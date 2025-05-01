@@ -18,11 +18,11 @@ services:
       context: ./apps/service-shopping
       dockerfile: Dockerfile
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_DATABASE: shopping
+      DB_DATABASE: ${SHOPPING_DB}
       PORT: 3001
     ports:
       - "3001:3001"
