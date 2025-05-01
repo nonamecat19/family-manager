@@ -14,8 +14,11 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  app.setGlobalPrefix('shopping-service');
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3001).then(() => {
+    console.log(`Server is running on port ${process.env.PORT ?? 3001}`);
+  });
 }
 
 void bootstrap();
