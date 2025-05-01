@@ -13,12 +13,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
-    command: >
-      sh -c "until psql -h localhost -U ${POSTGRES_USER} -d postgres -c 'select 1'; do
-        echo 'Waiting for database to start...';
-        sleep 2;
-      done;
-      psql -h localhost -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE IF NOT EXISTS ${SHOPPING_DB};'"
 
   service-shopping:
     container_name: service-shopping
