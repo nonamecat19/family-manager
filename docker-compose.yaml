@@ -1,12 +1,14 @@
 services:
   postgres:
-    container_name: postgres_db
+    container_name: postgres
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5001:5432"
+      - "${POSTGRES_PORT}:5432"
+    expose:
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
