@@ -33,6 +33,17 @@ services:
     networks:
       - app-network
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - service-shopping
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
 
