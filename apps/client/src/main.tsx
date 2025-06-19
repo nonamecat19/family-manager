@@ -4,7 +4,7 @@ import './main.css'
 import App from './App.tsx'
 import {createBrowserRouter, RouterProvider} from "react-router";
 
-let router = createBrowserRouter([
+const router = createBrowserRouter([
     {
         path: "/",
         Component: App,
