@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DrizzleModule } from './drizzle/drizzle.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { AppService } from './app.service';
         },
       },
     ]),
+    DrizzleModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
