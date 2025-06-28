@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DrizzleModule } from './drizzle/drizzle.module';
 import { TasksModule } from './tasks/tasks.module';
+import {ConfigModule} from "@nestjs/config";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TasksModule } from './tasks/tasks.module';
         },
       },
     ]),
+    ConfigModule,
     DrizzleModule,
     TasksModule,
   ],

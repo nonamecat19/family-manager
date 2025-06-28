@@ -1,5 +1,5 @@
 import {Module} from '@nestjs/common';
-import {ConfigService} from "@nestjs/config";
+import {ConfigModule, ConfigService} from "@nestjs/config";
 import {Pool} from "pg"
 import {drizzle, NodePgDatabase} from "drizzle-orm/node-postgres";
 import * as schema from "./schema"
@@ -7,6 +7,7 @@ import * as schema from "./schema"
 const DRIZZLE = Symbol('drizzle-connection')
 
 @Module({
+    imports: [ConfigModule],
     providers: [
         {
             provide: DRIZZLE,
