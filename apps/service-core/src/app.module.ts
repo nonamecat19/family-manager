@@ -7,8 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { SettingsModule } from './settings/settings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
-
-const schema = {} as any
+import * as schema from './schema'
 
 @Module({
   imports: [

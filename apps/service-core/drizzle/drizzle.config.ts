@@ -3,7 +3,7 @@ import "dotenv/config"
 import * as process from "node:process";
 
 export default defineConfig({
-    schema: "./src/**/*.schema.ts",
+    schema: ["./src/schema.ts"],
     dialect: "postgresql",
     dbCredentials: {
         user: process.env.DB_USER!,
@@ -11,5 +11,6 @@ export default defineConfig({
         database: process.env.DB_NAME!,
         password: process.env.DB_PASSWORD!,
         port: parseInt(process.env.DB_PORT!),
+        ssl: false,
     },
 })
