@@ -1,5 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller, Get, Param } from '@nestjs/common'
+import type { AppService } from './app.service'
 
 @Controller()
 export class AppController {
@@ -7,11 +7,11 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return this.appService.getHello();
+    return this.appService.getHello()
   }
 
   @Get('auth/:userId')
   async getUserAuth(@Param('userId') userId: string) {
-    return this.appService.getUserAuthData(userId);
+    return this.appService.getUserAuthData(userId)
   }
 }

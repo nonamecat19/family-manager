@@ -1,1 +1,6 @@
-export { type DBType, DRIZZLE, DBModule, DrizzleModuleOptions } from './db.module';
+export {
+  DBModule,
+  type DBType,
+  DRIZZLE,
+  DrizzleModuleOptions,
+} from './db.module'

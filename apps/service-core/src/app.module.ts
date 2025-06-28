@@ -1,13 +1,13 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import {DBModule} from "@repo/db";
-import {ConfigService} from "@nestjs/config";
-import { AuthModule } from './auth/auth.module';
-import { SettingsModule } from './settings/settings.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { UsersModule } from './users/users.module';
+import { Module } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { DBModule } from '@repo/db'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { AuthModule } from './auth/auth.module'
+import { NotificationsModule } from './notifications/notifications.module'
 import * as schema from './schema'
+import { SettingsModule } from './settings/settings.module'
+import { UsersModule } from './users/users.module'
 
 @Module({
   imports: [
