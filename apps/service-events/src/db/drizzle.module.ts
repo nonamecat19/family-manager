@@ -4,7 +4,7 @@ import {Pool} from "pg"
 import {drizzle, NodePgDatabase} from "drizzle-orm/node-postgres";
 import * as schema from "./schema"
 
-const DRIZZLE = Symbol('drizzle-connection')
+const DRIZZLE = Symbol('db-connection')
 
 @Module({
     imports: [ConfigModule],
