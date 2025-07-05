@@ -1,22 +1,30 @@
-import {NestFactory} from '@nestjs/core';
-import {AppModule} from './app.module';
-import {MicroserviceOptions, Transport} from '@nestjs/microservices';
+import { ValidationPipe } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { AuthProviderRabbitMQ, registerServiceRabbitMQ } from '@repo/rabbitmq'
+import { AppModule } from './app'
+import 'dotenv/config'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule)
+  app.useGlobalPipes(new ValidationPipe())
 
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: ['amqp://user:password@localhost:5672'],
-      queue: 'auth_queue',
-      queueOptions: {
-        durable: true,
+  const authRmqProvider = AuthProviderRabbitMQ({
+    urls: [
+      {
+        protocol: 'amqp',
+        username: 'user',
+        password: 'password',
+        hostname: 'localhost',
+        port: 5672,
       },
+    ],
+    queueOptions: {
+      durable: true,
     },
-  });
+  })
+  registerServiceRabbitMQ(app, authRmqProvider)
 
-  await app.startAllMicroservices();
-  await app.listen(9000);
+  await app.startAllMicroservices()
+  await app.listen(9000)
 }
-void bootstrap();
+void bootstrap()
