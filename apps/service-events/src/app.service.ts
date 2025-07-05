@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import type { ClientProxy } from '@nestjs/microservices'
+import { ClientProxy } from '@nestjs/microservices'
 
 @Injectable()
 export class AppService {

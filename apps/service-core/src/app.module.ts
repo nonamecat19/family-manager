@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { PassportModule } from '@nestjs/passport'
 import { DBModule } from '@repo/db'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
+import { JwtStrategy } from './auth/jwt.strategy'
 import { NotificationsModule } from './notifications/notifications.module'
 import * as schema from './schema'
 import { SettingsModule } from './settings/settings.module'
 import { UsersModule } from './users/users.module'
+import { UsersService } from './users/users.service'
+import { WorkspacesModule } from './workspaces/workspaces.module'
 
 @Module({
   imports: [
@@ -24,12 +28,14 @@ import { UsersModule } from './users/users.module'
         },
       }),
     }),
+    PassportModule,
+    UsersModule,
     AuthModule,
     SettingsModule,
     NotificationsModule,
-    UsersModule,
+    WorkspacesModule,
   ],
+  providers: [JwtStrategy, UsersService, AppService],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

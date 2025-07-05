@@ -20,12 +20,9 @@ export const workspaces = pgTable('workspaces', {
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 100 }).notNull().unique(),
-  name: varchar('name', { length: 50 }).notNull(),
-  surname: varchar('name', { length: 50 }).notNull(),
-  password: varchar('password', { length: 255 }).notNull(),
-  workspaceId: integer('workspace_id')
-    .notNull()
-    .references(() => workspaces.id),
+  name: varchar('name', { length: 50 }),
+  surname: varchar('surname', { length: 50 }),
+  password: varchar('password', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .$onUpdate(() => new Date())
@@ -33,13 +30,30 @@ export const users = pgTable('users', {
     .notNull(),
 })
 
+export const workspaceUsers = pgTable('workspace_users', {
+  userId: integer('user_id')
+    .references(() => users.id)
+    .notNull(),
+  workspaceId: integer('workspace_id')
+    .references(() => workspaces.id)
+    .notNull(),
+})
+
 export const workspacesRelations = relations(workspaces, ({ many }) => ({
-  users: many(users),
+  users: many(workspaceUsers),
 }))
 
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  workspaces: many(workspaceUsers),
+}))
+
+export const workspaceUsersRelations = relations(workspaceUsers, ({ one }) => ({
+  user: one(users, {
+    fields: [workspaceUsers.userId],
+    references: [users.id],
+  }),
   workspace: one(workspaces, {
-    fields: [users.workspaceId],
+    fields: [workspaceUsers.workspaceId],
     references: [workspaces.id],
   }),
 }))

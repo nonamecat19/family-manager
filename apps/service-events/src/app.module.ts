@@ -11,7 +11,15 @@ import { TasksModule } from './tasks/tasks.module'
   imports: [
     ClientsModule.register([
       AuthProviderRabbitMQ({
-        urls: ['amqp://user:password@localhost:5672'],
+        urls: [
+          {
+            protocol: 'ampq',
+            username: 'user',
+            password: 'password',
+            hostname: 'localhost',
+            port: 5672,
+          },
+        ],
         queueOptions: {
           durable: true,
         },

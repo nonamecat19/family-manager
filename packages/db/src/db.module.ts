@@ -72,5 +72,3 @@ export class DBModule {
     }
   }
 }
-
-export type DBType<T extends BaseSchema = BaseSchema> = NodePgDatabase<T>
