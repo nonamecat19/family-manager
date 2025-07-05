@@ -1,10 +1,8 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { Global, Module } from '@nestjs/common'
 import { ClientsModule } from '@nestjs/microservices'
 import { AuthProviderRabbitMQ } from '@repo/rabbitmq'
-import { DrizzleModule } from './db/drizzle.module'
-import { TasksModule } from './tasks/tasks.module'
 
+@Global()
 @Module({
   imports: [
     ClientsModule.register([
@@ -23,9 +21,7 @@ import { TasksModule } from './tasks/tasks.module'
         },
       }),
     ]),
-    ConfigModule,
-    DrizzleModule,
-    TasksModule,
   ],
+  exports: [ClientsModule],
 })
-export class AppModule {}
+export class RmqModule {}

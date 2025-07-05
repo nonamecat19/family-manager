@@ -1,7 +1,7 @@
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AuthProviderRabbitMQ, registerServiceRabbitMQ } from '@repo/rabbitmq'
-import { AppModule } from './app.module'
+import { AppModule } from './app'
 import 'dotenv/config'
 
 async function bootstrap() {

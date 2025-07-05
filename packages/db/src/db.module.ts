@@ -18,13 +18,13 @@ export interface DrizzleModuleOptions<T extends BaseSchema> {
 }
 
 @Module({})
-export class DBModule {
+export class DrizzleModule {
   static forRoot<T extends BaseSchema = BaseSchema>({
     schema,
     connectionOptions,
   }: DrizzleModuleOptions<T>): DynamicModule {
     return {
-      module: DBModule,
+      module: DrizzleModule,
       imports: [ConfigModule],
       providers: [
         {
@@ -50,7 +50,7 @@ export class DBModule {
     ) => DrizzleModuleOptions<T> | Promise<DrizzleModuleOptions<T>>
   }): DynamicModule {
     return {
-      module: DBModule,
+      module: DrizzleModule,
       imports: [ConfigModule],
       providers: [
         {

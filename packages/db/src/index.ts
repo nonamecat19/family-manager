@@ -1,5 +1,5 @@
 export {
-  DBModule,
   DRIZZLE,
+  DrizzleModule,
   DrizzleModuleOptions,
 } from './db.module'

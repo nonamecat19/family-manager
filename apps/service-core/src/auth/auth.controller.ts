@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, Req } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
+import { Request } from 'express'
+import { RequireAuth } from '../shared/decorators/require-auth.decorator'
 import { AuthService } from './auth.service'
 import { LoginDto, RegisterDto } from './dto'
-import { JwtAuthGuard } from './jwt.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -22,11 +24,16 @@ export class AuthController {
     return this.authService.login(loginDto.email, loginDto.password)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @RequireAuth()
   @Get('/profile')
-  getProfile() {
+  getProfile(@Req() req: Request) {
     return {
-      user: {},
+      user: req.user,
     }
+  }
+
+  @MessagePattern({ cmd: 'validate_token' })
+  async validateToken(data: { token: string }) {
+    return this.authService.validateToken(data.token)
   }
 }
