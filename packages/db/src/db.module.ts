@@ -1,5 +1,6 @@
 import {
   type DynamicModule,
+  Inject,
   type InjectionToken,
   Module,
   type OptionalFactoryDependency,
@@ -9,6 +10,8 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Pool, type PoolConfig } from 'pg'
 
 export const DRIZZLE = Symbol('drizzle-connection')
+
+export const InjectDb = () => Inject(DRIZZLE)
 
 type BaseSchema = Record<string, unknown>
 
