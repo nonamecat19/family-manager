@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ClientsModule } from '@nestjs/microservices'
 import { AuthProviderRabbitMQ } from '@repo/rabbitmq'
 import { ItemsModule } from '../items/items.module'
+import { ListsModule } from '../lists/lists.module'
 import { DbModule } from './db.module'
 import { RmqModule } from './rmq.module'
 
@@ -9,6 +10,7 @@ import { RmqModule } from './rmq.module'
   imports: [
     DbModule,
     ItemsModule,
+    ListsModule,
     RmqModule,
     ClientsModule.register([
       AuthProviderRabbitMQ({

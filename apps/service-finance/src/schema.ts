@@ -14,9 +14,9 @@ export const items = pgTable('items', {
   description: text('description'),
   quantity: integer('quantity').default(1).notNull(),
   isCompleted: boolean('is_completed').default(false).notNull(),
-  listId: integer('list_id')
-    .references(() => lists.id, { onDelete: 'cascade' })
-    .notNull(),
+  listId: integer('list_id').references(() => lists.id, {
+    onDelete: 'set null',
+  }),
 })
 
 export const listsRelations = relations(lists, ({ many }) => ({
