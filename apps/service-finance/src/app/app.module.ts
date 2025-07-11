@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { ClientsModule } from '@nestjs/microservices'
 import { AuthProviderRabbitMQ } from '@repo/rabbitmq'
 import { ItemsModule } from '../items/items.module'
@@ -12,6 +13,9 @@ import { RmqModule } from './rmq.module'
     ItemsModule,
     ListsModule,
     RmqModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     ClientsModule.register([
       AuthProviderRabbitMQ({
         urls: [
