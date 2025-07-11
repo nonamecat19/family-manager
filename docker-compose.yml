@@ -40,10 +40,40 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d tasks"]
+      test: ["CMD-SHELL", "pg_isready -U user -d core"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  service-core:
+    build:
+      context: .
+      dockerfile: ./apps/service-core/Dockerfile
+    env_file:
+      - ./apps/service-core/.env.production.local
+    ports:
+      - '9000:9000'
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    volumes:
+      - ./apps/service-core/src:/app/apps/service-core/src
+
+  service-finance:
+    build:
+      context: .
+      dockerfile: ./apps/service-finance/Dockerfile
+    env_file:
+      - ./apps/service-finance/.env.production.local
+    ports:
+      - '9002:9002'
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    volumes:
+      - ./apps/service-finance/src:/app/apps/service-finance/src
 
 volumes:
   redis_data:
