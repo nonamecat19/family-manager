@@ -1,4 +1,17 @@
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - service-core
+      - service-finance
+      - excalidraw-frontend
+      - excalidraw-collab
+
   redis:
     image: redis:latest
     container_name: my-redis-container
@@ -7,7 +20,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +37,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +53,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d core"]
+      test: [ "CMD-SHELL", "pg_isready -U user -d core" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,6 +87,17 @@ services:
       - postgres
     volumes:
       - ./apps/service-finance/src:/app/apps/service-finance/src
+
+  excalidraw-frontend:
+    image: excalidraw/excalidraw:latest
+    platform: linux/amd64
+    environment:
+      - VITE_APP_WS_SERVER_URL=http://localhost/excalidraw/socket.io
+    depends_on:
+      - excalidraw-collab
+
+  excalidraw-collab:
+    image: excalidraw/excalidraw-room:latest
 
 volumes:
   redis_data:
