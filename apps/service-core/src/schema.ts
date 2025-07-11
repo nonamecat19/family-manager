@@ -1,33 +1,18 @@
+import { systemFields } from '@repo/db'
 import { relations } from 'drizzle-orm'
-import {
-  integer,
-  pgTable,
-  serial,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/pg-core'
+import { integer, pgTable, varchar } from 'drizzle-orm/pg-core'
 
 export const workspaces = pgTable('workspaces', {
-  id: serial('id').primaryKey(),
+  ...systemFields,
   name: varchar('name', { length: 255 }).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .$onUpdate(() => new Date())
-    .defaultNow()
-    .notNull(),
 })
 
 export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
+  ...systemFields,
   email: varchar('email', { length: 100 }).notNull().unique(),
   name: varchar('name', { length: 50 }),
   surname: varchar('surname', { length: 50 }),
   password: varchar('password', { length: 255 }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .$onUpdate(() => new Date())
-    .defaultNow()
-    .notNull(),
 })
 
 export const workspaceUsers = pgTable('workspace_users', {

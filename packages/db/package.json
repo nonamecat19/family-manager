@@ -19,7 +19,7 @@
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
-    "drizzle-orm": "^0.29.0",
+    "drizzle-orm": "^0.44.2",
     "pg": "^8.11.0"
   },
   "devDependencies": {
