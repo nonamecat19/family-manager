@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { PassportModule } from '@nestjs/passport'
 import { AuthModule } from '../auth/auth.module'
 import { JwtStrategy } from '../auth/jwt.strategy'
@@ -12,6 +13,9 @@ import { RmqModule } from './rmq.module'
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     DbModule,
     PassportModule,
     UsersModule,
