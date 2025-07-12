@@ -39,5 +39,6 @@ yarn-error.log*
 
 .idea
 .vscode
-pnpm-lock.yaml
+yarn.lock
 package-lock.json
+.yarn/install-state.gz
