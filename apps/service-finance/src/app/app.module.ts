@@ -15,6 +15,7 @@ import { RmqModule } from './rmq.module'
     RmqModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     ClientsModule.register([
       AuthProviderRabbitMQ({
