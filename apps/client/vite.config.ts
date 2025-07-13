@@ -1,15 +1,21 @@
+import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
-import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
-
-
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon.ico',
+        'robots.txt',
+        'apple-touch-icon.png',
+      ],
       manifest: {
         name: 'My React Vite App',
         short_name: 'ViteApp',
@@ -34,6 +40,11 @@ export default defineConfig({
           },
         ],
       },
-    })
+    }),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 })

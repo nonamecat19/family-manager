@@ -14,3 +14,11 @@ declare module 'virtual:pwa-register/react' {
     updateServiceWorker: (reloadPage?: boolean) => Promise<void>
   }
 }
+
+interface ImportMetaEnv {
+  readonly VITE_SERVICE_FINANCE: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
