@@ -44,7 +44,7 @@ export default function ListItemPage() {
   const handleDeleteList = async () => {
     try {
       await deleteList({ id: +id! })
-      navigate('/lists')
+      navigate('/')
     } catch (error) {
       console.error('Failed to delete list:', error)
     }

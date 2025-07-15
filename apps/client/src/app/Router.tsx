@@ -7,7 +7,9 @@ export default function Router() {
       path: '/',
       children: financeRouter,
     },
-  ])
+  ], {
+    basename: '/client'
+  })
 
   return <RouterProvider router={router} />
 }
