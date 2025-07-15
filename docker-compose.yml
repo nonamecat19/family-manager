@@ -7,8 +7,10 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
     depends_on:
+      - client
       - service-core
       - service-finance
+      - service-events
 
   redis:
     image: redis:latest
@@ -85,6 +87,32 @@ services:
       - postgres
     volumes:
       - ./apps/service-finance/src:/app/apps/service-finance/src
+
+  service-events:
+    build:
+      context: .
+      dockerfile: ./apps/service-events/Dockerfile
+    env_file:
+      - ./apps/service-events/.env.production.local
+    ports:
+      - '9001:9001'
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+    volumes:
+      - ./apps/service-events/src:/app/apps/service-events/src
+
+  client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/client/.env.production.local
+    ports:
+      - "3000:80"
+    volumes:
+      - ./apps/client/src:/app/src
 
 volumes:
   redis_data:
