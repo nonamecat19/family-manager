@@ -17,6 +17,15 @@ export class ListsService {
     })
   }
 
+  async getById(id: List['id']) {
+    return this.db.query.lists.findFirst({
+      with: {
+        items: true,
+      },
+      where: eq(lists.id, id),
+    })
+  }
+
   async createOne(newList: NewList) {
     const [list] = await this.db.insert(lists).values(newList).returning()
     return list

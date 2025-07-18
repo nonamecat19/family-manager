@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common'
 import { CreateItemDto } from '../items/dto'
 import { DeleteListDto } from './dto'
 import { ListsService } from './lists.service'
@@ -10,6 +18,11 @@ export class ListsController {
   @Get('/')
   getItems() {
     return this.listsService.getAll()
+  }
+
+  @Get('/:id')
+  getItemById(@Param('id', ParseIntPipe) id: number) {
+    return this.listsService.getById(id)
   }
 
   @Post('/')
