@@ -17,6 +17,7 @@ declare module 'virtual:pwa-register/react' {
 
 interface ImportMetaEnv {
   readonly VITE_SERVICE_FINANCE: string
+  readonly VITE_BASENAME: string
 }
 
 interface ImportMeta {

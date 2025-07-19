@@ -8,7 +8,7 @@ export default function Router() {
       children: financeRouter,
     },
   ], {
-    basename: '/client'
+    basename: import.meta.env.VITE_BASENAME
   })
 
   return <RouterProvider router={router} />

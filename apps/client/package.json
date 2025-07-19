@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "npx cap sync android",
+    "android:run": "npx cap run android",
+    "android:full-run": "npm run build && npm run android:sync && npm run android:run"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
