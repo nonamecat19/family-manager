@@ -7,7 +7,7 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
     depends_on:
-      - client
+      - client-web
       - service-core
       - service-finance
       - service-events
@@ -103,6 +103,28 @@ services:
     volumes:
       - ./apps/service-events/src:/app/apps/service-events/src
 
+  service-iot:
+    build:
+      context: .
+      dockerfile: ./apps/service-iot/Dockerfile
+    env_file:
+      - ./apps/service-iot/.env.production.local
+    ports:
+      - '9005:9005'
+    volumes:
+      - ./apps/service-iot/src:/app/apps/service-iot/src
+
+  client-iot:
+    build:
+      context: .
+      dockerfile: ./apps/client-iot/Dockerfile
+    env_file:
+      - ./apps/client-iot/.env.production.local
+    ports:
+      - '8005:8005'
+    volumes:
+      - ./apps/client-iot/src:/app/apps/client-iot/src
+
   client-web:
     build:
       context: ./apps/client-web
@@ -118,8 +140,7 @@ services:
     image: eclipse-mosquitto:2
     container_name: mosquitto
     ports:
-      - "1883:1883"   # MQTT (unsecured)
-      - "9001:9001"   # WebSocket (optional)
+      - "1883:1883"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
