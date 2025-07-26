@@ -103,16 +103,27 @@ services:
     volumes:
       - ./apps/service-events/src:/app/apps/service-events/src
 
-  client:
+  client-web:
     build:
-      context: ./apps/client
+      context: ./apps/client-web
       dockerfile: Dockerfile
     env_file:
-      - ./apps/client/.env.production.local
+      - ./apps/client-web/.env.production.local
     ports:
       - "3000:80"
     volumes:
-      - ./apps/client/src:/app/src
+      - ./apps/client-web/src:/app/src
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    ports:
+      - "1883:1883"   # MQTT (unsecured)
+      - "9001:9001"   # WebSocket (optional)
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
 
 volumes:
   redis_data:
