@@ -33,14 +33,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
-        const userData = await apiClient.get<{ id: string; email: string; name?: string; avatar?: string }>('/auth/me');
-        setUser(userData);
-        // Connect WebSocket
-        wsClient.connect(token);
+        try {
+          const userData = await apiClient.get<{ id: string; email: string; name?: string; avatar?: string }>('/auth/me');
+          setUser(userData);
+          // Connect WebSocket
+          wsClient.connect(token).catch((err) => {
+            console.error('WebSocket connection failed:', err);
+          });
+        } catch (apiError) {
+          console.error('API call failed during auth check:', apiError);
+          // If API call fails, clear token and continue
+          await AsyncStorage.removeItem('auth_token');
+        }
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      await AsyncStorage.removeItem('auth_token');
+      try {
+        await AsyncStorage.removeItem('auth_token');
+      } catch (storageError) {
+        console.error('Failed to remove auth token:', storageError);
+      }
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,10 @@ import { io, Socket } from 'socket.io-client';
 
 const WS_BASE_URL = process.env.EXPO_PUBLIC_WS_URL;
 
+if (!WS_BASE_URL) {
+  throw new Error('EXPO_PUBLIC_WS_URL environment variable is required. Please set it in your eas.json build configuration.');
+}
+
 export type WebSocketEvent = {
   type: 'list_updated' | 'note_updated' | 'birthday_updated' | 'family_updated' | 'folder_updated';
   familyId: string;

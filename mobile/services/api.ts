@@ -2,10 +2,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
+if (!API_BASE_URL) {
+  throw new Error('EXPO_PUBLIC_API_URL environment variable is required. Please set it in your eas.json build configuration.');
+}
+
 class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
+    if (!baseUrl) {
+      throw new Error('API base URL is required');
+    }
     this.baseUrl = baseUrl;
   }
 
