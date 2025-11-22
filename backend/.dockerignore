@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+*.log
+.DS_Store
+coverage
+.git
+.gitignore
+README.md
+.vscode
+.idea
+*.md
+drizzle.config.ts
+bun.lock
+

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: family-manager-db
+    restart: unless-stopped
+    environment:
+      DATABASE_USER: ${DATABASE_USER:-family_manager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-family_manager_password}
+      POSTGRES_DB: ${POSTGRES_DB:-family_manager}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-family_manager}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: family-manager-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${DATABASE_USER:-family_manager}:${POSTGRES_PASSWORD:-family_manager_password}@postgres:5432/${POSTGRES_DB:-family_manager}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:99,http://localhost:5173,http://localhost:1420}
+    expose:
+      - "3000"
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:alpine
+    container_name: family-manager-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-99}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
