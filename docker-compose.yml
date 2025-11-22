@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -31,7 +29,7 @@ services:
       DATABASE_URL: postgresql://${DATABASE_USER:-family_manager}:${POSTGRES_PASSWORD:-family_manager_password}@postgres:5432/${POSTGRES_DB:-family_manager}
       DATABASE_USER: ${DATABASE_USER:-family_manager}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      CORS_ORIGIN: ${CORS_ORIGIN:-https://familymanageronline.online,https://www.familymanageronline.online,http://localhost:99,http://localhost:5173,http://localhost:1420}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://familymanageronline.online,https://www.familymanageronline.online,http://familymanageronline.online,http://www.familymanageronline.online,http://localhost:99,http://localhost:5173,http://localhost:1420}
     expose:
       - "3000"
     depends_on:

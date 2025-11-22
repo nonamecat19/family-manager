@@ -28,18 +28,22 @@ if [ ! -e "$data_path/conf/options-ssl-nginx.conf" ] || [ ! -e "$data_path/conf/
 fi
 
 echo "### Creating dummy certificate for $domains ..."
-path="/etc/letsencrypt/live/$domains"
-mkdir -p "$data_path/conf/live/$domains"
+# Create directories in the certbot volume
 docker compose run --rm --entrypoint "\
+  mkdir -p /etc/letsencrypt/live/$domains && \
   openssl req -x509 -nodes -newkey rsa:$rsa_key_size -days 1\
-    -keyout '$path/privkey.pem' \
-    -out '$path/fullchain.pem' \
+    -keyout /etc/letsencrypt/live/$domains/privkey.pem \
+    -out /etc/letsencrypt/live/$domains/fullchain.pem \
     -subj '/CN=localhost'" certbot
 echo
 
 
-echo "### Starting nginx ..."
+echo "### Starting nginx with HTTP-only config (for certificate generation) ..."
+# Copy no-ssl config temporarily
+cp nginx/nginx.conf.no-ssl nginx/nginx.conf
 docker compose up --force-recreate -d nginx
+echo "Waiting for nginx to be ready..."
+sleep 5
 echo
 
 echo "### Deleting dummy certificate for $domains ..."
@@ -76,6 +80,23 @@ docker compose run --rm --entrypoint "\
     --force-renewal" certbot
 echo
 
-echo "### Reloading nginx ..."
-docker compose exec nginx nginx -s reload
+echo "### Switching to HTTPS config and reloading nginx ..."
+# Restore HTTPS config (use template if exists, otherwise keep current)
+if [ -f "nginx/nginx.conf.template" ]; then
+    cp nginx/nginx.conf.template nginx/nginx.conf
+else
+    echo "Warning: nginx.conf.template not found. Using current HTTPS config."
+fi
+
+# Test and reload nginx
+if docker compose exec nginx nginx -t 2>/dev/null; then
+    docker compose exec nginx nginx -s reload
+    echo
+    echo "### Setup complete! Your API is now available at:"
+    echo "   https://familymanageronline.online/api/"
+else
+    echo "Error: nginx config test failed. Check logs: docker compose logs nginx"
+    echo "You may need to manually fix the nginx configuration."
+fi
+echo
 
