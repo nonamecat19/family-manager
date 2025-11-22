@@ -24,9 +24,17 @@ export class AuthService {
     const { email, password, name } = registerDto;
 
     // Check if user exists
-    const existingUser = await this.databaseService.db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    let existingUser;
+    try {
+      existingUser = await this.databaseService.db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
+    } catch (error) {
+      console.error('Database error when checking existing user:', error);
+      throw new BadRequestException(
+        `Database error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     if (existingUser) {
       throw new BadRequestException('User already exists');
@@ -36,30 +44,53 @@ export class AuthService {
     const passwordHash = await PasswordUtil.hash(password);
 
     // Create user
-    const [newUser] = await this.databaseService.db
-      .insert(users)
-      .values({
-        email,
-        passwordHash,
-        name: name || null,
-      })
-      .returning();
+    let newUser;
+    try {
+      [newUser] = await this.databaseService.db
+        .insert(users)
+        .values({
+          email,
+          passwordHash,
+          name: name || null,
+        })
+        .returning();
+    } catch (error) {
+      console.error('Database error when creating user:', error);
+      throw new BadRequestException(
+        `Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     // Create private family/workspace for the user
-    const [privateFamily] = await this.databaseService.db
-      .insert(families)
-      .values({
-        name: `${name || 'My'} Workspace`,
-        createdBy: newUser.id,
-      })
-      .returning();
+    let privateFamily;
+    try {
+      [privateFamily] = await this.databaseService.db
+        .insert(families)
+        .values({
+          name: `${name || 'My'} Workspace`,
+          createdBy: newUser.id,
+        })
+        .returning();
+    } catch (error) {
+      console.error('Database error when creating family:', error);
+      throw new BadRequestException(
+        `Failed to create family: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     // Add user as owner of their private family
-    await this.databaseService.db.insert(familyMembers).values({
-      userId: newUser.id,
-      familyId: privateFamily.id,
-      role: 'owner',
-    });
+    try {
+      await this.databaseService.db.insert(familyMembers).values({
+        userId: newUser.id,
+        familyId: privateFamily.id,
+        role: 'owner',
+      });
+    } catch (error) {
+      console.error('Database error when adding family member:', error);
+      throw new BadRequestException(
+        `Failed to add family member: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     // Generate JWT token
     const token = await this.generateToken(newUser.id, newUser.email);

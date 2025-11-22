@@ -8,6 +8,13 @@
       "when": 1763213937270,
       "tag": "0000_greedy_payback",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763809649018,
+      "tag": "0001_bored_whistler",
+      "breakpoints": true
     }
   ]
 }

@@ -7,12 +7,15 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import multipart from '@fastify/multipart';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Register multipart plugin for file uploads
   const fastifyInstance = app.getHttpAdapter().getInstance();

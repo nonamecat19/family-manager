@@ -29,12 +29,14 @@ services:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgresql://${DATABASE_USER:-family_manager}:${POSTGRES_PASSWORD:-family_manager_password}@postgres:5432/${POSTGRES_DB:-family_manager}
+      DATABASE_USER: ${DATABASE_USER:-family_manager}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:99,http://localhost:5173,http://localhost:1420}
     expose:
       - "3000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine

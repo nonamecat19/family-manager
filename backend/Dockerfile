@@ -24,7 +24,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
+# Install production dependencies
 RUN npm ci --only=production || npm install --production
 
 # Copy built application from builder stage
