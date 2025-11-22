@@ -1,10 +1,32 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+// Environment variables are available via process.env.EXPO_PUBLIC_* in Expo
+// For development builds, they are set in eas.json build profiles
+// After setting env vars in eas.json, rebuild the development build
+// Use multiple fallbacks to ensure we get the value in different build contexts
+const API_BASE_URL = 
+  process.env.EXPO_PUBLIC_API_URL ||
+  Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL ||
+  (__DEV__ ? 'http://174.138.48.226:99/api' : undefined); // Fallback for development
 
 if (!API_BASE_URL) {
-  throw new Error('EXPO_PUBLIC_API_URL environment variable is required. Please set it in your eas.json build configuration.');
+  throw new Error(
+    'EXPO_PUBLIC_API_URL environment variable is required. Please set it in your eas.json build configuration and rebuild your development build.\n' +
+    `Available env: ${JSON.stringify({ 
+      processEnv: !!process.env.EXPO_PUBLIC_API_URL,
+      constantsConfig: !!Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL
+    })}`
+  );
 }
+
+// Log the API URL for debugging (remove in production if needed)
+console.log(`[API] Initialized with base URL: ${API_BASE_URL}`);
+console.log(`[API] Environment check:`, {
+  hasProcessEnv: !!process.env.EXPO_PUBLIC_API_URL,
+  hasConstantsConfig: !!Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL,
+  __DEV__: __DEV__,
+});
 
 class ApiClient {
   private baseUrl: string;
@@ -44,17 +66,37 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      console.log(`[API] Making request to: ${url}`);
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Request failed' }));
+        console.error(`[API] Request failed with status ${response.status}:`, error);
+        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error: any) {
+      console.error(`[API] Network error for ${url}:`, error);
+      
+      // Handle network errors specifically
+      if (error.message === 'Network request failed' || error.message?.includes('Network')) {
+        throw new Error(
+          `Network request failed. Please check:\n` +
+          `1. Your device is connected to the internet\n` +
+          `2. The server is accessible from your network\n` +
+          `3. API URL is correct: ${this.baseUrl}\n` +
+          `Original error: ${error.message}`
+        );
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
-
-    return response.json();
   }
 
   async get<T>(endpoint: string): Promise<T> {

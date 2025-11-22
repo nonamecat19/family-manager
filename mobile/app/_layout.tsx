@@ -1,9 +1,7 @@
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@/theme/theme-provider';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { FamilyProvider } from '@/contexts/FamilyContext';
-import { Redirect } from 'expo-router';
 
 function RootLayoutNav() {
   const { isAuthenticated, loading } = useAuth();
@@ -41,7 +39,6 @@ export default function RootLayout() {
       <AuthProvider>
         <FamilyProvider>
           <RootLayoutNav />
-          <StatusBar style='auto' />
         </FamilyProvider>
       </AuthProvider>
     </ThemeProvider>

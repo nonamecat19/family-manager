@@ -21,20 +21,11 @@ async function bootstrap() {
   const fastifyInstance = app.getHttpAdapter().getInstance();
   await fastifyInstance.register(multipart as any);
 
-  // Enable CORS
-  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || [
-    'http://localhost:8081',
-    'http://localhost:1420',
-    'http://localhost:5173',
-    'http://127.0.0.1:1420',
-    'http://127.0.0.1:5173',
-  ];
-
   app.enableCors({
-    origin: corsOrigins,
+    origin: true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: '*',
+    allowedHeaders: '*',
   });
 
   // Global validation pipe

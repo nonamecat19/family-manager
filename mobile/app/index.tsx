@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Index() {
@@ -8,10 +9,15 @@ export default function Index() {
     return null;
   }
 
-  if (!isAuthenticated) {
-    return <Redirect href="/auth/login" />;
-  }
-
-  return <Redirect href="/(tabs)" />;
+  return (
+    <>
+      <StatusBar style='auto' />
+      {!isAuthenticated ? (
+        <Redirect href="/auth/login" />
+      ) : (
+        <Redirect href="/(tabs)" />
+      )}
+    </>
+  );
 }
 

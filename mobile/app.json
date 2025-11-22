@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "scheme": "family-manager",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -37,6 +38,12 @@
       "eas": {
         "projectId": "7a8619d1-450e-4c4e-9e72-a223930336d5"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7a8619d1-450e-4c4e-9e72-a223930336d5"
     }
   }
 }
