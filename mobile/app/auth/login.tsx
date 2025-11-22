@@ -16,6 +16,7 @@ export default function LoginScreen() {
   const inputColor = useColor({}, 'input');
   const borderColor = useColor({}, 'border');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -41,7 +42,7 @@ export default function LoginScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Email"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -52,7 +53,7 @@ export default function LoginScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Password"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={password}
         onChangeText={setPassword}
         secureTextEntry

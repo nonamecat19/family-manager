@@ -19,6 +19,7 @@ export default function NotesScreen() {
   const textColor = useColor({}, 'text');
   const cardColor = useColor({}, 'card');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
   const { activeFamily } = useFamily();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,11 +57,11 @@ export default function NotesScreen() {
       onPress={() => router.push(`/notes/${item.id}`)}
     >
       <Text style={[styles.noteTitle, { color: textColor }]}>{item.title}</Text>
-      <Text style={[styles.noteType, { color: useColor({}, 'textMuted') }]}>
+      <Text style={[styles.noteType, { color: textMutedColor }]}>
         {item.contentType}
       </Text>
       {item.content && (
-        <Text style={[styles.noteContent, { color: useColor({}, 'textMuted') }]} numberOfLines={2}>
+        <Text style={[styles.noteContent, { color: textMutedColor }]} numberOfLines={2}>
           {item.content}
         </Text>
       )}
@@ -106,7 +107,7 @@ export default function NotesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.emptyText, { color: textMutedColor }]}>
             No notes yet. Create one to get started!
           </Text>
         }

@@ -9,6 +9,7 @@ export default function HomeScreen() {
   const textColor = useColor({}, 'text');
   const cardColor = useColor({}, 'card');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
   const { activeFamily, families, setActiveFamily, loading } = useFamily();
   const { user } = useAuth();
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function HomeScreen() {
       {activeFamily && (
         <View style={[styles.activeFamilyCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.familyName, { color: textColor }]}>{activeFamily.name}</Text>
-          <Text style={[styles.familyRole, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.familyRole, { color: textMutedColor }]}>
             {activeFamily.role === 'owner' ? 'Owner' : 'Member'}
           </Text>
         </View>

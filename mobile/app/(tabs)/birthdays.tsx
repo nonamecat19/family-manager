@@ -20,6 +20,7 @@ export default function BirthdaysScreen() {
   const textColor = useColor({}, 'text');
   const cardColor = useColor({}, 'card');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
   const { activeFamily } = useFamily();
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +65,7 @@ export default function BirthdaysScreen() {
           {item.daysUntil === 0 ? 'Today!' : `${item.daysUntil} days`}
         </Text>
       </View>
-      <Text style={[styles.birthdayDate, { color: useColor({}, 'textMuted') }]}>
+      <Text style={[styles.birthdayDate, { color: textMutedColor }]}>
         {new Date(item.dateOfBirth).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
       </Text>
     </TouchableOpacity>
@@ -109,7 +110,7 @@ export default function BirthdaysScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.emptyText, { color: textMutedColor }]}>
             No birthdays yet. Add one to get started!
           </Text>
         }

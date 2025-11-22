@@ -21,6 +21,7 @@ export default function ListsScreen() {
   const textColor = useColor({}, 'text');
   const cardColor = useColor({}, 'card');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
   const { activeFamily } = useFamily();
   const [lists, setLists] = useState<List[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,12 +60,12 @@ export default function ListsScreen() {
     >
       <Text style={[styles.listTitle, { color: textColor }]}>{item.title}</Text>
       {item.description && (
-        <Text style={[styles.listDescription, { color: useColor({}, 'textMuted') }]}>
+        <Text style={[styles.listDescription, { color: textMutedColor }]}>
           {item.description}
         </Text>
       )}
       {item.dueDate && (
-        <Text style={[styles.listDueDate, { color: useColor({}, 'textMuted') }]}>
+        <Text style={[styles.listDueDate, { color: textMutedColor }]}>
           Due: {item.dueDate}
         </Text>
       )}
@@ -110,7 +111,7 @@ export default function ListsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.emptyText, { color: textMutedColor }]}>
             No lists yet. Create one to get started!
           </Text>
         }

@@ -19,6 +19,7 @@ export default function FamiliesScreen() {
   const textColor = useColor({}, 'text');
   const cardColor = useColor({}, 'card');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
   const { families, activeFamily, setActiveFamily, refreshFamilies } = useFamily();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function FamiliesScreen() {
           <Text style={[styles.activeBadge, { color: primaryColor }]}>Active</Text>
         )}
       </View>
-      <Text style={[styles.familyRole, { color: useColor({}, 'textMuted') }]}>
+      <Text style={[styles.familyRole, { color: textMutedColor }]}>
         {item.role === 'owner' ? 'Owner' : 'Member'}
       </Text>
     </TouchableOpacity>

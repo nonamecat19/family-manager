@@ -16,6 +16,7 @@ export default function CreateFamilyScreen() {
   const inputColor = useColor({}, 'input');
   const borderColor = useColor({}, 'border');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -42,7 +43,7 @@ export default function CreateFamilyScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Workspace name"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={name}
         onChangeText={setName}
         autoCapitalize="words"

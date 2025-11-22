@@ -17,6 +17,7 @@ export default function RegisterScreen() {
   const inputColor = useColor({}, 'input');
   const borderColor = useColor({}, 'border');
   const primaryColor = useColor({}, 'primary');
+  const textMutedColor = useColor({}, 'textMuted');
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -47,7 +48,7 @@ export default function RegisterScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Name (optional)"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={name}
         onChangeText={setName}
         autoCapitalize="words"
@@ -56,7 +57,7 @@ export default function RegisterScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Email"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -67,7 +68,7 @@ export default function RegisterScreen() {
       <TextInput
         style={[styles.input, { backgroundColor: inputColor, borderColor, color: textColor }]}
         placeholder="Password"
-        placeholderTextColor={useColor({}, 'textMuted')}
+        placeholderTextColor={textMutedColor}
         value={password}
         onChangeText={setPassword}
         secureTextEntry

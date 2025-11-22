@@ -8,6 +8,9 @@ export default function SettingsScreen() {
   const backgroundColor = useColor({}, 'background');
   const textColor = useColor({}, 'text');
   const primaryColor = useColor({}, 'primary');
+  const cardColor = useColor({}, 'card');
+  const textMutedColor = useColor({}, 'textMuted');
+  const destructiveColor = useColor({}, 'destructive');
   const { user, logout } = useAuth();
   const { activeFamily } = useFamily();
   const router = useRouter();
@@ -34,22 +37,22 @@ export default function SettingsScreen() {
     <View style={[styles.container, { backgroundColor }]}>
       <Text style={[styles.title, { color: textColor }]}>Settings</Text>
       
-      <View style={[styles.section, { backgroundColor: useColor({}, 'card') }]}>
+      <View style={[styles.section, { backgroundColor: cardColor }]}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>Account</Text>
-        <Text style={[styles.info, { color: useColor({}, 'textMuted') }]}>
+        <Text style={[styles.info, { color: textMutedColor }]}>
           Email: {user?.email}
         </Text>
         {user?.name && (
-          <Text style={[styles.info, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.info, { color: textMutedColor }]}>
             Name: {user.name}
           </Text>
         )}
       </View>
 
-      <View style={[styles.section, { backgroundColor: useColor({}, 'card') }]}>
+      <View style={[styles.section, { backgroundColor: cardColor }]}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>Workspace</Text>
         {activeFamily && (
-          <Text style={[styles.info, { color: useColor({}, 'textMuted') }]}>
+          <Text style={[styles.info, { color: textMutedColor }]}>
             Active: {activeFamily.name}
           </Text>
         )}
@@ -62,7 +65,7 @@ export default function SettingsScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.logoutButton, { backgroundColor: useColor({}, 'destructive') }]}
+        style={[styles.logoutButton, { backgroundColor: destructiveColor }]}
         onPress={handleLogout}
       >
         <Text style={styles.logoutButtonText}>Logout</Text>
