@@ -6,18 +6,37 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "corepack": true,
+      "android": {
+        "buildType": "apk",
+        "usesCleartextTraffic": true,
+        "networkSecurityConfig": "./android/app/src/main/res/xml/network_security_config.xml"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://familymanageronline.online/api",
+        "EXPO_PUBLIC_WS_URL": "wss://familymanageronline.online/api"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "corepack": true
     },
     "apk": {
+      "corepack": true,
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "usesCleartextTraffic": true,
+        "networkSecurityConfig": "./android/app/src/main/res/xml/network_security_config.xml"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://familymanageronline.online/api",
+        "EXPO_PUBLIC_WS_URL": "wss://familymanageronline.online/api"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "corepack": true
     }
   },
   "submit": {

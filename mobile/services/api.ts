@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 const API_BASE_URL = 
   process.env.EXPO_PUBLIC_API_URL ||
   Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL ||
-  (__DEV__ ? 'http://174.138.48.226:99/api' : undefined); // Fallback for development
+  (__DEV__ ? 'https://familymanageronline.online/api' : undefined); // Fallback for development
 
 if (!API_BASE_URL) {
   throw new Error(

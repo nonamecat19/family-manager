@@ -31,7 +31,7 @@ services:
       DATABASE_URL: postgresql://${DATABASE_USER:-family_manager}:${POSTGRES_PASSWORD:-family_manager_password}@postgres:5432/${POSTGRES_DB:-family_manager}
       DATABASE_USER: ${DATABASE_USER:-family_manager}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:99,http://localhost:5173,http://localhost:1420}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://familymanageronline.online,https://www.familymanageronline.online,http://localhost:99,http://localhost:5173,http://localhost:1420}
     expose:
       - "3000"
     depends_on:
@@ -43,17 +43,34 @@ services:
     container_name: family-manager-nginx
     restart: unless-stopped
     ports:
-      - "${NGINX_PORT:-99}:80"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - nginx_logs:/var/log/nginx
+      - certbot_data:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
     depends_on:
       backend:
         condition: service_healthy
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot
+    container_name: family-manager-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_data:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   postgres_data:
     driver: local
   nginx_logs:
+    driver: local
+  certbot_data:
+    driver: local
+  certbot_www:
     driver: local
 
