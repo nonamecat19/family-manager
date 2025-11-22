@@ -13,6 +13,9 @@ RUN npm ci || npm install
 COPY tsconfig.json nest-cli.json ./
 COPY src ./src
 
+RUN npm run db:generate
+RUN npm run db:push
+
 # Build the application
 RUN npm run build
 
