@@ -9,9 +9,7 @@
       "distribution": "internal",
       "corepack": true,
       "android": {
-        "buildType": "apk",
-        "usesCleartextTraffic": true,
-        "networkSecurityConfig": "./android/app/src/main/res/xml/network_security_config.xml"
+        "buildType": "apk"
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://familymanageronline.online/api",
@@ -25,9 +23,7 @@
     "apk": {
       "corepack": true,
       "android": {
-        "buildType": "apk",
-        "usesCleartextTraffic": true,
-        "networkSecurityConfig": "./android/app/src/main/res/xml/network_security_config.xml"
+        "buildType": "apk"
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://familymanageronline.online/api",

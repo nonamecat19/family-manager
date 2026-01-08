@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useColor } from '@/hooks/useColor';
 import { useFamily } from '@/contexts/FamilyContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { NotificationBanner } from '@/components/NotificationBanner';
 
 export default function HomeScreen() {
   const backgroundColor = useColor({}, 'background');
@@ -24,6 +25,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
+      <NotificationBanner />
       <Text style={[styles.title, { color: textColor }]}>Welcome, {user?.name || user?.email}!</Text>
       
       {activeFamily && (

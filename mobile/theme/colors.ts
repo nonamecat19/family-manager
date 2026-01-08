@@ -149,10 +149,87 @@ const darkColors = {
   // Indigo accent for system features
   indigo: '#5E5CE6',
 };
+
+const blueColors = {
+  // Base colors - blue tinted
+  background: '#F0F4FF',
+  foreground: '#1A1A2E',
  
+  // Card colors
+  card: '#E8EDFF',
+  cardForeground: '#1A1A2E',
+ 
+  // Popover colors
+  popover: '#E8EDFF',
+  popoverForeground: '#1A1A2E',
+ 
+  // Primary colors - blue theme
+  primary: '#2563EB',
+  primaryForeground: '#FFFFFF',
+ 
+  // Secondary colors
+  secondary: '#DBEAFE',
+  secondaryForeground: '#1E40AF',
+ 
+  // Muted colors
+  muted: '#BFDBFE',
+  mutedForeground: '#3B82F6',
+ 
+  // Accent colors
+  accent: '#DBEAFE',
+  accentForeground: '#1E40AF',
+ 
+  // Destructive colors
+  destructive: '#EF4444',
+  destructiveForeground: '#FFFFFF',
+ 
+  // Border and input
+  border: '#93C5FD',
+  input: '#DBEAFE',
+  ring: '#3B82F6',
+ 
+  // Text colors
+  text: '#1A1A2E',
+  textMuted: '#3B82F6',
+ 
+  // Legacy support for existing components
+  tint: '#2563EB',
+  icon: '#3B82F6',
+  tabIconDefault: '#60A5FA',
+  tabIconSelected: '#2563EB',
+ 
+  // Default buttons, links, Send button, selected tabs
+  blue: '#2563EB',
+ 
+  // Success states, FaceTime buttons, completed tasks
+  green: '#10B981',
+ 
+  // Delete buttons, error states, critical alerts
+  red: '#EF4444',
+ 
+  // VoiceOver highlights, warning states
+  orange: '#F59E0B',
+ 
+  // Notes app accent, Reminders highlights
+  yellow: '#FBBF24',
+ 
+  // Pink accent color for various UI elements
+  pink: '#EC4899',
+ 
+  // Purple accent for creative apps and features
+  purple: '#8B5CF6',
+ 
+  // Teal accent for communication features
+  teal: '#14B8A6',
+ 
+  // Indigo accent for system features
+  indigo: '#6366F1',
+};
+
 export const Colors = {
   light: lightColors,
   dark: darkColors,
+  blue: blueColors,
 };
  
 // Export individual color schemes for easier access

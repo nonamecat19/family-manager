@@ -84,3 +84,4 @@ staging=1
 
 Then use the staging certificates for testing. When ready, set `staging=0` and run the script again to get production certificates.
 
+
