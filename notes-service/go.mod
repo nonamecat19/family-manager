@@ -1,6 +1,6 @@
 module github.com/nnc/notes-manager-backend
 
-go 1.25.6
+go 1.24
 
 require (
 	github.com/99designs/gqlgen v0.17.86
