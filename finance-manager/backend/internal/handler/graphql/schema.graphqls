@@ -1,0 +1,124 @@
+type User {
+    id: ID!
+    email: String!
+    createdAt: String!
+}
+
+type Currency {
+    id: ID!
+    code: String!
+    type: String!
+    exchangeRate: Float!
+    name: String!
+}
+
+type Wallet {
+    id: ID!
+    userId: ID!
+    name: String!
+    type: String!
+    currency: String!
+    currencyInfo: Currency
+    balance: Float!
+    category: String
+    createdAt: String!
+}
+
+type Transaction {
+    id: ID!
+    walletId: ID!
+    type: String!
+    amount: Float!
+    currency: String!
+    currencyInfo: Currency
+    description: String
+    category: String
+    createdAt: String!
+    executedAt: String
+}
+
+type Recurring {
+    id: ID!
+    userId: ID!
+    walletId: ID!
+    type: String!
+    amount: Float!
+    currency: String!
+    currencyInfo: Currency
+    description: String
+    recurrence: String!
+    startDate: String!
+    endDate: String
+    nextExecution: String
+}
+
+type Investment {
+    id: ID!
+    userId: ID!
+    walletId: ID!
+    type: String!
+    coin: String
+    amount: Float
+    startDate: String!
+    endDate: String
+    dailyReward: Float
+    status: String!
+}
+
+type Query {
+    wallets(userId: ID!): [Wallet!]!
+    transactions(walletId: ID!, from: String, to: String): [Transaction!]!
+    investments(userId: ID!): [Investment!]!
+    recurringPayments(userId: ID!): [Recurring!]!
+    currencies(type: String): [Currency!]!
+    currency(code: String!): Currency
+}
+
+type Mutation {
+    # User mutations
+    createUser(email: String!, password: String!): User!
+    
+    # Wallet mutations
+    createWallet(userId: ID!, name: String!, type: String!, currency: String!, balance: Float, category: String): Wallet!
+    updateWallet(id: ID!, name: String, type: String, currency: String, balance: Float, category: String): Wallet!
+    deleteWallet(id: ID!): Boolean!
+    
+    # Transaction mutations
+    createTransaction(
+        walletId: ID!
+        type: String!
+        amount: Float!
+        currency: String!
+        description: String
+        category: String
+        executedAt: String
+    ): Transaction!
+    
+    # Recurring mutations
+    createRecurring(
+        userId: ID!
+        walletId: ID!
+        type: String!
+        amount: Float!
+        currency: String!
+        description: String
+        recurrence: String!
+        startDate: String!
+        endDate: String
+    ): Recurring!
+    
+    # Investment mutations
+    createInvestment(
+        userId: ID!
+        walletId: ID!
+        type: String!
+        coin: String
+        amount: Float!
+        startDate: String!
+        endDate: String
+        dailyReward: Float
+    ): Investment!
+    
+    # Currency mutations
+    updateExchangeRates: Boolean!
+}

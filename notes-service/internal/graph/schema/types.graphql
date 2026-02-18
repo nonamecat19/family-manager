@@ -1,0 +1,82 @@
+type User {
+  id: ID!
+  email: String!
+  username: String!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type List {
+  id: ID!
+  title: String!
+  description: String!
+  isPublic: Boolean!
+  owner: User!
+  items: [Item!]!
+  tags: [Tag!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Item {
+  id: ID!
+  type: ItemType!
+  content: String!
+  position: Int!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+enum ItemType {
+  TEXT
+  IMAGE
+  LINK
+}
+
+type Tag {
+  id: ID!
+  name: String!
+  lists: [List!]!
+  createdAt: Time!
+}
+
+type AuthPayload {
+  user: User!
+  accessToken: String!
+  refreshToken: String!
+}
+
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateListInput {
+  title: String!
+  description: String
+  isPublic: Boolean
+}
+
+input UpdateListInput {
+  title: String
+  description: String
+  isPublic: Boolean
+}
+
+input CreateItemInput {
+  listID: ID!
+  type: ItemType!
+  content: String!
+  position: Int
+}
+
+input UpdateItemInput {
+  content: String
+  type: ItemType
+}

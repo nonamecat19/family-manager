@@ -1,0 +1,31 @@
+scalar Time
+scalar Upload
+
+type Query {
+  me: User!
+  list(id: ID!): List!
+  myLists: [List!]!
+  publicLists(limit: Int = 20, offset: Int = 0): [List!]!
+  tags: [Tag!]!
+  tag(name: String!): Tag!
+}
+
+type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  refreshToken(token: String!): AuthPayload!
+
+  createList(input: CreateListInput!): List!
+  updateList(id: ID!, input: UpdateListInput!): List!
+  deleteList(id: ID!): Boolean!
+
+  createItem(input: CreateItemInput!): Item!
+  updateItem(id: ID!, input: UpdateItemInput!): Item!
+  deleteItem(id: ID!): Boolean!
+  reorderItems(listID: ID!, itemIDs: [ID!]!): [Item!]!
+
+  addTagToList(listID: ID!, tagName: String!): List!
+  removeTagFromList(listID: ID!, tagName: String!): List!
+
+  uploadImage(file: Upload!): String!
+}
