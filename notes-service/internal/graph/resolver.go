@@ -10,5 +10,5 @@ type Resolver struct {
 	Queries *sqlc.Queries
 	Auth    *auth.Service
 	JWT     *auth.JWTManager
-	Storage *storage.MinIOStorage
+	Storage *storage.VercelBlobStorage
 }

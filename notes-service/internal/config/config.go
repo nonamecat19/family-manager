@@ -7,23 +7,25 @@ import (
 )
 
 type Config struct {
-	Port     string
-	Postgres PostgresConfig
-	JWT      JWTConfig
-	MinIO    MinIOConfig
+	Port       string
+	Postgres   PostgresConfig
+	JWT        JWTConfig
+	VercelBlob VercelBlobConfig
 }
 
 type PostgresConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DB       string
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	DB         string
+	SSLMode    string
+	SchemaName string
 }
 
 func (c PostgresConfig) DSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=notes,public",
-		c.User, c.Password, c.Host, c.Port, c.DB)
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s&search_path=%s,public",
+		c.User, c.Password, c.Host, c.Port, c.DB, c.SSLMode, c.SchemaName)
 }
 
 type JWTConfig struct {
@@ -32,35 +34,29 @@ type JWTConfig struct {
 	RefreshDuration time.Duration
 }
 
-type MinIOConfig struct {
-	Endpoint  string
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	UseSSL    bool
+type VercelBlobConfig struct {
+	Token string
 }
 
 func Load() Config {
 	return Config{
 		Port: getEnv("PORT", "8080"),
 		Postgres: PostgresConfig{
-			Host:     getEnv("POSTGRES_HOST", "localhost"),
-			Port:     getEnv("POSTGRES_PORT", "5432"),
-			User:     getEnv("POSTGRES_USER", "notes"),
-			Password: getEnv("POSTGRES_PASSWORD", "notes"),
-			DB:       getEnv("POSTGRES_DB", "notes"),
+			Host:       getEnv("POSTGRES_HOST", "localhost"),
+			Port:       getEnv("POSTGRES_PORT", "5432"),
+			User:       getEnv("POSTGRES_USER", "notes"),
+			Password:   getEnv("POSTGRES_PASSWORD", "notes"),
+			DB:         getEnv("POSTGRES_DB", "notes"),
+			SSLMode:    getEnv("POSTGRES_SSL_MODE", "disable"),
+			SchemaName: getEnv("POSTGRES_SCHEMA", "notes"),
 		},
 		JWT: JWTConfig{
 			Secret:          getEnv("JWT_SECRET", "change-me-in-production"),
 			AccessDuration:  parseDuration(getEnv("JWT_ACCESS_DURATION", "15m")),
 			RefreshDuration: parseDuration(getEnv("JWT_REFRESH_DURATION", "168h")),
 		},
-		MinIO: MinIOConfig{
-			Endpoint:  getEnv("MINIO_ENDPOINT", "localhost:9000"),
-			AccessKey: getEnv("MINIO_ACCESS_KEY", "minioadmin"),
-			SecretKey: getEnv("MINIO_SECRET_KEY", "minioadmin"),
-			Bucket:    getEnv("MINIO_BUCKET", "notes-images"),
-			UseSSL:    getEnv("MINIO_USE_SSL", "false") == "true",
+		VercelBlob: VercelBlobConfig{
+			Token: getEnv("BLOB_READ_WRITE_TOKEN", ""),
 		},
 	}
 }

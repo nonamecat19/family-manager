@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -26,6 +27,7 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
 	cfg := config.Load()
 	ctx := context.Background()
 
@@ -46,10 +48,7 @@ func main() {
 	authSvc := auth.NewService(queries, jwtMgr)
 
 	// Storage
-	store, err := storage.NewMinIOStorage(ctx, cfg.MinIO)
-	if err != nil {
-		log.Fatalf("minio: %v", err)
-	}
+	store := storage.NewVercelBlobStorage(cfg.VercelBlob)
 
 	// GraphQL
 	resolver := &graph.Resolver{
