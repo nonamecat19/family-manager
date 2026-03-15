@@ -80,11 +80,11 @@ Plans:
   2. A quick expense (amount + category only) can be entered in under 3 seconds
   3. Amounts display with proper locale formatting (e.g., $1,234.56) but are stored as integer cents
   4. Newly logged expenses appear immediately in the app
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Go backend expenses: migration, sqlc queries, ExpenseDB interface, ExpenseHandler Create/List endpoints, unit tests
+- [ ] 04-02-PLAN.md — Flutter expense form: model with cents conversion, repository, state management, full-screen form with amount/category/note/date, FAB wiring, widget tests
 
 ### Phase 5: Expense Management
 **Goal**: Users can correct mistakes by editing or deleting any expense
@@ -185,7 +185,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 1. Foundation | 2/2 | Complete    | 2026-03-15 |
 | 2. Authentication | 2/2 | Complete | 2026-03-15 |
 | 3. Categories | 2/2 | Complete | 2026-03-15 |
-| 4. Expense Entry | 0/? | Not started | - |
+| 4. Expense Entry | 0/2 | Not started | - |
 | 5. Expense Management | 0/? | Not started | - |
 | 6. History and Filtering | 0/? | Not started | - |
 | 7. Visualization | 0/? | Not started | - |
