@@ -12,11 +12,13 @@ import (
 
 type Querier interface {
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
+	CreateExpense(ctx context.Context, arg CreateExpenseParams) (Expense, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (pgtype.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) (int64, error)
 	GetCategoriesByUser(ctx context.Context, userID pgtype.UUID) ([]Category, error)
 	GetCategoryByID(ctx context.Context, arg GetCategoryByIDParams) (Category, error)
+	GetExpensesByUser(ctx context.Context, arg GetExpensesByUserParams) ([]Expense, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (GetRefreshTokenByHashRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	Ping(ctx context.Context) (int32, error)

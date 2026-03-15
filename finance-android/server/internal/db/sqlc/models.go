@@ -19,6 +19,17 @@ type Category struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Expense struct {
+	ID          pgtype.UUID        `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	CategoryID  pgtype.UUID        `json:"category_id"`
+	AmountCents int64              `json:"amount_cents"`
+	Note        string             `json:"note"`
+	ExpenseDate pgtype.Date        `json:"expense_date"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
 type RefreshToken struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`
