@@ -49,6 +49,8 @@ func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.E
 			{
 				expenses.POST("", expenseHandler.Create)
 				expenses.GET("", expenseHandler.List)
+				expenses.PUT("/:id", expenseHandler.Update)
+				expenses.DELETE("/:id", expenseHandler.Delete)
 			}
 		}
 	}

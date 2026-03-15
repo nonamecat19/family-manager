@@ -16,6 +16,7 @@ type Querier interface {
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (pgtype.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) (int64, error)
+	DeleteExpense(ctx context.Context, arg DeleteExpenseParams) (int64, error)
 	GetCategoriesByUser(ctx context.Context, userID pgtype.UUID) ([]Category, error)
 	GetCategoryByID(ctx context.Context, arg GetCategoryByIDParams) (Category, error)
 	GetExpensesByUser(ctx context.Context, arg GetExpensesByUserParams) ([]Expense, error)
@@ -26,6 +27,7 @@ type Querier interface {
 	RevokeRefreshToken(ctx context.Context, tokenHash string) error
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (int64, error)
 	UpdateCategorySortOrder(ctx context.Context, arg UpdateCategorySortOrderParams) error
+	UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (Expense, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -47,6 +47,24 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (E
 	return i, err
 }
 
+const deleteExpense = `-- name: DeleteExpense :execrows
+DELETE FROM expenses
+WHERE id = $1 AND user_id = $2
+`
+
+type DeleteExpenseParams struct {
+	ID     pgtype.UUID `json:"id"`
+	UserID pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteExpense(ctx context.Context, arg DeleteExpenseParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteExpense, arg.ID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getExpensesByUser = `-- name: GetExpensesByUser :many
 SELECT id, user_id, category_id, amount_cents, note, expense_date, created_at, updated_at
 FROM expenses
@@ -88,4 +106,43 @@ func (q *Queries) GetExpensesByUser(ctx context.Context, arg GetExpensesByUserPa
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateExpense = `-- name: UpdateExpense :one
+UPDATE expenses
+SET category_id = $3, amount_cents = $4, note = $5, expense_date = $6, updated_at = NOW()
+WHERE id = $1 AND user_id = $2
+RETURNING id, user_id, category_id, amount_cents, note, expense_date, created_at, updated_at
+`
+
+type UpdateExpenseParams struct {
+	ID          pgtype.UUID `json:"id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	CategoryID  pgtype.UUID `json:"category_id"`
+	AmountCents int64       `json:"amount_cents"`
+	Note        string      `json:"note"`
+	ExpenseDate pgtype.Date `json:"expense_date"`
+}
+
+func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (Expense, error) {
+	row := q.db.QueryRow(ctx, updateExpense,
+		arg.ID,
+		arg.UserID,
+		arg.CategoryID,
+		arg.AmountCents,
+		arg.Note,
+		arg.ExpenseDate,
+	)
+	var i Expense
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CategoryID,
+		&i.AmountCents,
+		&i.Note,
+		&i.ExpenseDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

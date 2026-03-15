@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/nnc/finance-tracker/server/internal/db/sqlc"
 )
@@ -76,4 +77,58 @@ func (db *PgExpenseDB) GetExpensesByUser(userID string, limit, offset int) ([]Mo
 		}
 	}
 	return expenses, nil
+}
+
+func (db *PgExpenseDB) UpdateExpense(id, userID, categoryID string, amountCents int64, note string, expenseDate time.Time) (MockExpense, error) {
+	uid := stringToUUID(id)
+	uidUser := stringToUUID(userID)
+	cid := stringToUUID(categoryID)
+
+	dateVal := pgtype.Date{
+		Time:  expenseDate,
+		Valid: true,
+	}
+
+	row, err := db.queries.UpdateExpense(context.Background(), sqlc.UpdateExpenseParams{
+		ID:          uid,
+		UserID:      uidUser,
+		CategoryID:  cid,
+		AmountCents: amountCents,
+		Note:        note,
+		ExpenseDate: dateVal,
+	})
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return MockExpense{}, ErrExpenseNotFound
+		}
+		return MockExpense{}, err
+	}
+
+	return MockExpense{
+		ID:          uuidToString(row.ID),
+		UserID:      uuidToString(row.UserID),
+		CategoryID:  uuidToString(row.CategoryID),
+		AmountCents: row.AmountCents,
+		Note:        row.Note,
+		ExpenseDate: row.ExpenseDate.Time,
+		CreatedAt:   row.CreatedAt.Time,
+		UpdatedAt:   row.UpdatedAt.Time,
+	}, nil
+}
+
+func (db *PgExpenseDB) DeleteExpense(id, userID string) error {
+	uid := stringToUUID(id)
+	uidUser := stringToUUID(userID)
+
+	rowsAffected, err := db.queries.DeleteExpense(context.Background(), sqlc.DeleteExpenseParams{
+		ID:     uid,
+		UserID: uidUser,
+	})
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrExpenseNotFound
+	}
+	return nil
 }
