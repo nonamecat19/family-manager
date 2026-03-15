@@ -94,10 +94,11 @@ Plans:
   1. User can tap an expense and edit any field (amount, category, note, date)
   2. Edits are saved and reflected immediately in the expense list
   3. User can delete an expense and sees a confirmation dialog before deletion
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Go backend: UpdateExpense/DeleteExpense sqlc queries, ExpenseDB interface extension, PUT/DELETE handlers with validation, unit tests
+- [ ] 05-02-PLAN.md — Flutter edit/delete UI: repository+notifier update/delete methods, ExpenseFormScreen edit mode, HistoryScreen tap-to-edit + swipe-to-delete + category chips, widget tests
 
 ### Phase 6: History and Filtering
 **Goal**: Users can review their spending history and find specific expenses
@@ -186,7 +187,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 2. Authentication | 2/2 | Complete | 2026-03-15 |
 | 3. Categories | 2/2 | Complete | 2026-03-15 |
 | 4. Expense Entry | 1/2 | In Progress|  |
-| 5. Expense Management | 0/? | Not started | - |
+| 5. Expense Management | 0/2 | Not started | - |
 | 6. History and Filtering | 0/? | Not started | - |
 | 7. Visualization | 0/? | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
