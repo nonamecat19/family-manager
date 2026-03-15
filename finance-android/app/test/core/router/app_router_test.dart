@@ -40,6 +40,18 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
 
   @override
   Future<void> loadExpenses({int limit = 50, int offset = 0}) async {}
+
+  @override
+  Future<bool> updateExpense({
+    required String id,
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async => true;
+
+  @override
+  Future<bool> deleteExpense(String id) async => true;
 }
 
 void main() {

@@ -7,6 +7,7 @@ import 'package:finance_tracker/features/categories/data/models/category.dart'
 import 'package:finance_tracker/features/categories/presentation/categories_screen.dart';
 import 'package:finance_tracker/features/categories/presentation/category_form_screen.dart';
 import 'package:finance_tracker/features/charts/presentation/charts_screen.dart';
+import 'package:finance_tracker/features/expenses/data/models/expense.dart';
 import 'package:finance_tracker/features/expenses/presentation/expense_form_screen.dart';
 import 'package:finance_tracker/features/history/presentation/history_screen.dart';
 import 'package:finance_tracker/features/settings/presentation/settings_screen.dart';
@@ -86,6 +87,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/expenses/new',
         builder: (context, state) => const ExpenseFormScreen(),
+      ),
+      GoRoute(
+        path: '/expenses/edit',
+        builder: (context, state) => ExpenseFormScreen(
+          expense: state.extra as Expense?,
+        ),
       ),
       // Category management routes (outside ShellRoute -- own AppBar,
       // no bottom nav).

@@ -67,6 +67,27 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
 
   @override
   Future<void> loadExpenses({int limit = 50, int offset = 0}) async {}
+
+  bool updateExpenseCalled = false;
+  bool deleteExpenseCalled = false;
+
+  @override
+  Future<bool> updateExpense({
+    required String id,
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async {
+    updateExpenseCalled = true;
+    return true;
+  }
+
+  @override
+  Future<bool> deleteExpense(String id) async {
+    deleteExpenseCalled = true;
+    return true;
+  }
 }
 
 const _testCategories = [
@@ -176,7 +197,7 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save Expense'));
       await tester.pumpAndSettle();
 
       expect(find.text('Amount is required'), findsOneWidget);
@@ -189,7 +210,7 @@ void main() {
 
       // Enter a valid amount but don't select category.
       await tester.enterText(find.byType(TextField).first, '12.34');
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save Expense'));
       await tester.pumpAndSettle();
 
       expect(find.text('Select a category'), findsOneWidget);

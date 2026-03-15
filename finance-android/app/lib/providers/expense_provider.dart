@@ -54,6 +54,59 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
       state = ExpenseError(e.toString());
     }
   }
+
+  /// Updates an expense and replaces it in the local list.
+  ///
+  /// Returns `true` on success, `false` on failure.
+  Future<bool> updateExpense({
+    required String id,
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async {
+    try {
+      final updated = await _repository.updateExpense(
+        id: id,
+        categoryId: categoryId,
+        amountCents: amountCents,
+        note: note,
+        expenseDate: expenseDate,
+      );
+      final currentExpenses = switch (state) {
+        ExpenseLoaded(:final expenses) => expenses,
+        _ => <Expense>[],
+      };
+      state = ExpenseLoaded([
+        for (final e in currentExpenses)
+          if (e.id == id) updated else e,
+      ]);
+      return true;
+    } on Exception catch (e) {
+      state = ExpenseError(e.toString());
+      return false;
+    }
+  }
+
+  /// Deletes an expense and removes it from the local list.
+  ///
+  /// Returns `true` on success, `false` on failure.
+  Future<bool> deleteExpense(String id) async {
+    try {
+      await _repository.deleteExpense(id);
+      final currentExpenses = switch (state) {
+        ExpenseLoaded(:final expenses) => expenses,
+        _ => <Expense>[],
+      };
+      state = ExpenseLoaded(
+        currentExpenses.where((e) => e.id != id).toList(),
+      );
+      return true;
+    } on Exception catch (e) {
+      state = ExpenseError(e.toString());
+      return false;
+    }
+  }
 }
 
 /// Provides the expense state and notifier.

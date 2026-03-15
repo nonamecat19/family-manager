@@ -46,6 +46,31 @@ class ExpenseRepository {
         .map(Expense.fromJson)
         .toList();
   }
+
+  /// Updates an existing expense. Returns the updated expense from the server.
+  Future<Expense> updateExpense({
+    required String id,
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/expenses/$id',
+      data: {
+        'category_id': categoryId,
+        'amount_cents': amountCents,
+        'note': note,
+        'expense_date': expenseDate,
+      },
+    );
+    return Expense.fromJson(response.data!);
+  }
+
+  /// Deletes an expense by ID.
+  Future<void> deleteExpense(String id) async {
+    await _dio.delete<void>('/expenses/$id');
+  }
 }
 
 /// Provides an [ExpenseRepository] using the app's Dio client.

@@ -16,7 +16,12 @@ import 'package:intl/intl.dart';
 /// after FAB (amount -> chip -> save).
 class ExpenseFormScreen extends ConsumerStatefulWidget {
   /// Creates an [ExpenseFormScreen].
-  const ExpenseFormScreen({super.key});
+  ///
+  /// Pass [expense] for edit mode; omit for create mode.
+  const ExpenseFormScreen({this.expense, super.key});
+
+  /// The expense to edit, or null for create mode.
+  final Expense? expense;
 
   @override
   ConsumerState<ExpenseFormScreen> createState() => _ExpenseFormScreenState();
@@ -31,10 +36,20 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   bool _submitted = false;
   bool _saving = false;
 
+  bool get _isEditing => widget.expense != null;
+
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+
+    if (widget.expense != null) {
+      final exp = widget.expense!;
+      _amountController.text = (exp.amountCents / 100).toStringAsFixed(2);
+      _noteController.text = exp.note;
+      _selectedCategoryId = exp.categoryId;
+      _selectedDate = exp.expenseDate;
+    }
 
     // Ensure categories are loaded for the picker.
     final catState = ref.read(categoryStateProvider);
@@ -79,6 +94,44 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     }
   }
 
+  Future<void> _confirmAndDelete(BuildContext context) async {
+    final expense = widget.expense!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete this ${Expense.formatCents(expense.amountCents)} expense?',
+        ),
+        content: const Text('This expense will be permanently deleted.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep Expense'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete Expense'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final success = await ref
+        .read(expenseStateProvider.notifier)
+        .deleteExpense(expense.id);
+    if (!mounted) return;
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Expense deleted'
+              : 'Failed to delete expense. Pull down to refresh and retry.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     setState(() => _submitted = true);
 
@@ -89,13 +142,26 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     setState(() => _saving = true);
 
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final success =
-        await ref.read(expenseStateProvider.notifier).createExpense(
-              categoryId: _selectedCategoryId!,
-              amountCents: amountCents,
-              note: _noteController.text.trim(),
-              expenseDate: dateStr,
-            );
+
+    final bool success;
+    if (_isEditing) {
+      success =
+          await ref.read(expenseStateProvider.notifier).updateExpense(
+                id: widget.expense!.id,
+                categoryId: _selectedCategoryId!,
+                amountCents: amountCents,
+                note: _noteController.text.trim(),
+                expenseDate: dateStr,
+              );
+    } else {
+      success =
+          await ref.read(expenseStateProvider.notifier).createExpense(
+                categoryId: _selectedCategoryId!,
+                amountCents: amountCents,
+                note: _noteController.text.trim(),
+                expenseDate: dateStr,
+              );
+    }
 
     if (!mounted) return;
     setState(() => _saving = false);
@@ -103,11 +169,19 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
     if (success) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense saved')),
+        SnackBar(
+          content: Text(_isEditing ? 'Expense updated' : 'Expense saved'),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save expense')),
+        SnackBar(
+          content: Text(
+            _isEditing
+                ? 'Failed to update expense. Check your connection and try again.'
+                : 'Failed to save expense',
+          ),
+        ),
       );
     }
   }
@@ -128,14 +202,24 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         catState is CategoryLoaded ? catState.categories : <Category>[];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Expense')),
+      appBar: AppBar(
+        title: Text(_isEditing ? 'Edit Expense' : 'New Expense'),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete expense',
+              onPressed: () => _confirmAndDelete(context),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // --- Amount field ---
           TextField(
             controller: _amountController,
-            autofocus: true,
+            autofocus: !_isEditing,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
@@ -238,7 +322,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save'),
+                  : const Text('Save Expense'),
             ),
           ),
         ],
