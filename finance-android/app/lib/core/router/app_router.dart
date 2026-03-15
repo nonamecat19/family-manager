@@ -2,6 +2,10 @@ import 'package:finance_tracker/features/auth/domain/auth_state.dart';
 import 'package:finance_tracker/features/auth/presentation/login_screen.dart';
 import 'package:finance_tracker/features/auth/presentation/signup_screen.dart';
 import 'package:finance_tracker/features/auth/presentation/welcome_screen.dart';
+import 'package:finance_tracker/features/categories/data/models/category.dart'
+    as models;
+import 'package:finance_tracker/features/categories/presentation/categories_screen.dart';
+import 'package:finance_tracker/features/categories/presentation/category_form_screen.dart';
 import 'package:finance_tracker/features/charts/presentation/charts_screen.dart';
 import 'package:finance_tracker/features/history/presentation/history_screen.dart';
 import 'package:finance_tracker/features/settings/presentation/settings_screen.dart';
@@ -76,6 +80,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsScreen(),
           ),
         ],
+      ),
+      // Category management routes (outside ShellRoute -- own AppBar,
+      // no bottom nav).
+      GoRoute(
+        path: '/settings/categories',
+        builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/settings/categories/new',
+        builder: (context, state) => const CategoryFormScreen(),
+      ),
+      GoRoute(
+        path: '/settings/categories/edit',
+        builder: (context, state) => CategoryFormScreen(
+          category: state.extra as models.Category?,
+        ),
       ),
     ],
   );

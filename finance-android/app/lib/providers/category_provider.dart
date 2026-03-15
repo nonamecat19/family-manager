@@ -89,10 +89,9 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
     if (currentState is! CategoryLoaded) return;
 
     final items = List.of(currentState.categories);
-    // ReorderableListView adjusts newIndex when moving downward.
-    final adjustedNew = oldIndex < newIndex ? newIndex - 1 : newIndex;
+    // onReorderItem already provides the adjusted newIndex.
     final item = items.removeAt(oldIndex);
-    items.insert(adjustedNew, item);
+    items.insert(newIndex, item);
 
     // Update sort orders to match new positions.
     final reordered = [
