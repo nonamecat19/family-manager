@@ -1,6 +1,8 @@
 import 'package:finance_tracker/core/router/app_router.dart';
 import 'package:finance_tracker/features/auth/domain/auth_state.dart';
+import 'package:finance_tracker/features/expenses/domain/expense_state.dart';
 import 'package:finance_tracker/providers/auth_provider.dart';
+import 'package:finance_tracker/providers/expense_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +23,23 @@ class FakeAuthNotifier extends StateNotifier<AuthState>
 
   @override
   Future<void> tryRestoreSession() async {}
+}
+
+/// A fake [ExpenseNotifier] for testing that stays in loaded state.
+class FakeExpenseNotifier extends StateNotifier<ExpenseState>
+    implements ExpenseNotifier {
+  FakeExpenseNotifier() : super(const ExpenseLoaded([]));
+
+  @override
+  Future<bool> createExpense({
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async => true;
+
+  @override
+  Future<void> loadExpenses({int limit = 50, int offset = 0}) async {}
 }
 
 void main() {
@@ -59,10 +78,14 @@ void main() {
           const Authenticated(userId: 'test-id', email: 'test@test.com'),
         );
 
+        final fakeExpenseNotifier = FakeExpenseNotifier();
+
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
               authStateProvider.overrideWith((_) => notifier),
+              expenseStateProvider
+                  .overrideWith((_) => fakeExpenseNotifier),
             ],
             child: Consumer(
               builder: (context, ref, _) {
@@ -74,8 +97,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // Should show History screen (the initial authenticated location).
-        expect(find.text('History'), findsWidgets);
+        // Should show History screen with empty expense state.
+        expect(find.text('No expenses yet'), findsOneWidget);
       },
     );
   });
