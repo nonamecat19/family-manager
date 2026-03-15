@@ -65,11 +65,11 @@ Plans:
   3. User can edit a category name after creation
   4. User can delete a category
   5. Categories persist across sessions and display with their assigned icon and color
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Go backend categories: migration, sqlc queries, CategoryHandler CRUD + reorder + bulk endpoints, unit tests
+- [ ] 03-02-PLAN.md — Flutter categories UI: data layer, state management, list/form screens, icon/color pickers, drag-to-reorder, starter prompt, widget tests
 
 ### Phase 4: Expense Entry
 **Goal**: Users can log expenses quickly with amount, category, optional note, and date
@@ -184,7 +184,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete    | 2026-03-15 |
 | 2. Authentication | 2/2 | Complete | 2026-03-15 |
-| 3. Categories | 0/? | Not started | - |
+| 3. Categories | 0/2 | Planned | - |
 | 4. Expense Entry | 0/? | Not started | - |
 | 5. Expense Management | 0/? | Not started | - |
 | 6. History and Filtering | 0/? | Not started | - |
