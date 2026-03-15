@@ -24,9 +24,10 @@ func main() {
 	queries := sqlc.New(pool)
 	authDB := handler.NewPgAuthDB(queries)
 	categoryDB := handler.NewPgCategoryDB(queries)
+	expenseDB := handler.NewPgExpenseDB(queries)
 	authSvc := service.NewAuthService(cfg.JWTSecret)
 
-	r := router.Setup(authDB, categoryDB, authSvc)
+	r := router.Setup(authDB, categoryDB, expenseDB, authSvc)
 
 	log.Printf("Server starting on :%s", cfg.Port)
 	log.Fatal(r.Run(":" + cfg.Port))
