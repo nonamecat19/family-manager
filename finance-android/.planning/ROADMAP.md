@@ -184,7 +184,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete    | 2026-03-15 |
 | 2. Authentication | 2/2 | Complete | 2026-03-15 |
-| 3. Categories | 0/2 | Planned | - |
+| 3. Categories | 1/2 | In Progress | - |
 | 4. Expense Entry | 0/? | Not started | - |
 | 5. Expense Management | 0/? | Not started | - |
 | 6. History and Filtering | 0/? | Not started | - |
