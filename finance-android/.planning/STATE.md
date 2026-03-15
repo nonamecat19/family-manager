@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-15T21:21:35.413Z"
-last_activity: 2026-03-15 -- Phase 3 complete (Categories Flutter UI)
+status: in-progress
+stopped_at: "Completed 04-01-PLAN.md"
+last_updated: "2026-03-15T21:43:00Z"
+last_activity: 2026-03-15 -- Phase 4 Plan 1 complete (Expense Entry API)
 progress:
   total_phases: 10
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
   percent: 100
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 3: Categories -- COMPLETE
+**Current focus:** Phase 4: Expense Entry -- IN PROGRESS
 
 ## Current Position
 
-Phase: 3 of 10 (Categories) -- COMPLETE
-Plan: 2 of 2 in current phase -- Phase complete
-Status: Phase 3 complete, ready for Phase 4
-Last activity: 2026-03-15 -- Phase 3 complete (Categories Flutter UI)
+Phase: 4 of 10 (Expense Entry)
+Plan: 1 of 2 in current phase -- Plan 1 complete
+Status: Plan 04-01 complete (Expense Entry API), ready for Plan 04-02
+Last activity: 2026-03-15 -- Phase 4 Plan 1 complete (Expense Entry API)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 5min
-- Total execution time: 0.5 hours
+- Total execution time: 0.55 hours
 
 **By Phase:**
 
@@ -46,10 +46,11 @@ Progress: [██████████] 100%
 | 1. Foundation | 2 | 8min | 4min |
 | 2. Authentication | 2 | 8min | 4min |
 | 3. Categories | 2 | 15min | 7.5min |
+| 4. Expense Entry | 1/2 | 3min | 3min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (5min), 02-02 (3min), 03-01 (3min), 03-02 (12min)
-- Trend: Steady (03-02 longer due to TDD + checkpoint)
+- Last 5 plans: 02-02 (3min), 03-01 (3min), 03-02 (12min), 04-01 (3min)
+- Trend: Steady
 
 *Updated after each plan completion*
 
@@ -82,6 +83,10 @@ Recent decisions affecting current work:
 - [Phase 03-categories]: Optimistic reorder with 500ms debounce for responsive UX
 - [Phase 03-categories]: shared_preferences for starter prompt dismissal (client-side)
 - [Phase 03-categories]: Category routes outside ShellRoute (own AppBar, no bottom nav)
+- [Phase 04-expense-entry]: ExpenseDB interface mirroring CategoryDB pattern for testability
+- [Phase 04-expense-entry]: amount_cents as BIGINT (int64) -- integer cents, never floating-point
+- [Phase 04-expense-entry]: expense_date defaults to today when omitted from request
+- [Phase 04-expense-entry]: FK ON DELETE RESTRICT on category_id to prevent deleting categories with expenses
 
 ### Pending Todos
 
@@ -95,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T21:21:35.411Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-expense-entry/04-CONTEXT.md
+Last session: 2026-03-15T21:43:00Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-expense-entry/04-01-SUMMARY.md

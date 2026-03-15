@@ -22,11 +22,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Expenses
 
-- [ ] **EXP-01**: User can log an expense with amount, category, optional note, and date
+- [x] **EXP-01**: User can log an expense with amount, category, optional note, and date
 - [ ] **EXP-02**: Expense entry is optimized for speed (under 3 seconds for quick entry)
 - [ ] **EXP-03**: User can edit any field of an existing expense
 - [ ] **EXP-04**: User can delete an expense with confirmation
-- [ ] **EXP-05**: Amounts stored as integer cents, displayed with locale formatting
+- [x] **EXP-05**: Amounts stored as integer cents, displayed with locale formatting
 
 ### History
 
@@ -98,9 +98,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAT-03 | Phase 3: Categories | API Complete (Plan 1) |
 | CAT-04 | Phase 3: Categories | API Complete (Plan 1) |
 | CAT-05 | Phase 3: Categories | API Complete (Plan 1) |
-| EXP-01 | Phase 4: Expense Entry | Pending |
+| EXP-01 | Phase 4: Expense Entry | Complete |
 | EXP-02 | Phase 4: Expense Entry | Pending |
-| EXP-05 | Phase 4: Expense Entry | Pending |
+| EXP-05 | Phase 4: Expense Entry | Complete |
 | EXP-03 | Phase 5: Expense Management | Pending |
 | EXP-04 | Phase 5: Expense Management | Pending |
 | HIST-01 | Phase 6: History and Filtering | Pending |
