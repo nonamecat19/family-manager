@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-15T22:03:31.237Z"
-last_activity: 2026-03-15 -- Phase 4 complete (Expense Entry API + Flutter UI)
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-15T22:36:39.127Z"
+last_activity: 2026-03-15 -- Phase 5 Plan 1 complete (Expense Update/Delete API)
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 10
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 4 of 10 (Expense Entry) -- COMPLETE
-Plan: 2 of 2 in current phase -- All plans complete
-Status: Phase 4 complete, ready for Phase 5
-Last activity: 2026-03-15 -- Phase 4 complete (Expense Entry API + Flutter UI)
+Phase: 5 of 10 (Expense Management)
+Plan: 1 of 2 in current phase
+Status: Plan 05-01 complete (Update/Delete API), ready for 05-02
+Last activity: 2026-03-15 -- Phase 5 Plan 1 complete (Expense Update/Delete API)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 - Trend: Steady
 
 *Updated after each plan completion*
+| Phase 05 P01 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,7 @@ Recent decisions affecting current work:
 - [Phase 04-expense-entry]: parseAmountToCents uses .round() not .toInt() to avoid floating-point truncation
 - [Phase 04-expense-entry]: ExpenseNotifier prepends new expense for instant UI update
 - [Phase 04-expense-entry]: FakeExpenseNotifier pattern for widget test mocking
+- [Phase 05]: UpdateExpense uses :one (RETURNING) for full JSON response; DeleteExpense uses :execrows for not-found detection
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T22:03:31.236Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-expense-management/05-CONTEXT.md
+Last session: 2026-03-15T22:36:39.125Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None
