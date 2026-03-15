@@ -1,6 +1,7 @@
 import 'package:finance_tracker/features/categories/data/category_repository.dart';
 import 'package:finance_tracker/features/categories/data/models/category.dart';
 import 'package:finance_tracker/features/categories/domain/category_state.dart';
+import 'package:finance_tracker/features/expenses/data/models/expense.dart';
 import 'package:finance_tracker/features/expenses/domain/expense_state.dart';
 import 'package:finance_tracker/features/expenses/presentation/expense_form_screen.dart';
 import 'package:finance_tracker/providers/category_provider.dart';
@@ -247,6 +248,121 @@ void main() {
         return false;
       });
       expect(hasSelectedBorder, isTrue);
+    });
+  });
+
+  group('ExpenseFormScreen edit mode', () {
+    final testExpense = Expense(
+      id: 'exp-1',
+      categoryId: 'cat-1',
+      amountCents: 1250,
+      note: 'Lunch',
+      expenseDate: DateTime(2026, 3, 15),
+    );
+
+    Widget buildEditSubject(Expense expense) {
+      final router = GoRouter(
+        initialLocation: '/expenses/edit',
+        routes: [
+          GoRoute(
+            path: '/expenses/edit',
+            builder: (_, __) => ExpenseFormScreen(expense: expense),
+          ),
+        ],
+      );
+      return ProviderScope(
+        overrides: [
+          categoryStateProvider
+              .overrideWith((_) => fakeCategoryNotifier),
+          expenseStateProvider
+              .overrideWith((_) => fakeExpenseNotifier),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      );
+    }
+
+    testWidgets('edit mode: AppBar shows Edit Expense', (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Expense'), findsOneWidget);
+    });
+
+    testWidgets('edit mode: amount field pre-filled with dollars',
+        (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      // The amount TextField should contain '12.50'.
+      expect(find.text('12.50'), findsOneWidget);
+    });
+
+    testWidgets('edit mode: note field pre-filled', (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lunch'), findsOneWidget);
+    });
+
+    testWidgets('edit mode: category chip is pre-selected',
+        (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      // Food chip should have a selected border (non-transparent, width 2).
+      final containers = tester.widgetList<Container>(
+        find.descendant(
+          of: find.byType(GestureDetector),
+          matching: find.byType(Container),
+        ),
+      );
+
+      final hasSelectedBorder = containers.any((container) {
+        final decoration = container.decoration;
+        if (decoration is BoxDecoration && decoration.border != null) {
+          final border = decoration.border;
+          if (border is Border) {
+            return border.top.color != Colors.transparent &&
+                border.top.width == 2;
+          }
+        }
+        return false;
+      });
+      expect(hasSelectedBorder, isTrue);
+    });
+
+    testWidgets('edit mode: AppBar shows delete icon', (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Delete expense'), findsOneWidget);
+    });
+
+    testWidgets('edit mode: amount field does not autofocus',
+        (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      final textField = tester.widget<TextField>(
+        find.byType(TextField).first,
+      );
+      expect(textField.autofocus, isFalse);
+    });
+
+    testWidgets('edit mode: delete shows confirmation dialog',
+        (tester) async {
+      await tester.pumpWidget(buildEditSubject(testExpense));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Delete expense'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(r'Delete this $12.50 expense?'),
+        findsOneWidget,
+      );
+      expect(find.text('Keep Expense'), findsOneWidget);
+      expect(find.text('Delete Expense'), findsOneWidget);
     });
   });
 }
