@@ -13,7 +13,7 @@ FinanceTracker delivers a cross-platform expense tracking app in 10 phases. The 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project scaffolding, monorepo structure, backend server, database, and cross-platform Flutter shell (completed 2026-03-15)
-- [ ] **Phase 2: Authentication** - User registration and persistent login sessions
+- [x] **Phase 2: Authentication** - User registration and persistent login sessions (completed 2026-03-15)
 - [ ] **Phase 3: Categories** - User-created expense categories with icons and colors
 - [ ] **Phase 4: Expense Entry** - Fast manual expense logging optimized for speed
 - [ ] **Phase 5: Expense Management** - Edit and delete existing expenses
@@ -183,7 +183,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete    | 2026-03-15 |
-| 2. Authentication | 1/2 | In Progress|  |
+| 2. Authentication | 2/2 | Complete | 2026-03-15 |
 | 3. Categories | 0/? | Not started | - |
 | 4. Expense Entry | 0/? | Not started | - |
 | 5. Expense Management | 0/? | Not started | - |
