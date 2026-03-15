@@ -1,0 +1,63 @@
+import 'package:finance_tracker/features/expenses/data/expense_repository.dart';
+import 'package:finance_tracker/features/expenses/data/models/expense.dart';
+import 'package:finance_tracker/features/expenses/domain/expense_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Manages expense state for the application.
+///
+/// Handles creating expenses and loading the expense list
+/// via [ExpenseRepository].
+class ExpenseNotifier extends StateNotifier<ExpenseState> {
+  /// Creates an [ExpenseNotifier].
+  ExpenseNotifier(this._repository) : super(const ExpenseInitial());
+
+  final ExpenseRepository _repository;
+
+  /// Creates a new expense and prepends it to the loaded list.
+  ///
+  /// Returns `true` on success, `false` on failure.
+  Future<bool> createExpense({
+    required String categoryId,
+    required int amountCents,
+    required String note,
+    required String expenseDate,
+  }) async {
+    try {
+      final expense = await _repository.createExpense(
+        categoryId: categoryId,
+        amountCents: amountCents,
+        note: note,
+        expenseDate: expenseDate,
+      );
+
+      // Prepend new expense so it appears at the top immediately.
+      final currentExpenses = switch (state) {
+        ExpenseLoaded(:final expenses) => expenses,
+        _ => <Expense>[],
+      };
+      state = ExpenseLoaded([expense, ...currentExpenses]);
+      return true;
+    } on Exception catch (e) {
+      state = ExpenseError(e.toString());
+      return false;
+    }
+  }
+
+  /// Loads expenses from the API.
+  Future<void> loadExpenses({int limit = 50, int offset = 0}) async {
+    state = const ExpenseLoading();
+    try {
+      final expenses =
+          await _repository.getExpenses(limit: limit, offset: offset);
+      state = ExpenseLoaded(expenses);
+    } on Exception catch (e) {
+      state = ExpenseError(e.toString());
+    }
+  }
+}
+
+/// Provides the expense state and notifier.
+final expenseStateProvider =
+    StateNotifierProvider<ExpenseNotifier, ExpenseState>((ref) {
+  return ExpenseNotifier(ref.read(expenseRepositoryProvider));
+});
