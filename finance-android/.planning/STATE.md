@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: "Completed 04-01-PLAN.md"
-last_updated: "2026-03-15T21:43:00Z"
-last_activity: 2026-03-15 -- Phase 4 Plan 1 complete (Expense Entry API)
+stopped_at: "Completed 04-02-PLAN.md"
+last_updated: "2026-03-15T21:49:33Z"
+last_activity: 2026-03-15 -- Phase 4 complete (Expense Entry API + Flutter UI)
 progress:
   total_phases: 10
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 100
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 4: Expense Entry -- IN PROGRESS
+**Current focus:** Phase 4: Expense Entry -- COMPLETE
 
 ## Current Position
 
-Phase: 4 of 10 (Expense Entry)
-Plan: 1 of 2 in current phase -- Plan 1 complete
-Status: Plan 04-01 complete (Expense Entry API), ready for Plan 04-02
-Last activity: 2026-03-15 -- Phase 4 Plan 1 complete (Expense Entry API)
+Phase: 4 of 10 (Expense Entry) -- COMPLETE
+Plan: 2 of 2 in current phase -- All plans complete
+Status: Phase 4 complete, ready for Phase 5
+Last activity: 2026-03-15 -- Phase 4 complete (Expense Entry API + Flutter UI)
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 5min
-- Total execution time: 0.55 hours
+- Total execution time: 0.62 hours
 
 **By Phase:**
 
@@ -46,10 +46,10 @@ Progress: [█████████░] 88%
 | 1. Foundation | 2 | 8min | 4min |
 | 2. Authentication | 2 | 8min | 4min |
 | 3. Categories | 2 | 15min | 7.5min |
-| 4. Expense Entry | 1/2 | 3min | 3min |
+| 4. Expense Entry | 2/2 | 7min | 3.5min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (3min), 03-01 (3min), 03-02 (12min), 04-01 (3min)
+- Last 5 plans: 02-02 (3min), 03-01 (3min), 03-02 (12min), 04-01 (3min), 04-02 (4min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -87,6 +87,10 @@ Recent decisions affecting current work:
 - [Phase 04-expense-entry]: amount_cents as BIGINT (int64) -- integer cents, never floating-point
 - [Phase 04-expense-entry]: expense_date defaults to today when omitted from request
 - [Phase 04-expense-entry]: FK ON DELETE RESTRICT on category_id to prevent deleting categories with expenses
+- [Phase 04-expense-entry]: intl NumberFormat.currency for locale-aware dollar formatting
+- [Phase 04-expense-entry]: parseAmountToCents uses .round() not .toInt() to avoid floating-point truncation
+- [Phase 04-expense-entry]: ExpenseNotifier prepends new expense for instant UI update
+- [Phase 04-expense-entry]: FakeExpenseNotifier pattern for widget test mocking
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T21:43:00Z
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-expense-entry/04-01-SUMMARY.md
+Last session: 2026-03-15T21:49:33Z
+Stopped at: Completed 04-02-PLAN.md
+Resume file: .planning/phases/04-expense-entry/04-02-SUMMARY.md
