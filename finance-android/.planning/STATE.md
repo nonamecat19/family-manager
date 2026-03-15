@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-15T22:36:39.127Z"
-last_activity: 2026-03-15 -- Phase 5 Plan 1 complete (Expense Update/Delete API)
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-15T22:43:54.683Z"
+last_activity: 2026-03-15 -- Phase 5 Plan 2 complete (Expense Edit/Delete UI)
 progress:
   total_phases: 10
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 10
-  completed_plans: 9
-  percent: 90
+  completed_plans: 10
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 4: Expense Entry -- COMPLETE
+**Current focus:** Phase 5: Expense Management -- COMPLETE
 
 ## Current Position
 
 Phase: 5 of 10 (Expense Management)
-Plan: 1 of 2 in current phase
-Status: Plan 05-01 complete (Update/Delete API), ready for 05-02
-Last activity: 2026-03-15 -- Phase 5 Plan 1 complete (Expense Update/Delete API)
+Plan: 2 of 2 in current phase
+Status: Phase 5 complete (Edit/Delete API + UI), ready for Phase 6
+Last activity: 2026-03-15 -- Phase 5 Plan 2 complete (Expense Edit/Delete UI)
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 90%
 
 *Updated after each plan completion*
 | Phase 05 P01 | 3min | 2 tasks | 7 files |
+| Phase 05 P02 | 5min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 04-expense-entry]: ExpenseNotifier prepends new expense for instant UI update
 - [Phase 04-expense-entry]: FakeExpenseNotifier pattern for widget test mocking
 - [Phase 05]: UpdateExpense uses :one (RETURNING) for full JSON response; DeleteExpense uses :execrows for not-found detection
+- [Phase 05]: Compact 36x36 circular category chip for ListTile leading (icon only, no text)
+- [Phase 05]: Delete icon in AppBar (not bottom button) matching Material 3 convention
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T22:36:39.125Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-15T22:43:54.681Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
