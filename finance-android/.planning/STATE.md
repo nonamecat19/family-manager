@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-15T20:56:48Z"
-last_activity: 2026-03-15 -- Phase 3 Plan 1 complete (Categories API)
+status: executing
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-15T21:15:00Z"
+last_activity: 2026-03-15 -- Phase 3 complete (Categories Flutter UI)
 progress:
   total_phases: 10
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
   percent: 100
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 3: Categories
+**Current focus:** Phase 3: Categories -- COMPLETE
 
 ## Current Position
 
-Phase: 3 of 10 (Categories) -- IN PROGRESS
-Plan: 1 of 2 in current phase -- Plan 1 complete
-Status: Executing Phase 3
-Last activity: 2026-03-15 -- Phase 3 Plan 1 complete (Categories API)
+Phase: 3 of 10 (Categories) -- COMPLETE
+Plan: 2 of 2 in current phase -- Phase complete
+Status: Phase 3 complete, ready for Phase 4
+Last activity: 2026-03-15 -- Phase 3 complete (Categories Flutter UI)
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 4min
-- Total execution time: 0.3 hours
+- Total plans completed: 6
+- Average duration: 5min
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
@@ -45,11 +45,11 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 1. Foundation | 2 | 8min | 4min |
 | 2. Authentication | 2 | 8min | 4min |
-| 3. Categories | 1 | 3min | 3min |
+| 3. Categories | 2 | 15min | 7.5min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3min), 02-01 (5min), 02-02 (3min), 03-01 (3min)
-- Trend: Steady
+- Last 5 plans: 02-01 (5min), 02-02 (3min), 03-01 (3min), 03-02 (12min)
+- Trend: Steady (03-02 longer due to TDD + checkpoint)
 
 *Updated after each plan completion*
 
@@ -78,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase 03-categories]: :execrows for Update/Delete to detect not-found via rows affected
 - [Phase 03-categories]: No unique index on (user_id, sort_order) -- gaps acceptable during batch reorder
 - [Phase 03-categories]: CategoryDB interface pattern mirroring AuthDB for testability
+- [Phase 03-categories]: CategoryNotifier follows AuthNotifier StateNotifier pattern
+- [Phase 03-categories]: Optimistic reorder with 500ms debounce for responsive UX
+- [Phase 03-categories]: shared_preferences for starter prompt dismissal (client-side)
+- [Phase 03-categories]: Category routes outside ShellRoute (own AppBar, no bottom nav)
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T20:56:48Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-categories/03-01-SUMMARY.md
+Last session: 2026-03-15T21:15:00Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: .planning/phases/03-categories/03-02-SUMMARY.md

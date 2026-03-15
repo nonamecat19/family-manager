@@ -14,11 +14,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Categories
 
-- [ ] **CAT-01**: User can create custom expense categories
-- [ ] **CAT-02**: User can edit category name
-- [ ] **CAT-03**: User can delete categories
-- [ ] **CAT-04**: User can assign an icon to each category
-- [ ] **CAT-05**: User can assign a color to each category
+- [x] **CAT-01**: User can create custom expense categories
+- [x] **CAT-02**: User can edit category name
+- [x] **CAT-03**: User can delete categories
+- [x] **CAT-04**: User can assign an icon to each category
+- [x] **CAT-05**: User can assign a color to each category
 
 ### Expenses
 
