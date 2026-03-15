@@ -17,10 +17,11 @@ var errFKViolation = errors.New("violates foreign key constraint")
 
 // mockExpenseDB implements handler.ExpenseDB for testing.
 type mockExpenseDB struct {
-	expenses []handler.MockExpense
-	nextID   int
-	// If set, CreateExpense returns this error.
+	expenses  []handler.MockExpense
+	nextID    int
 	createErr error
+	updateErr error
+	deleteErr error
 }
 
 func newMockExpenseDB() *mockExpenseDB {
@@ -67,6 +68,36 @@ func (m *mockExpenseDB) GetExpensesByUser(userID string, limit, offset int) ([]h
 	return result, nil
 }
 
+func (m *mockExpenseDB) UpdateExpense(id, userID, categoryID string, amountCents int64, note string, expenseDate time.Time) (handler.MockExpense, error) {
+	if m.updateErr != nil {
+		return handler.MockExpense{}, m.updateErr
+	}
+	for i, exp := range m.expenses {
+		if exp.ID == id && exp.UserID == userID {
+			m.expenses[i].CategoryID = categoryID
+			m.expenses[i].AmountCents = amountCents
+			m.expenses[i].Note = note
+			m.expenses[i].ExpenseDate = expenseDate
+			m.expenses[i].UpdatedAt = time.Now()
+			return m.expenses[i], nil
+		}
+	}
+	return handler.MockExpense{}, handler.ErrExpenseNotFound
+}
+
+func (m *mockExpenseDB) DeleteExpense(id, userID string) error {
+	if m.deleteErr != nil {
+		return m.deleteErr
+	}
+	for i, exp := range m.expenses {
+		if exp.ID == id && exp.UserID == userID {
+			m.expenses = append(m.expenses[:i], m.expenses[i+1:]...)
+			return nil
+		}
+	}
+	return handler.ErrExpenseNotFound
+}
+
 func expIDForIndex(i int) string {
 	return "exp-" + string(rune('0'+i))
 }
@@ -84,6 +115,8 @@ func setupExpenseRouter(db handler.ExpenseDB) *gin.Engine {
 	{
 		expenses.POST("", h.Create)
 		expenses.GET("", h.List)
+		expenses.PUT("/:id", h.Update)
+		expenses.DELETE("/:id", h.Delete)
 	}
 	return r
 }
@@ -342,5 +375,197 @@ func TestListExpenses_WithLimitOffset(t *testing.T) {
 
 	if len(resp) != 1 {
 		t.Fatalf("expected 1 expense with limit=1, got %d", len(resp))
+	}
+}
+
+// --- Update Tests ---
+
+func createTestExpense(t *testing.T, r *gin.Engine) string {
+	t.Helper()
+	body, _ := json.Marshal(map[string]any{
+		"category_id":  "550e8400-e29b-41d4-a716-446655440001",
+		"amount_cents": 1500,
+		"note":         "Lunch",
+		"expense_date": "2026-03-15",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/expenses", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("setup: expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	return resp["id"].(string)
+}
+
+func TestUpdateExpense_Success(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+	id := createTestExpense(t, r)
+
+	body, _ := json.Marshal(map[string]any{
+		"category_id":  "550e8400-e29b-41d4-a716-446655440002",
+		"amount_cents": 2500,
+		"note":         "Dinner",
+		"expense_date": "2026-03-16",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/expenses/"+id, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	json.Unmarshal(w.Body.Bytes(), &resp)
+
+	if resp["amount_cents"] != float64(2500) {
+		t.Fatalf("expected amount_cents 2500, got %v", resp["amount_cents"])
+	}
+	if resp["note"] != "Dinner" {
+		t.Fatalf("expected note Dinner, got %v", resp["note"])
+	}
+	if resp["expense_date"] != "2026-03-16" {
+		t.Fatalf("expected expense_date 2026-03-16, got %v", resp["expense_date"])
+	}
+	if resp["updated_at"] == nil {
+		t.Fatal("response should include updated_at")
+	}
+}
+
+func TestUpdateExpense_NotFound(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	body, _ := json.Marshal(map[string]any{
+		"category_id":  "550e8400-e29b-41d4-a716-446655440001",
+		"amount_cents": 2500,
+		"note":         "Dinner",
+		"expense_date": "2026-03-16",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/expenses/nonexistent-id", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["error"] != "Expense not found" {
+		t.Fatalf("expected 'Expense not found', got %v", resp["error"])
+	}
+}
+
+func TestUpdateExpense_MissingCategoryID(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+	id := createTestExpense(t, r)
+
+	body, _ := json.Marshal(map[string]any{
+		"amount_cents": 2500,
+		"expense_date": "2026-03-16",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/expenses/"+id, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateExpense_InvalidAmount_Zero(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+	id := createTestExpense(t, r)
+
+	body, _ := json.Marshal(map[string]any{
+		"category_id":  "550e8400-e29b-41d4-a716-446655440001",
+		"amount_cents": 0,
+		"expense_date": "2026-03-16",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/expenses/"+id, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestUpdateExpense_InvalidDate(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+	id := createTestExpense(t, r)
+
+	body, _ := json.Marshal(map[string]any{
+		"category_id":  "550e8400-e29b-41d4-a716-446655440001",
+		"amount_cents": 2500,
+		"expense_date": "not-a-date",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/expenses/"+id, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// --- Delete Tests ---
+
+func TestDeleteExpense_Success(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+	id := createTestExpense(t, r)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/expenses/"+id, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify expense is gone
+	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/expenses", nil)
+	listW := httptest.NewRecorder()
+	r.ServeHTTP(listW, listReq)
+
+	var resp []map[string]any
+	json.Unmarshal(listW.Body.Bytes(), &resp)
+	if len(resp) != 0 {
+		t.Fatalf("expected 0 expenses after delete, got %d", len(resp))
+	}
+}
+
+func TestDeleteExpense_NotFound(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/expenses/nonexistent-id", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d: %s", w.Code, w.Body.String())
+	}
+
+	var resp map[string]any
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["error"] != "Expense not found" {
+		t.Fatalf("expected 'Expense not found', got %v", resp["error"])
 	}
 }
