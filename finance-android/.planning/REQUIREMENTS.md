@@ -50,7 +50,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Platform
 
 - [x] **PLAT-01**: App runs on Android, iOS, and web from single Flutter codebase
-- [ ] **PLAT-02**: App works offline and syncs when connectivity is restored
+- [x] **PLAT-02**: App works offline and syncs when connectivity is restored
 
 ## v2 Requirements
 
@@ -113,7 +113,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FAM-02 | Phase 8: Family Groups | Complete |
 | FAM-03 | Phase 9: Family Views | Complete |
 | FAM-04 | Phase 9: Family Views | Complete |
-| PLAT-02 | Phase 10: Offline and Platform Polish | Pending |
+| PLAT-02 | Phase 10: Offline and Platform Polish | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total
