@@ -139,11 +139,11 @@ Plans:
   2. User can generate an invitation for another person to join their family
   3. An invited user can accept the invitation and become a family member
   4. Family membership persists and is visible in the user's profile or settings
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Go backend: families/members/invitations migration, sqlc queries, FamilyDB interface, FamilyHandler endpoints, route wiring, unit tests
+- [ ] 08-02-PLAN.md — Flutter family feature: models, repository, FamilyNotifier, family/create/accept screens, settings integration, deep link routing, widget tests
 
 ### Phase 9: Family Views
 **Goal**: Family members can see each other's spending in a combined feed and summary
@@ -154,7 +154,7 @@ Plans:
   2. Each expense in the family feed shows the name of the person who logged it
   3. Family members can view a summary dashboard with totals per person and per category
   4. Family views update when any member logs, edits, or deletes an expense
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 09-01: TBD
@@ -169,7 +169,7 @@ Plans:
   2. Offline expenses sync to the server when connectivity is restored
   3. App handles sync conflicts gracefully (no data loss, no duplicates)
   4. App is usable and visually consistent across Android, iOS, and web
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 10-01: TBD
