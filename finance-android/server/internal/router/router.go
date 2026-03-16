@@ -10,7 +10,7 @@ import (
 )
 
 // Setup creates and configures the Gin router with CORS middleware and routes.
-func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.ExpenseDB, authSvc *service.AuthService) *gin.Engine {
+func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.ExpenseDB, summaryDB handler.SummaryDB, authSvc *service.AuthService) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(corsMiddleware())
@@ -45,8 +45,10 @@ func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.E
 			}
 
 			expenseHandler := handler.NewExpenseHandler(expenseDB)
+			summaryHandler := handler.NewSummaryHandler(summaryDB)
 			expenses := protected.Group("expenses")
 			{
+				expenses.GET("/summary", summaryHandler.Summary)
 				expenses.POST("", expenseHandler.Create)
 				expenses.GET("", expenseHandler.List)
 				expenses.PUT("/:id", expenseHandler.Update)
