@@ -54,23 +54,22 @@ Exceptions: Touch targets use Material 3 default 48px minimum (ListTile height, 
 
 ## Typography
 
-Uses Material 3 `TextTheme` from `Theme.of(context).textTheme` -- no custom font sizes.
+Uses Material 3 `TextTheme` from `Theme.of(context).textTheme` -- no custom font sizes. Limited to 4 distinct sizes.
 
 | Role | TextTheme Slot | Size | Weight | Line Height |
 |------|---------------|------|--------|-------------|
-| Body | bodyMedium | 14px | 400 (regular) | 1.43 (20px) |
-| Body Large | bodyLarge | 16px | 400 (regular) | 1.5 (24px) |
+| Body | bodyLarge | 16px | 400 (regular) | 1.5 (24px) |
 | Label / Count | bodySmall | 12px | 400 (regular) | 1.33 (16px) |
-| Section Header | titleMedium | 16px | 500 (medium) | 1.5 (24px) |
 | Heading | titleLarge | 22px | 400 (regular) | 1.27 (28px) |
-| Total Amount | headlineMedium | 28px | 400 (regular) | 1.29 (36px) |
+| Display | headlineMedium | 28px | 400 (regular) | 1.29 (36px) |
+
+**Auxiliary weight:** `titleMedium` (16px, weight 500) is used for section headers and amounts. This shares the 16px size with `bodyLarge` (differing only in weight), so it does not count as a fifth size.
 
 **Phase-specific usage:**
 - `titleLarge` (22px): AppBar titles ("Family Expenses", "Family Summary")
 - `headlineMedium` (28px): Family total spent amount on summary dashboard (mirrors MonthlySummary pattern)
-- `titleMedium` (16px): Expense amount in feed tiles, section headers ("By Person", "By Category"), month selector label
-- `bodyLarge` (16px): ListTile titles (member email in per-person breakdown)
-- `bodyMedium` (14px): Expense note/date in feed tiles, "Total Spent" label, spender email subtitle on feed tiles
+- `titleMedium` (16px, w500): Expense amount in feed tiles, section headers ("By Person", "By Category"), month selector label
+- `bodyLarge` (16px): ListTile titles (member email in per-person breakdown), spender email subtitle on feed tiles, expense note text, "Total Spent" label, navigation ListTile subtitles
 - `bodySmall` (12px): Expense count labels ("N expenses"), date trailing text on feed tiles, onSurfaceVariant color
 
 ---
@@ -135,8 +134,8 @@ ListTile:
     Icon(categoryIcon, size: 18, color: Colors.white)
   title: Text(Expense.formatCents(amountCents)) -- titleMedium
   subtitle: Column(crossAxisAlignment: start):
-    Text(userEmail) -- bodyMedium, onSurfaceVariant color
-    if note.isNotEmpty: Text(note) -- bodyMedium
+    Text(userEmail) -- bodyLarge, onSurfaceVariant color
+    if note.isNotEmpty: Text(note) -- bodyLarge
   trailing: Column(mainAxisAlignment: center):
     Text(DateFormat.yMMMd().format(expenseDate)) -- bodySmall
 ```
@@ -171,7 +170,7 @@ Scaffold:
         SingleChildScrollView(physics: AlwaysScrollable):
           // Total section (mirrors MonthlySummary)
           Padding(16px all):
-            Text("Family Total") -- bodyMedium
+            Text("Family Total") -- bodyLarge
             Text(Expense.formatCents(totalCents)) -- headlineMedium
           // Per-person section
           Padding(horizontal: 16):
@@ -215,13 +214,13 @@ Text("Family Spending") -- titleMedium, 16px horizontal padding
 ListTile:
   leading: Icon(Icons.list_alt)
   title: Text("Family Expenses") -- bodyLarge
-  subtitle: Text("See what everyone spent") -- bodyMedium
+  subtitle: Text("See what everyone spent") -- bodyLarge
   trailing: Icon(Icons.chevron_right)
   onTap: context.push('/settings/family/expenses')
 ListTile:
   leading: Icon(Icons.bar_chart)
   title: Text("Family Summary") -- bodyLarge
-  subtitle: Text("Totals by person and category") -- bodyMedium
+  subtitle: Text("Totals by person and category") -- bodyLarge
   trailing: Icon(Icons.chevron_right)
   onTap: context.push('/settings/family/summary')
 ```
