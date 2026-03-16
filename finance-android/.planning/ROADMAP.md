@@ -172,8 +172,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
+- [ ] 10-01-PLAN.md — Local SQLite database (sqflite), expense/category local sources, connectivity provider, sync service with mutex guard, unit tests
+- [ ] 10-02-PLAN.md — Local-first expense creation, offline banner in AppScaffold, pending-sync dots on expense tiles, connectivity-triggered sync with SnackBar feedback, category caching, widget tests
 
 ## Progress
 
@@ -192,4 +192,4 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 7. Visualization | 0/2 | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
 | 9. Family Views | 1/2 | In Progress|  |
-| 10. Offline and Platform Polish | 0/? | Not started | - |
+| 10. Offline and Platform Polish | 0/2 | Not started | - |
