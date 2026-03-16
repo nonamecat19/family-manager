@@ -562,6 +562,112 @@ func TestDeleteExpense_Success(t *testing.T) {
 	}
 }
 
+// --- Filter Tests ---
+
+func TestListExpenses_WithDateFilter(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	// Create 3 expenses with different dates
+	for _, d := range []string{"2026-03-01", "2026-03-10", "2026-03-20"} {
+		body, _ := json.Marshal(map[string]any{
+			"category_id":  "550e8400-e29b-41d4-a716-446655440001",
+			"amount_cents": 1500,
+			"expense_date": d,
+		})
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/expenses", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/expenses?date_from=2026-03-05&date_to=2026-03-15", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	if db.lastFilterDateFrom == nil {
+		t.Fatal("expected date_from to be set")
+	}
+	if db.lastFilterDateFrom.Format("2006-01-02") != "2026-03-05" {
+		t.Fatalf("expected date_from 2026-03-05, got %s", db.lastFilterDateFrom.Format("2006-01-02"))
+	}
+	if db.lastFilterDateTo == nil {
+		t.Fatal("expected date_to to be set")
+	}
+	if db.lastFilterDateTo.Format("2006-01-02") != "2026-03-15" {
+		t.Fatalf("expected date_to 2026-03-15, got %s", db.lastFilterDateTo.Format("2006-01-02"))
+	}
+}
+
+func TestListExpenses_WithCategoryFilter(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	catID := "550e8400-e29b-41d4-a716-446655440099"
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/expenses?category_id="+catID, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	if db.lastFilterCatID != catID {
+		t.Fatalf("expected category_id %s, got %s", catID, db.lastFilterCatID)
+	}
+}
+
+func TestListExpenses_WithCombinedFilters(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	catID := "550e8400-e29b-41d4-a716-446655440099"
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/expenses?date_from=2026-03-01&date_to=2026-03-31&category_id="+catID, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	if db.lastFilterDateFrom == nil || db.lastFilterDateFrom.Format("2006-01-02") != "2026-03-01" {
+		t.Fatalf("expected date_from 2026-03-01")
+	}
+	if db.lastFilterDateTo == nil || db.lastFilterDateTo.Format("2006-01-02") != "2026-03-31" {
+		t.Fatalf("expected date_to 2026-03-31")
+	}
+	if db.lastFilterCatID != catID {
+		t.Fatalf("expected category_id %s, got %s", catID, db.lastFilterCatID)
+	}
+}
+
+func TestListExpenses_NoFilters(t *testing.T) {
+	db := newMockExpenseDB()
+	r := setupExpenseRouter(db)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/expenses", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	if db.lastFilterDateFrom != nil {
+		t.Fatal("expected date_from to be nil for no-filter request")
+	}
+	if db.lastFilterDateTo != nil {
+		t.Fatal("expected date_to to be nil for no-filter request")
+	}
+	if db.lastFilterCatID != "" {
+		t.Fatal("expected category_id to be empty for no-filter request")
+	}
+}
+
 func TestDeleteExpense_NotFound(t *testing.T) {
 	db := newMockExpenseDB()
 	r := setupExpenseRouter(db)
