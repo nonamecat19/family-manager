@@ -17,11 +17,14 @@ var errFKViolation = errors.New("violates foreign key constraint")
 
 // mockExpenseDB implements handler.ExpenseDB for testing.
 type mockExpenseDB struct {
-	expenses  []handler.MockExpense
-	nextID    int
-	createErr error
-	updateErr error
-	deleteErr error
+	expenses          []handler.MockExpense
+	nextID            int
+	createErr         error
+	updateErr         error
+	deleteErr         error
+	lastFilterDateFrom *time.Time
+	lastFilterDateTo   *time.Time
+	lastFilterCatID    string
 }
 
 func newMockExpenseDB() *mockExpenseDB {
@@ -51,6 +54,14 @@ func (m *mockExpenseDB) CreateExpense(userID, categoryID string, amountCents int
 }
 
 func (m *mockExpenseDB) GetExpensesByUser(userID string, limit, offset int) ([]handler.MockExpense, error) {
+	return m.GetExpensesByUserFiltered(userID, limit, offset, nil, nil, "")
+}
+
+func (m *mockExpenseDB) GetExpensesByUserFiltered(userID string, limit, offset int, dateFrom, dateTo *time.Time, categoryID string) ([]handler.MockExpense, error) {
+	m.lastFilterDateFrom = dateFrom
+	m.lastFilterDateTo = dateTo
+	m.lastFilterCatID = categoryID
+
 	var result []handler.MockExpense
 	for _, exp := range m.expenses {
 		if exp.UserID == userID {

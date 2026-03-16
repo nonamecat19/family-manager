@@ -116,6 +116,51 @@ func (db *PgExpenseDB) UpdateExpense(id, userID, categoryID string, amountCents 
 	}, nil
 }
 
+func dateToPgDate(t *time.Time) pgtype.Date {
+	if t == nil {
+		return pgtype.Date{Valid: false}
+	}
+	return pgtype.Date{Time: *t, Valid: true}
+}
+
+func stringToNullableUUID(s string) pgtype.UUID {
+	if s == "" {
+		return pgtype.UUID{Valid: false}
+	}
+	return stringToUUID(s)
+}
+
+func (db *PgExpenseDB) GetExpensesByUserFiltered(userID string, limit, offset int, dateFrom, dateTo *time.Time, categoryID string) ([]MockExpense, error) {
+	uid := stringToUUID(userID)
+
+	rows, err := db.queries.GetExpensesByUserFiltered(context.Background(), sqlc.GetExpensesByUserFilteredParams{
+		UserID:     uid,
+		Limit:      int32(limit),
+		Offset:     int32(offset),
+		DateFrom:   dateToPgDate(dateFrom),
+		DateTo:     dateToPgDate(dateTo),
+		CategoryID: stringToNullableUUID(categoryID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	expenses := make([]MockExpense, len(rows))
+	for i, row := range rows {
+		expenses[i] = MockExpense{
+			ID:          uuidToString(row.ID),
+			UserID:      uuidToString(row.UserID),
+			CategoryID:  uuidToString(row.CategoryID),
+			AmountCents: row.AmountCents,
+			Note:        row.Note,
+			ExpenseDate: row.ExpenseDate.Time,
+			CreatedAt:   row.CreatedAt.Time,
+			UpdatedAt:   row.UpdatedAt.Time,
+		}
+	}
+	return expenses, nil
+}
+
 func (db *PgExpenseDB) DeleteExpense(id, userID string) error {
 	uid := stringToUUID(id)
 	uidUser := stringToUUID(userID)

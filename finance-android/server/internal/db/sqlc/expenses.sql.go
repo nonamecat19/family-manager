@@ -108,6 +108,62 @@ func (q *Queries) GetExpensesByUser(ctx context.Context, arg GetExpensesByUserPa
 	return items, nil
 }
 
+const getExpensesByUserFiltered = `-- name: GetExpensesByUserFiltered :many
+SELECT id, user_id, category_id, amount_cents, note, expense_date, created_at, updated_at
+FROM expenses
+WHERE user_id = $1
+  AND (expense_date >= $4::DATE OR $4 IS NULL)
+  AND (expense_date <= $5::DATE OR $5 IS NULL)
+  AND (category_id = $6 OR $6 IS NULL)
+ORDER BY expense_date DESC, created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type GetExpensesByUserFilteredParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	DateFrom   pgtype.Date `json:"date_from"`
+	DateTo     pgtype.Date `json:"date_to"`
+	CategoryID pgtype.UUID `json:"category_id"`
+}
+
+func (q *Queries) GetExpensesByUserFiltered(ctx context.Context, arg GetExpensesByUserFilteredParams) ([]Expense, error) {
+	rows, err := q.db.Query(ctx, getExpensesByUserFiltered,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.DateFrom,
+		arg.DateTo,
+		arg.CategoryID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Expense
+	for rows.Next() {
+		var i Expense
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CategoryID,
+			&i.AmountCents,
+			&i.Note,
+			&i.ExpenseDate,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateExpense = `-- name: UpdateExpense :one
 UPDATE expenses
 SET category_id = $3, amount_cents = $4, note = $5, expense_date = $6, updated_at = NOW()

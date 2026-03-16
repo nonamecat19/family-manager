@@ -32,6 +32,7 @@ type MockExpense struct {
 type ExpenseDB interface {
 	CreateExpense(userID, categoryID string, amountCents int64, note string, expenseDate time.Time) (MockExpense, error)
 	GetExpensesByUser(userID string, limit, offset int) ([]MockExpense, error)
+	GetExpensesByUserFiltered(userID string, limit, offset int, dateFrom, dateTo *time.Time, categoryID string) ([]MockExpense, error)
 	UpdateExpense(id, userID, categoryID string, amountCents int64, note string, expenseDate time.Time) (MockExpense, error)
 	DeleteExpense(id, userID string) error
 }
@@ -207,7 +208,20 @@ func (h *ExpenseHandler) List(c *gin.Context) {
 		}
 	}
 
-	expenses, err := h.db.GetExpensesByUser(userID, limit, offset)
+	var dateFrom, dateTo *time.Time
+	if df := c.Query("date_from"); df != "" {
+		if t, err := time.Parse("2006-01-02", df); err == nil {
+			dateFrom = &t
+		}
+	}
+	if dt := c.Query("date_to"); dt != "" {
+		if t, err := time.Parse("2006-01-02", dt); err == nil {
+			dateTo = &t
+		}
+	}
+	categoryID := c.Query("category_id")
+
+	expenses, err := h.db.GetExpensesByUserFiltered(userID, limit, offset, dateFrom, dateTo, categoryID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return

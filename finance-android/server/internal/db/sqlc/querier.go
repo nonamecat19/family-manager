@@ -20,6 +20,7 @@ type Querier interface {
 	GetCategoriesByUser(ctx context.Context, userID pgtype.UUID) ([]Category, error)
 	GetCategoryByID(ctx context.Context, arg GetCategoryByIDParams) (Category, error)
 	GetExpensesByUser(ctx context.Context, arg GetExpensesByUserParams) ([]Expense, error)
+	GetExpensesByUserFiltered(ctx context.Context, arg GetExpensesByUserFilteredParams) ([]Expense, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (GetRefreshTokenByHashRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	Ping(ctx context.Context) (int32, error)
