@@ -19,6 +19,11 @@ class SettingsScreen extends ConsumerWidget {
           onTap: () => context.push('/settings/categories'),
         ),
         ListTile(
+          leading: const Icon(Icons.group),
+          title: const Text('Family'),
+          onTap: () => context.push('/settings/family'),
+        ),
+        ListTile(
           leading: const Icon(Icons.logout),
           title: const Text('Log Out'),
           onTap: () {

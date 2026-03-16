@@ -6,6 +6,9 @@ import 'package:finance_tracker/features/categories/data/models/category.dart'
     as models;
 import 'package:finance_tracker/features/categories/presentation/categories_screen.dart';
 import 'package:finance_tracker/features/categories/presentation/category_form_screen.dart';
+import 'package:finance_tracker/features/family/presentation/accept_invite_screen.dart';
+import 'package:finance_tracker/features/family/presentation/create_family_screen.dart';
+import 'package:finance_tracker/features/family/presentation/family_screen.dart';
 import 'package:finance_tracker/features/charts/presentation/charts_screen.dart';
 import 'package:finance_tracker/features/expenses/data/models/expense.dart';
 import 'package:finance_tracker/features/expenses/presentation/expense_form_screen.dart';
@@ -108,6 +111,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings/categories/edit',
         builder: (context, state) => CategoryFormScreen(
           category: state.extra as models.Category?,
+        ),
+      ),
+      // Family management routes (outside ShellRoute -- own AppBar,
+      // no bottom nav).
+      GoRoute(
+        path: '/settings/family',
+        builder: (context, state) => const FamilyScreen(),
+      ),
+      GoRoute(
+        path: '/settings/family/create',
+        builder: (context, state) => const CreateFamilyScreen(),
+      ),
+      GoRoute(
+        path: '/invite/:token',
+        builder: (context, state) => AcceptInviteScreen(
+          token: state.pathParameters['token']!,
         ),
       ),
     ],
