@@ -10,7 +10,7 @@ import (
 )
 
 // Setup creates and configures the Gin router with CORS middleware and routes.
-func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.ExpenseDB, summaryDB handler.SummaryDB, authSvc *service.AuthService) *gin.Engine {
+func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.ExpenseDB, summaryDB handler.SummaryDB, familyDB handler.FamilyDB, authSvc *service.AuthService) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(corsMiddleware())
@@ -53,6 +53,24 @@ func Setup(db handler.AuthDB, categoryDB handler.CategoryDB, expenseDB handler.E
 				expenses.GET("", expenseHandler.List)
 				expenses.PUT("/:id", expenseHandler.Update)
 				expenses.DELETE("/:id", expenseHandler.Delete)
+			}
+
+			familyHandler := handler.NewFamilyHandler(familyDB)
+			families := protected.Group("families")
+			{
+				families.POST("", familyHandler.CreateFamily)
+				families.GET("/me", familyHandler.GetMyFamily)
+				families.DELETE("/me", familyHandler.DeleteMyFamily)
+				families.DELETE("/me/members/:userId", familyHandler.RemoveMember)
+				families.POST("/me/leave", familyHandler.LeaveFamily)
+				families.POST("/me/invitations", familyHandler.CreateInvitation)
+				families.DELETE("/me/invitations/:id", familyHandler.RevokeInvitation)
+			}
+
+			invitations := protected.Group("invitations")
+			{
+				invitations.GET("/:token", familyHandler.GetInvitationInfo)
+				invitations.POST("/accept", familyHandler.AcceptInvitation)
 			}
 		}
 	}
