@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-16T10:30:18.332Z"
-last_activity: 2026-03-16 -- Phase 8 Plan 2 complete (Family Groups Flutter UI)
+status: in_progress
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-16T12:11:15Z"
+last_activity: 2026-03-16 -- Phase 9 Plan 1 complete (Family Views Backend)
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_plans: 18
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 5: Expense Management -- COMPLETE
+**Current focus:** Phase 9: Family Views -- IN PROGRESS
 
 ## Current Position
 
-Phase: 8 of 10 (Family Groups) -- COMPLETE
-Plan: 2 of 2 in current phase
-Status: Phase 8 complete, ready for Phase 9
-Last activity: 2026-03-16 -- Phase 8 Plan 2 complete (Family Groups Flutter UI)
+Phase: 9 of 10 (Family Views) -- IN PROGRESS
+Plan: 1 of 2 in current phase (Plan 1 complete)
+Status: Phase 9 Plan 1 complete, ready for Plan 2
+Last activity: 2026-03-16 -- Phase 9 Plan 1 complete (Family Views Backend)
 
-Progress: [██████████] 100%
+Progress: [█████████ ] 94%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 07 P02 | 4min | 3 tasks | 12 files |
 | Phase 08 P01 | 6min | 2 tasks | 10 files |
 | Phase 08 P02 | 17min | 2 tasks | 13 files |
+| Phase 09 P01 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ Recent decisions affecting current work:
 - [Phase 08]: hide Family from flutter_riverpod imports to avoid Riverpod Family class name collision
 - [Phase 08]: Admin detection via family.adminUserId == currentUserId from authStateProvider
 - [Phase 08]: Invite link format financetracker://invite/{token} copied to clipboard
+- [Phase 09]: FamilyViewDB as separate interface from FamilyDB to keep view queries decoupled from CRUD operations
+- [Phase 09]: Total cents computed by summing member totals server-side (same pattern as SummaryHandler)
 
 ### Pending Todos
 
@@ -128,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T10:25:37Z
-Stopped at: Completed 08-02-PLAN.md
-Resume file: None
+Last session: 2026-03-16T12:11:15Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-family-views/09-02-PLAN.md

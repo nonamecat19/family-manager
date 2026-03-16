@@ -44,8 +44,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **FAM-01**: User can create a family group
 - [x] **FAM-02**: User can invite others to join their family
-- [ ] **FAM-03**: Family members can view combined expense feed showing who spent what
-- [ ] **FAM-04**: Family members can view summary dashboard with per-person and per-category totals
+- [x] **FAM-03**: Family members can view combined expense feed showing who spent what
+- [x] **FAM-04**: Family members can view summary dashboard with per-person and per-category totals
 
 ### Platform
 
@@ -111,8 +111,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VIS-03 | Phase 7: Visualization | Complete |
 | FAM-01 | Phase 8: Family Groups | Complete |
 | FAM-02 | Phase 8: Family Groups | Complete |
-| FAM-03 | Phase 9: Family Views | Pending |
-| FAM-04 | Phase 9: Family Views | Pending |
+| FAM-03 | Phase 9: Family Views | Complete |
+| FAM-04 | Phase 9: Family Views | Complete |
 | PLAT-02 | Phase 10: Offline and Platform Polish | Pending |
 
 **Coverage:**
