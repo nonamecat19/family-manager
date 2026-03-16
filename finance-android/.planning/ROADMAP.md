@@ -109,11 +109,11 @@ Plans:
   2. User can filter expenses to a specific date range and see only matching results
   3. User can filter expenses by category and see only expenses in that category
   4. Filters can be combined (date range + category) and cleared
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Go backend: GetExpensesByUserFiltered sqlc query with optional date_from/date_to/category_id params, List handler filter parsing, unit tests
+- [ ] 06-02-PLAN.md — Flutter filter UI: FilterState provider, filter bar with date/category FilterChips, preset/category picker bottom sheets, widget tests
 
 ### Phase 7: Visualization
 **Goal**: Users can see visual summaries of where their money goes
@@ -188,7 +188,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 3. Categories | 2/2 | Complete | 2026-03-15 |
 | 4. Expense Entry | 1/2 | In Progress|  |
 | 5. Expense Management | 0/2 | Not started | - |
-| 6. History and Filtering | 0/? | Not started | - |
+| 6. History and Filtering | 0/2 | Not started | - |
 | 7. Visualization | 0/? | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
 | 9. Family Views | 0/? | Not started | - |
