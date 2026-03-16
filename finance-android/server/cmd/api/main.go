@@ -27,9 +27,10 @@ func main() {
 	expenseDB := handler.NewPgExpenseDB(queries)
 	summaryDB := handler.NewPgSummaryDB(queries)
 	familyDB := handler.NewPgFamilyDB(queries)
+	familyViewDB := handler.NewPgFamilyViewDB(queries)
 	authSvc := service.NewAuthService(cfg.JWTSecret)
 
-	r := router.Setup(authDB, categoryDB, expenseDB, summaryDB, familyDB, authSvc)
+	r := router.Setup(authDB, categoryDB, expenseDB, summaryDB, familyDB, familyViewDB, authSvc)
 
 	log.Printf("Server starting on :%s", cfg.Port)
 	log.Fatal(r.Run(":" + cfg.Port))
