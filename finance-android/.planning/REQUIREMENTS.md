@@ -30,9 +30,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### History
 
-- [ ] **HIST-01**: User can view expense history sorted by date (newest first)
-- [ ] **HIST-02**: User can filter expenses by date range
-- [ ] **HIST-03**: User can filter expenses by category
+- [x] **HIST-01**: User can view expense history sorted by date (newest first)
+- [x] **HIST-02**: User can filter expenses by date range
+- [x] **HIST-03**: User can filter expenses by category
 
 ### Visualization
 
@@ -103,9 +103,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXP-05 | Phase 4: Expense Entry | Complete |
 | EXP-03 | Phase 5: Expense Management | Complete |
 | EXP-04 | Phase 5: Expense Management | Complete |
-| HIST-01 | Phase 6: History and Filtering | Pending |
-| HIST-02 | Phase 6: History and Filtering | Pending |
-| HIST-03 | Phase 6: History and Filtering | Pending |
+| HIST-01 | Phase 6: History and Filtering | Complete |
+| HIST-02 | Phase 6: History and Filtering | Complete |
+| HIST-03 | Phase 6: History and Filtering | Complete |
 | VIS-01 | Phase 7: Visualization | Pending |
 | VIS-02 | Phase 7: Visualization | Pending |
 | VIS-03 | Phase 7: Visualization | Pending |
