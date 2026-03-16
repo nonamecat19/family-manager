@@ -2,6 +2,7 @@ import 'package:finance_tracker/features/categories/data/models/category.dart';
 import 'package:finance_tracker/features/categories/domain/category_state.dart';
 import 'package:finance_tracker/features/expenses/data/models/expense.dart';
 import 'package:finance_tracker/features/expenses/domain/expense_state.dart';
+import 'package:finance_tracker/features/history/domain/filter_state.dart';
 import 'package:finance_tracker/features/history/presentation/history_screen.dart';
 import 'package:finance_tracker/providers/category_provider.dart';
 import 'package:finance_tracker/providers/expense_provider.dart';
@@ -49,6 +50,9 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
   FakeExpenseNotifier(super.initial);
 
   bool deleteExpenseCalled = false;
+  String? lastDateFrom;
+  String? lastDateTo;
+  String? lastCategoryId;
 
   @override
   Future<bool> createExpense({
@@ -59,7 +63,17 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
   }) async => true;
 
   @override
-  Future<void> loadExpenses({int limit = 50, int offset = 0}) async {}
+  Future<void> loadExpenses({
+    int limit = 50,
+    int offset = 0,
+    String? dateFrom,
+    String? dateTo,
+    String? categoryId,
+  }) async {
+    lastDateFrom = dateFrom;
+    lastDateTo = dateTo;
+    lastCategoryId = categoryId;
+  }
 
   @override
   Future<bool> updateExpense({
@@ -84,6 +98,13 @@ const _testCategories = [
     icon: 'restaurant',
     color: '#FF7043',
     sortOrder: 0,
+  ),
+  Category(
+    id: 'cat-2',
+    name: 'Transport',
+    icon: 'directions_car',
+    color: '#42A5F5',
+    sortOrder: 1,
   ),
 ];
 
@@ -117,7 +138,7 @@ void main() {
     );
   });
 
-  Widget buildSubject() {
+  Widget buildSubject({FilterNotifier? filterNotifier}) {
     final router = GoRouter(
       initialLocation: '/history',
       routes: [
@@ -141,6 +162,9 @@ void main() {
             .overrideWith((_) => fakeCategoryNotifier),
         expenseStateProvider
             .overrideWith((_) => fakeExpenseNotifier),
+        if (filterNotifier != null)
+          filterStateProvider
+              .overrideWith((_) => filterNotifier),
       ],
       child: MaterialApp.router(routerConfig: router),
     );
@@ -241,6 +265,129 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No expenses yet'), findsOneWidget);
+    });
+  });
+
+  group('Filter bar', () {
+    testWidgets('filter bar shows All Dates and All Categories chips',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.text('All Dates'), findsOneWidget);
+      expect(find.text('All Categories'), findsOneWidget);
+    });
+
+    testWidgets('tapping date chip opens date preset bottom sheet',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('All Dates'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter by Date'), findsOneWidget);
+      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('This Week'), findsOneWidget);
+      expect(find.text('This Month'), findsOneWidget);
+      expect(find.text('Last Month'), findsOneWidget);
+      expect(find.text('Custom Range'), findsOneWidget);
+    });
+
+    testWidgets('selecting This Month preset updates chip label',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('All Dates'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('This Month'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('This Month'), findsOneWidget);
+      expect(find.text('All Dates'), findsNothing);
+    });
+
+    testWidgets('tapping category chip opens category picker bottom sheet',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('All Categories'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter by Category'), findsOneWidget);
+      expect(find.text('Food'), findsWidgets);
+      expect(find.text('Transport'), findsOneWidget);
+    });
+
+    testWidgets('selecting a category updates chip label',
+        (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('All Categories'));
+      await tester.pumpAndSettle();
+
+      // Tap the Transport ListTile in the bottom sheet.
+      await tester.tap(find.text('Transport'));
+      await tester.pumpAndSettle();
+
+      // Chip should show Transport now.
+      expect(find.text('Transport'), findsOneWidget);
+      expect(find.text('All Categories'), findsNothing);
+    });
+
+    testWidgets(
+        'empty filter results show No expenses match these filters message',
+        (tester) async {
+      fakeExpenseNotifier = FakeExpenseNotifier(
+        const ExpenseLoaded([]),
+      );
+
+      // Pre-set a filter so the empty state shows the filter message.
+      final filterNotifier = FilterNotifier()
+        ..setDatePreset(
+          'Today',
+          DateTime(2026, 3, 16),
+          DateTime(2026, 3, 16),
+        );
+
+      final router = GoRouter(
+        initialLocation: '/history',
+        routes: [
+          GoRoute(
+            path: '/history',
+            builder: (_, __) => const Scaffold(
+              body: HistoryScreen(),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            categoryStateProvider
+                .overrideWith((_) => fakeCategoryNotifier),
+            expenseStateProvider
+                .overrideWith((_) => fakeExpenseNotifier),
+            filterStateProvider
+                .overrideWith((_) => filterNotifier),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('No expenses match these filters'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Try adjusting your date range or category.'),
+        findsOneWidget,
+      );
     });
   });
 }

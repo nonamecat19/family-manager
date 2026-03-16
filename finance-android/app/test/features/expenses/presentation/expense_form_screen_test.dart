@@ -67,7 +67,7 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
   }
 
   @override
-  Future<void> loadExpenses({int limit = 50, int offset = 0}) async {}
+  Future<void> loadExpenses({int limit = 50, int offset = 0, String? dateFrom, String? dateTo, String? categoryId}) async {}
 
   bool updateExpenseCalled = false;
   bool deleteExpenseCalled = false;
