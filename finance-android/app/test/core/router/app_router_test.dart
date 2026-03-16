@@ -1,8 +1,12 @@
+import 'package:finance_tracker/core/network/connectivity_provider.dart';
 import 'package:finance_tracker/core/router/app_router.dart';
 import 'package:finance_tracker/features/auth/domain/auth_state.dart';
+import 'package:finance_tracker/features/categories/domain/category_state.dart';
 import 'package:finance_tracker/features/expenses/domain/expense_state.dart';
 import 'package:finance_tracker/providers/auth_provider.dart';
+import 'package:finance_tracker/providers/category_provider.dart';
 import 'package:finance_tracker/providers/expense_provider.dart';
+import 'package:finance_tracker/shared/widgets/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +58,39 @@ class FakeExpenseNotifier extends StateNotifier<ExpenseState>
   Future<bool> deleteExpense(String id) async => true;
 }
 
+/// A fake [CategoryNotifier] that stays in loaded state with empty list.
+class FakeCategoryNotifier extends StateNotifier<CategoryState>
+    implements CategoryNotifier {
+  FakeCategoryNotifier() : super(const CategoryLoaded([]));
+
+  @override
+  Future<void> loadCategories() async {}
+
+  @override
+  Future<void> createCategory({
+    required String name,
+    required String icon,
+    required String color,
+  }) async {}
+
+  @override
+  Future<void> updateCategory({
+    required String id,
+    required String name,
+    required String icon,
+    required String color,
+  }) async {}
+
+  @override
+  Future<void> deleteCategory(String id) async {}
+
+  @override
+  void reorderCategories(int oldIndex, int newIndex) {}
+
+  @override
+  Future<void> bulkCreateStarters() async {}
+}
+
 void main() {
   group('AppRouter', () {
     testWidgets(
@@ -91,6 +128,7 @@ void main() {
         );
 
         final fakeExpenseNotifier = FakeExpenseNotifier();
+        final fakeCategoryNotifier = FakeCategoryNotifier();
 
         await tester.pumpWidget(
           ProviderScope(
@@ -98,6 +136,12 @@ void main() {
               authStateProvider.overrideWith((_) => notifier),
               expenseStateProvider
                   .overrideWith((_) => fakeExpenseNotifier),
+              categoryStateProvider
+                  .overrideWith((_) => fakeCategoryNotifier),
+              connectivityProvider
+                  .overrideWith((_) => Stream.value(true)),
+              unsyncedCountProvider
+                  .overrideWith((_) => Future.value(0)),
             ],
             child: Consumer(
               builder: (context, ref, _) {
