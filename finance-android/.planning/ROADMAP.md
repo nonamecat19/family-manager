@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Categories** - User-created expense categories with icons and colors (completed 2026-03-15)
 - [ ] **Phase 4: Expense Entry** - Fast manual expense logging optimized for speed
 - [ ] **Phase 5: Expense Management** - Edit and delete existing expenses
-- [ ] **Phase 6: History and Filtering** - Chronological expense history with date and category filters
+- [x] **Phase 6: History and Filtering** - Chronological expense history with date and category filters (completed 2026-03-16)
 - [ ] **Phase 7: Visualization** - Spending charts and monthly summaries
 - [ ] **Phase 8: Family Groups** - Create families and invite members
 - [ ] **Phase 9: Family Views** - Shared expense feed and family summary dashboard
@@ -188,7 +188,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 3. Categories | 2/2 | Complete | 2026-03-15 |
 | 4. Expense Entry | 1/2 | In Progress|  |
 | 5. Expense Management | 0/2 | Not started | - |
-| 6. History and Filtering | 0/2 | Not started | - |
+| 6. History and Filtering | 2/2 | Complete   | 2026-03-16 |
 | 7. Visualization | 0/? | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
 | 9. Family Views | 0/? | Not started | - |

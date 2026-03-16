@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-16T07:37:05.250Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-16T07:43:39.814Z"
 last_activity: 2026-03-15 -- Phase 5 Plan 2 complete (Expense Edit/Delete UI)
 progress:
   total_phases: 10
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
   percent: 100
 ---
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100%
 | Phase 05 P01 | 3min | 2 tasks | 7 files |
 | Phase 05 P02 | 5min | 3 tasks | 8 files |
 | Phase 06 P01 | 2min | 2 tasks | 5 files |
+| Phase 06 P02 | 5min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Compact 36x36 circular category chip for ListTile leading (icon only, no text)
 - [Phase 05]: Delete icon in AppBar (not bottom button) matching Material 3 convention
 - [Phase 06]: sqlc.narg with ::DATE cast for optional date params; GetExpensesByUserFiltered replaces GetExpensesByUser in List handler
+- [Phase 06]: FilterNotifier as StateNotifier following existing CategoryNotifier/ExpenseNotifier pattern
+- [Phase 06]: ref.listen for filter-change side effects (reload expenses) rather than in-widget imperative calls
 
 ### Pending Todos
 
@@ -111,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T07:37:05.249Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-16T07:43:39.813Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
