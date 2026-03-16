@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-03-16T15:27:10.085Z"
-last_activity: 2026-03-16 -- Phase 10 Plan 1 complete (Offline Data Infrastructure)
+status: complete
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-03-16T15:35:01.795Z"
+last_activity: 2026-03-16 -- Phase 10 Plan 2 complete (Offline App Wiring)
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 20
-  completed_plans: 19
-  percent: 95
+  completed_plans: 20
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can quickly log expenses, categorize them their way, and understand where their money goes -- individually or as a family.
-**Current focus:** Phase 10: Offline and Platform Polish -- IN PROGRESS
+**Current focus:** All phases complete
 
 ## Current Position
 
-Phase: 10 of 10 (Offline and Platform Polish)
-Plan: 2 of 2 in current phase (Plan 1 complete)
-Status: Executing Phase 10
-Last activity: 2026-03-16 -- Phase 10 Plan 1 complete (Offline Data Infrastructure)
+Phase: 10 of 10 (Offline and Platform Polish) -- COMPLETE
+Plan: 2 of 2 in current phase (all complete)
+Status: All 10 phases complete
+Last activity: 2026-03-16 -- Phase 10 Plan 2 complete (Offline App Wiring)
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [██████████] 95%
 | Phase 09 P01 | 3min | 2 tasks | 7 files |
 | Phase 09 P02 | 5min | 2 tasks | 12 files |
 | Phase 10 P01 | 4min | 2 tasks | 11 files |
+| Phase 10 P02 | 4min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Recent decisions affecting current work:
 - [Phase 10]: sqflite_common_ffi for in-memory SQLite in unit tests -- avoids platform channel mocking
 - [Phase 10]: localExpenseSourceProvider throws UnimplementedError until overridden after DB init in main.dart
 - [Phase 10]: SyncService stops on first DioException rather than retrying -- avoids hammering broken connection
+- [Phase 10]: unsyncedCountProvider as FutureProvider.autoDispose for live pending count in offline banner
+- [Phase 10]: ref.listen on connectivityProvider for sync trigger (wasOffline && isOnline transition)
+- [Phase 10]: ref.invalidate(unsyncedCountProvider) after sync to refresh banner count
 
 ### Pending Todos
 
@@ -138,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T15:26:22Z
-Stopped at: Completed 10-01-PLAN.md
-Resume file: .planning/phases/10-offline-platform-polish/10-02-PLAN.md
+Last session: 2026-03-16T15:35:01.794Z
+Stopped at: Completed 10-02-PLAN.md
+Resume file: None
