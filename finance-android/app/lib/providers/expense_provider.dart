@@ -43,12 +43,23 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
     }
   }
 
-  /// Loads expenses from the API.
-  Future<void> loadExpenses({int limit = 50, int offset = 0}) async {
+  /// Loads expenses from the API with optional filters.
+  Future<void> loadExpenses({
+    int limit = 50,
+    int offset = 0,
+    String? dateFrom,
+    String? dateTo,
+    String? categoryId,
+  }) async {
     state = const ExpenseLoading();
     try {
-      final expenses =
-          await _repository.getExpenses(limit: limit, offset: offset);
+      final expenses = await _repository.getExpenses(
+        limit: limit,
+        offset: offset,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        categoryId: categoryId,
+      );
       state = ExpenseLoaded(expenses);
     } on Exception catch (e) {
       state = ExpenseError(e.toString());

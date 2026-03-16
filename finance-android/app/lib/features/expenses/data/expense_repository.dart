@@ -35,11 +35,22 @@ class ExpenseRepository {
     return Expense.fromJson(response.data!);
   }
 
-  /// Fetches expenses for the authenticated user with pagination.
-  Future<List<Expense>> getExpenses({int limit = 50, int offset = 0}) async {
+  /// Fetches expenses for the authenticated user with pagination
+  /// and optional filters.
+  Future<List<Expense>> getExpenses({
+    int limit = 50,
+    int offset = 0,
+    String? dateFrom,
+    String? dateTo,
+    String? categoryId,
+  }) async {
+    final params = <String, dynamic>{'limit': limit, 'offset': offset};
+    if (dateFrom != null) params['date_from'] = dateFrom;
+    if (dateTo != null) params['date_to'] = dateTo;
+    if (categoryId != null) params['category_id'] = categoryId;
     final response = await _dio.get<List<dynamic>>(
       '/expenses',
-      queryParameters: {'limit': limit, 'offset': offset},
+      queryParameters: params,
     );
     return response.data!
         .cast<Map<String, dynamic>>()
