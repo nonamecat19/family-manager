@@ -403,9 +403,24 @@ class _ExpenseTile extends StatelessWidget {
       leading: category != null
           ? _CategoryChipSmall(category: category!)
           : null,
-      title: Text(
-        Expense.formatCents(expense.amountCents),
-        style: theme.textTheme.titleMedium,
+      title: Row(
+        children: [
+          Text(
+            Expense.formatCents(expense.amountCents),
+            style: theme.textTheme.titleMedium,
+          ),
+          if (!expense.synced) ...[
+            const SizedBox(width: 8),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade700,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ],
       ),
       subtitle: Text(
         expense.note.isNotEmpty ? expense.note : dateStr,
