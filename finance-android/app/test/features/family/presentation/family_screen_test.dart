@@ -1,6 +1,5 @@
 import 'package:finance_tracker/features/auth/domain/auth_state.dart';
 import 'package:finance_tracker/features/family/data/models/family.dart';
-import 'package:finance_tracker/features/family/data/models/family_invitation.dart';
 import 'package:finance_tracker/features/family/data/models/family_member.dart';
 import 'package:finance_tracker/features/family/domain/family_notifier.dart';
 import 'package:finance_tracker/features/family/domain/family_state.dart';
@@ -178,6 +177,12 @@ void main() {
         );
         await tester.pump();
 
+        // Scroll down to reveal admin controls below the fold.
+        await tester.scrollUntilVisible(
+          find.text('Copy Invite Link'),
+          200,
+        );
+
         expect(find.text('Copy Invite Link'), findsOneWidget);
         expect(
           find.byIcon(Icons.remove_circle_outline),
@@ -232,6 +237,12 @@ void main() {
         expect(
           find.byIcon(Icons.remove_circle_outline),
           findsNothing,
+        );
+
+        // Scroll down to reveal Leave Family button below the fold.
+        await tester.scrollUntilVisible(
+          find.text('Leave Family'),
+          200,
         );
         expect(find.text('Leave Family'), findsOneWidget);
       },

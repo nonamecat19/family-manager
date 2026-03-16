@@ -6,11 +6,13 @@ import 'package:finance_tracker/features/categories/data/models/category.dart'
     as models;
 import 'package:finance_tracker/features/categories/presentation/categories_screen.dart';
 import 'package:finance_tracker/features/categories/presentation/category_form_screen.dart';
-import 'package:finance_tracker/features/family/presentation/accept_invite_screen.dart';
-import 'package:finance_tracker/features/family/presentation/create_family_screen.dart';
-import 'package:finance_tracker/features/family/presentation/family_screen.dart';
 import 'package:finance_tracker/features/charts/presentation/charts_screen.dart';
 import 'package:finance_tracker/features/expenses/data/models/expense.dart';
+import 'package:finance_tracker/features/family/presentation/accept_invite_screen.dart';
+import 'package:finance_tracker/features/family/presentation/create_family_screen.dart';
+import 'package:finance_tracker/features/family/presentation/family_feed_screen.dart';
+import 'package:finance_tracker/features/family/presentation/family_screen.dart';
+import 'package:finance_tracker/features/family/presentation/family_summary_screen.dart';
 import 'package:finance_tracker/features/expenses/presentation/expense_form_screen.dart';
 import 'package:finance_tracker/features/history/presentation/history_screen.dart';
 import 'package:finance_tracker/features/settings/presentation/settings_screen.dart';
@@ -122,6 +124,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings/family/create',
         builder: (context, state) => const CreateFamilyScreen(),
+      ),
+      GoRoute(
+        path: '/settings/family/expenses',
+        builder: (context, state) => const FamilyFeedScreen(),
+      ),
+      GoRoute(
+        path: '/settings/family/summary',
+        builder: (context, state) => const FamilySummaryScreen(),
       ),
       GoRoute(
         path: '/invite/:token',

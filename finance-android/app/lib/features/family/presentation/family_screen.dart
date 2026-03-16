@@ -214,6 +214,44 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
         ),
         const SizedBox(height: 16),
 
+        // Family spending navigation.
+        const Divider(),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Family Spending',
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListTile(
+          leading: const Icon(Icons.list_alt),
+          title: Text(
+            'Family Expenses',
+            style: theme.textTheme.bodyLarge,
+          ),
+          subtitle: Text(
+            'See what everyone spent',
+            style: theme.textTheme.bodyLarge,
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/settings/family/expenses'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.bar_chart),
+          title: Text(
+            'Family Summary',
+            style: theme.textTheme.bodyLarge,
+          ),
+          subtitle: Text(
+            'Totals by person and category',
+            style: theme.textTheme.bodyLarge,
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/settings/family/summary'),
+        ),
+
         // Admin-only: Pending invitations section.
         if (isAdmin) ...[
           Padding(
