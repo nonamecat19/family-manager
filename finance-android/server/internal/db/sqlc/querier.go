@@ -19,6 +19,8 @@ type Querier interface {
 	DeleteExpense(ctx context.Context, arg DeleteExpenseParams) (int64, error)
 	GetCategoriesByUser(ctx context.Context, userID pgtype.UUID) ([]Category, error)
 	GetCategoryByID(ctx context.Context, arg GetCategoryByIDParams) (Category, error)
+	GetCategoryTotals(ctx context.Context, arg GetCategoryTotalsParams) ([]GetCategoryTotalsRow, error)
+	GetDailyTotals(ctx context.Context, arg GetDailyTotalsParams) ([]GetDailyTotalsRow, error)
 	GetExpensesByUser(ctx context.Context, arg GetExpensesByUserParams) ([]Expense, error)
 	GetExpensesByUserFiltered(ctx context.Context, arg GetExpensesByUserFilteredParams) ([]Expense, error)
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (GetRefreshTokenByHashRow, error)
