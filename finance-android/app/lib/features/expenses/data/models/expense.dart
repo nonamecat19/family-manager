@@ -9,6 +9,7 @@ class Expense {
     required this.amountCents,
     required this.note,
     required this.expenseDate,
+    this.synced = true,
   });
 
   /// Parses an [Expense] from a JSON map (API response).
@@ -19,10 +20,11 @@ class Expense {
       amountCents: json['amount_cents'] as int,
       note: (json['note'] as String?) ?? '',
       expenseDate: DateTime.parse(json['expense_date'] as String),
+      synced: (json['synced'] as bool?) ?? true,
     );
   }
 
-  /// Unique identifier (UUID from server).
+  /// Unique identifier (UUID from server or local UUID).
   final String id;
 
   /// The category this expense belongs to.
@@ -36,6 +38,28 @@ class Expense {
 
   /// The date the expense occurred.
   final DateTime expenseDate;
+
+  /// Whether this expense has been synced to the server.
+  final bool synced;
+
+  /// Returns a copy of this expense with the given fields replaced.
+  Expense copyWith({
+    String? id,
+    String? categoryId,
+    int? amountCents,
+    String? note,
+    DateTime? expenseDate,
+    bool? synced,
+  }) {
+    return Expense(
+      id: id ?? this.id,
+      categoryId: categoryId ?? this.categoryId,
+      amountCents: amountCents ?? this.amountCents,
+      note: note ?? this.note,
+      expenseDate: expenseDate ?? this.expenseDate,
+      synced: synced ?? this.synced,
+    );
+  }
 
   /// Parses a user-entered amount string to integer cents.
   ///

@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:finance_tracker/core/database/local_category_source.dart';
 import 'package:finance_tracker/features/categories/data/category_repository.dart';
 import 'package:finance_tracker/features/categories/domain/category_state.dart';
+import 'package:finance_tracker/features/sync/data/sync_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Default starter categories offered on first visit.
@@ -17,21 +19,39 @@ const List<Map<String, String>> starterCategories = [
 /// Manages category state for the application.
 ///
 /// Handles CRUD operations, reorder (with debounced API call),
-/// and bulk creation of starter categories via [CategoryRepository].
+/// bulk creation of starter categories, and offline caching
+/// via [CategoryRepository] and [LocalCategorySource].
 class CategoryNotifier extends StateNotifier<CategoryState> {
   /// Creates a [CategoryNotifier].
-  CategoryNotifier(this._repository) : super(const CategoryInitial());
+  CategoryNotifier(this._repository, this._localCategorySource)
+      : super(const CategoryInitial());
 
   final CategoryRepository _repository;
+  final LocalCategorySource _localCategorySource;
   Timer? _reorderTimer;
 
   /// Loads all categories for the authenticated user.
+  ///
+  /// On success, caches categories locally for offline use.
+  /// On failure, falls back to the local cache if available.
   Future<void> loadCategories() async {
     state = const CategoryLoading();
     try {
       final categories = await _repository.getCategories();
       state = CategoryLoaded(categories);
+      // Cache for offline use.
+      await _localCategorySource.cacheCategories(categories);
     } on Exception catch (e) {
+      // Try loading from local cache.
+      try {
+        final cached = await _localCategorySource.getCachedCategories();
+        if (cached.isNotEmpty) {
+          state = CategoryLoaded(cached);
+          return;
+        }
+      } on Exception catch (_) {
+        // Cache also failed.
+      }
       state = CategoryError(e.toString());
     }
   }
@@ -129,5 +149,8 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
 /// Provides the category state and notifier.
 final categoryStateProvider =
     StateNotifierProvider<CategoryNotifier, CategoryState>((ref) {
-  return CategoryNotifier(ref.read(categoryRepositoryProvider));
+  return CategoryNotifier(
+    ref.read(categoryRepositoryProvider),
+    ref.read(localCategorySourceProvider),
+  );
 });
