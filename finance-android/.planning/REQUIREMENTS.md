@@ -36,9 +36,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Visualization
 
-- [ ] **VIS-01**: User can view pie chart of spending by category
-- [ ] **VIS-02**: User can view bar chart of spending over time (weekly/monthly)
-- [ ] **VIS-03**: User can view monthly summary (total spent, category breakdown)
+- [x] **VIS-01**: User can view pie chart of spending by category
+- [x] **VIS-02**: User can view bar chart of spending over time (weekly/monthly)
+- [x] **VIS-03**: User can view monthly summary (total spent, category breakdown)
 
 ### Family
 
@@ -106,9 +106,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HIST-01 | Phase 6: History and Filtering | Complete |
 | HIST-02 | Phase 6: History and Filtering | Complete |
 | HIST-03 | Phase 6: History and Filtering | Complete |
-| VIS-01 | Phase 7: Visualization | Pending |
-| VIS-02 | Phase 7: Visualization | Pending |
-| VIS-03 | Phase 7: Visualization | Pending |
+| VIS-01 | Phase 7: Visualization | Complete |
+| VIS-02 | Phase 7: Visualization | Complete |
+| VIS-03 | Phase 7: Visualization | Complete |
 | FAM-01 | Phase 8: Family Groups | Pending |
 | FAM-02 | Phase 8: Family Groups | Pending |
 | FAM-03 | Phase 9: Family Views | Pending |
