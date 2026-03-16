@@ -61,10 +61,12 @@ Uses Material 3 `TextTheme` from `Theme.of(context).textTheme` -- no custom font
 | Body | bodyMedium | 14px | 400 (regular) | 1.43 (20px) |
 | Body Large | bodyLarge | 16px | 400 (regular) | 1.5 (24px) |
 | Label | labelLarge | 14px | 500 (medium) | 1.43 (20px) |
+| Section Header | titleMedium | 16px | 500 (medium) | 1.5 (24px) |
 | Heading | titleLarge | 22px | 400 (regular) | 1.27 (28px) |
 
 **Phase-specific usage:**
 - `titleLarge` (22px): AppBar titles ("Family", "Create Family", "Join Family"), empty state heading
+- `titleMedium` (16px): Section headers within FamilyLoaded screen ("Members", "Pending Invitations")
 - `bodyLarge` (16px): ListTile titles (member names, group name), form labels
 - `bodyMedium` (14px): ListTile subtitles (email addresses, invitation status, timestamps), empty state body copy
 - `labelLarge` (14px): Button text ("Create Family", "Copy Invite Link", "Leave Family")
@@ -109,6 +111,8 @@ Uses Material 3 `ColorScheme.fromSeed(seedColor: Colors.teal)` -- all colors der
 4. **FamilyLoaded (admin view)** -- Group name header, member list with remove buttons, pending invitations section, invite button
 5. **FamilyLoaded (member view)** -- Group name header, member list (no remove buttons), "Leave Family" button at bottom
 
+**Primary visual anchor (FamilyLoaded):** `FilledButton.icon(Icons.link, "Copy Invite Link")` -- full-width, accent-colored, positioned after the member/invitation lists. This is the dominant interactive element on the loaded screen.
+
 **Layout (FamilyLoaded):**
 ```
 AppBar: "Family"
@@ -125,7 +129,7 @@ ListView:
     leading: CircleAvatar(child: Text(initial))
     title: Text(email) -- bodyLarge
     subtitle: Text(role) -- bodyMedium
-    trailing (admin only, non-self): IconButton(Icons.remove_circle_outline, color: error)
+    trailing (admin only, non-self): IconButton(Icons.remove_circle_outline, color: error, tooltip: "Remove member")
   [16px gap]
   --- (admin only) ---
   Text("Pending Invitations") -- titleMedium, 16px horizontal padding
@@ -134,7 +138,7 @@ ListView:
     leading: Icon(Icons.mail_outline)
     title: Text("Invite #N") -- bodyLarge
     subtitle: Text("Expires DATE") -- bodyMedium
-    trailing: IconButton(Icons.close, color: error) -- revoke
+    trailing: IconButton(Icons.close, color: error, tooltip: "Revoke invitation")
   [16px gap]
   FilledButton.icon(Icons.link, "Copy Invite Link") -- full width, 16px horizontal margin
   [32px gap]
@@ -203,7 +207,7 @@ Center:
           [24px gap]
           FilledButton("Join Family") -- full width
           [8px gap]
-          TextButton("Decline")
+          TextButton("Decline Invite")
 ```
 
 **Layout (Error):**
@@ -232,8 +236,8 @@ AlertDialog:
       hintText: "Paste the invite code here"
       maxLines: 1
   actions:
-    TextButton("Cancel")
-    TextButton("Join")
+    TextButton("Dismiss")
+    TextButton("Join Family")
 ```
 
 ### Dialog: Leave Family Confirmation
@@ -243,7 +247,7 @@ AlertDialog:
   title: "Leave FAMILY_NAME?"
   content: "You will be removed from this family group. Your expenses will stay with your account."
   actions:
-    TextButton("Cancel")
+    TextButton("Stay in Family")
     TextButton("Leave", style: error color)
 ```
 
@@ -254,7 +258,7 @@ AlertDialog:
   title: "Remove MEMBER_EMAIL?"
   content: "This person will be removed from the family group. Their expenses will stay with them."
   actions:
-    TextButton("Cancel")
+    TextButton("Keep Member")
     TextButton("Remove", style: error color)
 ```
 
@@ -265,7 +269,7 @@ AlertDialog:
   title: "Delete FAMILY_NAME?"
   content: "As the admin, leaving will dissolve the family group and remove all members."
   actions:
-    TextButton("Cancel")
+    TextButton("Stay")
     TextButton("Delete Family", style: error color)
 ```
 
@@ -292,6 +296,7 @@ AlertDialog:
 | Primary CTA (admin, invite) | "Copy Invite Link" |
 | Primary CTA (accept invite) | "Join Family" |
 | Primary CTA (create form) | "Create Family" |
+| Secondary action (accept invite) | "Decline Invite" |
 | Empty state heading | "No family yet" |
 | Empty state body | "Create a family group to share expense tracking with your household." |
 | Empty state secondary action | "Have an invite code?" |
@@ -299,10 +304,11 @@ AlertDialog:
 | Error state (invalid invite) body | "This invite link has expired or already been used." |
 | Error state (network) | "Something went wrong. Check your connection and try again." |
 | Error state (already in family) | "You're already in a family. Leave your current family first to join a new one." |
-| Destructive: Leave Family | Confirmation: "You will be removed from this family group. Your expenses will stay with your account." |
-| Destructive: Remove Member | Confirmation: "This person will be removed from the family group. Their expenses will stay with them." |
-| Destructive: Delete Family (admin) | Confirmation: "As the admin, leaving will dissolve the family group and remove all members." |
+| Destructive: Leave Family | Dialog dismiss: "Stay in Family". Confirmation: "You will be removed from this family group. Your expenses will stay with your account." |
+| Destructive: Remove Member | Dialog dismiss: "Keep Member". Confirmation: "This person will be removed from the family group. Their expenses will stay with them." |
+| Destructive: Delete Family (admin) | Dialog dismiss: "Stay". Confirmation: "As the admin, leaving will dissolve the family group and remove all members." |
 | Destructive: Revoke Invitation | No confirmation dialog (immediate action, low severity, reversible by creating new invite) |
+| Dialog: Invite Code Entry | Dialog dismiss: "Dismiss". Confirm: "Join Family" |
 
 ---
 
@@ -336,8 +342,8 @@ AlertDialog:
 ### Admin vs Member UI Differences
 | Element | Admin | Member |
 |---------|-------|--------|
-| Remove member buttons | Visible (trailing IconButton on each non-self member) | Hidden |
-| Pending Invitations section | Visible with revoke buttons | Hidden |
+| Remove member buttons | Visible (trailing IconButton on each non-self member, tooltip: "Remove member") | Hidden |
+| Pending Invitations section | Visible with revoke buttons (tooltip: "Revoke invitation") | Hidden |
 | "Copy Invite Link" button | Visible | Hidden |
 | Leave action label | "Leave Family" (triggers delete/dissolve dialog) | "Leave Family" (triggers leave dialog) |
 
