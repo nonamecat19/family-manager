@@ -30,6 +30,32 @@ type Expense struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Family struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	AdminUserID pgtype.UUID        `json:"admin_user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type FamilyInvitation struct {
+	ID            pgtype.UUID        `json:"id"`
+	FamilyID      pgtype.UUID        `json:"family_id"`
+	InviterUserID pgtype.UUID        `json:"inviter_user_id"`
+	TokenHash     string             `json:"token_hash"`
+	Status        string             `json:"status"`
+	ExpiresAt     pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type FamilyMember struct {
+	ID       pgtype.UUID        `json:"id"`
+	FamilyID pgtype.UUID        `json:"family_id"`
+	UserID   pgtype.UUID        `json:"user_id"`
+	Role     string             `json:"role"`
+	JoinedAt pgtype.Timestamptz `json:"joined_at"`
+}
+
 type RefreshToken struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`
