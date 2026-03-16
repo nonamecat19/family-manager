@@ -157,8 +157,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
+- [ ] 09-01-PLAN.md — Go backend: family_expenses sqlc queries, FamilyViewDB interface, FamilyViewHandler with feed and summary endpoints, route wiring, handler tests
+- [ ] 09-02-PLAN.md — Flutter family views: FamilyExpense/FamilySummary models, FamilyViewRepository, feed/summary notifiers, FamilyFeedScreen, FamilySummaryScreen, FamilyScreen navigation, route registration, widget tests
 
 ### Phase 10: Offline and Platform Polish
 **Goal**: The app works without connectivity and syncs when back online, with a polished experience on all platforms
@@ -191,5 +191,5 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 6. History and Filtering | 2/2 | Complete   | 2026-03-16 |
 | 7. Visualization | 0/2 | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
-| 9. Family Views | 0/? | Not started | - |
+| 9. Family Views | 0/2 | Not started | - |
 | 10. Offline and Platform Polish | 0/? | Not started | - |
