@@ -124,11 +124,11 @@ Plans:
   2. User can view a bar chart showing spending over time (weekly or monthly)
   3. User can view a monthly summary showing total spent and per-category breakdown
   4. Charts update to reflect the current data (not stale)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — Go backend: summary SQL queries with category JOIN, SummaryDB interface, SummaryHandler GET endpoint, route wiring, unit tests
+- [ ] 07-02-PLAN.md — Flutter charts UI: fl_chart dependency, ChartData model, ChartRepository, ChartNotifier, pie/bar/summary widgets, ChartsScreen with month navigation, widget tests
 
 ### Phase 8: Family Groups
 **Goal**: Users can create family groups and invite others to join
@@ -189,7 +189,7 @@ Note: Phase 8 depends on Phase 2 (not Phase 7), so Phases 8-9 could theoreticall
 | 4. Expense Entry | 1/2 | In Progress|  |
 | 5. Expense Management | 0/2 | Not started | - |
 | 6. History and Filtering | 2/2 | Complete   | 2026-03-16 |
-| 7. Visualization | 0/? | Not started | - |
+| 7. Visualization | 0/2 | Not started | - |
 | 8. Family Groups | 0/? | Not started | - |
 | 9. Family Views | 0/? | Not started | - |
 | 10. Offline and Platform Polish | 0/? | Not started | - |
