@@ -173,6 +173,7 @@ func (h *FamilyHandler) GetMyFamily(c *gin.Context) {
 			"id":            family.ID,
 			"name":          family.Name,
 			"admin_user_id": family.AdminUserID,
+			"created_at":    family.CreatedAt,
 		},
 		"members": memberList,
 	}
