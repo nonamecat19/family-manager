@@ -1,4 +1,4 @@
-package com.example.noteapp.ui.create
+package com.example.noteapp.ui.lists
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,28 +29,49 @@ import com.example.noteapp.ui.theme.NeuToggle
 import com.example.noteapp.ui.theme.NeuTopBar
 
 @Composable
-fun CreateListScreen(
+fun EditListScreen(
+    listId: String,
+    viewModel: ListDetailViewModel,
     onBack: () -> Unit,
-    onCreate: (title: String, description: String, isPublic: Boolean) -> Unit,
 ) {
     val colors = LocalAppColors.current
     val strings = LocalStrings.current
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var isPublic by remember { mutableStateOf(false) }
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(listId) {
+        if (state.list?.id != listId) {
+            viewModel.loadList(listId)
+        }
+    }
+
+    val list = state.list
+
+    var title by remember(list) { mutableStateOf(list?.title ?: "") }
+    var description by remember(list) { mutableStateOf(list?.description ?: "") }
+    var isPublic by remember(list) { mutableStateOf(list?.isPublic ?: false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        NeuTopBar(title = strings.newListTitle, onBack = onBack)
+        NeuTopBar(title = strings.editListTitle, onBack = onBack)
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 8.dp, vertical = 16.dp),
         ) {
+            if (state.isLoading && list == null) {
+                CircularProgressIndicator(color = colors.accent)
+                return@Column
+            }
+
+            if (state.error != null && list == null) {
+                Text(state.error!!, color = colors.error)
+                return@Column
+            }
+
             NeuTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -66,7 +90,6 @@ fun CreateListScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Public toggle row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,9 +114,12 @@ fun CreateListScreen(
             Spacer(Modifier.height(24.dp))
 
             NeuButton(
-                text = strings.createList,
-                onClick = { onCreate(title, description, isPublic) },
-                enabled = title.isNotBlank(),
+                text = strings.saveChanges,
+                onClick = {
+                    viewModel.updateList(listId, title, description, isPublic) { onBack() }
+                },
+                enabled = title.isNotBlank() && !state.isLoading,
+                loading = state.isLoading,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

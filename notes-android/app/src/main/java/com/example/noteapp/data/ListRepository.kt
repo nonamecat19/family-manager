@@ -1,5 +1,9 @@
 package com.example.noteapp.data
 
+import android.content.Context
+import android.net.Uri
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -165,5 +169,27 @@ class ListRepository(private val client: GraphQLClient) {
             }
         )
         return client.decode(client.extractData(response, "removeTagFromList"))
+    }
+
+    suspend fun reorderItems(listId: String, itemIDs: List<String>): List<NoteItem> {
+        val idsArray = JsonArray(itemIDs.map { JsonPrimitive(it) })
+        val response = client.execute(
+            query = """
+                mutation ReorderItems(${'$'}listId: ID!, ${'$'}ids: [ID!]!) {
+                    reorderItems(listID: ${'$'}listId, itemIDs: ${'$'}ids) {
+                        id type content position createdAt
+                    }
+                }
+            """.trimIndent(),
+            variables = buildJsonObject {
+                put("listId", listId)
+                put("ids", idsArray)
+            }
+        )
+        return client.decode(client.extractData(response, "reorderItems"))
+    }
+
+    suspend fun uploadImage(context: Context, uri: Uri): String {
+        return client.executeUpload(context, uri)
     }
 }

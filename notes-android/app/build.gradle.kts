@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.ktor.serialization.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

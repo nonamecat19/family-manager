@@ -15,6 +15,8 @@ datastorePrefs = "1.0.0"
 coil = "2.6.0"
 lifecycleViewmodelCompose = "2.6.1"
 material-icons = "1.6.0"
+glance = "1.1.0"
+glanceVersion = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +43,8 @@ ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-conte
 ktor-serialization-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-glance = { group = "androidx.glance", name = "glance", version.ref = "glanceVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

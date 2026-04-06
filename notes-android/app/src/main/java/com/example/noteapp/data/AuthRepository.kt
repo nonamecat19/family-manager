@@ -1,5 +1,6 @@
 package com.example.noteapp.data
 
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -59,6 +60,27 @@ class AuthRepository(
             """.trimIndent()
         )
         return client.decode(client.extractData(response, "me"))
+    }
+
+    suspend fun refresh(): AuthPayload {
+        val refreshToken = tokenStore.refreshToken.firstOrNull()
+            ?: throw Exception("No refresh token stored")
+        val response = client.execute(
+            query = """
+                mutation RefreshToken(${'$'}token: String!) {
+                    refreshToken(token: ${'$'}token) {
+                        user { id email username }
+                        accessToken
+                        refreshToken
+                    }
+                }
+            """.trimIndent(),
+            variables = buildJsonObject { put("token", refreshToken) }
+        )
+        val data = client.extractData(response, "refreshToken")
+        val payload: AuthPayload = client.decode(data)
+        tokenStore.save(payload.accessToken, payload.refreshToken)
+        return payload
     }
 
     suspend fun logout() {
