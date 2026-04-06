@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["collection|lib/collection.dart","hooks|lib/src/config.dart","hooks|lib/src/encoded_asset.dart","hooks|lib/src/hooks/syntax.g.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

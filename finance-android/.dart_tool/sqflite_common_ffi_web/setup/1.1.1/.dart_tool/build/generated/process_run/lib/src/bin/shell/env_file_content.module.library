@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["process_run|lib/src/characters.dart","process_run|lib/src/io/io.dart","process_run|lib/src/user_config.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert"],"hasMain":false}

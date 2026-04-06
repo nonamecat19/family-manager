@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["yaml|lib/yaml.dart","hooks|lib/src/config.dart","hooks|lib/src/encoded_asset.dart","hooks|lib/src/extension.dart","hooks|lib/src/user_defines.dart","hooks|lib/src/validation.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async","convert","io"],"hasMain":false}

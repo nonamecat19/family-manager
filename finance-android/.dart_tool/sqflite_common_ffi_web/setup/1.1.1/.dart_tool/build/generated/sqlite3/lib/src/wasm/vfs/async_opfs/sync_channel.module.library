@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqlite3|lib/src/wasm/js_interop.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert","typed_data"],"hasMain":false}

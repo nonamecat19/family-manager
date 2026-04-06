@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["ffi|lib/ffi.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async","ffi"],"hasMain":false}

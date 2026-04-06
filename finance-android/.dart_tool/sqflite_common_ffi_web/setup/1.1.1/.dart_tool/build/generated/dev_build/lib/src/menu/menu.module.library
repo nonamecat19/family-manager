@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["dev_build|lib/src/menu/declarer.dart","dev_build|lib/src/menu/menu_controller.dart","dev_build|lib/src/menu/menu_manager.dart","dev_build|lib/src/menu/menu_presenter.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async"],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["dev_build|lib/src/package/filter_dart_project_options.dart","dev_build|lib/src/package/package.dart","dev_build|lib/src/package/universal/package_universal.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

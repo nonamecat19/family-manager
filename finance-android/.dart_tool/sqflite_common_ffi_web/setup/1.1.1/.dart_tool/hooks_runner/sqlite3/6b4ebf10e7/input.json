@@ -1,0 +1,21 @@
+{
+  "assets": {},
+  "config": {
+    "build_asset_types": [
+      "code_assets/code"
+    ],
+    "extensions": {
+      "code_assets": {
+        "link_mode_preference": "dynamic",
+        "target_architecture": "x64",
+        "target_os": "linux"
+      }
+    },
+    "linking_enabled": false
+  },
+  "out_dir_shared": "/home/nnc/fm/finance-android/app/.dart_tool/sqflite_common_ffi_web/setup/1.1.1/.dart_tool/hooks_runner/shared/sqlite3/build/",
+  "out_file": "/home/nnc/fm/finance-android/app/.dart_tool/sqflite_common_ffi_web/setup/1.1.1/.dart_tool/hooks_runner/sqlite3/6b4ebf10e7/output.json",
+  "package_name": "sqlite3",
+  "package_root": "/home/nnc/.pub-cache/hosted/pub.dev/sqlite3-3.2.0/",
+  "user_defines": {}
+}

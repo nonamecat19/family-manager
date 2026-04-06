@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["web|lib/web.dart","sqlite3|lib/src/implementation/sqlite3.dart","sqlite3|lib/src/wasm/bindings.dart","sqlite3|lib/src/wasm/js_interop.dart","sqlite3|lib/src/wasm/wasm_interop.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["js_interop","js_interop_unsafe","typed_data"],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["dev_build|lib/src/menu/io/menu.dart"],"parts":[],"conditionalDeps":[{"$default":"dev_build|lib/src/menu/io/menu_stub.dart","dart.library.io":"dev_build|lib/src/menu/io/menu_io.dart"}],"sdkDeps":[],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqflite_common|lib/sqlite_api.dart","sqflite_common|lib/src/mixin/import_mixin.dart","sqflite_common|lib/src/logger/sqflite_logger.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

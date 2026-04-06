@@ -1,0 +1,17 @@
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/finance_tracker
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/icudtl.dat
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/lib/libflutter_linux_gtk.so
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/lib/libflutter_secure_storage_linux_plugin.so
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/lib/libsqlite3.so
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/fonts/MaterialIcons-Regular.otf
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/shaders/stretch_effect.frag
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/shaders/ink_sparkle.frag
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.bin
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.bin.json
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/FontManifest.json
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/NOTICES
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/NativeAssetsManifest.json
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/version.json
+/home/nnc/fm/finance-android/app/build/linux/x64/debug/bundle/data/flutter_assets/NOTICES.Z

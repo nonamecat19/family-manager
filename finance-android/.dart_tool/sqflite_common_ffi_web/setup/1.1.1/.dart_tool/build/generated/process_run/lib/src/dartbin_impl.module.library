@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["meta|lib/meta.dart","path|lib/path.dart","process_run|lib/src/io/io.dart","process_run|lib/src/shell_utils.dart","process_run|lib/src/user_config.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

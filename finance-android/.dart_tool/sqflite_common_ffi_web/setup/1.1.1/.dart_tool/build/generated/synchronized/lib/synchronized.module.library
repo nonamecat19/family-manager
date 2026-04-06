@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["synchronized|lib/src/basic_lock.dart","synchronized|lib/src/reentrant_lock.dart","synchronized|lib/src/lock_extension.dart","synchronized|lib/src/multi_lock.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async"],"hasMain":false}

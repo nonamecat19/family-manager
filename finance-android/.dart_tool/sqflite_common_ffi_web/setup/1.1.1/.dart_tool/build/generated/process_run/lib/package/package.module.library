@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["path|lib/path.dart","process_run|lib/src/io/io.dart","pub_semver|lib/pub_semver.dart","yaml|lib/yaml.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

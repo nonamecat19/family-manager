@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["code_assets|lib/code_assets.dart","sqlite3|lib/src/hook/asset_hashes.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["logging|lib/logging.dart","hooks|lib/src/config.dart","hooks|lib/src/api/build_and_link.dart","hooks|lib/src/api/linker.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqflite_common_ffi|lib/src/env_utils.dart","sqflite_common_ffi|lib/src/sqflite_import.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

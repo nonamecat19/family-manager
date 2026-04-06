@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["ffi|lib/src/allocation.dart","ffi|lib/src/arena.dart","ffi|lib/src/utf16.dart","ffi|lib/src/utf8.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

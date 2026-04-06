@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":[],"parts":[],"conditionalDeps":[{"$default":"sqflite_common_ffi|lib/src/database_factory_ffi_io.dart","dart.library.js_interop":"sqflite_common_ffi|lib/src/database_factory_ffi_web.dart"}],"sdkDeps":[],"hasMain":false}

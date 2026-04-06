@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqflite_common|lib/sqlite_api.dart","sqflite_common|lib/src/batch.dart","sqflite_common|lib/src/factory.dart","sqflite_common|lib/src/transaction.dart","sqflite_common|lib/src/cursor.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["sqlite3|lib/common.dart","sqlite3|lib/src/wasm/vfs/simple_opfs.dart","sqlite3|lib/src/wasm/vfs/indexed_db.dart","sqlite3|lib/src/wasm/vfs/async_opfs/client.dart","sqlite3|lib/src/wasm/vfs/async_opfs/worker.dart","sqlite3|lib/src/wasm/sqlite3.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["process_run|lib/shell.dart","sqflite_common_ffi_web|lib/src/setup/setup_io.dart","sqflite_common_ffi_web|tool/setup_example_force.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":true}

@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["dev_build|lib/build_support.dart","http|lib/http.dart","path|lib/path.dart","process_run|lib/shell.dart","pub_semver|lib/pub_semver.dart","sqflite_common_ffi_web|lib/src/constant.dart","sqflite_common_ffi_web|lib/src/setup/setup_common.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async","convert","io"],"hasMain":true}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["hooks|lib/src/args_parser.dart","hooks|lib/src/config.dart","hooks|lib/src/validation.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert","io"],"hasMain":false}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqlite3|lib/src/exception.dart","sqlite3|lib/src/implementation/bindings.dart","sqlite3|lib/src/implementation/database.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

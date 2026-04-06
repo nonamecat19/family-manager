@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["process_run|lib/src/platform/platform_common.dart"],"parts":[],"conditionalDeps":[{"$default":"process_run|lib/src/platform/platform_stub.dart","dart.library.io":"process_run|lib/src/platform/platform_io.dart"}],"sdkDeps":[],"hasMain":false}

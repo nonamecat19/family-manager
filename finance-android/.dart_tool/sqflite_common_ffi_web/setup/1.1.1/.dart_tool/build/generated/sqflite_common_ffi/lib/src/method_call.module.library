@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["meta|lib/meta.dart","sqflite_common_ffi|lib/src/constant.dart","sqflite_common_ffi|lib/src/env_utils.dart","sqflite_common_ffi|lib/src/mixin/handler_mixin.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

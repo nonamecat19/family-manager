@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["process_run|lib/stdio.dart","dev_build|lib/src/content/lines.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

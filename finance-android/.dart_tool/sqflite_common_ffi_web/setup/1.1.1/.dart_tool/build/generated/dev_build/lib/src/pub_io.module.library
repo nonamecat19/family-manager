@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["path|lib/path.dart","process_run|lib/cmd_run.dart","process_run|lib/stdio.dart","dev_build|lib/src/mixin/package.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async"],"hasMain":false}

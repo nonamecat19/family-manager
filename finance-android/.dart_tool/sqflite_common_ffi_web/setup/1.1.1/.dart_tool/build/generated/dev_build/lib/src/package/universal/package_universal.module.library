@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":[],"parts":[],"conditionalDeps":[{"$default":"dev_build|lib/src/package/universal/package_universal_stub.dart","dart.library.io":"dev_build|lib/src/package/universal/package_universal_io.dart"}],"sdkDeps":[],"hasMain":false}

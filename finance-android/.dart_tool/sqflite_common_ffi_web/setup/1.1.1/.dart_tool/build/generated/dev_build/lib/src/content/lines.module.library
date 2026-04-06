@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["yaml|lib/yaml.dart","dev_build|lib/src/content/characters.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert"],"hasMain":false}

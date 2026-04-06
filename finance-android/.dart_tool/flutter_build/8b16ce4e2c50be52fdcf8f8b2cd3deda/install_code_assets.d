@@ -1,0 +1,1 @@
+ /home/nnc/fm/finance-android/app/.dart_tool/flutter_build/8b16ce4e2c50be52fdcf8f8b2cd3deda/native_assets.json /home/nnc/fm/finance-android/app/build/native_assets/linux/libsqlite3.so:  /home/nnc/fm/finance-android/app/.dart_tool/hooks_runner/shared/sqlite3/build/download-1f122164/libsqlite3.so

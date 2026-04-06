@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/nnc/fm/finance-android/app/build/linux/x64/debug/cmake_install.cmake",
+		"/home/nnc/fm/finance-android/app/build/linux/x64/debug/flutter/cmake_install.cmake",
+		"/home/nnc/fm/finance-android/app/build/linux/x64/debug/runner/cmake_install.cmake",
+		"/home/nnc/fm/finance-android/app/build/linux/x64/debug/plugins/flutter_secure_storage_linux/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["web|lib/web.dart","sqlite3|lib/src/wasm/js_interop/core.dart","sqlite3|lib/src/wasm/js_interop/new_file_system_access.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["js_interop"],"hasMain":false}

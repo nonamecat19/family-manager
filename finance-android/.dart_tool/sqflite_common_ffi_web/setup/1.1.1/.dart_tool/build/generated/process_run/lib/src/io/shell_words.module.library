@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["process_run|lib/src/common/ascii_charcodes.dart","string_scanner|lib/string_scanner.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

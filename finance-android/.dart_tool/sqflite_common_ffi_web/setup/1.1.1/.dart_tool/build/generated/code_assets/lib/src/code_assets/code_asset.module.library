@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["hooks|lib/hooks.dart","code_assets|lib/src/code_assets/config.dart","code_assets|lib/src/code_assets/link_mode.dart","code_assets|lib/src/code_assets/os.dart","code_assets|lib/src/code_assets/syntax.g.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

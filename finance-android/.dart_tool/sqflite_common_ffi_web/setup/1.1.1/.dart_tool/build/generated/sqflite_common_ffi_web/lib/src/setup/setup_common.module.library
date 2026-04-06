@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["path|lib/path.dart","sqflite_common_ffi_web|lib/src/setup/sqlite3_wasm_version.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

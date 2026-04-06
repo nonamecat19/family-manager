@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["process_run|lib/src/flutterbin_cmd.dart","process_run|lib/src/common/dartbin.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

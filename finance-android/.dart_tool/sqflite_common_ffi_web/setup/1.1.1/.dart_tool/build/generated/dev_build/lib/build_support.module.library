@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["dev_build|lib/src/mixin/package.dart","dev_build|lib/src/node_support.dart","process_run|lib/shell.dart","dev_build|lib/src/build_support.dart","dev_build|lib/src/package/package_io_impl.dart","dev_build|lib/src/pub_global.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

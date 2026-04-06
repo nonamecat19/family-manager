@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["path|lib/path.dart","web|lib/web.dart","sqlite3|lib/src/constants.dart","sqlite3|lib/src/vfs.dart","sqlite3|lib/src/wasm/js_interop.dart","sqlite3|lib/src/wasm/vfs/async_opfs/sync_channel.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["js_interop"],"hasMain":false}

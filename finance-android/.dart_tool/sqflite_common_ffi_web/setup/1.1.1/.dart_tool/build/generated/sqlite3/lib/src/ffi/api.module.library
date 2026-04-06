@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqlite3|lib/src/database.dart","sqlite3|lib/src/sqlite3.dart","sqlite3|lib/src/statement.dart","sqlite3|lib/src/ffi/libsqlite3.g.dart","sqlite3|lib/src/ffi/implementation.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["ffi"],"hasMain":false}

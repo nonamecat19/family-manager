@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["path|lib/path.dart","typed_data|lib/typed_buffers.dart","sqlite3|lib/src/constants.dart","sqlite3|lib/src/vfs.dart","sqlite3|lib/src/utils.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["math","typed_data"],"hasMain":false}

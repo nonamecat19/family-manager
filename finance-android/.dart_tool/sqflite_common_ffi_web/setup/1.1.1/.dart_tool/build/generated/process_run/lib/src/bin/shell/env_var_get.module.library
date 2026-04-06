@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["process_run|lib/src/bin/shell/env.dart","process_run|lib/src/common/import.dart","process_run|lib/src/io/env_var_get_io.dart","process_run|lib/src/io/io.dart","process_run|lib/src/bin/shell/dump.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":true}

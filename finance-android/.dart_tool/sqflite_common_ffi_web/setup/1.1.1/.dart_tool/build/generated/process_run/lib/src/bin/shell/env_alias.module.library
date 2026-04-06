@@ -1,0 +1,1 @@
+{"isEntrypoint":true,"deps":["process_run|lib/src/bin/shell/env_alias_dump.dart","process_run|lib/src/bin/shell/env_alias_set.dart","process_run|lib/src/bin/shell/env_alias_delete.dart","process_run|lib/src/bin/shell/env_alias_get.dart","process_run|lib/src/bin/shell/import.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":true}

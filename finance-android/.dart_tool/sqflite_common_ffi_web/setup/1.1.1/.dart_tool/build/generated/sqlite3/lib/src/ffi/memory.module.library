@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["ffi|lib/ffi.dart","sqlite3|lib/src/ffi/libsqlite3.g.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert","ffi","typed_data"],"hasMain":false}

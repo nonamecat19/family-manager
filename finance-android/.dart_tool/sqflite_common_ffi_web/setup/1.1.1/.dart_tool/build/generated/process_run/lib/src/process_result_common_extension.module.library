@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["process_run|lib/src/process_cmd.dart","process_run|lib/src/bin/shell/import.dart","process_run|lib/src/lines_utils.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert"],"hasMain":false}

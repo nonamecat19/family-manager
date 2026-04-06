@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["args|lib/args.dart","dev_build|lib/src/import.dart","dev_build|lib/src/menu/presenter_mixin.dart","process_run|lib/shell.dart","process_run|lib/stdio.dart","synchronized|lib/synchronized.dart","dev_build|lib/src/menu/io/menu.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["convert"],"hasMain":false}

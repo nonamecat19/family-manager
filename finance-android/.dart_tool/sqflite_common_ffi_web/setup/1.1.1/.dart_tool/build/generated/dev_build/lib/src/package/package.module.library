@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["dev_build|lib/src/content/lines.dart","dev_build|lib/src/map_utils.dart","dev_build|lib/src/yaml_utils.dart","pub_semver|lib/pub_semver.dart","dev_build|lib/src/package/version_boundary.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":[],"hasMain":false}

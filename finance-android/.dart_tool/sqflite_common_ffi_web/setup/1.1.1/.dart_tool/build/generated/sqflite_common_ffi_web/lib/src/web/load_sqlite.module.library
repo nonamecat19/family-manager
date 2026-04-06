@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["sqflite_common_ffi_web|lib/src/web/load_sqlite_common.dart"],"parts":[],"conditionalDeps":[{"$default":"sqflite_common_ffi_web|lib/src/web/load_sqlite_io.dart","dart.library.js_interop":"sqflite_common_ffi_web|lib/src/web/load_sqlite_web.dart"}],"sdkDeps":[],"hasMain":false}

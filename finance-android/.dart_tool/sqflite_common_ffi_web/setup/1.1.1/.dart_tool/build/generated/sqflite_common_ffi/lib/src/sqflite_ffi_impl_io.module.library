@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["path|lib/path.dart","sqflite_common|lib/src/mixin/constant.dart","sqflite_common|lib/src/mixin/platform.dart","sqlite3|lib/common.dart","sqlite3|lib/sqlite3.dart","sqflite_common_ffi|lib/src/database_tracker.dart","sqflite_common_ffi|lib/src/sqflite_ffi_handler.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["io","typed_data"],"hasMain":false}

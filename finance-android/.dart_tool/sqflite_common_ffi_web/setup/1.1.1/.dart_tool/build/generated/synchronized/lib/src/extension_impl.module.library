@@ -1,0 +1,1 @@
+{"isEntrypoint":false,"deps":["synchronized|lib/src/basic_lock.dart"],"parts":[],"conditionalDeps":[],"sdkDeps":["async"],"hasMain":false}
