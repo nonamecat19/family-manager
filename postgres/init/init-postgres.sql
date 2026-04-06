@@ -1,0 +1,4 @@
+CREATE SCHEMA auth;
+CREATE SCHEMA notes;
+CREATE SCHEMA finance;
+
