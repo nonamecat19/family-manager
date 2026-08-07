@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    // Sources import each other with explicit .ts/.tsx extensions so Node's type-stripping
+    // runtime (used by `pnpm test`) can resolve them without a build step. Safe here because
+    // nothing in this repo emits JS from tsc.
+    "allowImportingTsExtensions": true
+  },
+  "exclude": ["node_modules", "dist", ".expo"]
+}

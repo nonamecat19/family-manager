@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"],
+    // No explicit `types` list: it would force every consumer to depend on every entry,
+    // and a package that uses no React Native APIs should not need its type package.
+    "allowJs": true
+  }
+}
