@@ -29,6 +29,7 @@ graph LR
   end
   subgraph tables
     table_accounts["table:accounts"]
+    table_budgets["table:budgets"]
     table_categories["table:categories"]
     table_families["table:families"]
     table_family_invitations["table:family_invitations"]
@@ -89,12 +90,14 @@ graph LR
   service_finance -->|DEPENDS_ON| golib_logger
   service_finance -->|IMPLEMENTS| proto_libs_proto_finance_v1_finance_proto
   service_finance -->|PERSISTS_TO| table_accounts
+  service_finance -->|PERSISTS_TO| table_budgets
   service_finance -->|PERSISTS_TO| table_categories
   service_finance -->|PERSISTS_TO| table_transactions
   service_finance -->|RUNS_ON| infra_finance
   service_finance -->|RUNS_ON| infra_nats
   service_finance -->|RUNS_ON| infra_postgres
   table_accounts -->|OWNED_BY| service_finance
+  table_budgets -->|OWNED_BY| service_finance
   table_categories -->|OWNED_BY| service_finance
   table_families -->|OWNED_BY| service_family
   table_family_invitations -->|OWNED_BY| service_family

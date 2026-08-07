@@ -453,6 +453,9 @@ func (h *Handler) CreateTransaction(
 		OccurredAt:      h.timestamp(),
 	})
 
+	// After the write, not before: a budget is measured against what is recorded.
+	h.announceBudgetCrossings(ctx, familyID, tx, claims.UserID)
+
 	return connect.NewResponse(&financev1.CreateTransactionResponse{
 		Transaction: toProtoTransaction(tx),
 	}), nil
@@ -605,6 +608,9 @@ func (h *Handler) UpdateTransaction(
 		TransactionId: pgconv.UUIDString(tx.ID),
 		OccurredAt:    h.timestamp(),
 	})
+
+	// Editing an amount upward can cross a limit just as adding a transaction can.
+	h.announceBudgetCrossings(ctx, familyID, tx, claims.UserID)
 
 	return connect.NewResponse(&financev1.UpdateTransactionResponse{
 		Transaction: toProtoTransaction(tx),

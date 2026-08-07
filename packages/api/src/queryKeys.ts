@@ -22,6 +22,11 @@ export const queryKeys = {
   breakdown: (range: DateRange, type: number, accountIds: readonly string[] = []) =>
     ["finance", "breakdown", range, type, [...accountIds].sort()] as const,
 
+  // asOf is part of the key: the same budget has different progress in different windows.
+  budgets: (asOf = "", includeArchived = false) =>
+    ["finance", "budgets", { asOf, includeArchived }] as const,
+  budget: (id: string, asOf = "") => ["finance", "budgets", id, { asOf }] as const,
+
   family: ["family"] as const,
   familyDetail: () => ["family", "detail"] as const,
   members: () => ["family", "members"] as const,

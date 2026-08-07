@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file finance/v1/finance.proto.
  */
 export const file_finance_v1_finance: GenFile = /*@__PURE__*/
-  fileDesc("ChhmaW5hbmNlL3YxL2ZpbmFuY2UucHJvdG8SCmZpbmFuY2UudjEiNAoFTW9uZXkSFAoMYW1vdW50X21pbm9yGAEgASgDEhUKDWN1cnJlbmN5X2NvZGUYAiABKAkiJQoJRGF0ZVJhbmdlEgwKBGZyb20YASABKAkSCgoCdG8YAiABKAki5wIKB0FjY291bnQSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSJQoEdHlwZRgEIAEoDjIXLmZpbmFuY2UudjEuQWNjb3VudFR5cGUSFQoNY3VycmVuY3lfY29kZRgFIAEoCRIiCgdiYWxhbmNlGAYgASgLMhEuZmluYW5jZS52MS5Nb25leRIqCg9vcGVuaW5nX2JhbGFuY2UYByABKAsyES5maW5hbmNlLnYxLk1vbmV5Eg0KBWNvbG9yGAggASgJEgwKBGljb24YCSABKAkSEAoIYXJjaGl2ZWQYCiABKAgSEgoKc29ydF9vcmRlchgLIAEoBRIuCgpjcmVhdGVkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKYAgoIQ2F0ZWdvcnkSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSKQoEa2luZBgEIAEoDjIbLmZpbmFuY2UudjEuVHJhbnNhY3Rpb25UeXBlEg0KBWNvbG9yGAUgASgJEgwKBGljb24YBiABKAkSEQoJcGFyZW50X2lkGAcgASgJEhAKCGFyY2hpdmVkGAggASgIEhIKCnNvcnRfb3JkZXIYCSABKAUSLgoKY3JlYXRlZF9hdBgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAi3gIKC1RyYW5zYWN0aW9uEgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRISCgphY2NvdW50X2lkGAMgASgJEhoKEmNvdW50ZXJfYWNjb3VudF9pZBgEIAEoCRITCgtjYXRlZ29yeV9pZBgFIAEoCRIpCgR0eXBlGAYgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSIQoGYW1vdW50GAcgASgLMhEuZmluYW5jZS52MS5Nb25leRIMCgRub3RlGAggASgJEhMKC29jY3VycmVkX29uGAkgASgJEhoKEmNyZWF0ZWRfYnlfdXNlcl9pZBgKIAEoCRIuCgpjcmVhdGVkX2F0GAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKrAQoUQ3JlYXRlQWNjb3VudFJlcXVlc3QSDAoEbmFtZRgBIAEoCRIlCgR0eXBlGAIgASgOMhcuZmluYW5jZS52MS5BY2NvdW50VHlwZRIVCg1jdXJyZW5jeV9jb2RlGAMgASgJEioKD29wZW5pbmdfYmFsYW5jZRgEIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSDQoFY29sb3IYBSABKAkSDAoEaWNvbhgGIAEoCSI9ChVDcmVhdGVBY2NvdW50UmVzcG9uc2USJAoHYWNjb3VudBgBIAEoCzITLmZpbmFuY2UudjEuQWNjb3VudCIvChNMaXN0QWNjb3VudHNSZXF1ZXN0EhgKEGluY2x1ZGVfYXJjaGl2ZWQYASABKAgiXwoUTGlzdEFjY291bnRzUmVzcG9uc2USJQoIYWNjb3VudHMYASADKAsyEy5maW5hbmNlLnYxLkFjY291bnQSIAoFdG90YWwYAiABKAsyES5maW5hbmNlLnYxLk1vbmV5Ih8KEUdldEFjY291bnRSZXF1ZXN0EgoKAmlkGAEgASgJIjoKEkdldEFjY291bnRSZXNwb25zZRIkCgdhY2NvdW50GAEgASgLMhMuZmluYW5jZS52MS5BY2NvdW50IpoBChRVcGRhdGVBY2NvdW50UmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEiUKBHR5cGUYAyABKA4yFy5maW5hbmNlLnYxLkFjY291bnRUeXBlEg0KBWNvbG9yGAQgASgJEgwKBGljb24YBSABKAkSEAoIYXJjaGl2ZWQYBiABKAgSEgoKc29ydF9vcmRlchgHIAEoBSI9ChVVcGRhdGVBY2NvdW50UmVzcG9uc2USJAoHYWNjb3VudBgBIAEoCzITLmZpbmFuY2UudjEuQWNjb3VudCIiChREZWxldGVBY2NvdW50UmVxdWVzdBIKCgJpZBgBIAEoCSIXChVEZWxldGVBY2NvdW50UmVzcG9uc2UigAEKFUNyZWF0ZUNhdGVnb3J5UmVxdWVzdBIMCgRuYW1lGAEgASgJEikKBGtpbmQYAiABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRINCgVjb2xvchgDIAEoCRIMCgRpY29uGAQgASgJEhEKCXBhcmVudF9pZBgFIAEoCSJAChZDcmVhdGVDYXRlZ29yeVJlc3BvbnNlEiYKCGNhdGVnb3J5GAEgASgLMhQuZmluYW5jZS52MS5DYXRlZ29yeSJcChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QSKQoEa2luZBgBIAEoDjIbLmZpbmFuY2UudjEuVHJhbnNhY3Rpb25UeXBlEhgKEGluY2x1ZGVfYXJjaGl2ZWQYAiABKAgiQgoWTGlzdENhdGVnb3JpZXNSZXNwb25zZRIoCgpjYXRlZ29yaWVzGAEgAygLMhQuZmluYW5jZS52MS5DYXRlZ29yeSKHAQoVVXBkYXRlQ2F0ZWdvcnlSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDQoFY29sb3IYAyABKAkSDAoEaWNvbhgEIAEoCRIRCglwYXJlbnRfaWQYBSABKAkSEAoIYXJjaGl2ZWQYBiABKAgSEgoKc29ydF9vcmRlchgHIAEoBSJAChZVcGRhdGVDYXRlZ29yeVJlc3BvbnNlEiYKCGNhdGVnb3J5GAEgASgLMhQuZmluYW5jZS52MS5DYXRlZ29yeSIjChVEZWxldGVDYXRlZ29yeVJlcXVlc3QSCgoCaWQYASABKAkiGAoWRGVsZXRlQ2F0ZWdvcnlSZXNwb25zZSLQAQoYQ3JlYXRlVHJhbnNhY3Rpb25SZXF1ZXN0EhIKCmFjY291bnRfaWQYASABKAkSGgoSY291bnRlcl9hY2NvdW50X2lkGAIgASgJEhMKC2NhdGVnb3J5X2lkGAMgASgJEikKBHR5cGUYBCABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRIhCgZhbW91bnQYBSABKAsyES5maW5hbmNlLnYxLk1vbmV5EgwKBG5vdGUYBiABKAkSEwoLb2NjdXJyZWRfb24YByABKAkiSQoZQ3JlYXRlVHJhbnNhY3Rpb25SZXNwb25zZRIsCgt0cmFuc2FjdGlvbhgBIAEoCzIXLmZpbmFuY2UudjEuVHJhbnNhY3Rpb24izAEKF0xpc3RUcmFuc2FjdGlvbnNSZXF1ZXN0EiQKBXJhbmdlGAEgASgLMhUuZmluYW5jZS52MS5EYXRlUmFuZ2USEwoLYWNjb3VudF9pZHMYAiADKAkSFAoMY2F0ZWdvcnlfaWRzGAMgAygJEikKBHR5cGUYBCABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRIOCgZzZWFyY2gYBSABKAkSEQoJcGFnZV9zaXplGAYgASgFEhIKCnBhZ2VfdG9rZW4YByABKAkiYgoYTGlzdFRyYW5zYWN0aW9uc1Jlc3BvbnNlEi0KDHRyYW5zYWN0aW9ucxgBIAMoCzIXLmZpbmFuY2UudjEuVHJhbnNhY3Rpb24SFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJIiMKFUdldFRyYW5zYWN0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCSJGChZHZXRUcmFuc2FjdGlvblJlc3BvbnNlEiwKC3RyYW5zYWN0aW9uGAEgASgLMhcuZmluYW5jZS52MS5UcmFuc2FjdGlvbiLcAQoYVXBkYXRlVHJhbnNhY3Rpb25SZXF1ZXN0EgoKAmlkGAEgASgJEhIKCmFjY291bnRfaWQYAiABKAkSGgoSY291bnRlcl9hY2NvdW50X2lkGAMgASgJEhMKC2NhdGVnb3J5X2lkGAQgASgJEikKBHR5cGUYBSABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRIhCgZhbW91bnQYBiABKAsyES5maW5hbmNlLnYxLk1vbmV5EgwKBG5vdGUYByABKAkSEwoLb2NjdXJyZWRfb24YCCABKAkiSQoZVXBkYXRlVHJhbnNhY3Rpb25SZXNwb25zZRIsCgt0cmFuc2FjdGlvbhgBIAEoCzIXLmZpbmFuY2UudjEuVHJhbnNhY3Rpb24iJgoYRGVsZXRlVHJhbnNhY3Rpb25SZXF1ZXN0EgoKAmlkGAEgASgJIhsKGURlbGV0ZVRyYW5zYWN0aW9uUmVzcG9uc2UiTgoRR2V0U3VtbWFyeVJlcXVlc3QSJAoFcmFuZ2UYASABKAsyFS5maW5hbmNlLnYxLkRhdGVSYW5nZRITCgthY2NvdW50X2lkcxgCIAMoCSKfAQoSR2V0U3VtbWFyeVJlc3BvbnNlEiEKBmluY29tZRgBIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSIgoHZXhwZW5zZRgCIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSHgoDbmV0GAMgASgLMhEuZmluYW5jZS52MS5Nb25leRIiCgdiYWxhbmNlGAQgASgLMhEuZmluYW5jZS52MS5Nb25leSKWAQoNQ2F0ZWdvcnlTbGljZRITCgtjYXRlZ29yeV9pZBgBIAEoCRIVCg1jYXRlZ29yeV9uYW1lGAIgASgJEg0KBWNvbG9yGAMgASgJEiAKBXRvdGFsGAQgASgLMhEuZmluYW5jZS52MS5Nb25leRINCgVzaGFyZRgFIAEoARIZChF0cmFuc2FjdGlvbl9jb3VudBgGIAEoBSKDAQobR2V0Q2F0ZWdvcnlCcmVha2Rvd25SZXF1ZXN0EiQKBXJhbmdlGAEgASgLMhUuZmluYW5jZS52MS5EYXRlUmFuZ2USKQoEdHlwZRgCIAEoDjIbLmZpbmFuY2UudjEuVHJhbnNhY3Rpb25UeXBlEhMKC2FjY291bnRfaWRzGAMgAygJImsKHEdldENhdGVnb3J5QnJlYWtkb3duUmVzcG9uc2USKQoGc2xpY2VzGAEgAygLMhkuZmluYW5jZS52MS5DYXRlZ29yeVNsaWNlEiAKBXRvdGFsGAIgASgLMhEuZmluYW5jZS52MS5Nb25leSKIAgoXVHJhbnNhY3Rpb25DcmVhdGVkRXZlbnQSEQoJZmFtaWx5X2lkGAEgASgJEhYKDnRyYW5zYWN0aW9uX2lkGAIgASgJEhIKCmFjY291bnRfaWQYAyABKAkSEwoLY2F0ZWdvcnlfaWQYBCABKAkSKQoEdHlwZRgFIAEoDjIbLmZpbmFuY2UudjEuVHJhbnNhY3Rpb25UeXBlEiEKBmFtb3VudBgGIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSGgoSY3JlYXRlZF9ieV91c2VyX2lkGAcgASgJEi8KC29jY3VycmVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ1ChdUcmFuc2FjdGlvblVwZGF0ZWRFdmVudBIRCglmYW1pbHlfaWQYASABKAkSFgoOdHJhbnNhY3Rpb25faWQYAiABKAkSLwoLb2NjdXJyZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wInUKF1RyYW5zYWN0aW9uRGVsZXRlZEV2ZW50EhEKCWZhbWlseV9pZBgBIAEoCRIWCg50cmFuc2FjdGlvbl9pZBgCIAEoCRIvCgtvY2N1cnJlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAqoQEKC0FjY291bnRUeXBlEhwKGEFDQ09VTlRfVFlQRV9VTlNQRUNJRklFRBAAEhUKEUFDQ09VTlRfVFlQRV9DQVNIEAESFQoRQUNDT1VOVF9UWVBFX0NBUkQQAhIVChFBQ0NPVU5UX1RZUEVfQkFOSxADEhgKFEFDQ09VTlRfVFlQRV9TQVZJTkdTEAQSFQoRQUNDT1VOVF9UWVBFX0RFQlQQBSqNAQoPVHJhbnNhY3Rpb25UeXBlEiAKHFRSQU5TQUNUSU9OX1RZUEVfVU5TUEVDSUZJRUQQABIcChhUUkFOU0FDVElPTl9UWVBFX0VYUEVOU0UQARIbChdUUkFOU0FDVElPTl9UWVBFX0lOQ09NRRACEh0KGVRSQU5TQUNUSU9OX1RZUEVfVFJBTlNGRVIQAzKsCwoORmluYW5jZVNlcnZpY2USVAoNQ3JlYXRlQWNjb3VudBIgLmZpbmFuY2UudjEuQ3JlYXRlQWNjb3VudFJlcXVlc3QaIS5maW5hbmNlLnYxLkNyZWF0ZUFjY291bnRSZXNwb25zZRJRCgxMaXN0QWNjb3VudHMSHy5maW5hbmNlLnYxLkxpc3RBY2NvdW50c1JlcXVlc3QaIC5maW5hbmNlLnYxLkxpc3RBY2NvdW50c1Jlc3BvbnNlEksKCkdldEFjY291bnQSHS5maW5hbmNlLnYxLkdldEFjY291bnRSZXF1ZXN0Gh4uZmluYW5jZS52MS5HZXRBY2NvdW50UmVzcG9uc2USVAoNVXBkYXRlQWNjb3VudBIgLmZpbmFuY2UudjEuVXBkYXRlQWNjb3VudFJlcXVlc3QaIS5maW5hbmNlLnYxLlVwZGF0ZUFjY291bnRSZXNwb25zZRJUCg1EZWxldGVBY2NvdW50EiAuZmluYW5jZS52MS5EZWxldGVBY2NvdW50UmVxdWVzdBohLmZpbmFuY2UudjEuRGVsZXRlQWNjb3VudFJlc3BvbnNlElcKDkNyZWF0ZUNhdGVnb3J5EiEuZmluYW5jZS52MS5DcmVhdGVDYXRlZ29yeVJlcXVlc3QaIi5maW5hbmNlLnYxLkNyZWF0ZUNhdGVnb3J5UmVzcG9uc2USVwoOTGlzdENhdGVnb3JpZXMSIS5maW5hbmNlLnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBoiLmZpbmFuY2UudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJXCg5VcGRhdGVDYXRlZ29yeRIhLmZpbmFuY2UudjEuVXBkYXRlQ2F0ZWdvcnlSZXF1ZXN0GiIuZmluYW5jZS52MS5VcGRhdGVDYXRlZ29yeVJlc3BvbnNlElcKDkRlbGV0ZUNhdGVnb3J5EiEuZmluYW5jZS52MS5EZWxldGVDYXRlZ29yeVJlcXVlc3QaIi5maW5hbmNlLnYxLkRlbGV0ZUNhdGVnb3J5UmVzcG9uc2USYAoRQ3JlYXRlVHJhbnNhY3Rpb24SJC5maW5hbmNlLnYxLkNyZWF0ZVRyYW5zYWN0aW9uUmVxdWVzdBolLmZpbmFuY2UudjEuQ3JlYXRlVHJhbnNhY3Rpb25SZXNwb25zZRJdChBMaXN0VHJhbnNhY3Rpb25zEiMuZmluYW5jZS52MS5MaXN0VHJhbnNhY3Rpb25zUmVxdWVzdBokLmZpbmFuY2UudjEuTGlzdFRyYW5zYWN0aW9uc1Jlc3BvbnNlElcKDkdldFRyYW5zYWN0aW9uEiEuZmluYW5jZS52MS5HZXRUcmFuc2FjdGlvblJlcXVlc3QaIi5maW5hbmNlLnYxLkdldFRyYW5zYWN0aW9uUmVzcG9uc2USYAoRVXBkYXRlVHJhbnNhY3Rpb24SJC5maW5hbmNlLnYxLlVwZGF0ZVRyYW5zYWN0aW9uUmVxdWVzdBolLmZpbmFuY2UudjEuVXBkYXRlVHJhbnNhY3Rpb25SZXNwb25zZRJgChFEZWxldGVUcmFuc2FjdGlvbhIkLmZpbmFuY2UudjEuRGVsZXRlVHJhbnNhY3Rpb25SZXF1ZXN0GiUuZmluYW5jZS52MS5EZWxldGVUcmFuc2FjdGlvblJlc3BvbnNlEksKCkdldFN1bW1hcnkSHS5maW5hbmNlLnYxLkdldFN1bW1hcnlSZXF1ZXN0Gh4uZmluYW5jZS52MS5HZXRTdW1tYXJ5UmVzcG9uc2USaQoUR2V0Q2F0ZWdvcnlCcmVha2Rvd24SJy5maW5hbmNlLnYxLkdldENhdGVnb3J5QnJlYWtkb3duUmVxdWVzdBooLmZpbmFuY2UudjEuR2V0Q2F0ZWdvcnlCcmVha2Rvd25SZXNwb25zZUKiAQoOY29tLmZpbmFuY2UudjFCDEZpbmFuY2VQcm90b1ABWjlnaXRodWIuY29tL25uYy9mYW1pbHktbWFuYWdlci9zZGsvZ28vZmluYW5jZS92MTtmaW5hbmNldjGiAgNGWFiqAgpGaW5hbmNlLlYxygIKRmluYW5jZVxWMeICFkZpbmFuY2VcVjFcR1BCTWV0YWRhdGHqAgtGaW5hbmNlOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChhmaW5hbmNlL3YxL2ZpbmFuY2UucHJvdG8SCmZpbmFuY2UudjEiNAoFTW9uZXkSFAoMYW1vdW50X21pbm9yGAEgASgDEhUKDWN1cnJlbmN5X2NvZGUYAiABKAkiJQoJRGF0ZVJhbmdlEgwKBGZyb20YASABKAkSCgoCdG8YAiABKAki5wIKB0FjY291bnQSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSJQoEdHlwZRgEIAEoDjIXLmZpbmFuY2UudjEuQWNjb3VudFR5cGUSFQoNY3VycmVuY3lfY29kZRgFIAEoCRIiCgdiYWxhbmNlGAYgASgLMhEuZmluYW5jZS52MS5Nb25leRIqCg9vcGVuaW5nX2JhbGFuY2UYByABKAsyES5maW5hbmNlLnYxLk1vbmV5Eg0KBWNvbG9yGAggASgJEgwKBGljb24YCSABKAkSEAoIYXJjaGl2ZWQYCiABKAgSEgoKc29ydF9vcmRlchgLIAEoBRIuCgpjcmVhdGVkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKYAgoIQ2F0ZWdvcnkSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSKQoEa2luZBgEIAEoDjIbLmZpbmFuY2UudjEuVHJhbnNhY3Rpb25UeXBlEg0KBWNvbG9yGAUgASgJEgwKBGljb24YBiABKAkSEQoJcGFyZW50X2lkGAcgASgJEhAKCGFyY2hpdmVkGAggASgIEhIKCnNvcnRfb3JkZXIYCSABKAUSLgoKY3JlYXRlZF9hdBgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgLIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAi3gIKC1RyYW5zYWN0aW9uEgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRISCgphY2NvdW50X2lkGAMgASgJEhoKEmNvdW50ZXJfYWNjb3VudF9pZBgEIAEoCRITCgtjYXRlZ29yeV9pZBgFIAEoCRIpCgR0eXBlGAYgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSIQoGYW1vdW50GAcgASgLMhEuZmluYW5jZS52MS5Nb25leRIMCgRub3RlGAggASgJEhMKC29jY3VycmVkX29uGAkgASgJEhoKEmNyZWF0ZWRfYnlfdXNlcl9pZBgKIAEoCRIuCgpjcmVhdGVkX2F0GAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKuAgoGQnVkZ2V0EgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhMKC2NhdGVnb3J5X2lkGAQgASgJEiAKBWxpbWl0GAUgASgLMhEuZmluYW5jZS52MS5Nb25leRIoCgZwZXJpb2QYBiABKA4yGC5maW5hbmNlLnYxLkJ1ZGdldFBlcmlvZBIQCghzdGFydF9vbhgHIAEoCRIQCghhcmNoaXZlZBgIIAEoCBISCgpzb3J0X29yZGVyGAkgASgFEi4KCmNyZWF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wItoBCgxCdWRnZXRTdGF0dXMSIgoGYnVkZ2V0GAEgASgLMhIuZmluYW5jZS52MS5CdWRnZXQSJQoGcGVyaW9kGAIgASgLMhUuZmluYW5jZS52MS5EYXRlUmFuZ2USIAoFc3BlbnQYAyABKAsyES5maW5hbmNlLnYxLk1vbmV5EiQKCXJlbWFpbmluZxgEIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSDQoFc2hhcmUYBSABKAESEAoIZXhjZWVkZWQYBiABKAgSFgoOZGF5c19yZW1haW5pbmcYByABKAUilgEKE0NyZWF0ZUJ1ZGdldFJlcXVlc3QSDAoEbmFtZRgBIAEoCRITCgtjYXRlZ29yeV9pZBgCIAEoCRIgCgVsaW1pdBgDIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSKAoGcGVyaW9kGAQgASgOMhguZmluYW5jZS52MS5CdWRnZXRQZXJpb2QSEAoIc3RhcnRfb24YBSABKAkiOgoUQ3JlYXRlQnVkZ2V0UmVzcG9uc2USIgoGYnVkZ2V0GAEgASgLMhIuZmluYW5jZS52MS5CdWRnZXQiPQoSTGlzdEJ1ZGdldHNSZXF1ZXN0EhgKEGluY2x1ZGVfYXJjaGl2ZWQYASABKAgSDQoFYXNfb2YYAiABKAkiQAoTTGlzdEJ1ZGdldHNSZXNwb25zZRIpCgdidWRnZXRzGAEgAygLMhguZmluYW5jZS52MS5CdWRnZXRTdGF0dXMiLQoQR2V0QnVkZ2V0UmVxdWVzdBIKCgJpZBgBIAEoCRINCgVhc19vZhgCIAEoCSI9ChFHZXRCdWRnZXRSZXNwb25zZRIoCgZidWRnZXQYASABKAsyGC5maW5hbmNlLnYxLkJ1ZGdldFN0YXR1cyLIAQoTVXBkYXRlQnVkZ2V0UmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEhMKC2NhdGVnb3J5X2lkGAMgASgJEiAKBWxpbWl0GAQgASgLMhEuZmluYW5jZS52MS5Nb25leRIoCgZwZXJpb2QYBSABKA4yGC5maW5hbmNlLnYxLkJ1ZGdldFBlcmlvZBIQCghzdGFydF9vbhgGIAEoCRIQCghhcmNoaXZlZBgHIAEoCBISCgpzb3J0X29yZGVyGAggASgFIjoKFFVwZGF0ZUJ1ZGdldFJlc3BvbnNlEiIKBmJ1ZGdldBgBIAEoCzISLmZpbmFuY2UudjEuQnVkZ2V0IiEKE0RlbGV0ZUJ1ZGdldFJlcXVlc3QSCgoCaWQYASABKAkiFgoURGVsZXRlQnVkZ2V0UmVzcG9uc2UiqwEKFENyZWF0ZUFjY291bnRSZXF1ZXN0EgwKBG5hbWUYASABKAkSJQoEdHlwZRgCIAEoDjIXLmZpbmFuY2UudjEuQWNjb3VudFR5cGUSFQoNY3VycmVuY3lfY29kZRgDIAEoCRIqCg9vcGVuaW5nX2JhbGFuY2UYBCABKAsyES5maW5hbmNlLnYxLk1vbmV5Eg0KBWNvbG9yGAUgASgJEgwKBGljb24YBiABKAkiPQoVQ3JlYXRlQWNjb3VudFJlc3BvbnNlEiQKB2FjY291bnQYASABKAsyEy5maW5hbmNlLnYxLkFjY291bnQiLwoTTGlzdEFjY291bnRzUmVxdWVzdBIYChBpbmNsdWRlX2FyY2hpdmVkGAEgASgIIl8KFExpc3RBY2NvdW50c1Jlc3BvbnNlEiUKCGFjY291bnRzGAEgAygLMhMuZmluYW5jZS52MS5BY2NvdW50EiAKBXRvdGFsGAIgASgLMhEuZmluYW5jZS52MS5Nb25leSIfChFHZXRBY2NvdW50UmVxdWVzdBIKCgJpZBgBIAEoCSI6ChJHZXRBY2NvdW50UmVzcG9uc2USJAoHYWNjb3VudBgBIAEoCzITLmZpbmFuY2UudjEuQWNjb3VudCKaAQoUVXBkYXRlQWNjb3VudFJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIlCgR0eXBlGAMgASgOMhcuZmluYW5jZS52MS5BY2NvdW50VHlwZRINCgVjb2xvchgEIAEoCRIMCgRpY29uGAUgASgJEhAKCGFyY2hpdmVkGAYgASgIEhIKCnNvcnRfb3JkZXIYByABKAUiPQoVVXBkYXRlQWNjb3VudFJlc3BvbnNlEiQKB2FjY291bnQYASABKAsyEy5maW5hbmNlLnYxLkFjY291bnQiIgoURGVsZXRlQWNjb3VudFJlcXVlc3QSCgoCaWQYASABKAkiFwoVRGVsZXRlQWNjb3VudFJlc3BvbnNlIoABChVDcmVhdGVDYXRlZ29yeVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIpCgRraW5kGAIgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSDQoFY29sb3IYAyABKAkSDAoEaWNvbhgEIAEoCRIRCglwYXJlbnRfaWQYBSABKAkiQAoWQ3JlYXRlQ2F0ZWdvcnlSZXNwb25zZRImCghjYXRlZ29yeRgBIAEoCzIULmZpbmFuY2UudjEuQ2F0ZWdvcnkiXAoVTGlzdENhdGVnb3JpZXNSZXF1ZXN0EikKBGtpbmQYASABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRIYChBpbmNsdWRlX2FyY2hpdmVkGAIgASgIIkIKFkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USKAoKY2F0ZWdvcmllcxgBIAMoCzIULmZpbmFuY2UudjEuQ2F0ZWdvcnkihwEKFVVwZGF0ZUNhdGVnb3J5UmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg0KBWNvbG9yGAMgASgJEgwKBGljb24YBCABKAkSEQoJcGFyZW50X2lkGAUgASgJEhAKCGFyY2hpdmVkGAYgASgIEhIKCnNvcnRfb3JkZXIYByABKAUiQAoWVXBkYXRlQ2F0ZWdvcnlSZXNwb25zZRImCghjYXRlZ29yeRgBIAEoCzIULmZpbmFuY2UudjEuQ2F0ZWdvcnkiIwoVRGVsZXRlQ2F0ZWdvcnlSZXF1ZXN0EgoKAmlkGAEgASgJIhgKFkRlbGV0ZUNhdGVnb3J5UmVzcG9uc2Ui0AEKGENyZWF0ZVRyYW5zYWN0aW9uUmVxdWVzdBISCgphY2NvdW50X2lkGAEgASgJEhoKEmNvdW50ZXJfYWNjb3VudF9pZBgCIAEoCRITCgtjYXRlZ29yeV9pZBgDIAEoCRIpCgR0eXBlGAQgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSIQoGYW1vdW50GAUgASgLMhEuZmluYW5jZS52MS5Nb25leRIMCgRub3RlGAYgASgJEhMKC29jY3VycmVkX29uGAcgASgJIkkKGUNyZWF0ZVRyYW5zYWN0aW9uUmVzcG9uc2USLAoLdHJhbnNhY3Rpb24YASABKAsyFy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uIswBChdMaXN0VHJhbnNhY3Rpb25zUmVxdWVzdBIkCgVyYW5nZRgBIAEoCzIVLmZpbmFuY2UudjEuRGF0ZVJhbmdlEhMKC2FjY291bnRfaWRzGAIgAygJEhQKDGNhdGVnb3J5X2lkcxgDIAMoCRIpCgR0eXBlGAQgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSDgoGc2VhcmNoGAUgASgJEhEKCXBhZ2Vfc2l6ZRgGIAEoBRISCgpwYWdlX3Rva2VuGAcgASgJImIKGExpc3RUcmFuc2FjdGlvbnNSZXNwb25zZRItCgx0cmFuc2FjdGlvbnMYASADKAsyFy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCSIjChVHZXRUcmFuc2FjdGlvblJlcXVlc3QSCgoCaWQYASABKAkiRgoWR2V0VHJhbnNhY3Rpb25SZXNwb25zZRIsCgt0cmFuc2FjdGlvbhgBIAEoCzIXLmZpbmFuY2UudjEuVHJhbnNhY3Rpb24i3AEKGFVwZGF0ZVRyYW5zYWN0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCRISCgphY2NvdW50X2lkGAIgASgJEhoKEmNvdW50ZXJfYWNjb3VudF9pZBgDIAEoCRITCgtjYXRlZ29yeV9pZBgEIAEoCRIpCgR0eXBlGAUgASgOMhsuZmluYW5jZS52MS5UcmFuc2FjdGlvblR5cGUSIQoGYW1vdW50GAYgASgLMhEuZmluYW5jZS52MS5Nb25leRIMCgRub3RlGAcgASgJEhMKC29jY3VycmVkX29uGAggASgJIkkKGVVwZGF0ZVRyYW5zYWN0aW9uUmVzcG9uc2USLAoLdHJhbnNhY3Rpb24YASABKAsyFy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uIiYKGERlbGV0ZVRyYW5zYWN0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCSIbChlEZWxldGVUcmFuc2FjdGlvblJlc3BvbnNlIk4KEUdldFN1bW1hcnlSZXF1ZXN0EiQKBXJhbmdlGAEgASgLMhUuZmluYW5jZS52MS5EYXRlUmFuZ2USEwoLYWNjb3VudF9pZHMYAiADKAkinwEKEkdldFN1bW1hcnlSZXNwb25zZRIhCgZpbmNvbWUYASABKAsyES5maW5hbmNlLnYxLk1vbmV5EiIKB2V4cGVuc2UYAiABKAsyES5maW5hbmNlLnYxLk1vbmV5Eh4KA25ldBgDIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSIgoHYmFsYW5jZRgEIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkilgEKDUNhdGVnb3J5U2xpY2USEwoLY2F0ZWdvcnlfaWQYASABKAkSFQoNY2F0ZWdvcnlfbmFtZRgCIAEoCRINCgVjb2xvchgDIAEoCRIgCgV0b3RhbBgEIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSDQoFc2hhcmUYBSABKAESGQoRdHJhbnNhY3Rpb25fY291bnQYBiABKAUigwEKG0dldENhdGVnb3J5QnJlYWtkb3duUmVxdWVzdBIkCgVyYW5nZRgBIAEoCzIVLmZpbmFuY2UudjEuRGF0ZVJhbmdlEikKBHR5cGUYAiABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRITCgthY2NvdW50X2lkcxgDIAMoCSJrChxHZXRDYXRlZ29yeUJyZWFrZG93blJlc3BvbnNlEikKBnNsaWNlcxgBIAMoCzIZLmZpbmFuY2UudjEuQ2F0ZWdvcnlTbGljZRIgCgV0b3RhbBgCIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkiiAIKF1RyYW5zYWN0aW9uQ3JlYXRlZEV2ZW50EhEKCWZhbWlseV9pZBgBIAEoCRIWCg50cmFuc2FjdGlvbl9pZBgCIAEoCRISCgphY2NvdW50X2lkGAMgASgJEhMKC2NhdGVnb3J5X2lkGAQgASgJEikKBHR5cGUYBSABKA4yGy5maW5hbmNlLnYxLlRyYW5zYWN0aW9uVHlwZRIhCgZhbW91bnQYBiABKAsyES5maW5hbmNlLnYxLk1vbmV5EhoKEmNyZWF0ZWRfYnlfdXNlcl9pZBgHIAEoCRIvCgtvY2N1cnJlZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAinwIKE0J1ZGdldEV4Y2VlZGVkRXZlbnQSEQoJZmFtaWx5X2lkGAEgASgJEhEKCWJ1ZGdldF9pZBgCIAEoCRITCgtidWRnZXRfbmFtZRgDIAEoCRITCgtjYXRlZ29yeV9pZBgEIAEoCRIgCgVsaW1pdBgFIAEoCzIRLmZpbmFuY2UudjEuTW9uZXkSIAoFc3BlbnQYBiABKAsyES5maW5hbmNlLnYxLk1vbmV5EiUKBnBlcmlvZBgHIAEoCzIVLmZpbmFuY2UudjEuRGF0ZVJhbmdlEhwKFHRyaWdnZXJlZF9ieV91c2VyX2lkGAggASgJEi8KC29jY3VycmVkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJ1ChdUcmFuc2FjdGlvblVwZGF0ZWRFdmVudBIRCglmYW1pbHlfaWQYASABKAkSFgoOdHJhbnNhY3Rpb25faWQYAiABKAkSLwoLb2NjdXJyZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wInUKF1RyYW5zYWN0aW9uRGVsZXRlZEV2ZW50EhEKCWZhbWlseV9pZBgBIAEoCRIWCg50cmFuc2FjdGlvbl9pZBgCIAEoCRIvCgtvY2N1cnJlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAqoQEKC0FjY291bnRUeXBlEhwKGEFDQ09VTlRfVFlQRV9VTlNQRUNJRklFRBAAEhUKEUFDQ09VTlRfVFlQRV9DQVNIEAESFQoRQUNDT1VOVF9UWVBFX0NBUkQQAhIVChFBQ0NPVU5UX1RZUEVfQkFOSxADEhgKFEFDQ09VTlRfVFlQRV9TQVZJTkdTEAQSFQoRQUNDT1VOVF9UWVBFX0RFQlQQBSqNAQoPVHJhbnNhY3Rpb25UeXBlEiAKHFRSQU5TQUNUSU9OX1RZUEVfVU5TUEVDSUZJRUQQABIcChhUUkFOU0FDVElPTl9UWVBFX0VYUEVOU0UQARIbChdUUkFOU0FDVElPTl9UWVBFX0lOQ09NRRACEh0KGVRSQU5TQUNUSU9OX1RZUEVfVFJBTlNGRVIQAyp2CgxCdWRnZXRQZXJpb2QSHQoZQlVER0VUX1BFUklPRF9VTlNQRUNJRklFRBAAEhYKEkJVREdFVF9QRVJJT0RfV0VFSxABEhcKE0JVREdFVF9QRVJJT0RfTU9OVEgQAhIWChJCVURHRVRfUEVSSU9EX1lFQVIQAzK/DgoORmluYW5jZVNlcnZpY2USVAoNQ3JlYXRlQWNjb3VudBIgLmZpbmFuY2UudjEuQ3JlYXRlQWNjb3VudFJlcXVlc3QaIS5maW5hbmNlLnYxLkNyZWF0ZUFjY291bnRSZXNwb25zZRJRCgxMaXN0QWNjb3VudHMSHy5maW5hbmNlLnYxLkxpc3RBY2NvdW50c1JlcXVlc3QaIC5maW5hbmNlLnYxLkxpc3RBY2NvdW50c1Jlc3BvbnNlEksKCkdldEFjY291bnQSHS5maW5hbmNlLnYxLkdldEFjY291bnRSZXF1ZXN0Gh4uZmluYW5jZS52MS5HZXRBY2NvdW50UmVzcG9uc2USVAoNVXBkYXRlQWNjb3VudBIgLmZpbmFuY2UudjEuVXBkYXRlQWNjb3VudFJlcXVlc3QaIS5maW5hbmNlLnYxLlVwZGF0ZUFjY291bnRSZXNwb25zZRJUCg1EZWxldGVBY2NvdW50EiAuZmluYW5jZS52MS5EZWxldGVBY2NvdW50UmVxdWVzdBohLmZpbmFuY2UudjEuRGVsZXRlQWNjb3VudFJlc3BvbnNlElcKDkNyZWF0ZUNhdGVnb3J5EiEuZmluYW5jZS52MS5DcmVhdGVDYXRlZ29yeVJlcXVlc3QaIi5maW5hbmNlLnYxLkNyZWF0ZUNhdGVnb3J5UmVzcG9uc2USVwoOTGlzdENhdGVnb3JpZXMSIS5maW5hbmNlLnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBoiLmZpbmFuY2UudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJXCg5VcGRhdGVDYXRlZ29yeRIhLmZpbmFuY2UudjEuVXBkYXRlQ2F0ZWdvcnlSZXF1ZXN0GiIuZmluYW5jZS52MS5VcGRhdGVDYXRlZ29yeVJlc3BvbnNlElcKDkRlbGV0ZUNhdGVnb3J5EiEuZmluYW5jZS52MS5EZWxldGVDYXRlZ29yeVJlcXVlc3QaIi5maW5hbmNlLnYxLkRlbGV0ZUNhdGVnb3J5UmVzcG9uc2USYAoRQ3JlYXRlVHJhbnNhY3Rpb24SJC5maW5hbmNlLnYxLkNyZWF0ZVRyYW5zYWN0aW9uUmVxdWVzdBolLmZpbmFuY2UudjEuQ3JlYXRlVHJhbnNhY3Rpb25SZXNwb25zZRJdChBMaXN0VHJhbnNhY3Rpb25zEiMuZmluYW5jZS52MS5MaXN0VHJhbnNhY3Rpb25zUmVxdWVzdBokLmZpbmFuY2UudjEuTGlzdFRyYW5zYWN0aW9uc1Jlc3BvbnNlElcKDkdldFRyYW5zYWN0aW9uEiEuZmluYW5jZS52MS5HZXRUcmFuc2FjdGlvblJlcXVlc3QaIi5maW5hbmNlLnYxLkdldFRyYW5zYWN0aW9uUmVzcG9uc2USYAoRVXBkYXRlVHJhbnNhY3Rpb24SJC5maW5hbmNlLnYxLlVwZGF0ZVRyYW5zYWN0aW9uUmVxdWVzdBolLmZpbmFuY2UudjEuVXBkYXRlVHJhbnNhY3Rpb25SZXNwb25zZRJgChFEZWxldGVUcmFuc2FjdGlvbhIkLmZpbmFuY2UudjEuRGVsZXRlVHJhbnNhY3Rpb25SZXF1ZXN0GiUuZmluYW5jZS52MS5EZWxldGVUcmFuc2FjdGlvblJlc3BvbnNlElEKDENyZWF0ZUJ1ZGdldBIfLmZpbmFuY2UudjEuQ3JlYXRlQnVkZ2V0UmVxdWVzdBogLmZpbmFuY2UudjEuQ3JlYXRlQnVkZ2V0UmVzcG9uc2USTgoLTGlzdEJ1ZGdldHMSHi5maW5hbmNlLnYxLkxpc3RCdWRnZXRzUmVxdWVzdBofLmZpbmFuY2UudjEuTGlzdEJ1ZGdldHNSZXNwb25zZRJICglHZXRCdWRnZXQSHC5maW5hbmNlLnYxLkdldEJ1ZGdldFJlcXVlc3QaHS5maW5hbmNlLnYxLkdldEJ1ZGdldFJlc3BvbnNlElEKDFVwZGF0ZUJ1ZGdldBIfLmZpbmFuY2UudjEuVXBkYXRlQnVkZ2V0UmVxdWVzdBogLmZpbmFuY2UudjEuVXBkYXRlQnVkZ2V0UmVzcG9uc2USUQoMRGVsZXRlQnVkZ2V0Eh8uZmluYW5jZS52MS5EZWxldGVCdWRnZXRSZXF1ZXN0GiAuZmluYW5jZS52MS5EZWxldGVCdWRnZXRSZXNwb25zZRJLCgpHZXRTdW1tYXJ5Eh0uZmluYW5jZS52MS5HZXRTdW1tYXJ5UmVxdWVzdBoeLmZpbmFuY2UudjEuR2V0U3VtbWFyeVJlc3BvbnNlEmkKFEdldENhdGVnb3J5QnJlYWtkb3duEicuZmluYW5jZS52MS5HZXRDYXRlZ29yeUJyZWFrZG93blJlcXVlc3QaKC5maW5hbmNlLnYxLkdldENhdGVnb3J5QnJlYWtkb3duUmVzcG9uc2VCogEKDmNvbS5maW5hbmNlLnYxQgxGaW5hbmNlUHJvdG9QAVo5Z2l0aHViLmNvbS9ubmMvZmFtaWx5LW1hbmFnZXIvc2RrL2dvL2ZpbmFuY2UvdjE7ZmluYW5jZXYxogIDRlhYqgIKRmluYW5jZS5WMcoCCkZpbmFuY2VcVjHiAhZGaW5hbmNlXFYxXEdQQk1ldGFkYXRh6gILRmluYW5jZTo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * Money is a minor-unit integer plus its ISO 4217 code. Floating point never touches money
@@ -299,6 +299,372 @@ export const TransactionSchema: GenMessage<Transaction> = /*@__PURE__*/
   messageDesc(file_finance_v1_finance, 4);
 
 /**
+ * @generated from message finance.v1.Budget
+ */
+export type Budget = Message<"finance.v1.Budget"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string family_id = 2;
+   */
+  familyId: string;
+
+  /**
+   * @generated from field: string name = 3;
+   */
+  name: string;
+
+  /**
+   * category_id empty means the budget covers every expense in the household. A per-category
+   * budget and a total one are the same row, which keeps the progress query single-shaped.
+   *
+   * @generated from field: string category_id = 4;
+   */
+  categoryId: string;
+
+  /**
+   * @generated from field: finance.v1.Money limit = 5;
+   */
+  limit?: Money | undefined;
+
+  /**
+   * @generated from field: finance.v1.BudgetPeriod period = 6;
+   */
+  period: BudgetPeriod;
+
+  /**
+   * start_on anchors the recurring window, YYYY-MM-DD. A monthly budget anchored on the 15th
+   * runs the 15th to the 14th, which is what someone paid mid-month actually wants.
+   *
+   * @generated from field: string start_on = 7;
+   */
+  startOn: string;
+
+  /**
+   * @generated from field: bool archived = 8;
+   */
+  archived: boolean;
+
+  /**
+   * @generated from field: int32 sort_order = 9;
+   */
+  sortOrder: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 10;
+   */
+  createdAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 11;
+   */
+  updatedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message finance.v1.Budget.
+ * Use `create(BudgetSchema)` to create a new message.
+ */
+export const BudgetSchema: GenMessage<Budget> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 5);
+
+/**
+ * BudgetStatus is a budget plus where it stands in the window in force. Progress is derived
+ * from transactions on every read, never stored — a stored total is a total that drifts.
+ *
+ * @generated from message finance.v1.BudgetStatus
+ */
+export type BudgetStatus = Message<"finance.v1.BudgetStatus"> & {
+  /**
+   * @generated from field: finance.v1.Budget budget = 1;
+   */
+  budget?: Budget | undefined;
+
+  /**
+   * period is the concrete window the numbers below cover.
+   *
+   * @generated from field: finance.v1.DateRange period = 2;
+   */
+  period?: DateRange | undefined;
+
+  /**
+   * @generated from field: finance.v1.Money spent = 3;
+   */
+  spent?: Money | undefined;
+
+  /**
+   * remaining goes negative once the limit is passed; clients render the overspend rather
+   * than clamping it to zero and hiding it.
+   *
+   * @generated from field: finance.v1.Money remaining = 4;
+   */
+  remaining?: Money | undefined;
+
+  /**
+   * share is spent/limit, 0..n — above 1 when overspent. Precomputed so every client draws
+   * the same bar.
+   *
+   * @generated from field: double share = 5;
+   */
+  share: number;
+
+  /**
+   * @generated from field: bool exceeded = 6;
+   */
+  exceeded: boolean;
+
+  /**
+   * days_remaining counts today as remaining, so the last day of a window reads 1, not 0.
+   *
+   * @generated from field: int32 days_remaining = 7;
+   */
+  daysRemaining: number;
+};
+
+/**
+ * Describes the message finance.v1.BudgetStatus.
+ * Use `create(BudgetStatusSchema)` to create a new message.
+ */
+export const BudgetStatusSchema: GenMessage<BudgetStatus> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 6);
+
+/**
+ * @generated from message finance.v1.CreateBudgetRequest
+ */
+export type CreateBudgetRequest = Message<"finance.v1.CreateBudgetRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string category_id = 2;
+   */
+  categoryId: string;
+
+  /**
+   * @generated from field: finance.v1.Money limit = 3;
+   */
+  limit?: Money | undefined;
+
+  /**
+   * @generated from field: finance.v1.BudgetPeriod period = 4;
+   */
+  period: BudgetPeriod;
+
+  /**
+   * @generated from field: string start_on = 5;
+   */
+  startOn: string;
+};
+
+/**
+ * Describes the message finance.v1.CreateBudgetRequest.
+ * Use `create(CreateBudgetRequestSchema)` to create a new message.
+ */
+export const CreateBudgetRequestSchema: GenMessage<CreateBudgetRequest> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 7);
+
+/**
+ * @generated from message finance.v1.CreateBudgetResponse
+ */
+export type CreateBudgetResponse = Message<"finance.v1.CreateBudgetResponse"> & {
+  /**
+   * @generated from field: finance.v1.Budget budget = 1;
+   */
+  budget?: Budget | undefined;
+};
+
+/**
+ * Describes the message finance.v1.CreateBudgetResponse.
+ * Use `create(CreateBudgetResponseSchema)` to create a new message.
+ */
+export const CreateBudgetResponseSchema: GenMessage<CreateBudgetResponse> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 8);
+
+/**
+ * @generated from message finance.v1.ListBudgetsRequest
+ */
+export type ListBudgetsRequest = Message<"finance.v1.ListBudgetsRequest"> & {
+  /**
+   * @generated from field: bool include_archived = 1;
+   */
+  includeArchived: boolean;
+
+  /**
+   * as_of picks which window to report, YYYY-MM-DD. Empty means today.
+   *
+   * @generated from field: string as_of = 2;
+   */
+  asOf: string;
+};
+
+/**
+ * Describes the message finance.v1.ListBudgetsRequest.
+ * Use `create(ListBudgetsRequestSchema)` to create a new message.
+ */
+export const ListBudgetsRequestSchema: GenMessage<ListBudgetsRequest> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 9);
+
+/**
+ * @generated from message finance.v1.ListBudgetsResponse
+ */
+export type ListBudgetsResponse = Message<"finance.v1.ListBudgetsResponse"> & {
+  /**
+   * @generated from field: repeated finance.v1.BudgetStatus budgets = 1;
+   */
+  budgets: BudgetStatus[];
+};
+
+/**
+ * Describes the message finance.v1.ListBudgetsResponse.
+ * Use `create(ListBudgetsResponseSchema)` to create a new message.
+ */
+export const ListBudgetsResponseSchema: GenMessage<ListBudgetsResponse> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 10);
+
+/**
+ * @generated from message finance.v1.GetBudgetRequest
+ */
+export type GetBudgetRequest = Message<"finance.v1.GetBudgetRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string as_of = 2;
+   */
+  asOf: string;
+};
+
+/**
+ * Describes the message finance.v1.GetBudgetRequest.
+ * Use `create(GetBudgetRequestSchema)` to create a new message.
+ */
+export const GetBudgetRequestSchema: GenMessage<GetBudgetRequest> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 11);
+
+/**
+ * @generated from message finance.v1.GetBudgetResponse
+ */
+export type GetBudgetResponse = Message<"finance.v1.GetBudgetResponse"> & {
+  /**
+   * @generated from field: finance.v1.BudgetStatus budget = 1;
+   */
+  budget?: BudgetStatus | undefined;
+};
+
+/**
+ * Describes the message finance.v1.GetBudgetResponse.
+ * Use `create(GetBudgetResponseSchema)` to create a new message.
+ */
+export const GetBudgetResponseSchema: GenMessage<GetBudgetResponse> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 12);
+
+/**
+ * @generated from message finance.v1.UpdateBudgetRequest
+ */
+export type UpdateBudgetRequest = Message<"finance.v1.UpdateBudgetRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string category_id = 3;
+   */
+  categoryId: string;
+
+  /**
+   * @generated from field: finance.v1.Money limit = 4;
+   */
+  limit?: Money | undefined;
+
+  /**
+   * @generated from field: finance.v1.BudgetPeriod period = 5;
+   */
+  period: BudgetPeriod;
+
+  /**
+   * @generated from field: string start_on = 6;
+   */
+  startOn: string;
+
+  /**
+   * @generated from field: bool archived = 7;
+   */
+  archived: boolean;
+
+  /**
+   * @generated from field: int32 sort_order = 8;
+   */
+  sortOrder: number;
+};
+
+/**
+ * Describes the message finance.v1.UpdateBudgetRequest.
+ * Use `create(UpdateBudgetRequestSchema)` to create a new message.
+ */
+export const UpdateBudgetRequestSchema: GenMessage<UpdateBudgetRequest> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 13);
+
+/**
+ * @generated from message finance.v1.UpdateBudgetResponse
+ */
+export type UpdateBudgetResponse = Message<"finance.v1.UpdateBudgetResponse"> & {
+  /**
+   * @generated from field: finance.v1.Budget budget = 1;
+   */
+  budget?: Budget | undefined;
+};
+
+/**
+ * Describes the message finance.v1.UpdateBudgetResponse.
+ * Use `create(UpdateBudgetResponseSchema)` to create a new message.
+ */
+export const UpdateBudgetResponseSchema: GenMessage<UpdateBudgetResponse> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 14);
+
+/**
+ * @generated from message finance.v1.DeleteBudgetRequest
+ */
+export type DeleteBudgetRequest = Message<"finance.v1.DeleteBudgetRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message finance.v1.DeleteBudgetRequest.
+ * Use `create(DeleteBudgetRequestSchema)` to create a new message.
+ */
+export const DeleteBudgetRequestSchema: GenMessage<DeleteBudgetRequest> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 15);
+
+/**
+ * @generated from message finance.v1.DeleteBudgetResponse
+ */
+export type DeleteBudgetResponse = Message<"finance.v1.DeleteBudgetResponse"> & {
+};
+
+/**
+ * Describes the message finance.v1.DeleteBudgetResponse.
+ * Use `create(DeleteBudgetResponseSchema)` to create a new message.
+ */
+export const DeleteBudgetResponseSchema: GenMessage<DeleteBudgetResponse> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 16);
+
+/**
  * @generated from message finance.v1.CreateAccountRequest
  */
 export type CreateAccountRequest = Message<"finance.v1.CreateAccountRequest"> & {
@@ -338,7 +704,7 @@ export type CreateAccountRequest = Message<"finance.v1.CreateAccountRequest"> & 
  * Use `create(CreateAccountRequestSchema)` to create a new message.
  */
 export const CreateAccountRequestSchema: GenMessage<CreateAccountRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 5);
+  messageDesc(file_finance_v1_finance, 17);
 
 /**
  * @generated from message finance.v1.CreateAccountResponse
@@ -355,7 +721,7 @@ export type CreateAccountResponse = Message<"finance.v1.CreateAccountResponse"> 
  * Use `create(CreateAccountResponseSchema)` to create a new message.
  */
 export const CreateAccountResponseSchema: GenMessage<CreateAccountResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 6);
+  messageDesc(file_finance_v1_finance, 18);
 
 /**
  * @generated from message finance.v1.ListAccountsRequest
@@ -372,7 +738,7 @@ export type ListAccountsRequest = Message<"finance.v1.ListAccountsRequest"> & {
  * Use `create(ListAccountsRequestSchema)` to create a new message.
  */
 export const ListAccountsRequestSchema: GenMessage<ListAccountsRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 7);
+  messageDesc(file_finance_v1_finance, 19);
 
 /**
  * @generated from message finance.v1.ListAccountsResponse
@@ -396,7 +762,7 @@ export type ListAccountsResponse = Message<"finance.v1.ListAccountsResponse"> & 
  * Use `create(ListAccountsResponseSchema)` to create a new message.
  */
 export const ListAccountsResponseSchema: GenMessage<ListAccountsResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 8);
+  messageDesc(file_finance_v1_finance, 20);
 
 /**
  * @generated from message finance.v1.GetAccountRequest
@@ -413,7 +779,7 @@ export type GetAccountRequest = Message<"finance.v1.GetAccountRequest"> & {
  * Use `create(GetAccountRequestSchema)` to create a new message.
  */
 export const GetAccountRequestSchema: GenMessage<GetAccountRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 9);
+  messageDesc(file_finance_v1_finance, 21);
 
 /**
  * @generated from message finance.v1.GetAccountResponse
@@ -430,7 +796,7 @@ export type GetAccountResponse = Message<"finance.v1.GetAccountResponse"> & {
  * Use `create(GetAccountResponseSchema)` to create a new message.
  */
 export const GetAccountResponseSchema: GenMessage<GetAccountResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 10);
+  messageDesc(file_finance_v1_finance, 22);
 
 /**
  * @generated from message finance.v1.UpdateAccountRequest
@@ -477,7 +843,7 @@ export type UpdateAccountRequest = Message<"finance.v1.UpdateAccountRequest"> & 
  * Use `create(UpdateAccountRequestSchema)` to create a new message.
  */
 export const UpdateAccountRequestSchema: GenMessage<UpdateAccountRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 11);
+  messageDesc(file_finance_v1_finance, 23);
 
 /**
  * @generated from message finance.v1.UpdateAccountResponse
@@ -494,7 +860,7 @@ export type UpdateAccountResponse = Message<"finance.v1.UpdateAccountResponse"> 
  * Use `create(UpdateAccountResponseSchema)` to create a new message.
  */
 export const UpdateAccountResponseSchema: GenMessage<UpdateAccountResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 12);
+  messageDesc(file_finance_v1_finance, 24);
 
 /**
  * @generated from message finance.v1.DeleteAccountRequest
@@ -511,7 +877,7 @@ export type DeleteAccountRequest = Message<"finance.v1.DeleteAccountRequest"> & 
  * Use `create(DeleteAccountRequestSchema)` to create a new message.
  */
 export const DeleteAccountRequestSchema: GenMessage<DeleteAccountRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 13);
+  messageDesc(file_finance_v1_finance, 25);
 
 /**
  * @generated from message finance.v1.DeleteAccountResponse
@@ -524,7 +890,7 @@ export type DeleteAccountResponse = Message<"finance.v1.DeleteAccountResponse"> 
  * Use `create(DeleteAccountResponseSchema)` to create a new message.
  */
 export const DeleteAccountResponseSchema: GenMessage<DeleteAccountResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 14);
+  messageDesc(file_finance_v1_finance, 26);
 
 /**
  * @generated from message finance.v1.CreateCategoryRequest
@@ -561,7 +927,7 @@ export type CreateCategoryRequest = Message<"finance.v1.CreateCategoryRequest"> 
  * Use `create(CreateCategoryRequestSchema)` to create a new message.
  */
 export const CreateCategoryRequestSchema: GenMessage<CreateCategoryRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 15);
+  messageDesc(file_finance_v1_finance, 27);
 
 /**
  * @generated from message finance.v1.CreateCategoryResponse
@@ -578,7 +944,7 @@ export type CreateCategoryResponse = Message<"finance.v1.CreateCategoryResponse"
  * Use `create(CreateCategoryResponseSchema)` to create a new message.
  */
 export const CreateCategoryResponseSchema: GenMessage<CreateCategoryResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 16);
+  messageDesc(file_finance_v1_finance, 28);
 
 /**
  * @generated from message finance.v1.ListCategoriesRequest
@@ -602,7 +968,7 @@ export type ListCategoriesRequest = Message<"finance.v1.ListCategoriesRequest"> 
  * Use `create(ListCategoriesRequestSchema)` to create a new message.
  */
 export const ListCategoriesRequestSchema: GenMessage<ListCategoriesRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 17);
+  messageDesc(file_finance_v1_finance, 29);
 
 /**
  * @generated from message finance.v1.ListCategoriesResponse
@@ -619,7 +985,7 @@ export type ListCategoriesResponse = Message<"finance.v1.ListCategoriesResponse"
  * Use `create(ListCategoriesResponseSchema)` to create a new message.
  */
 export const ListCategoriesResponseSchema: GenMessage<ListCategoriesResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 18);
+  messageDesc(file_finance_v1_finance, 30);
 
 /**
  * @generated from message finance.v1.UpdateCategoryRequest
@@ -666,7 +1032,7 @@ export type UpdateCategoryRequest = Message<"finance.v1.UpdateCategoryRequest"> 
  * Use `create(UpdateCategoryRequestSchema)` to create a new message.
  */
 export const UpdateCategoryRequestSchema: GenMessage<UpdateCategoryRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 19);
+  messageDesc(file_finance_v1_finance, 31);
 
 /**
  * @generated from message finance.v1.UpdateCategoryResponse
@@ -683,7 +1049,7 @@ export type UpdateCategoryResponse = Message<"finance.v1.UpdateCategoryResponse"
  * Use `create(UpdateCategoryResponseSchema)` to create a new message.
  */
 export const UpdateCategoryResponseSchema: GenMessage<UpdateCategoryResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 20);
+  messageDesc(file_finance_v1_finance, 32);
 
 /**
  * @generated from message finance.v1.DeleteCategoryRequest
@@ -700,7 +1066,7 @@ export type DeleteCategoryRequest = Message<"finance.v1.DeleteCategoryRequest"> 
  * Use `create(DeleteCategoryRequestSchema)` to create a new message.
  */
 export const DeleteCategoryRequestSchema: GenMessage<DeleteCategoryRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 21);
+  messageDesc(file_finance_v1_finance, 33);
 
 /**
  * @generated from message finance.v1.DeleteCategoryResponse
@@ -713,7 +1079,7 @@ export type DeleteCategoryResponse = Message<"finance.v1.DeleteCategoryResponse"
  * Use `create(DeleteCategoryResponseSchema)` to create a new message.
  */
 export const DeleteCategoryResponseSchema: GenMessage<DeleteCategoryResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 22);
+  messageDesc(file_finance_v1_finance, 34);
 
 /**
  * @generated from message finance.v1.CreateTransactionRequest
@@ -760,7 +1126,7 @@ export type CreateTransactionRequest = Message<"finance.v1.CreateTransactionRequ
  * Use `create(CreateTransactionRequestSchema)` to create a new message.
  */
 export const CreateTransactionRequestSchema: GenMessage<CreateTransactionRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 23);
+  messageDesc(file_finance_v1_finance, 35);
 
 /**
  * @generated from message finance.v1.CreateTransactionResponse
@@ -777,7 +1143,7 @@ export type CreateTransactionResponse = Message<"finance.v1.CreateTransactionRes
  * Use `create(CreateTransactionResponseSchema)` to create a new message.
  */
 export const CreateTransactionResponseSchema: GenMessage<CreateTransactionResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 24);
+  messageDesc(file_finance_v1_finance, 36);
 
 /**
  * @generated from message finance.v1.ListTransactionsRequest
@@ -831,7 +1197,7 @@ export type ListTransactionsRequest = Message<"finance.v1.ListTransactionsReques
  * Use `create(ListTransactionsRequestSchema)` to create a new message.
  */
 export const ListTransactionsRequestSchema: GenMessage<ListTransactionsRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 25);
+  messageDesc(file_finance_v1_finance, 37);
 
 /**
  * @generated from message finance.v1.ListTransactionsResponse
@@ -853,7 +1219,7 @@ export type ListTransactionsResponse = Message<"finance.v1.ListTransactionsRespo
  * Use `create(ListTransactionsResponseSchema)` to create a new message.
  */
 export const ListTransactionsResponseSchema: GenMessage<ListTransactionsResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 26);
+  messageDesc(file_finance_v1_finance, 38);
 
 /**
  * @generated from message finance.v1.GetTransactionRequest
@@ -870,7 +1236,7 @@ export type GetTransactionRequest = Message<"finance.v1.GetTransactionRequest"> 
  * Use `create(GetTransactionRequestSchema)` to create a new message.
  */
 export const GetTransactionRequestSchema: GenMessage<GetTransactionRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 27);
+  messageDesc(file_finance_v1_finance, 39);
 
 /**
  * @generated from message finance.v1.GetTransactionResponse
@@ -887,7 +1253,7 @@ export type GetTransactionResponse = Message<"finance.v1.GetTransactionResponse"
  * Use `create(GetTransactionResponseSchema)` to create a new message.
  */
 export const GetTransactionResponseSchema: GenMessage<GetTransactionResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 28);
+  messageDesc(file_finance_v1_finance, 40);
 
 /**
  * @generated from message finance.v1.UpdateTransactionRequest
@@ -939,7 +1305,7 @@ export type UpdateTransactionRequest = Message<"finance.v1.UpdateTransactionRequ
  * Use `create(UpdateTransactionRequestSchema)` to create a new message.
  */
 export const UpdateTransactionRequestSchema: GenMessage<UpdateTransactionRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 29);
+  messageDesc(file_finance_v1_finance, 41);
 
 /**
  * @generated from message finance.v1.UpdateTransactionResponse
@@ -956,7 +1322,7 @@ export type UpdateTransactionResponse = Message<"finance.v1.UpdateTransactionRes
  * Use `create(UpdateTransactionResponseSchema)` to create a new message.
  */
 export const UpdateTransactionResponseSchema: GenMessage<UpdateTransactionResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 30);
+  messageDesc(file_finance_v1_finance, 42);
 
 /**
  * @generated from message finance.v1.DeleteTransactionRequest
@@ -973,7 +1339,7 @@ export type DeleteTransactionRequest = Message<"finance.v1.DeleteTransactionRequ
  * Use `create(DeleteTransactionRequestSchema)` to create a new message.
  */
 export const DeleteTransactionRequestSchema: GenMessage<DeleteTransactionRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 31);
+  messageDesc(file_finance_v1_finance, 43);
 
 /**
  * @generated from message finance.v1.DeleteTransactionResponse
@@ -986,7 +1352,7 @@ export type DeleteTransactionResponse = Message<"finance.v1.DeleteTransactionRes
  * Use `create(DeleteTransactionResponseSchema)` to create a new message.
  */
 export const DeleteTransactionResponseSchema: GenMessage<DeleteTransactionResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 32);
+  messageDesc(file_finance_v1_finance, 44);
 
 /**
  * @generated from message finance.v1.GetSummaryRequest
@@ -1008,7 +1374,7 @@ export type GetSummaryRequest = Message<"finance.v1.GetSummaryRequest"> & {
  * Use `create(GetSummaryRequestSchema)` to create a new message.
  */
 export const GetSummaryRequestSchema: GenMessage<GetSummaryRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 33);
+  messageDesc(file_finance_v1_finance, 45);
 
 /**
  * @generated from message finance.v1.GetSummaryResponse
@@ -1042,7 +1408,7 @@ export type GetSummaryResponse = Message<"finance.v1.GetSummaryResponse"> & {
  * Use `create(GetSummaryResponseSchema)` to create a new message.
  */
 export const GetSummaryResponseSchema: GenMessage<GetSummaryResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 34);
+  messageDesc(file_finance_v1_finance, 46);
 
 /**
  * @generated from message finance.v1.CategorySlice
@@ -1087,7 +1453,7 @@ export type CategorySlice = Message<"finance.v1.CategorySlice"> & {
  * Use `create(CategorySliceSchema)` to create a new message.
  */
 export const CategorySliceSchema: GenMessage<CategorySlice> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 35);
+  messageDesc(file_finance_v1_finance, 47);
 
 /**
  * @generated from message finance.v1.GetCategoryBreakdownRequest
@@ -1114,7 +1480,7 @@ export type GetCategoryBreakdownRequest = Message<"finance.v1.GetCategoryBreakdo
  * Use `create(GetCategoryBreakdownRequestSchema)` to create a new message.
  */
 export const GetCategoryBreakdownRequestSchema: GenMessage<GetCategoryBreakdownRequest> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 36);
+  messageDesc(file_finance_v1_finance, 48);
 
 /**
  * @generated from message finance.v1.GetCategoryBreakdownResponse
@@ -1136,7 +1502,7 @@ export type GetCategoryBreakdownResponse = Message<"finance.v1.GetCategoryBreakd
  * Use `create(GetCategoryBreakdownResponseSchema)` to create a new message.
  */
 export const GetCategoryBreakdownResponseSchema: GenMessage<GetCategoryBreakdownResponse> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 37);
+  messageDesc(file_finance_v1_finance, 49);
 
 /**
  * Events published on `finance.transaction.*` (libs/go/events).
@@ -1190,7 +1556,68 @@ export type TransactionCreatedEvent = Message<"finance.v1.TransactionCreatedEven
  * Use `create(TransactionCreatedEventSchema)` to create a new message.
  */
 export const TransactionCreatedEventSchema: GenMessage<TransactionCreatedEvent> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 38);
+  messageDesc(file_finance_v1_finance, 50);
+
+/**
+ * BudgetExceededEvent is published on `finance.budget.exceeded` the moment a transaction
+ * takes a budget past its limit — once per crossing, not on every subsequent overspend, so a
+ * consumer can notify without a storm.
+ *
+ * @generated from message finance.v1.BudgetExceededEvent
+ */
+export type BudgetExceededEvent = Message<"finance.v1.BudgetExceededEvent"> & {
+  /**
+   * @generated from field: string family_id = 1;
+   */
+  familyId: string;
+
+  /**
+   * @generated from field: string budget_id = 2;
+   */
+  budgetId: string;
+
+  /**
+   * @generated from field: string budget_name = 3;
+   */
+  budgetName: string;
+
+  /**
+   * @generated from field: string category_id = 4;
+   */
+  categoryId: string;
+
+  /**
+   * @generated from field: finance.v1.Money limit = 5;
+   */
+  limit?: Money | undefined;
+
+  /**
+   * @generated from field: finance.v1.Money spent = 6;
+   */
+  spent?: Money | undefined;
+
+  /**
+   * @generated from field: finance.v1.DateRange period = 7;
+   */
+  period?: DateRange | undefined;
+
+  /**
+   * @generated from field: string triggered_by_user_id = 8;
+   */
+  triggeredByUserId: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp occurred_at = 9;
+   */
+  occurredAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message finance.v1.BudgetExceededEvent.
+ * Use `create(BudgetExceededEventSchema)` to create a new message.
+ */
+export const BudgetExceededEventSchema: GenMessage<BudgetExceededEvent> = /*@__PURE__*/
+  messageDesc(file_finance_v1_finance, 51);
 
 /**
  * @generated from message finance.v1.TransactionUpdatedEvent
@@ -1217,7 +1644,7 @@ export type TransactionUpdatedEvent = Message<"finance.v1.TransactionUpdatedEven
  * Use `create(TransactionUpdatedEventSchema)` to create a new message.
  */
 export const TransactionUpdatedEventSchema: GenMessage<TransactionUpdatedEvent> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 39);
+  messageDesc(file_finance_v1_finance, 52);
 
 /**
  * @generated from message finance.v1.TransactionDeletedEvent
@@ -1244,7 +1671,7 @@ export type TransactionDeletedEvent = Message<"finance.v1.TransactionDeletedEven
  * Use `create(TransactionDeletedEventSchema)` to create a new message.
  */
 export const TransactionDeletedEventSchema: GenMessage<TransactionDeletedEvent> = /*@__PURE__*/
-  messageDesc(file_finance_v1_finance, 40);
+  messageDesc(file_finance_v1_finance, 53);
 
 /**
  * @generated from enum finance.v1.AccountType
@@ -1322,6 +1749,40 @@ export enum TransactionType {
  */
 export const TransactionTypeSchema: GenEnum<TransactionType> = /*@__PURE__*/
   enumDesc(file_finance_v1_finance, 1);
+
+/**
+ * BudgetPeriod is the window a budget's limit applies to, recurring. A budget is "500 a
+ * month", not "500 between two dates" — the window rolls forward on its own.
+ *
+ * @generated from enum finance.v1.BudgetPeriod
+ */
+export enum BudgetPeriod {
+  /**
+   * @generated from enum value: BUDGET_PERIOD_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: BUDGET_PERIOD_WEEK = 1;
+   */
+  WEEK = 1,
+
+  /**
+   * @generated from enum value: BUDGET_PERIOD_MONTH = 2;
+   */
+  MONTH = 2,
+
+  /**
+   * @generated from enum value: BUDGET_PERIOD_YEAR = 3;
+   */
+  YEAR = 3,
+}
+
+/**
+ * Describes the enum finance.v1.BudgetPeriod.
+ */
+export const BudgetPeriodSchema: GenEnum<BudgetPeriod> = /*@__PURE__*/
+  enumDesc(file_finance_v1_finance, 2);
 
 /**
  * FinanceService is the household ledger: accounts hold money, transactions move it,
@@ -1445,6 +1906,49 @@ export const FinanceService: GenService<{
     methodKind: "unary";
     input: typeof DeleteTransactionRequestSchema;
     output: typeof DeleteTransactionResponseSchema;
+  },
+  /**
+   * @generated from rpc finance.v1.FinanceService.CreateBudget
+   */
+  createBudget: {
+    methodKind: "unary";
+    input: typeof CreateBudgetRequestSchema;
+    output: typeof CreateBudgetResponseSchema;
+  },
+  /**
+   * ListBudgets returns each budget with its progress for the window in force today, which
+   * is the only form the UI ever renders.
+   *
+   * @generated from rpc finance.v1.FinanceService.ListBudgets
+   */
+  listBudgets: {
+    methodKind: "unary";
+    input: typeof ListBudgetsRequestSchema;
+    output: typeof ListBudgetsResponseSchema;
+  },
+  /**
+   * @generated from rpc finance.v1.FinanceService.GetBudget
+   */
+  getBudget: {
+    methodKind: "unary";
+    input: typeof GetBudgetRequestSchema;
+    output: typeof GetBudgetResponseSchema;
+  },
+  /**
+   * @generated from rpc finance.v1.FinanceService.UpdateBudget
+   */
+  updateBudget: {
+    methodKind: "unary";
+    input: typeof UpdateBudgetRequestSchema;
+    output: typeof UpdateBudgetResponseSchema;
+  },
+  /**
+   * @generated from rpc finance.v1.FinanceService.DeleteBudget
+   */
+  deleteBudget: {
+    methodKind: "unary";
+    input: typeof DeleteBudgetRequestSchema;
+    output: typeof DeleteBudgetResponseSchema;
   },
   /**
    * GetSummary is the home screen: totals and balance for one period.
