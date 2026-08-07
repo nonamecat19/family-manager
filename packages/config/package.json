@@ -1,0 +1,22 @@
+{
+  "name": "@fm/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Single source of truth for tsconfig, eslint, babel and metro presets. Apps extend these; they never re-declare them.",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.expo.json": "./tsconfig.expo.json",
+    "./eslint.config.mjs": "./eslint.config.mjs",
+    "./babel.config.cjs": "./babel.config.cjs",
+    "./metro.config.cjs": "./metro.config.cjs",
+    "./tailwind.preset.cjs": "./tailwind.preset.cjs"
+  },
+  "scripts": {
+    "lint": "echo \"config package: nothing to lint\"",
+    "typecheck": "echo \"config package: no sources\"",
+    "test": "echo \"config package: no tests\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
