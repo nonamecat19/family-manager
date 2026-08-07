@@ -1,8 +1,162 @@
 {
   "version": 1,
-  "generated_at": "2026-08-06T14:47:36.379Z",
-  "commit": "3e5aa70",
+  "generated_at": "2026-08-07T07:59:17.015Z",
+  "commit": "9ebedd8",
   "nodes": [
+    {
+      "id": "app:finance",
+      "type": "app",
+      "props": {
+        "dir": "apps/finance",
+        "name": "@fm/app-finance"
+      },
+      "source": "apps/finance/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@bufbuild/protobuf",
+      "type": "external",
+      "props": {
+        "name": "@bufbuild/protobuf"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@connectrpc/connect",
+      "type": "external",
+      "props": {
+        "name": "@connectrpc/connect"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@connectrpc/connect-web",
+      "type": "external",
+      "props": {
+        "name": "@connectrpc/connect-web"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@tanstack/react-query",
+      "type": "external",
+      "props": {
+        "name": "@tanstack/react-query"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@types/node",
+      "type": "external",
+      "props": {
+        "name": "@types/node"
+      },
+      "source": "packages/api/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:@types/react",
+      "type": "external",
+      "props": {
+        "name": "@types/react"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:connectrpc.com/connect",
+      "type": "external",
+      "props": {
+        "name": "connectrpc.com/connect"
+      },
+      "source": "libs/go/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo",
+      "type": "external",
+      "props": {
+        "name": "expo"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo-constants",
+      "type": "external",
+      "props": {
+        "name": "expo-constants"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo-linking",
+      "type": "external",
+      "props": {
+        "name": "expo-linking"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo-router",
+      "type": "external",
+      "props": {
+        "name": "expo-router"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo-secure-store",
+      "type": "external",
+      "props": {
+        "name": "expo-secure-store"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:expo-status-bar",
+      "type": "external",
+      "props": {
+        "name": "expo-status-bar"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
     {
       "id": "ext:github.com/gin-gonic/gin",
       "type": "external",
@@ -11,8 +165,30 @@
       },
       "source": "services/auth/go.mod",
       "confidence": 0.9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:github.com/golang-jwt/jwt/v5",
+      "type": "external",
+      "props": {
+        "name": "github.com/golang-jwt/jwt/v5"
+      },
+      "source": "libs/go/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:github.com/google/uuid",
+      "type": "external",
+      "props": {
+        "name": "github.com/google/uuid"
+      },
+      "source": "libs/go/database/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "ext:github.com/jackc/pgx/v5",
@@ -20,10 +196,21 @@
       "props": {
         "name": "github.com/jackc/pgx/v5"
       },
-      "source": "services/auth/go.mod",
+      "source": "libs/go/database/go.mod",
       "confidence": 0.9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:github.com/nats-io/nats.go",
+      "type": "external",
+      "props": {
+        "name": "github.com/nats-io/nats.go"
+      },
+      "source": "libs/go/events/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "ext:github.com/spf13/viper",
@@ -33,8 +220,19 @@
       },
       "source": "services/auth/go.mod",
       "confidence": 0.9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:golang.org/x/net",
+      "type": "external",
+      "props": {
+        "name": "golang.org/x/net"
+      },
+      "source": "services/family/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "ext:google.golang.org/grpc",
@@ -44,8 +242,231 @@
       },
       "source": "services/auth/go.mod",
       "confidence": 0.9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:google.golang.org/protobuf",
+      "type": "external",
+      "props": {
+        "name": "google.golang.org/protobuf"
+      },
+      "source": "libs/go/database/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:nativewind",
+      "type": "external",
+      "props": {
+        "name": "nativewind"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react",
+      "type": "external",
+      "props": {
+        "name": "react"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-dom",
+      "type": "external",
+      "props": {
+        "name": "react-dom"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-native",
+      "type": "external",
+      "props": {
+        "name": "react-native"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-native-safe-area-context",
+      "type": "external",
+      "props": {
+        "name": "react-native-safe-area-context"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-native-screens",
+      "type": "external",
+      "props": {
+        "name": "react-native-screens"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-native-svg",
+      "type": "external",
+      "props": {
+        "name": "react-native-svg"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:react-native-web",
+      "type": "external",
+      "props": {
+        "name": "react-native-web"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:tailwindcss",
+      "type": "external",
+      "props": {
+        "name": "tailwindcss"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "ext:typescript",
+      "type": "external",
+      "props": {
+        "name": "typescript"
+      },
+      "source": "apps/finance/package.json",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "golib:auth",
+      "type": "golib",
+      "props": {
+        "dir": "libs/go/auth",
+        "module": "github.com/nnc/family-manager/libs/go/auth",
+        "aliases": [
+          "github.com/nnc/family-manager/libs/go/auth",
+          "libs/go/auth",
+          "auth"
+        ]
+      },
+      "source": "libs/go/auth/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "golib:database",
+      "type": "golib",
+      "props": {
+        "dir": "libs/go/database",
+        "module": "github.com/nnc/family-manager/libs/go/database",
+        "aliases": [
+          "github.com/nnc/family-manager/libs/go/database",
+          "libs/go/database",
+          "database"
+        ]
+      },
+      "source": "libs/go/database/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "golib:events",
+      "type": "golib",
+      "props": {
+        "dir": "libs/go/events",
+        "module": "github.com/nnc/family-manager/libs/go/events",
+        "aliases": [
+          "github.com/nnc/family-manager/libs/go/events",
+          "libs/go/events",
+          "events"
+        ]
+      },
+      "source": "libs/go/events/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "golib:go",
+      "type": "golib",
+      "props": {
+        "dir": "sdk/go",
+        "module": "github.com/nnc/family-manager/sdk/go",
+        "aliases": [
+          "github.com/nnc/family-manager/sdk/go",
+          "sdk/go",
+          "go"
+        ]
+      },
+      "source": "sdk/go/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "golib:logger",
+      "type": "golib",
+      "props": {
+        "dir": "libs/go/logger",
+        "module": "github.com/nnc/family-manager/libs/go/logger",
+        "aliases": [
+          "github.com/nnc/family-manager/libs/go/logger",
+          "libs/go/logger",
+          "logger"
+        ]
+      },
+      "source": "libs/go/logger/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "infra:family",
+      "type": "infra",
+      "props": {
+        "name": "family"
+      },
+      "source": "docker-compose.yml",
+      "line": 49,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "infra:finance",
+      "type": "infra",
+      "props": {
+        "name": "finance"
+      },
+      "source": "docker-compose.yml",
+      "line": 71,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "infra:minio",
@@ -55,8 +476,8 @@
       },
       "source": "docker-compose.yml",
       "line": 33,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "infra:nats",
@@ -66,8 +487,8 @@
       },
       "source": "docker-compose.yml",
       "line": 19,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "infra:postgres",
@@ -77,16 +498,48 @@
       },
       "source": "docker-compose.yml",
       "line": 2,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
       "type": "migration",
       "props": {},
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "migration:services/family/internal/db/migrations/000001_init.down.sql",
+      "type": "migration",
+      "props": {},
+      "source": "services/family/internal/db/migrations/000001_init.down.sql",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "migration:services/family/internal/db/migrations/000001_init.up.sql",
+      "type": "migration",
+      "props": {},
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "migration:services/finance/internal/db/migrations/000001_init.down.sql",
+      "type": "migration",
+      "props": {},
+      "source": "services/finance/internal/db/migrations/000001_init.down.sql",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "migration:services/finance/internal/db/migrations/000001_init.up.sql",
+      "type": "migration",
+      "props": {},
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.LoginRequest",
@@ -96,8 +549,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.LoginResponse",
@@ -107,8 +560,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.LogoutRequest",
@@ -118,8 +571,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.LogoutResponse",
@@ -129,8 +582,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.RefreshRequest",
@@ -140,8 +593,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.RefreshResponse",
@@ -151,8 +604,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.RegisterRequest",
@@ -162,8 +615,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "msg:auth.v1.RegisterResponse",
@@ -173,8 +626,833 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.AcceptInvitationRequest",
+      "type": "message",
+      "props": {
+        "name": "AcceptInvitationRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.AcceptInvitationResponse",
+      "type": "message",
+      "props": {
+        "name": "AcceptInvitationResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.CheckMembershipRequest",
+      "type": "message",
+      "props": {
+        "name": "CheckMembershipRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.CheckMembershipResponse",
+      "type": "message",
+      "props": {
+        "name": "CheckMembershipResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.CreateFamilyRequest",
+      "type": "message",
+      "props": {
+        "name": "CreateFamilyRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.CreateFamilyResponse",
+      "type": "message",
+      "props": {
+        "name": "CreateFamilyResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.Family",
+      "type": "message",
+      "props": {
+        "name": "Family"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 47,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.GetFamilyRequest",
+      "type": "message",
+      "props": {
+        "name": "GetFamilyRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.GetFamilyResponse",
+      "type": "message",
+      "props": {
+        "name": "GetFamilyResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.Invitation",
+      "type": "message",
+      "props": {
+        "name": "Invitation"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 66,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.InviteMemberRequest",
+      "type": "message",
+      "props": {
+        "name": "InviteMemberRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.InviteMemberResponse",
+      "type": "message",
+      "props": {
+        "name": "InviteMemberResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.LeaveFamilyRequest",
+      "type": "message",
+      "props": {
+        "name": "LeaveFamilyRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.LeaveFamilyResponse",
+      "type": "message",
+      "props": {
+        "name": "LeaveFamilyResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.ListInvitationsRequest",
+      "type": "message",
+      "props": {
+        "name": "ListInvitationsRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.ListInvitationsResponse",
+      "type": "message",
+      "props": {
+        "name": "ListInvitationsResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.ListMembersRequest",
+      "type": "message",
+      "props": {
+        "name": "ListMembersRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.ListMembersResponse",
+      "type": "message",
+      "props": {
+        "name": "ListMembersResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.Member",
+      "type": "message",
+      "props": {
+        "name": "Member"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 55,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.MemberInvitedEvent",
+      "type": "message",
+      "props": {
+        "name": "MemberInvitedEvent"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 171,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.MemberJoinedEvent",
+      "type": "message",
+      "props": {
+        "name": "MemberJoinedEvent"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 179,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.MemberRemovedEvent",
+      "type": "message",
+      "props": {
+        "name": "MemberRemovedEvent"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 186,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.RemoveMemberRequest",
+      "type": "message",
+      "props": {
+        "name": "RemoveMemberRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.RemoveMemberResponse",
+      "type": "message",
+      "props": {
+        "name": "RemoveMemberResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.RevokeInvitationRequest",
+      "type": "message",
+      "props": {
+        "name": "RevokeInvitationRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.RevokeInvitationResponse",
+      "type": "message",
+      "props": {
+        "name": "RevokeInvitationResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.UpdateFamilyRequest",
+      "type": "message",
+      "props": {
+        "name": "UpdateFamilyRequest"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:family.v1.UpdateFamilyResponse",
+      "type": "message",
+      "props": {
+        "name": "UpdateFamilyResponse"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.Account",
+      "type": "message",
+      "props": {
+        "name": "Account"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 73,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.Category",
+      "type": "message",
+      "props": {
+        "name": "Category"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 92,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CategorySlice",
+      "type": "message",
+      "props": {
+        "name": "CategorySlice"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 296,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateAccountRequest",
+      "type": "message",
+      "props": {
+        "name": "CreateAccountRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateAccountResponse",
+      "type": "message",
+      "props": {
+        "name": "CreateAccountResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateCategoryRequest",
+      "type": "message",
+      "props": {
+        "name": "CreateCategoryRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateCategoryResponse",
+      "type": "message",
+      "props": {
+        "name": "CreateCategoryResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateTransactionRequest",
+      "type": "message",
+      "props": {
+        "name": "CreateTransactionRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.CreateTransactionResponse",
+      "type": "message",
+      "props": {
+        "name": "CreateTransactionResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DateRange",
+      "type": "message",
+      "props": {
+        "name": "DateRange"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 68,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteAccountRequest",
+      "type": "message",
+      "props": {
+        "name": "DeleteAccountRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteAccountResponse",
+      "type": "message",
+      "props": {
+        "name": "DeleteAccountResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteCategoryRequest",
+      "type": "message",
+      "props": {
+        "name": "DeleteCategoryRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteCategoryResponse",
+      "type": "message",
+      "props": {
+        "name": "DeleteCategoryResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteTransactionRequest",
+      "type": "message",
+      "props": {
+        "name": "DeleteTransactionRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.DeleteTransactionResponse",
+      "type": "message",
+      "props": {
+        "name": "DeleteTransactionResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetAccountRequest",
+      "type": "message",
+      "props": {
+        "name": "GetAccountRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetAccountResponse",
+      "type": "message",
+      "props": {
+        "name": "GetAccountResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetCategoryBreakdownRequest",
+      "type": "message",
+      "props": {
+        "name": "GetCategoryBreakdownRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetCategoryBreakdownResponse",
+      "type": "message",
+      "props": {
+        "name": "GetCategoryBreakdownResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetSummaryRequest",
+      "type": "message",
+      "props": {
+        "name": "GetSummaryRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetSummaryResponse",
+      "type": "message",
+      "props": {
+        "name": "GetSummaryResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetTransactionRequest",
+      "type": "message",
+      "props": {
+        "name": "GetTransactionRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.GetTransactionResponse",
+      "type": "message",
+      "props": {
+        "name": "GetTransactionResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListAccountsRequest",
+      "type": "message",
+      "props": {
+        "name": "ListAccountsRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListAccountsResponse",
+      "type": "message",
+      "props": {
+        "name": "ListAccountsResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListCategoriesRequest",
+      "type": "message",
+      "props": {
+        "name": "ListCategoriesRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListCategoriesResponse",
+      "type": "message",
+      "props": {
+        "name": "ListCategoriesResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListTransactionsRequest",
+      "type": "message",
+      "props": {
+        "name": "ListTransactionsRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.ListTransactionsResponse",
+      "type": "message",
+      "props": {
+        "name": "ListTransactionsResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.Money",
+      "type": "message",
+      "props": {
+        "name": "Money"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 61,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.Transaction",
+      "type": "message",
+      "props": {
+        "name": "Transaction"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 109,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.TransactionCreatedEvent",
+      "type": "message",
+      "props": {
+        "name": "TransactionCreatedEvent"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 319,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.TransactionDeletedEvent",
+      "type": "message",
+      "props": {
+        "name": "TransactionDeletedEvent"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 336,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.TransactionUpdatedEvent",
+      "type": "message",
+      "props": {
+        "name": "TransactionUpdatedEvent"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 330,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateAccountRequest",
+      "type": "message",
+      "props": {
+        "name": "UpdateAccountRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateAccountResponse",
+      "type": "message",
+      "props": {
+        "name": "UpdateAccountResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateCategoryRequest",
+      "type": "message",
+      "props": {
+        "name": "UpdateCategoryRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateCategoryResponse",
+      "type": "message",
+      "props": {
+        "name": "UpdateCategoryResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateTransactionRequest",
+      "type": "message",
+      "props": {
+        "name": "UpdateTransactionRequest"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "msg:finance.v1.UpdateTransactionResponse",
+      "type": "message",
+      "props": {
+        "name": "UpdateTransactionResponse"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/api",
+      "type": "package",
+      "props": {
+        "dir": "packages/api",
+        "name": "@fm/api"
+      },
+      "source": "packages/api/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/auth",
+      "type": "package",
+      "props": {
+        "dir": "packages/auth",
+        "name": "@fm/auth"
+      },
+      "source": "packages/auth/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/config",
+      "type": "package",
+      "props": {
+        "dir": "packages/config",
+        "name": "@fm/config"
+      },
+      "source": "packages/config/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/sdk",
+      "type": "package",
+      "props": {
+        "dir": "sdk/typescript",
+        "generated": true
+      },
+      "source": "sdk/typescript/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/theme",
+      "type": "package",
+      "props": {
+        "dir": "packages/theme",
+        "name": "@fm/theme"
+      },
+      "source": "packages/theme/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "pkg:@fm/ui",
+      "type": "package",
+      "props": {
+        "dir": "packages/ui",
+        "name": "@fm/ui"
+      },
+      "source": "packages/ui/package.json",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "proto:libs/proto/auth/v1/auth.proto",
@@ -185,8 +1463,32 @@
         "canonical": true
       },
       "source": "libs/proto/auth/v1/auth.proto",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "proto:libs/proto/family/v1/family.proto",
+      "type": "contract",
+      "props": {
+        "package": "family.v1",
+        "go_package": null,
+        "canonical": true
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "proto:libs/proto/finance/v1/finance.proto",
+      "type": "contract",
+      "props": {
+        "package": "finance.v1",
+        "go_package": null,
+        "canonical": true
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "rpc:AuthService.Login",
@@ -197,8 +1499,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "rpc:AuthService.Logout",
@@ -209,8 +1511,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "rpc:AuthService.Refresh",
@@ -221,8 +1523,8 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "rpc:AuthService.Register",
@@ -233,8 +1535,332 @@
       },
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.AcceptInvitation",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "AcceptInvitation"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.CheckMembership",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "CheckMembership"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.CreateFamily",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "CreateFamily"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.GetFamily",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "GetFamily"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.InviteMember",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "InviteMember"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.LeaveFamily",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "LeaveFamily"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.ListInvitations",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "ListInvitations"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.ListMembers",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "ListMembers"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.RemoveMember",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "RemoveMember"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.RevokeInvitation",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "RevokeInvitation"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FamilyService.UpdateFamily",
+      "type": "rpc",
+      "props": {
+        "service": "FamilyService",
+        "name": "UpdateFamily"
+      },
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.CreateAccount",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "CreateAccount"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.CreateCategory",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "CreateCategory"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.CreateTransaction",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "CreateTransaction"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.DeleteAccount",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "DeleteAccount"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.DeleteCategory",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "DeleteCategory"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.DeleteTransaction",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "DeleteTransaction"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.GetAccount",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "GetAccount"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.GetCategoryBreakdown",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "GetCategoryBreakdown"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.GetSummary",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "GetSummary"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.GetTransaction",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "GetTransaction"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.ListAccounts",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "ListAccounts"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.ListCategories",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "ListCategories"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.ListTransactions",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "ListTransactions"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.UpdateAccount",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "UpdateAccount"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.UpdateCategory",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "UpdateCategory"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "rpc:FinanceService.UpdateTransaction",
+      "type": "rpc",
+      "props": {
+        "service": "FinanceService",
+        "name": "UpdateTransaction"
+      },
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "service:auth",
@@ -249,8 +1875,106 @@
         ]
       },
       "source": "services/auth/go.mod",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "service:family",
+      "type": "service",
+      "props": {
+        "dir": "services/family",
+        "module": "github.com/nnc/family-manager/services/family",
+        "aliases": [
+          "github.com/nnc/family-manager/services/family",
+          "services/family",
+          "family"
+        ]
+      },
+      "source": "services/family/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "service:finance",
+      "type": "service",
+      "props": {
+        "dir": "services/finance",
+        "module": "github.com/nnc/family-manager/services/finance",
+        "aliases": [
+          "github.com/nnc/family-manager/services/finance",
+          "services/finance",
+          "finance"
+        ]
+      },
+      "source": "services/finance/go.mod",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:accounts",
+      "type": "table",
+      "props": {
+        "name": "accounts"
+      },
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 8,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:categories",
+      "type": "table",
+      "props": {
+        "name": "categories"
+      },
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:families",
+      "type": "table",
+      "props": {
+        "name": "families"
+      },
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 5,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:family_invitations",
+      "type": "table",
+      "props": {
+        "name": "family_invitations"
+      },
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:family_members",
+      "type": "table",
+      "props": {
+        "name": "family_members"
+      },
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "id": "table:transactions",
+      "type": "table",
+      "props": {
+        "name": "transactions"
+      },
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 46,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "id": "table:users",
@@ -260,19 +1984,352 @@
       },
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
       "line": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     }
   ],
   "edges": [
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@bufbuild/protobuf",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@connectrpc/connect",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@connectrpc/connect-web",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@tanstack/react-query",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/react",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-constants",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-linking",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-router",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-secure-store",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-status-bar",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:nativewind",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-dom",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native-safe-area-context",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native-screens",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native-svg",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native-web",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:tailwindcss",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "apps/finance/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/api",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/auth",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/config",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/sdk",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/theme",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "app:finance",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/ui",
+      "source": "apps/finance/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:connectrpc.com/connect",
+      "source": "libs/go/auth/go.mod",
+      "line": 6,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/golang-jwt/jwt/v5",
+      "source": "libs/go/auth/go.mod",
+      "line": 7,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:database",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/google/uuid",
+      "source": "libs/go/database/go.mod",
+      "line": 6,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:database",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/jackc/pgx/v5",
+      "source": "libs/go/database/go.mod",
+      "line": 7,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:database",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/protobuf",
+      "source": "libs/go/database/go.mod",
+      "line": 8,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:events",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/nats-io/nats.go",
+      "source": "libs/go/events/go.mod",
+      "line": 6,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:events",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/protobuf",
+      "source": "libs/go/events/go.mod",
+      "line": 7,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:go",
+      "rel": "DEPENDS_ON",
+      "to": "ext:connectrpc.com/connect",
+      "source": "sdk/go/go.mod",
+      "line": 8,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "golib:go",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/protobuf",
+      "source": "sdk/go/go.mod",
+      "line": 9,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
     {
       "from": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
       "rel": "CREATES",
       "to": "table:users",
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
       "line": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
@@ -280,8 +2337,341 @@
       "to": "service:auth",
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
       "line": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/family/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:families",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 5,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/family/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:family_invitations",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/family/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:family_members",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/family/internal/db/migrations/000001_init.up.sql",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 5,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/finance/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:accounts",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 8,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/finance/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:categories",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/finance/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:transactions",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 46,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "migration:services/finance/internal/db/migrations/000001_init.up.sql",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 8,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@bufbuild/protobuf",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@connectrpc/connect",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@connectrpc/connect-web",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@tanstack/react-query",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/node",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/react",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "packages/api/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/auth",
+      "source": "packages/api/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/config",
+      "source": "packages/api/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/api",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/sdk",
+      "source": "packages/api/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/node",
+      "source": "packages/auth/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/react",
+      "source": "packages/auth/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:expo-secure-store",
+      "source": "packages/auth/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react",
+      "source": "packages/auth/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "packages/auth/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/auth",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/config",
+      "source": "packages/auth/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/config",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "packages/config/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/theme",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/node",
+      "source": "packages/theme/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/theme",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "packages/theme/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/theme",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/config",
+      "source": "packages/theme/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:@types/react",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:nativewind",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:react-native-svg",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "ext:typescript",
+      "source": "packages/ui/package.json",
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/config",
+      "source": "packages/ui/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "pkg:@fm/ui",
+      "rel": "DEPENDS_ON",
+      "to": "pkg:@fm/theme",
+      "source": "packages/ui/package.json",
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "proto:libs/proto/auth/v1/auth.proto",
@@ -289,8 +2679,8 @@
       "to": "rpc:AuthService.Login",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "proto:libs/proto/auth/v1/auth.proto",
@@ -298,8 +2688,8 @@
       "to": "rpc:AuthService.Logout",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "proto:libs/proto/auth/v1/auth.proto",
@@ -307,8 +2697,8 @@
       "to": "rpc:AuthService.Refresh",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "proto:libs/proto/auth/v1/auth.proto",
@@ -316,16 +2706,259 @@
       "to": "rpc:AuthService.Register",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.AcceptInvitation",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.CheckMembership",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.CreateFamily",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.GetFamily",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.InviteMember",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.LeaveFamily",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.ListInvitations",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.ListMembers",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.RemoveMember",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.RevokeInvitation",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/family/v1/family.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FamilyService.UpdateFamily",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.CreateAccount",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.CreateCategory",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.CreateTransaction",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.DeleteAccount",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.DeleteCategory",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.DeleteTransaction",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.GetAccount",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.GetCategoryBreakdown",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.GetSummary",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.GetTransaction",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.ListAccounts",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.ListCategories",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.ListTransactions",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.UpdateAccount",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.UpdateCategory",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "proto:libs/proto/finance/v1/finance.proto",
+      "rel": "DECLARES",
+      "to": "rpc:FinanceService.UpdateTransaction",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Login",
       "rel": "OWNED_BY",
       "to": "service:auth",
       "source": "libs/proto/auth/v1/auth.proto",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Login",
@@ -333,8 +2966,8 @@
       "to": "msg:auth.v1.LoginRequest",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Login",
@@ -342,16 +2975,16 @@
       "to": "msg:auth.v1.LoginResponse",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 8,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Logout",
       "rel": "OWNED_BY",
       "to": "service:auth",
       "source": "libs/proto/auth/v1/auth.proto",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Logout",
@@ -359,8 +2992,8 @@
       "to": "msg:auth.v1.LogoutRequest",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Logout",
@@ -368,16 +3001,16 @@
       "to": "msg:auth.v1.LogoutResponse",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 13,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Refresh",
       "rel": "OWNED_BY",
       "to": "service:auth",
       "source": "libs/proto/auth/v1/auth.proto",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Refresh",
@@ -385,8 +3018,8 @@
       "to": "msg:auth.v1.RefreshRequest",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Refresh",
@@ -394,16 +3027,16 @@
       "to": "msg:auth.v1.RefreshResponse",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 12,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Register",
       "rel": "OWNED_BY",
       "to": "service:auth",
       "source": "libs/proto/auth/v1/auth.proto",
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Register",
@@ -411,8 +3044,8 @@
       "to": "msg:auth.v1.RegisterRequest",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "rpc:AuthService.Register",
@@ -420,8 +3053,710 @@
       "to": "msg:auth.v1.RegisterResponse",
       "source": "libs/proto/auth/v1/auth.proto",
       "line": 9,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.AcceptInvitation",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.AcceptInvitation",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.AcceptInvitationRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.AcceptInvitation",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.AcceptInvitationResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 22,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CheckMembership",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CheckMembership",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.CheckMembershipRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CheckMembership",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.CheckMembershipResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CreateFamily",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CreateFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.CreateFamilyRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.CreateFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.CreateFamilyResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 13,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.GetFamily",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.GetFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.GetFamilyRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.GetFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.GetFamilyResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 14,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.InviteMember",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.InviteMember",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.InviteMemberRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.InviteMember",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.InviteMemberResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.LeaveFamily",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.LeaveFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.LeaveFamilyRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.LeaveFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.LeaveFamilyResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListInvitations",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListInvitations",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.ListInvitationsRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListInvitations",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.ListInvitationsResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListMembers",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListMembers",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.ListMembersRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.ListMembers",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.ListMembersResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RemoveMember",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RemoveMember",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.RemoveMemberRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RemoveMember",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.RemoveMemberResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RevokeInvitation",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RevokeInvitation",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.RevokeInvitationRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.RevokeInvitation",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.RevokeInvitationResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.UpdateFamily",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "libs/proto/family/v1/family.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.UpdateFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.UpdateFamilyRequest",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FamilyService.UpdateFamily",
+      "rel": "USES_MESSAGE",
+      "to": "msg:family.v1.UpdateFamilyResponse",
+      "source": "libs/proto/family/v1/family.proto",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateAccount",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateAccountRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateAccountResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 16,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateCategory",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateCategoryRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateCategoryResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 21,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateTransaction",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateTransactionRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.CreateTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.CreateTransactionResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteAccount",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteAccountRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteAccountResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 20,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteCategory",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteCategoryRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteCategoryResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 25,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteTransaction",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteTransactionRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.DeleteTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.DeleteTransactionResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 31,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetAccount",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetAccountRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetAccountResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 18,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetCategoryBreakdown",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetCategoryBreakdown",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetCategoryBreakdownRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetCategoryBreakdown",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetCategoryBreakdownResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 36,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetSummary",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetSummary",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetSummaryRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetSummary",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetSummaryResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 34,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetTransaction",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetTransactionRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.GetTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.GetTransactionResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 29,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListAccounts",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListAccounts",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListAccountsRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListAccounts",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListAccountsResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 17,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListCategories",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListCategories",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListCategoriesRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListCategories",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListCategoriesResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 23,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListTransactions",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListTransactions",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListTransactionsRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.ListTransactions",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.ListTransactionsResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 28,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateAccount",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateAccountRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateAccount",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateAccountResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 19,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateCategory",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateCategoryRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateCategory",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateCategoryResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 24,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateTransaction",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateTransactionRequest",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "rpc:FinanceService.UpdateTransaction",
+      "rel": "USES_MESSAGE",
+      "to": "msg:finance.v1.UpdateTransactionResponse",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -430,8 +3765,8 @@
       "source": "services/auth/go.mod",
       "line": 6,
       "internal": false,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -440,8 +3775,8 @@
       "source": "services/auth/go.mod",
       "line": 7,
       "internal": false,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -450,8 +3785,8 @@
       "source": "services/auth/go.mod",
       "line": 8,
       "internal": false,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -460,8 +3795,8 @@
       "source": "services/auth/go.mod",
       "line": 9,
       "internal": false,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -469,8 +3804,8 @@
       "to": "proto:libs/proto/auth/v1/auth.proto",
       "source": "libs/proto/auth/v1/auth.proto",
       "confidence": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -478,8 +3813,8 @@
       "to": "table:users",
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
       "line": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "service:auth",
@@ -487,8 +3822,388 @@
       "to": "infra:postgres",
       "source": "services/auth/.env.example",
       "confidence": 0.7,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "ext:connectrpc.com/connect",
+      "source": "services/family/go.mod",
+      "line": 16,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/jackc/pgx/v5",
+      "source": "services/family/go.mod",
+      "line": 17,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/spf13/viper",
+      "source": "services/family/go.mod",
+      "line": 23,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "ext:golang.org/x/net",
+      "source": "services/family/go.mod",
+      "line": 24,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/protobuf",
+      "source": "services/family/go.mod",
+      "line": 25,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "golib:auth",
+      "source": "services/family/go.mod",
+      "line": 18,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "golib:database",
+      "source": "services/family/go.mod",
+      "line": 19,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "golib:events",
+      "source": "services/family/go.mod",
+      "line": 20,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "golib:go",
+      "source": "services/family/go.mod",
+      "line": 22,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "DEPENDS_ON",
+      "to": "golib:logger",
+      "source": "services/family/go.mod",
+      "line": 21,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "IMPLEMENTS",
+      "to": "proto:libs/proto/family/v1/family.proto",
+      "source": "libs/proto/family/v1/family.proto",
+      "confidence": 1,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "PERSISTS_TO",
+      "to": "table:families",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 5,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "PERSISTS_TO",
+      "to": "table:family_invitations",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "PERSISTS_TO",
+      "to": "table:family_members",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "RUNS_ON",
+      "to": "infra:family",
+      "source": "services/family/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "RUNS_ON",
+      "to": "infra:nats",
+      "source": "services/family/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:family",
+      "rel": "RUNS_ON",
+      "to": "infra:postgres",
+      "source": "services/family/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:connectrpc.com/connect",
+      "source": "services/finance/go.mod",
+      "line": 16,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/jackc/pgx/v5",
+      "source": "services/finance/go.mod",
+      "line": 17,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/spf13/viper",
+      "source": "services/finance/go.mod",
+      "line": 23,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:golang.org/x/net",
+      "source": "services/finance/go.mod",
+      "line": 24,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/protobuf",
+      "source": "services/finance/go.mod",
+      "line": 25,
+      "internal": false,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "golib:auth",
+      "source": "services/finance/go.mod",
+      "line": 18,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "golib:database",
+      "source": "services/finance/go.mod",
+      "line": 19,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "golib:events",
+      "source": "services/finance/go.mod",
+      "line": 20,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "golib:go",
+      "source": "services/finance/go.mod",
+      "line": 22,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "DEPENDS_ON",
+      "to": "golib:logger",
+      "source": "services/finance/go.mod",
+      "line": 21,
+      "internal": true,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "IMPLEMENTS",
+      "to": "proto:libs/proto/finance/v1/finance.proto",
+      "source": "libs/proto/finance/v1/finance.proto",
+      "confidence": 1,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "PERSISTS_TO",
+      "to": "table:accounts",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 8,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "PERSISTS_TO",
+      "to": "table:categories",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "PERSISTS_TO",
+      "to": "table:transactions",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 46,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "RUNS_ON",
+      "to": "infra:finance",
+      "source": "services/finance/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "RUNS_ON",
+      "to": "infra:nats",
+      "source": "services/finance/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "service:finance",
+      "rel": "RUNS_ON",
+      "to": "infra:postgres",
+      "source": "services/finance/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:accounts",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 8,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:categories",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 26,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:families",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 5,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:family_invitations",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 30,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:family_members",
+      "rel": "OWNED_BY",
+      "to": "service:family",
+      "source": "services/family/internal/db/migrations/000001_init.up.sql",
+      "line": 15,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
+    },
+    {
+      "from": "table:transactions",
+      "rel": "OWNED_BY",
+      "to": "service:finance",
+      "source": "services/finance/internal/db/migrations/000001_init.up.sql",
+      "line": 46,
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     },
     {
       "from": "table:users",
@@ -496,8 +4211,8 @@
       "to": "service:auth",
       "source": "services/auth/internal/db/migrations/000001_init.up.sql",
       "line": 1,
-      "extracted_at": "2026-08-06T14:47:36.379Z",
-      "commit": "3e5aa70"
+      "extracted_at": "2026-08-07T07:59:17.015Z",
+      "commit": "9ebedd8"
     }
   ],
   "dropped": []

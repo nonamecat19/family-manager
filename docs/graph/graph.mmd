@@ -1,19 +1,92 @@
 graph LR
+  subgraph apps
+    app_finance["app:finance"]
+  end
+  subgraph packages
+    pkg__fm_api["pkg:@fm/api"]
+    pkg__fm_auth["pkg:@fm/auth"]
+    pkg__fm_config["pkg:@fm/config"]
+    pkg__fm_sdk["pkg:@fm/sdk"]
+    pkg__fm_theme["pkg:@fm/theme"]
+    pkg__fm_ui["pkg:@fm/ui"]
+  end
   subgraph services
     service_auth["service:auth"]
+    service_family["service:family"]
+    service_finance["service:finance"]
+  end
+  subgraph golibs
+    golib_auth["golib:auth"]
+    golib_database["golib:database"]
+    golib_events["golib:events"]
+    golib_go["golib:go"]
+    golib_logger["golib:logger"]
   end
   subgraph contracts
     proto_libs_proto_auth_v1_auth_proto["proto:libs/proto/auth/v1/auth.proto"]
+    proto_libs_proto_family_v1_family_proto["proto:libs/proto/family/v1/family.proto"]
+    proto_libs_proto_finance_v1_finance_proto["proto:libs/proto/finance/v1/finance.proto"]
   end
   subgraph tables
+    table_accounts["table:accounts"]
+    table_categories["table:categories"]
+    table_families["table:families"]
+    table_family_invitations["table:family_invitations"]
+    table_family_members["table:family_members"]
+    table_transactions["table:transactions"]
     table_users["table:users"]
   end
   subgraph infras
+    infra_family["infra:family"]
+    infra_finance["infra:finance"]
     infra_minio["infra:minio"]
     infra_nats["infra:nats"]
     infra_postgres["infra:postgres"]
   end
+  app_finance -->|DEPENDS_ON| pkg__fm_api
+  app_finance -->|DEPENDS_ON| pkg__fm_auth
+  app_finance -->|DEPENDS_ON| pkg__fm_config
+  app_finance -->|DEPENDS_ON| pkg__fm_sdk
+  app_finance -->|DEPENDS_ON| pkg__fm_theme
+  app_finance -->|DEPENDS_ON| pkg__fm_ui
+  pkg__fm_api -->|DEPENDS_ON| pkg__fm_auth
+  pkg__fm_api -->|DEPENDS_ON| pkg__fm_config
+  pkg__fm_api -->|DEPENDS_ON| pkg__fm_sdk
+  pkg__fm_auth -->|DEPENDS_ON| pkg__fm_config
+  pkg__fm_theme -->|DEPENDS_ON| pkg__fm_config
+  pkg__fm_ui -->|DEPENDS_ON| pkg__fm_config
+  pkg__fm_ui -->|DEPENDS_ON| pkg__fm_theme
   service_auth -->|IMPLEMENTS| proto_libs_proto_auth_v1_auth_proto
   service_auth -->|PERSISTS_TO| table_users
   service_auth -->|RUNS_ON| infra_postgres
+  service_family -->|DEPENDS_ON| golib_auth
+  service_family -->|DEPENDS_ON| golib_database
+  service_family -->|DEPENDS_ON| golib_events
+  service_family -->|DEPENDS_ON| golib_go
+  service_family -->|DEPENDS_ON| golib_logger
+  service_family -->|IMPLEMENTS| proto_libs_proto_family_v1_family_proto
+  service_family -->|PERSISTS_TO| table_families
+  service_family -->|PERSISTS_TO| table_family_invitations
+  service_family -->|PERSISTS_TO| table_family_members
+  service_family -->|RUNS_ON| infra_family
+  service_family -->|RUNS_ON| infra_nats
+  service_family -->|RUNS_ON| infra_postgres
+  service_finance -->|DEPENDS_ON| golib_auth
+  service_finance -->|DEPENDS_ON| golib_database
+  service_finance -->|DEPENDS_ON| golib_events
+  service_finance -->|DEPENDS_ON| golib_go
+  service_finance -->|DEPENDS_ON| golib_logger
+  service_finance -->|IMPLEMENTS| proto_libs_proto_finance_v1_finance_proto
+  service_finance -->|PERSISTS_TO| table_accounts
+  service_finance -->|PERSISTS_TO| table_categories
+  service_finance -->|PERSISTS_TO| table_transactions
+  service_finance -->|RUNS_ON| infra_finance
+  service_finance -->|RUNS_ON| infra_nats
+  service_finance -->|RUNS_ON| infra_postgres
+  table_accounts -->|OWNED_BY| service_finance
+  table_categories -->|OWNED_BY| service_finance
+  table_families -->|OWNED_BY| service_family
+  table_family_invitations -->|OWNED_BY| service_family
+  table_family_members -->|OWNED_BY| service_family
+  table_transactions -->|OWNED_BY| service_finance
   table_users -->|OWNED_BY| service_auth
