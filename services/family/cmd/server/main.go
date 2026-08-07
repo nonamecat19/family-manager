@@ -89,35 +89,27 @@ func run() error {
 		InvitationTTL: cfg.InvitationTTL,
 	})
 
-	mux := http.NewServeMux()
-	// Every procedure on this service requires a token — there is no public family RPC, so
-	// the interceptor gets no exemption list.
-	path, svc := familyv1connect.NewFamilyServiceHandler(
-		h, connect.WithInterceptors(fmauth.Interceptor(verifier)),
-	)
-	mux.Handle(path, svc)
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		if err := pool.Ping(context.Background()); err != nil {
-			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = w.Write([]byte("ok"))
-	})
+	// Two listeners, because the two audiences are not equally trusted.
+	//
+	// Public (HTTPPort): apps. Every procedure requires a verified token, and
+	// GetUserMembership is refused outright — it names a user id in the request, so on a
+	// token-authenticated port it would let any signed-in user read anyone's household.
+	//
+	// Internal (GRPCPort): sibling services. No token — services/auth calls it *before* a
+	// token exists. It must never be published to the host; compose leaves its port unmapped
+	// so it is reachable only on the compose network.
+	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool))
+	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool))
 
-	// h2c so gRPC clients (sibling services) and Connect/JSON clients (apps) share one port.
-	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler:           h2c.NewHandler(mux, &http2.Server{}),
-		ReadHeaderTimeout: 10 * time.Second,
-	}
-
-	errc := make(chan error, 1)
-	go func() {
-		log.Info("listening", slog.String("addr", srv.Addr))
+	errc := make(chan error, 2)
+	serve := func(srv *http.Server, name string) {
+		log.Info("listening", slog.String("listener", name), slog.String("addr", srv.Addr))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errc <- err
+			errc <- fmt.Errorf("%s listener: %w", name, err)
 		}
-	}()
+	}
+	go serve(publicSrv, "public")
+	go serve(internalSrv, "internal")
 
 	select {
 	case err := <-errc:
@@ -126,7 +118,68 @@ func run() error {
 		log.Info("shutting down")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		return srv.Shutdown(shutdownCtx)
+		if err := publicSrv.Shutdown(shutdownCtx); err != nil {
+			return err
+		}
+		return internalSrv.Shutdown(shutdownCtx)
+	}
+}
+
+// internalOnly lists procedures that must not be served on the token-authenticated public
+// port. They take a subject id as an argument instead of reading it from the token, so
+// exposing them to apps would be a horizontal privilege escalation.
+var internalOnly = []string{
+	familyv1connect.FamilyServiceGetUserMembershipProcedure,
+	familyv1connect.FamilyServiceCheckMembershipProcedure,
+}
+
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger) *http.ServeMux {
+	mux := http.NewServeMux()
+	path, svc := familyv1connect.NewFamilyServiceHandler(
+		h, connect.WithInterceptors(fmauth.Interceptor(verifier)),
+	)
+	// Registered under the service path, then shadowed per procedure: a more specific
+	// pattern wins in ServeMux, so the block cannot be bypassed by casing or query strings.
+	mux.Handle(path, svc)
+	for _, procedure := range internalOnly {
+		mux.HandleFunc(procedure, func(w http.ResponseWriter, _ *http.Request) {
+			http.Error(w, "not found", http.StatusNotFound)
+		})
+	}
+	mux.HandleFunc("/healthz", healthz(pool))
+	return mux
+}
+
+func internalMux(h *handler.Handler, pool pinger) *http.ServeMux {
+	mux := http.NewServeMux()
+	// No interceptor: the caller is a sibling service on a private network, and auth calls
+	// this before any token exists.
+	path, svc := familyv1connect.NewFamilyServiceHandler(h)
+	mux.Handle(path, svc)
+	mux.HandleFunc("/healthz", healthz(pool))
+	return mux
+}
+
+type pinger interface {
+	Ping(ctx context.Context) error
+}
+
+func healthz(pool pinger) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		if err := pool.Ping(context.Background()); err != nil {
+			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = w.Write([]byte("ok"))
+	}
+}
+
+// h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.
+func newServer(port string, mux *http.ServeMux) *http.Server {
+	return &http.Server{
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 }
 

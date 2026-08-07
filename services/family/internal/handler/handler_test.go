@@ -390,3 +390,49 @@ func (f *fixture) accept(t *testing.T, userID, token string) {
 		t.Fatalf("AcceptInvitation: %v", err)
 	}
 }
+
+func TestGetUserMembershipAnswersForAuth(t *testing.T) {
+	f := newFixture(t)
+	fam := f.createFamilyAs(t, alice, "Household")
+
+	// The claim services/auth stamps on a token comes from here.
+	res, err := f.h.GetUserMembership(context.Background(),
+		connect.NewRequest(&familyv1.GetUserMembershipRequest{UserId: alice}))
+	if err != nil {
+		t.Fatalf("GetUserMembership: %v", err)
+	}
+	if !res.Msg.GetInFamily() {
+		t.Fatal("alice is in a family but GetUserMembership said otherwise")
+	}
+	if res.Msg.GetFamilyId() != fam.GetId() {
+		t.Errorf("family_id = %q, want %q", res.Msg.GetFamilyId(), fam.GetId())
+	}
+	if res.Msg.GetRole() != familyv1.Role_ROLE_ADMIN {
+		t.Errorf("role = %v, want admin", res.Msg.GetRole())
+	}
+}
+
+func TestGetUserMembershipTreatsNoFamilyAsNormal(t *testing.T) {
+	f := newFixture(t)
+
+	// A user who has not joined one yet is not an error: the token is minted without a
+	// family_id and the app shows onboarding.
+	res, err := f.h.GetUserMembership(context.Background(),
+		connect.NewRequest(&familyv1.GetUserMembershipRequest{UserId: carol}))
+	if err != nil {
+		t.Fatalf("GetUserMembership: %v", err)
+	}
+	if res.Msg.GetInFamily() || res.Msg.GetFamilyId() != "" {
+		t.Errorf("expected in_family=false with no id, got %v/%q",
+			res.Msg.GetInFamily(), res.Msg.GetFamilyId())
+	}
+}
+
+func TestGetUserMembershipValidatesTheUserID(t *testing.T) {
+	f := newFixture(t)
+	_, err := f.h.GetUserMembership(context.Background(),
+		connect.NewRequest(&familyv1.GetUserMembershipRequest{UserId: "not-a-uuid"}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("code = %v, want invalid_argument", connect.CodeOf(err))
+	}
+}

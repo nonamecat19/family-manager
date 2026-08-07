@@ -26,10 +26,16 @@ export function createQueryClient(): QueryClient {
   });
 }
 
-export function ApiProvider({ baseUrl, getAccessToken, queryClient, children }: ApiProviderProps) {
+export function ApiProvider({
+  baseUrl,
+  serviceUrls,
+  getAccessToken,
+  queryClient,
+  children,
+}: ApiProviderProps) {
   const clients = useMemo(
-    () => createClients({ baseUrl, getAccessToken }),
-    [baseUrl, getAccessToken],
+    () => createClients({ baseUrl, serviceUrls, getAccessToken }),
+    [baseUrl, serviceUrls, getAccessToken],
   );
   const qc = useMemo(() => queryClient ?? createQueryClient(), [queryClient]);
 

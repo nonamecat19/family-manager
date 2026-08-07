@@ -9,8 +9,17 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect } from "react";
 
-const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? "http://localhost:8083";
+const extra = Constants.expoConfig?.extra as
+  | { apiBaseUrl?: string; serviceUrls?: Record<string, string> }
+  | undefined;
+
+const API_BASE_URL = extra?.apiBaseUrl ?? "http://localhost:8083";
+
+/**
+ * In development each service listens on its own port; deployed, one gateway routes by
+ * procedure path and these are absent. app.json carries whichever applies.
+ */
+const SERVICE_URLS = extra?.serviceUrls;
 
 /**
  * The refresh call is built here with its own transport rather than through @fm/api: the
@@ -19,7 +28,10 @@ const API_BASE_URL =
  */
 const refreshClient = createClient(
   AuthService,
-  createConnectTransport({ baseUrl: API_BASE_URL, useBinaryFormat: false }),
+  createConnectTransport({
+    baseUrl: SERVICE_URLS?.auth ?? API_BASE_URL,
+    useBinaryFormat: false,
+  }),
 );
 
 async function refresh(refreshToken: string): Promise<Tokens> {
@@ -58,7 +70,7 @@ function ApiGate() {
   if (status === "loading") return <Loading label="Restoring your session…" />;
 
   return (
-    <ApiProvider baseUrl={API_BASE_URL} getAccessToken={getToken}>
+    <ApiProvider baseUrl={API_BASE_URL} serviceUrls={SERVICE_URLS} getAccessToken={getToken}>
       <Slot />
     </ApiProvider>
   );

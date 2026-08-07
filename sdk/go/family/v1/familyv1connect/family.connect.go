@@ -65,6 +65,9 @@ const (
 	// FamilyServiceCheckMembershipProcedure is the fully-qualified name of the FamilyService's
 	// CheckMembership RPC.
 	FamilyServiceCheckMembershipProcedure = "/family.v1.FamilyService/CheckMembership"
+	// FamilyServiceGetUserMembershipProcedure is the fully-qualified name of the FamilyService's
+	// GetUserMembership RPC.
+	FamilyServiceGetUserMembershipProcedure = "/family.v1.FamilyService/GetUserMembership"
 )
 
 // FamilyServiceClient is a client for the family.v1.FamilyService service.
@@ -82,6 +85,11 @@ type FamilyServiceClient interface {
 	// CheckMembership is the service-to-service call: a sibling service asks whether a user
 	// may act inside a family before it touches family-scoped rows.
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
+	// GetUserMembership answers "which family is this user in", which is what services/auth
+	// needs to stamp the family_id claim when it mints a token. It is served on the internal
+	// gRPC listener only: it takes a user_id from the caller rather than from a token, so it
+	// must never be reachable by an app.
+	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
 }
 
 // NewFamilyServiceClient constructs a client for the family.v1.FamilyService service. By default,
@@ -161,22 +169,29 @@ func NewFamilyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(familyServiceMethods.ByName("CheckMembership")),
 			connect.WithClientOptions(opts...),
 		),
+		getUserMembership: connect.NewClient[v1.GetUserMembershipRequest, v1.GetUserMembershipResponse](
+			httpClient,
+			baseURL+FamilyServiceGetUserMembershipProcedure,
+			connect.WithSchema(familyServiceMethods.ByName("GetUserMembership")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // familyServiceClient implements FamilyServiceClient.
 type familyServiceClient struct {
-	createFamily     *connect.Client[v1.CreateFamilyRequest, v1.CreateFamilyResponse]
-	getFamily        *connect.Client[v1.GetFamilyRequest, v1.GetFamilyResponse]
-	updateFamily     *connect.Client[v1.UpdateFamilyRequest, v1.UpdateFamilyResponse]
-	listMembers      *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
-	removeMember     *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
-	leaveFamily      *connect.Client[v1.LeaveFamilyRequest, v1.LeaveFamilyResponse]
-	inviteMember     *connect.Client[v1.InviteMemberRequest, v1.InviteMemberResponse]
-	acceptInvitation *connect.Client[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse]
-	revokeInvitation *connect.Client[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse]
-	listInvitations  *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
-	checkMembership  *connect.Client[v1.CheckMembershipRequest, v1.CheckMembershipResponse]
+	createFamily      *connect.Client[v1.CreateFamilyRequest, v1.CreateFamilyResponse]
+	getFamily         *connect.Client[v1.GetFamilyRequest, v1.GetFamilyResponse]
+	updateFamily      *connect.Client[v1.UpdateFamilyRequest, v1.UpdateFamilyResponse]
+	listMembers       *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
+	removeMember      *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
+	leaveFamily       *connect.Client[v1.LeaveFamilyRequest, v1.LeaveFamilyResponse]
+	inviteMember      *connect.Client[v1.InviteMemberRequest, v1.InviteMemberResponse]
+	acceptInvitation  *connect.Client[v1.AcceptInvitationRequest, v1.AcceptInvitationResponse]
+	revokeInvitation  *connect.Client[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse]
+	listInvitations   *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
+	checkMembership   *connect.Client[v1.CheckMembershipRequest, v1.CheckMembershipResponse]
+	getUserMembership *connect.Client[v1.GetUserMembershipRequest, v1.GetUserMembershipResponse]
 }
 
 // CreateFamily calls family.v1.FamilyService.CreateFamily.
@@ -234,6 +249,11 @@ func (c *familyServiceClient) CheckMembership(ctx context.Context, req *connect.
 	return c.checkMembership.CallUnary(ctx, req)
 }
 
+// GetUserMembership calls family.v1.FamilyService.GetUserMembership.
+func (c *familyServiceClient) GetUserMembership(ctx context.Context, req *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error) {
+	return c.getUserMembership.CallUnary(ctx, req)
+}
+
 // FamilyServiceHandler is an implementation of the family.v1.FamilyService service.
 type FamilyServiceHandler interface {
 	CreateFamily(context.Context, *connect.Request[v1.CreateFamilyRequest]) (*connect.Response[v1.CreateFamilyResponse], error)
@@ -249,6 +269,11 @@ type FamilyServiceHandler interface {
 	// CheckMembership is the service-to-service call: a sibling service asks whether a user
 	// may act inside a family before it touches family-scoped rows.
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
+	// GetUserMembership answers "which family is this user in", which is what services/auth
+	// needs to stamp the family_id claim when it mints a token. It is served on the internal
+	// gRPC listener only: it takes a user_id from the caller rather than from a token, so it
+	// must never be reachable by an app.
+	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
 }
 
 // NewFamilyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -324,6 +349,12 @@ func NewFamilyServiceHandler(svc FamilyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(familyServiceMethods.ByName("CheckMembership")),
 		connect.WithHandlerOptions(opts...),
 	)
+	familyServiceGetUserMembershipHandler := connect.NewUnaryHandler(
+		FamilyServiceGetUserMembershipProcedure,
+		svc.GetUserMembership,
+		connect.WithSchema(familyServiceMethods.ByName("GetUserMembership")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/family.v1.FamilyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case FamilyServiceCreateFamilyProcedure:
@@ -348,6 +379,8 @@ func NewFamilyServiceHandler(svc FamilyServiceHandler, opts ...connect.HandlerOp
 			familyServiceListInvitationsHandler.ServeHTTP(w, r)
 		case FamilyServiceCheckMembershipProcedure:
 			familyServiceCheckMembershipHandler.ServeHTTP(w, r)
+		case FamilyServiceGetUserMembershipProcedure:
+			familyServiceGetUserMembershipHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -399,4 +432,8 @@ func (UnimplementedFamilyServiceHandler) ListInvitations(context.Context, *conne
 
 func (UnimplementedFamilyServiceHandler) CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.CheckMembership is not implemented"))
+}
+
+func (UnimplementedFamilyServiceHandler) GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.GetUserMembership is not implemented"))
 }

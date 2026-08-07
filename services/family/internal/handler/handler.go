@@ -453,6 +453,37 @@ func (h *Handler) CheckMembership(
 	}), nil
 }
 
+// GetUserMembership resolves a user's family. services/auth calls it when minting a token,
+// so the family_id claim every other service scopes by comes from the service that owns
+// membership rather than from anything a client can set.
+//
+// It takes the user id as an argument rather than from a token, which is why it is served on
+// the internal listener only — see cmd/server/main.go.
+func (h *Handler) GetUserMembership(
+	ctx context.Context, req *connect.Request[familyv1.GetUserMembershipRequest],
+) (*connect.Response[familyv1.GetUserMembershipResponse], error) {
+	userID, err := pgconv.UUID(req.Msg.GetUserId())
+	if err != nil || !userID.Valid {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user_id is required"))
+	}
+
+	member, err := h.q.GetMembership(ctx, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Not in a family is a normal first-launch state, not an error: the token is
+			// minted without a family_id and the app shows onboarding.
+			return connect.NewResponse(&familyv1.GetUserMembershipResponse{InFamily: false}), nil
+		}
+		return nil, internal(err, "get membership")
+	}
+
+	return connect.NewResponse(&familyv1.GetUserMembershipResponse{
+		InFamily: true,
+		FamilyId: pgconv.UUIDString(member.FamilyID),
+		Role:     roleToProto(member.Role),
+	}), nil
+}
+
 /* ------------------------------------------------------------------ internals */
 
 // membershipOf resolves the caller's single membership row.

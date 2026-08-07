@@ -16,8 +16,16 @@ const PUBLIC_PROCEDURES = new Set([
 ]);
 
 export interface ClientsOptions {
-  /** Gateway base URL, e.g. https://api.example.com. */
+  /**
+   * Base URL for every service. Correct behind a gateway that routes by procedure path,
+   * which is the deployed shape (Caddy — docs/adr/0004-compose-vps.md).
+   */
   baseUrl: string;
+  /**
+   * Per-service overrides. In development each service listens on its own port and there is
+   * no gateway, so without these every call would land on whichever service baseUrl names.
+   */
+  serviceUrls?: Partial<Record<"auth" | "family" | "finance", string>>;
   /** Resolves a fresh access token, or null when anonymous. Supplied by @fm/auth. */
   getAccessToken: () => Promise<string | null>;
 }
@@ -26,7 +34,7 @@ export interface ClientsOptions {
  * The Connect transport used by every hook. JSON over HTTP/1.1 (see docs/adr/0001-connectrpc.md)
  * so responses stay readable in a proxy and React Native needs no HTTP/2 shims.
  */
-function createTransport({ baseUrl, getAccessToken }: ClientsOptions) {
+function createTransport(url: string, getAccessToken: ClientsOptions["getAccessToken"]) {
   const auth: Interceptor = (next) => async (req) => {
     if (!PUBLIC_PROCEDURES.has(`${req.service.typeName}/${req.method.name}`)) {
       const token = await getAccessToken();
@@ -35,7 +43,7 @@ function createTransport({ baseUrl, getAccessToken }: ClientsOptions) {
     return next(req);
   };
 
-  return createConnectTransport({ baseUrl, useBinaryFormat: false, interceptors: [auth] });
+  return createConnectTransport({ baseUrl: url, useBinaryFormat: false, interceptors: [auth] });
 }
 
 export interface Clients {
@@ -46,10 +54,12 @@ export interface Clients {
 
 /** Builds one client per service. Call once per app and put the result in a context. */
 export function createClients(opts: ClientsOptions): Clients {
-  const transport = createTransport(opts);
+  const urlFor = (service: "auth" | "family" | "finance") =>
+    opts.serviceUrls?.[service] ?? opts.baseUrl;
+
   return {
-    auth: createClient(AuthService, transport),
-    family: createClient(FamilyService, transport),
-    finance: createClient(FinanceService, transport),
+    auth: createClient(AuthService, createTransport(urlFor("auth"), opts.getAccessToken)),
+    family: createClient(FamilyService, createTransport(urlFor("family"), opts.getAccessToken)),
+    finance: createClient(FinanceService, createTransport(urlFor("finance"), opts.getAccessToken)),
   };
 }

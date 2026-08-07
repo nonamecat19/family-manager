@@ -33,10 +33,13 @@ graph LR
     table_families["table:families"]
     table_family_invitations["table:family_invitations"]
     table_family_members["table:family_members"]
+    table_refresh_tokens["table:refresh_tokens"]
     table_transactions["table:transactions"]
     table_users["table:users"]
   end
   subgraph infras
+    infra_auth["infra:auth"]
+    infra_auth_signing_key["infra:auth-signing-key"]
     infra_family["infra:family"]
     infra_finance["infra:finance"]
     infra_minio["infra:minio"]
@@ -56,8 +59,16 @@ graph LR
   pkg__fm_theme -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_ui -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_ui -->|DEPENDS_ON| pkg__fm_theme
+  service_auth -->|DEPENDS_ON| golib_auth
+  service_auth -->|DEPENDS_ON| golib_database
+  service_auth -->|DEPENDS_ON| golib_go
+  service_auth -->|DEPENDS_ON| golib_logger
   service_auth -->|IMPLEMENTS| proto_libs_proto_auth_v1_auth_proto
+  service_auth -->|PERSISTS_TO| table_refresh_tokens
   service_auth -->|PERSISTS_TO| table_users
+  service_auth -->|RUNS_ON| infra_auth
+  service_auth -->|RUNS_ON| infra_auth_signing_key
+  service_auth -->|RUNS_ON| infra_family
   service_auth -->|RUNS_ON| infra_postgres
   service_family -->|DEPENDS_ON| golib_auth
   service_family -->|DEPENDS_ON| golib_database
@@ -88,5 +99,6 @@ graph LR
   table_families -->|OWNED_BY| service_family
   table_family_invitations -->|OWNED_BY| service_family
   table_family_members -->|OWNED_BY| service_family
+  table_refresh_tokens -->|OWNED_BY| service_auth
   table_transactions -->|OWNED_BY| service_finance
   table_users -->|OWNED_BY| service_auth
