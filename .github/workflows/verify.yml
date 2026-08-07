@@ -28,7 +28,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      # pnpm-lock.yaml is deliberately untracked, so there is nothing to freeze against.
+      # This means CI resolves versions afresh and can differ from a local tree.
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm turbo run lint typecheck test
 
   contracts:
@@ -40,7 +42,14 @@ jobs:
       - uses: bufbuild/buf-action@v1
         with:
           input: libs/proto
-          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.repository.default_branch }},subdir=libs/proto"
+          # The input is 'breaking_against', not 'against' — the latter is silently ignored,
+          # which left this job comparing against whatever the action defaulted to.
+          breaking_against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.repository.default_branch }},subdir=libs/proto"
+          # The action posts its findings as a PR comment by default, which needs
+          # pull-requests: write. The default token does not have it (and a fork's never
+          # will), so the job failed on the comment even when every buf check passed.
+          # The checks themselves are the signal; the comment is not worth the permission.
+          pr_comment: false
 
   graph:
     # Keeps the knowledge graph honest: a structural change without `just graph` fails here.
