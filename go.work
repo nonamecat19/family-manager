@@ -8,6 +8,7 @@ use (
 	./sdk/go
 	./services/auth
 	./services/family
+	./services/finance
 )
 
 // Add every new module here on creation:
