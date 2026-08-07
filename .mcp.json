@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode=restricted"],
+      "env": {
+        "DATABASE_URI": "postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-postgres}"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }
+  }
+}

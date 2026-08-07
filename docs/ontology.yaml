@@ -1,0 +1,61 @@
+# Repo knowledge graph — ontology (stage 3 of the graph-engineering pipeline).
+# Extraction MUST conform to this file. Anything not typed here does not enter the graph.
+# Regenerate the graph with `just graph`; it reads this file's types implicitly via
+# tools/repo-graph/extract.mjs. Change the ontology FIRST, the extractor SECOND.
+
+version: 1
+representation: property-graph          # stage 2: typed nodes + typed edges, JSON on disk
+
+provenance:                             # non-negotiable, every node and edge carries this
+  required: [source, extracted_at, commit]
+  optional: [line, confidence]
+
+entities:
+  app:            { key: "app:<dir>",        desc: "Expo application in apps/*" }
+  package:        { key: "pkg:<name>",       desc: "Shared TS package in packages/* or sdk/typescript" }
+  service:        { key: "service:<name>",   desc: "Go microservice in services/* (app-specific)" }
+  golib:          { key: "golib:<name>",     desc: "Shared Go library in libs/go/* or sdk/go" }
+  gomodule:       { key: "gomod:<path>",     desc: "Go module as declared in a go.mod" }
+  contract:       { key: "proto:<file>",     desc: ".proto file in libs/proto (the only contract surface)" }
+  rpc:            { key: "rpc:<svc>.<name>", desc: "gRPC method declared in a contract" }
+  message:        { key: "msg:<pkg>.<name>", desc: "Protobuf message type" }
+  table:          { key: "table:<name>",     desc: "Postgres table created by a migration" }
+  migration:      { key: "migration:<file>", desc: "SQL migration file" }
+  infra:          { key: "infra:<name>",     desc: "docker-compose / infra component" }
+  external:       { key: "ext:<name>",       desc: "Third-party dependency kept at low resolution" }
+
+# Precise verbs only. domain -> range is enforced by the extractor; violating edges are dropped.
+relations:
+  DEPENDS_ON:     { domain: [app, package, service, golib, gomodule], range: [package, golib, gomodule, external] }
+  IMPLEMENTS:     { domain: [service], range: [rpc, contract] }
+  CONSUMES:       { domain: [app, package, service], range: [rpc, contract] }
+  DECLARES:       { domain: [contract], range: [rpc, message] }
+  USES_MESSAGE:   { domain: [rpc], range: [message] }
+  PERSISTS_TO:    { domain: [service], range: [table] }
+  CREATES:        { domain: [migration], range: [table] }
+  OWNED_BY:       { domain: [migration, table, rpc], range: [service] }
+  RUNS_ON:        { domain: [service], range: [infra] }
+  GENERATES:      { domain: [contract], range: [package, golib] }
+
+# Stage 1 value test — the queries this graph must answer. If a query here cannot be
+# answered from graph.json, the ontology or the extractor is wrong, not the query.
+competency_questions:
+  - "If I change rpc X, which apps, packages and services must be rebuilt and retested?"
+  - "Which services write to table T?"
+  - "Which shared package is imported by every app (candidate for stricter review)?"
+  - "Which contracts have no implementing service (dead) or two (ambiguous ownership)?"
+  - "What is the blast radius of touching libs/go/auth?"
+
+fusion:                                 # stage 8 — how duplicate surface forms merge
+  rules:
+    - "Go module path and its directory name are the same node (gomod: wins, dir is an alias)."
+    - "A package.json name and its workspace dir are the same node (pkg: wins)."
+    - "contract ownership precedence: libs/proto/<domain>/ -> service:<domain>; else a
+       go_package pointing at a service module; else the enclosing service dir (confidence 0.6).
+       sdk/go and libs/go modules hold generated or shared code and are never owners."
+    - "Case- and separator-insensitive match on service names (auth-service == auth == authService)."
+
+quality_gate:                           # stage 7
+  precision_target: 0.9
+  sample_size: 30
+  check: "Open the cited source:line for 30 random edges; the file must literally assert the edge."

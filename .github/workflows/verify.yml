@@ -1,0 +1,53 @@
+# The verify node of the task graph (docs/workflow.md), enforced in CI.
+# Jobs are independent — no fake edges between them.
+name: verify
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+      - run: just --version || (curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin)
+      - run: just check-go
+
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint typecheck test
+
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # buf breaking needs the base branch
+      - uses: bufbuild/buf-action@v1
+        with:
+          input: libs/proto
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.repository.default_branch }},subdir=libs/proto"
+
+  graph:
+    # Keeps the knowledge graph honest: a structural change without `just graph` fails here.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/repo-graph/extract.mjs --check

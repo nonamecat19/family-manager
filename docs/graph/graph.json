@@ -1,0 +1,504 @@
+{
+  "version": 1,
+  "generated_at": "2026-08-06T14:47:36.379Z",
+  "commit": "3e5aa70",
+  "nodes": [
+    {
+      "id": "ext:github.com/gin-gonic/gin",
+      "type": "external",
+      "props": {
+        "name": "github.com/gin-gonic/gin"
+      },
+      "source": "services/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "ext:github.com/jackc/pgx/v5",
+      "type": "external",
+      "props": {
+        "name": "github.com/jackc/pgx/v5"
+      },
+      "source": "services/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "ext:github.com/spf13/viper",
+      "type": "external",
+      "props": {
+        "name": "github.com/spf13/viper"
+      },
+      "source": "services/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "ext:google.golang.org/grpc",
+      "type": "external",
+      "props": {
+        "name": "google.golang.org/grpc"
+      },
+      "source": "services/auth/go.mod",
+      "confidence": 0.9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "infra:minio",
+      "type": "infra",
+      "props": {
+        "name": "minio"
+      },
+      "source": "docker-compose.yml",
+      "line": 33,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "infra:nats",
+      "type": "infra",
+      "props": {
+        "name": "nats"
+      },
+      "source": "docker-compose.yml",
+      "line": 19,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "infra:postgres",
+      "type": "infra",
+      "props": {
+        "name": "postgres"
+      },
+      "source": "docker-compose.yml",
+      "line": 2,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
+      "type": "migration",
+      "props": {},
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.LoginRequest",
+      "type": "message",
+      "props": {
+        "name": "LoginRequest"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.LoginResponse",
+      "type": "message",
+      "props": {
+        "name": "LoginResponse"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.LogoutRequest",
+      "type": "message",
+      "props": {
+        "name": "LogoutRequest"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.LogoutResponse",
+      "type": "message",
+      "props": {
+        "name": "LogoutResponse"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.RefreshRequest",
+      "type": "message",
+      "props": {
+        "name": "RefreshRequest"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.RefreshResponse",
+      "type": "message",
+      "props": {
+        "name": "RefreshResponse"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.RegisterRequest",
+      "type": "message",
+      "props": {
+        "name": "RegisterRequest"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "msg:auth.v1.RegisterResponse",
+      "type": "message",
+      "props": {
+        "name": "RegisterResponse"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "proto:libs/proto/auth/v1/auth.proto",
+      "type": "contract",
+      "props": {
+        "package": "auth.v1",
+        "go_package": null,
+        "canonical": true
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "rpc:AuthService.Login",
+      "type": "rpc",
+      "props": {
+        "service": "AuthService",
+        "name": "Login"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "rpc:AuthService.Logout",
+      "type": "rpc",
+      "props": {
+        "service": "AuthService",
+        "name": "Logout"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "rpc:AuthService.Refresh",
+      "type": "rpc",
+      "props": {
+        "service": "AuthService",
+        "name": "Refresh"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "rpc:AuthService.Register",
+      "type": "rpc",
+      "props": {
+        "service": "AuthService",
+        "name": "Register"
+      },
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "service:auth",
+      "type": "service",
+      "props": {
+        "dir": "services/auth",
+        "module": "github.com/nnc/family-manager/services/auth",
+        "aliases": [
+          "github.com/nnc/family-manager/services/auth",
+          "services/auth",
+          "auth"
+        ]
+      },
+      "source": "services/auth/go.mod",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "id": "table:users",
+      "type": "table",
+      "props": {
+        "name": "users"
+      },
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "line": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    }
+  ],
+  "edges": [
+    {
+      "from": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
+      "rel": "CREATES",
+      "to": "table:users",
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "line": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "migration:services/auth/internal/db/migrations/000001_init.up.sql",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "line": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "proto:libs/proto/auth/v1/auth.proto",
+      "rel": "DECLARES",
+      "to": "rpc:AuthService.Login",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "proto:libs/proto/auth/v1/auth.proto",
+      "rel": "DECLARES",
+      "to": "rpc:AuthService.Logout",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "proto:libs/proto/auth/v1/auth.proto",
+      "rel": "DECLARES",
+      "to": "rpc:AuthService.Refresh",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "proto:libs/proto/auth/v1/auth.proto",
+      "rel": "DECLARES",
+      "to": "rpc:AuthService.Register",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Login",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Login",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.LoginRequest",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Login",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.LoginResponse",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 8,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Logout",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Logout",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.LogoutRequest",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Logout",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.LogoutResponse",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 13,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Refresh",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Refresh",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.RefreshRequest",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Refresh",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.RefreshResponse",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 12,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Register",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Register",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.RegisterRequest",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "rpc:AuthService.Register",
+      "rel": "USES_MESSAGE",
+      "to": "msg:auth.v1.RegisterResponse",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "line": 9,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/gin-gonic/gin",
+      "source": "services/auth/go.mod",
+      "line": 6,
+      "internal": false,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/jackc/pgx/v5",
+      "source": "services/auth/go.mod",
+      "line": 7,
+      "internal": false,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:github.com/spf13/viper",
+      "source": "services/auth/go.mod",
+      "line": 8,
+      "internal": false,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "DEPENDS_ON",
+      "to": "ext:google.golang.org/grpc",
+      "source": "services/auth/go.mod",
+      "line": 9,
+      "internal": false,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "IMPLEMENTS",
+      "to": "proto:libs/proto/auth/v1/auth.proto",
+      "source": "libs/proto/auth/v1/auth.proto",
+      "confidence": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "PERSISTS_TO",
+      "to": "table:users",
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "line": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "service:auth",
+      "rel": "RUNS_ON",
+      "to": "infra:postgres",
+      "source": "services/auth/.env.example",
+      "confidence": 0.7,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    },
+    {
+      "from": "table:users",
+      "rel": "OWNED_BY",
+      "to": "service:auth",
+      "source": "services/auth/internal/db/migrations/000001_init.up.sql",
+      "line": 1,
+      "extracted_at": "2026-08-06T14:47:36.379Z",
+      "commit": "3e5aa70"
+    }
+  ],
+  "dropped": []
+}

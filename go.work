@@ -1,0 +1,10 @@
+go 1.23
+
+use (
+	./services/auth
+)
+
+// Add every new module here on creation:
+//   use ./services/<name>
+//   use ./libs/go/<name>
+//   use ./sdk/go

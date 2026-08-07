@@ -1,0 +1,12 @@
+version: v2
+modules:
+  - path: .
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_VERSION_SUFFIX # enforced by the directory layout <domain>/v1/
+breaking:
+  use:
+    - FILE
+  # Mobile clients keep running old code; removals and renumbering are gated by a human.

@@ -1,0 +1,19 @@
+graph LR
+  subgraph services
+    service_auth["service:auth"]
+  end
+  subgraph contracts
+    proto_libs_proto_auth_v1_auth_proto["proto:libs/proto/auth/v1/auth.proto"]
+  end
+  subgraph tables
+    table_users["table:users"]
+  end
+  subgraph infras
+    infra_minio["infra:minio"]
+    infra_nats["infra:nats"]
+    infra_postgres["infra:postgres"]
+  end
+  service_auth -->|IMPLEMENTS| proto_libs_proto_auth_v1_auth_proto
+  service_auth -->|PERSISTS_TO| table_users
+  service_auth -->|RUNS_ON| infra_postgres
+  table_users -->|OWNED_BY| service_auth
