@@ -342,7 +342,11 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 const json = JSON.stringify(graph, null, 2) + "\n";
 if (args.includes("--check")) {
   const prev = read(path.join(OUT_DIR, "graph.json"));
-  const strip = (s) => (s ?? "").replace(/"(generated_at|extracted_at)": "[^"]*"/g, "");
+  // `commit` is stripped alongside the timestamps: it records the HEAD the facts were read
+  // at, so committing the graph changes it and the very next --check would call the file
+  // stale — with no way to ever satisfy it. Staleness is about structure (nodes, edges,
+  // sources), which the rest of the comparison covers.
+  const strip = (s) => (s ?? "").replace(/"(generated_at|extracted_at|commit)": "[^"]*"/g, "");
   if (strip(prev) !== strip(json)) { console.error("graph is stale — run `just graph`"); process.exit(1); }
   console.log("graph up to date");
   process.exit(0);
