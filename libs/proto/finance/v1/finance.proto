@@ -1,0 +1,340 @@
+syntax = "proto3";
+
+package finance.v1;
+
+// go_package is set by buf managed mode (libs/proto/buf.gen.yaml) to
+// github.com/nnc/family-manager/sdk/go/finance/v1 — do not set it here.
+
+import "google/protobuf/timestamp.proto";
+
+// FinanceService is the household ledger: accounts hold money, transactions move it,
+// categories classify it, reports summarise it.
+//
+// Every row is scoped to a family_id taken from the caller's access token — the service
+// never accepts a family_id from the request body for a write, and never joins against
+// another service's tables (family membership is resolved over family.v1.FamilyService).
+service FinanceService {
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  rpc UpdateTransaction(UpdateTransactionRequest) returns (UpdateTransactionResponse);
+  rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse);
+
+  // GetSummary is the home screen: totals and balance for one period.
+  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
+  // GetCategoryBreakdown is the pie chart: one slice per category for one period.
+  rpc GetCategoryBreakdown(GetCategoryBreakdownRequest) returns (GetCategoryBreakdownResponse);
+}
+
+enum AccountType {
+  ACCOUNT_TYPE_UNSPECIFIED = 0;
+  ACCOUNT_TYPE_CASH = 1;
+  ACCOUNT_TYPE_CARD = 2;
+  ACCOUNT_TYPE_BANK = 3;
+  ACCOUNT_TYPE_SAVINGS = 4;
+  // ACCOUNT_TYPE_DEBT carries a negative balance (loans, credit owed).
+  ACCOUNT_TYPE_DEBT = 5;
+}
+
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_EXPENSE = 1;
+  TRANSACTION_TYPE_INCOME = 2;
+  // TRANSACTION_TYPE_TRANSFER moves money between two accounts of the same family and is
+  // excluded from income/expense totals.
+  TRANSACTION_TYPE_TRANSFER = 3;
+}
+
+// Money is a minor-unit integer plus its ISO 4217 code. Floating point never touches money
+// in this repo: 10.10 is {amount_minor: 1010, currency_code: "EUR"}.
+message Money {
+  int64 amount_minor = 1;
+  string currency_code = 2;
+}
+
+// DateRange is inclusive on both ends. Dates are calendar dates in the family's timezone,
+// formatted YYYY-MM-DD — a spending report is a calendar question, not an instant one.
+message DateRange {
+  string from = 1;
+  string to = 2;
+}
+
+message Account {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  AccountType type = 4;
+  string currency_code = 5;
+  // balance is derived from transactions plus the opening balance; it is never written
+  // directly by a client.
+  Money balance = 6;
+  Money opening_balance = 7;
+  // color is a hex string like "#4C9F70"; icon is a client-side icon key.
+  string color = 8;
+  string icon = 9;
+  bool archived = 10;
+  int32 sort_order = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+message Category {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  // kind restricts where the category may be used: an expense category cannot classify
+  // income. TRANSACTION_TYPE_TRANSFER is not a valid kind.
+  TransactionType kind = 4;
+  string color = 5;
+  string icon = 6;
+  // parent_id groups categories into the two-level tree the UI renders; "" is a root.
+  string parent_id = 7;
+  bool archived = 8;
+  int32 sort_order = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message Transaction {
+  string id = 1;
+  string family_id = 2;
+  string account_id = 3;
+  // counter_account_id is set only for TRANSACTION_TYPE_TRANSFER: the destination account.
+  string counter_account_id = 4;
+  string category_id = 5;
+  TransactionType type = 6;
+  // amount is always positive; type decides the direction.
+  Money amount = 7;
+  string note = 8;
+  // occurred_on is the calendar date the money moved, YYYY-MM-DD.
+  string occurred_on = 9;
+  // created_by_user_id attributes the entry inside a shared family ledger.
+  string created_by_user_id = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message CreateAccountRequest {
+  string name = 1;
+  AccountType type = 2;
+  string currency_code = 3;
+  Money opening_balance = 4;
+  string color = 5;
+  string icon = 6;
+}
+
+message CreateAccountResponse {
+  Account account = 1;
+}
+
+message ListAccountsRequest {
+  bool include_archived = 1;
+}
+
+message ListAccountsResponse {
+  repeated Account accounts = 1;
+  // total is every account balance converted to the family's base currency.
+  Money total = 2;
+}
+
+message GetAccountRequest {
+  string id = 1;
+}
+
+message GetAccountResponse {
+  Account account = 1;
+}
+
+message UpdateAccountRequest {
+  string id = 1;
+  string name = 2;
+  AccountType type = 3;
+  string color = 4;
+  string icon = 5;
+  bool archived = 6;
+  int32 sort_order = 7;
+}
+
+message UpdateAccountResponse {
+  Account account = 1;
+}
+
+message DeleteAccountRequest {
+  string id = 1;
+}
+
+message DeleteAccountResponse {}
+
+message CreateCategoryRequest {
+  string name = 1;
+  TransactionType kind = 2;
+  string color = 3;
+  string icon = 4;
+  string parent_id = 5;
+}
+
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+message ListCategoriesRequest {
+  // kind filters to expense or income categories; unspecified returns both.
+  TransactionType kind = 1;
+  bool include_archived = 2;
+}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message UpdateCategoryRequest {
+  string id = 1;
+  string name = 2;
+  string color = 3;
+  string icon = 4;
+  string parent_id = 5;
+  bool archived = 6;
+  int32 sort_order = 7;
+}
+
+message UpdateCategoryResponse {
+  Category category = 1;
+}
+
+message DeleteCategoryRequest {
+  string id = 1;
+}
+
+message DeleteCategoryResponse {}
+
+message CreateTransactionRequest {
+  string account_id = 1;
+  string counter_account_id = 2;
+  string category_id = 3;
+  TransactionType type = 4;
+  Money amount = 5;
+  string note = 6;
+  string occurred_on = 7;
+}
+
+message CreateTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message ListTransactionsRequest {
+  DateRange range = 1;
+  // Empty filters mean "everything".
+  repeated string account_ids = 2;
+  repeated string category_ids = 3;
+  TransactionType type = 4;
+  // search matches the note, case-insensitively.
+  string search = 5;
+  // page_size defaults to 50 and is capped at 200. page_token is the opaque cursor from
+  // the previous response.
+  int32 page_size = 6;
+  string page_token = 7;
+}
+
+message ListTransactionsResponse {
+  repeated Transaction transactions = 1;
+  string next_page_token = 2;
+}
+
+message GetTransactionRequest {
+  string id = 1;
+}
+
+message GetTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message UpdateTransactionRequest {
+  string id = 1;
+  string account_id = 2;
+  string counter_account_id = 3;
+  string category_id = 4;
+  TransactionType type = 5;
+  Money amount = 6;
+  string note = 7;
+  string occurred_on = 8;
+}
+
+message UpdateTransactionResponse {
+  Transaction transaction = 1;
+}
+
+message DeleteTransactionRequest {
+  string id = 1;
+}
+
+message DeleteTransactionResponse {}
+
+message GetSummaryRequest {
+  DateRange range = 1;
+  repeated string account_ids = 2;
+}
+
+message GetSummaryResponse {
+  Money income = 1;
+  Money expense = 2;
+  // net is income - expense for the period; balance is the current total across accounts.
+  Money net = 3;
+  Money balance = 4;
+}
+
+message CategorySlice {
+  string category_id = 1;
+  string category_name = 2;
+  string color = 3;
+  Money total = 4;
+  // share is the fraction of the period total, 0..1 — precomputed so every client draws
+  // the same pie.
+  double share = 5;
+  int32 transaction_count = 6;
+}
+
+message GetCategoryBreakdownRequest {
+  DateRange range = 1;
+  TransactionType type = 2;
+  repeated string account_ids = 3;
+}
+
+message GetCategoryBreakdownResponse {
+  repeated CategorySlice slices = 1;
+  Money total = 2;
+}
+
+// Events published on `finance.transaction.*` (libs/go/events).
+message TransactionCreatedEvent {
+  string family_id = 1;
+  string transaction_id = 2;
+  string account_id = 3;
+  string category_id = 4;
+  TransactionType type = 5;
+  Money amount = 6;
+  string created_by_user_id = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+message TransactionUpdatedEvent {
+  string family_id = 1;
+  string transaction_id = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+}
+
+message TransactionDeletedEvent {
+  string family_id = 1;
+  string transaction_id = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+}
