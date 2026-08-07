@@ -31,6 +31,14 @@ service FinanceService {
   rpc UpdateTransaction(UpdateTransactionRequest) returns (UpdateTransactionResponse);
   rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse);
 
+  rpc CreateBudget(CreateBudgetRequest) returns (CreateBudgetResponse);
+  // ListBudgets returns each budget with its progress for the window in force today, which
+  // is the only form the UI ever renders.
+  rpc ListBudgets(ListBudgetsRequest) returns (ListBudgetsResponse);
+  rpc GetBudget(GetBudgetRequest) returns (GetBudgetResponse);
+  rpc UpdateBudget(UpdateBudgetRequest) returns (UpdateBudgetResponse);
+  rpc DeleteBudget(DeleteBudgetRequest) returns (DeleteBudgetResponse);
+
   // GetSummary is the home screen: totals and balance for one period.
   rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
   // GetCategoryBreakdown is the pie chart: one slice per category for one period.
@@ -124,6 +132,103 @@ message Transaction {
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
 }
+
+// BudgetPeriod is the window a budget's limit applies to, recurring. A budget is "500 a
+// month", not "500 between two dates" — the window rolls forward on its own.
+enum BudgetPeriod {
+  BUDGET_PERIOD_UNSPECIFIED = 0;
+  BUDGET_PERIOD_WEEK = 1;
+  BUDGET_PERIOD_MONTH = 2;
+  BUDGET_PERIOD_YEAR = 3;
+}
+
+message Budget {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  // category_id empty means the budget covers every expense in the household. A per-category
+  // budget and a total one are the same row, which keeps the progress query single-shaped.
+  string category_id = 4;
+  Money limit = 5;
+  BudgetPeriod period = 6;
+  // start_on anchors the recurring window, YYYY-MM-DD. A monthly budget anchored on the 15th
+  // runs the 15th to the 14th, which is what someone paid mid-month actually wants.
+  string start_on = 7;
+  bool archived = 8;
+  int32 sort_order = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// BudgetStatus is a budget plus where it stands in the window in force. Progress is derived
+// from transactions on every read, never stored — a stored total is a total that drifts.
+message BudgetStatus {
+  Budget budget = 1;
+  // period is the concrete window the numbers below cover.
+  DateRange period = 2;
+  Money spent = 3;
+  // remaining goes negative once the limit is passed; clients render the overspend rather
+  // than clamping it to zero and hiding it.
+  Money remaining = 4;
+  // share is spent/limit, 0..n — above 1 when overspent. Precomputed so every client draws
+  // the same bar.
+  double share = 5;
+  bool exceeded = 6;
+  // days_remaining counts today as remaining, so the last day of a window reads 1, not 0.
+  int32 days_remaining = 7;
+}
+
+message CreateBudgetRequest {
+  string name = 1;
+  string category_id = 2;
+  Money limit = 3;
+  BudgetPeriod period = 4;
+  string start_on = 5;
+}
+
+message CreateBudgetResponse {
+  Budget budget = 1;
+}
+
+message ListBudgetsRequest {
+  bool include_archived = 1;
+  // as_of picks which window to report, YYYY-MM-DD. Empty means today.
+  string as_of = 2;
+}
+
+message ListBudgetsResponse {
+  repeated BudgetStatus budgets = 1;
+}
+
+message GetBudgetRequest {
+  string id = 1;
+  string as_of = 2;
+}
+
+message GetBudgetResponse {
+  BudgetStatus budget = 1;
+}
+
+message UpdateBudgetRequest {
+  string id = 1;
+  string name = 2;
+  string category_id = 3;
+  Money limit = 4;
+  BudgetPeriod period = 5;
+  string start_on = 6;
+  bool archived = 7;
+  int32 sort_order = 8;
+}
+
+message UpdateBudgetResponse {
+  Budget budget = 1;
+}
+
+message DeleteBudgetRequest {
+  string id = 1;
+}
+
+message DeleteBudgetResponse {}
 
 message CreateAccountRequest {
   string name = 1;
@@ -325,6 +430,21 @@ message TransactionCreatedEvent {
   Money amount = 6;
   string created_by_user_id = 7;
   google.protobuf.Timestamp occurred_at = 8;
+}
+
+// BudgetExceededEvent is published on `finance.budget.exceeded` the moment a transaction
+// takes a budget past its limit — once per crossing, not on every subsequent overspend, so a
+// consumer can notify without a storm.
+message BudgetExceededEvent {
+  string family_id = 1;
+  string budget_id = 2;
+  string budget_name = 3;
+  string category_id = 4;
+  Money limit = 5;
+  Money spent = 6;
+  DateRange period = 7;
+  string triggered_by_user_id = 8;
+  google.protobuf.Timestamp occurred_at = 9;
 }
 
 message TransactionUpdatedEvent {

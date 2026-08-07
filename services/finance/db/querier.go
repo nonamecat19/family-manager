@@ -14,13 +14,16 @@ type Querier interface {
 	CountAccountTransactions(ctx context.Context, accountID pgtype.UUID) (int64, error)
 	CountCategoryTransactions(ctx context.Context, categoryID pgtype.UUID) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
+	CreateBudget(ctx context.Context, arg CreateBudgetParams) (Budget, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) (int64, error)
+	DeleteBudget(ctx context.Context, arg DeleteBudgetParams) (int64, error)
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) (int64, error)
 	DeleteTransaction(ctx context.Context, arg DeleteTransactionParams) (int64, error)
 	GetAccount(ctx context.Context, arg GetAccountParams) (Account, error)
 	GetAccountWithBalance(ctx context.Context, arg GetAccountWithBalanceParams) (GetAccountWithBalanceRow, error)
+	GetBudget(ctx context.Context, arg GetBudgetParams) (Budget, error)
 	GetCategory(ctx context.Context, arg GetCategoryParams) (Category, error)
 	GetCategoryBreakdown(ctx context.Context, arg GetCategoryBreakdownParams) ([]GetCategoryBreakdownRow, error)
 	// Transfers are excluded from both totals: moving money between your own accounts is not
@@ -32,12 +35,25 @@ type Querier interface {
 	// would mean two sources of truth, and the stored one is always the stale one.
 	//
 	ListAccountsWithBalance(ctx context.Context, arg ListAccountsWithBalanceParams) ([]ListAccountsWithBalanceRow, error)
+	ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Budget, error)
+	// Budgets a given category's spending counts against: its own, plus the household total.
+	// Used after a write to decide whether a limit was just crossed.
+	//
+	ListBudgetsForCategory(ctx context.Context, arg ListBudgetsForCategoryParams) ([]Budget, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	// Keyset pagination on (occurred_on, id): OFFSET drifts when a row is inserted mid-scroll,
 	// and the ledger is written to while it is being read.
 	//
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
+	// Budgets are consumed by spending only: a transfer moves your own money between pockets and
+	// income is not expenditure, so neither touches a limit.
+	//
+	// A NULL category_id on the budget means "everything", which is why the category filter is
+	// written as a nullable comparison rather than an equality.
+	//
+	SumBudgetSpend(ctx context.Context, arg SumBudgetSpendParams) (int64, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
+	UpdateBudget(ctx context.Context, arg UpdateBudgetParams) (Budget, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (Transaction, error)
 }

@@ -210,3 +210,8 @@ func decodeCursor(token string) (occurredOn, id string, err error) {
 	}
 	return parts[0], parts[1], nil
 }
+
+// slogError is the one-liner every best-effort path uses to log why it gave up.
+func slogError(err error) slog.Attr {
+	return slog.String("error", err.Error())
+}

@@ -24,6 +24,7 @@ type fakeStore struct {
 	accounts     map[string]db.Account
 	categories   map[string]db.Category
 	transactions map[string]db.Transaction
+	budgets      map[string]db.Budget
 
 	failOn map[string]error
 }
@@ -33,6 +34,7 @@ func newFakeStore() *fakeStore {
 		accounts:     map[string]db.Account{},
 		categories:   map[string]db.Category{},
 		transactions: map[string]db.Transaction{},
+		budgets:      map[string]db.Budget{},
 		failOn:       map[string]error{},
 	}
 }
@@ -450,6 +452,12 @@ func (r *recorder) sawSubject(s events.Subject) bool {
 	return false
 }
 
+// uniqueViolation mimics Postgres SQLSTATE 23505 so the handler's mapping is exercised.
+type uniqueViolation struct{}
+
+func (uniqueViolation) Error() string    { return "duplicate key value violates unique constraint" }
+func (uniqueViolation) SQLState() string { return "23505" }
+
 var errBoom = errors.New("boom")
 
 // newUUID hands out deterministic, valid v4-shaped ids so failures are reproducible.
@@ -458,4 +466,119 @@ var uuidCounter int
 func newUUID() string {
 	uuidCounter++
 	return fmt.Sprintf("00000000-0000-4000-8000-%012d", uuidCounter)
+}
+
+/* ------------------------------------------------------------------ budgets */
+
+func (s *fakeStore) CreateBudget(_ context.Context, arg db.CreateBudgetParams) (db.Budget, error) {
+	if err := s.fail("CreateBudget"); err != nil {
+		return db.Budget{}, err
+	}
+	// Mirrors the two partial unique indexes: one budget per category per period, and one
+	// household total per period.
+	for _, existing := range s.budgets {
+		if id(existing.FamilyID) != id(arg.FamilyID) || existing.Archived {
+			continue
+		}
+		if existing.Period == arg.Period && id(existing.CategoryID) == id(arg.CategoryID) {
+			return db.Budget{}, uniqueViolation{}
+		}
+	}
+
+	b := db.Budget{
+		ID:           pgconv.MustUUID(newUUID()),
+		FamilyID:     arg.FamilyID,
+		Name:         arg.Name,
+		CategoryID:   arg.CategoryID,
+		LimitMinor:   arg.LimitMinor,
+		CurrencyCode: arg.CurrencyCode,
+		Period:       arg.Period,
+		StartOn:      arg.StartOn,
+		SortOrder:    arg.SortOrder,
+		CreatedAt:    pgtype.Timestamptz{Valid: true},
+		UpdatedAt:    pgtype.Timestamptz{Valid: true},
+	}
+	s.budgets[id(b.ID)] = b
+	return b, nil
+}
+
+func (s *fakeStore) ListBudgets(_ context.Context, arg db.ListBudgetsParams) ([]db.Budget, error) {
+	var out []db.Budget
+	for _, b := range s.budgets {
+		if id(b.FamilyID) != id(arg.FamilyID) {
+			continue
+		}
+		if b.Archived && !arg.IncludeArchived {
+			continue
+		}
+		out = append(out, b)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out, nil
+}
+
+func (s *fakeStore) GetBudget(_ context.Context, arg db.GetBudgetParams) (db.Budget, error) {
+	b, ok := s.budgets[id(arg.ID)]
+	if !ok || id(b.FamilyID) != id(arg.FamilyID) {
+		return db.Budget{}, pgx.ErrNoRows
+	}
+	return b, nil
+}
+
+func (s *fakeStore) UpdateBudget(_ context.Context, arg db.UpdateBudgetParams) (db.Budget, error) {
+	b, ok := s.budgets[id(arg.ID)]
+	if !ok || id(b.FamilyID) != id(arg.FamilyID) {
+		return db.Budget{}, pgx.ErrNoRows
+	}
+	b.Name, b.CategoryID, b.LimitMinor = arg.Name, arg.CategoryID, arg.LimitMinor
+	b.Period, b.StartOn = arg.Period, arg.StartOn
+	b.Archived, b.SortOrder = arg.Archived, arg.SortOrder
+	s.budgets[id(arg.ID)] = b
+	return b, nil
+}
+
+func (s *fakeStore) DeleteBudget(_ context.Context, arg db.DeleteBudgetParams) (int64, error) {
+	b, ok := s.budgets[id(arg.ID)]
+	if !ok || id(b.FamilyID) != id(arg.FamilyID) {
+		return 0, nil
+	}
+	delete(s.budgets, id(arg.ID))
+	return 1, nil
+}
+
+// SumBudgetSpend mirrors the query: expenses only, inside the window, and a NULL category on
+// the budget means every category.
+func (s *fakeStore) SumBudgetSpend(
+	_ context.Context, arg db.SumBudgetSpendParams,
+) (int64, error) {
+	var total int64
+	for _, t := range s.transactions {
+		if id(t.FamilyID) != id(arg.FamilyID) || t.Type != typeExpense {
+			continue
+		}
+		day := pgconv.DateString(t.OccurredOn)
+		if day < pgconv.DateString(arg.FromDate) || day > pgconv.DateString(arg.ToDate) {
+			continue
+		}
+		if arg.CategoryID.Valid && id(t.CategoryID) != id(arg.CategoryID) {
+			continue
+		}
+		total += t.AmountMinor
+	}
+	return total, nil
+}
+
+func (s *fakeStore) ListBudgetsForCategory(
+	_ context.Context, arg db.ListBudgetsForCategoryParams,
+) ([]db.Budget, error) {
+	var out []db.Budget
+	for _, b := range s.budgets {
+		if id(b.FamilyID) != id(arg.FamilyID) || b.Archived {
+			continue
+		}
+		if !b.CategoryID.Valid || id(b.CategoryID) == id(arg.CategoryID) {
+			out = append(out, b)
+		}
+	}
+	return out, nil
 }

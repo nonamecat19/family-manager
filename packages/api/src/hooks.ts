@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 
 import type {
   AccountType,
+  BudgetPeriod,
   Transaction,
   TransactionType,
 } from "@fm/sdk/finance/v1/finance_pb";
@@ -265,5 +266,63 @@ export function useAcceptInvitation() {
     mutationFn: (token: string) => family.acceptInvitation({ token }),
     // Joining a family changes which ledger the user sees: drop everything.
     onSuccess: () => qc.invalidateQueries(),
+  });
+}
+
+/* ------------------------------------------------------------------- budgets */
+
+export function useBudgets(asOf = "", includeArchived = false) {
+  const { finance } = useClients();
+  return useQuery({
+    queryKey: queryKeys.budgets(asOf, includeArchived),
+    queryFn: () => finance.listBudgets({ asOf, includeArchived }),
+  });
+}
+
+export function useBudget(id: string, asOf = "") {
+  const { finance } = useClients();
+  return useQuery({
+    queryKey: queryKeys.budget(id, asOf),
+    queryFn: () => finance.getBudget({ id, asOf }),
+    enabled: id !== "",
+  });
+}
+
+export interface BudgetInput {
+  name: string;
+  /** Empty means the budget covers every expense in the household. */
+  categoryId?: string;
+  limit: Money;
+  period: BudgetPeriod;
+  /** YYYY-MM-DD; anchors the recurring window. */
+  startOn: string;
+}
+
+export function useCreateBudget() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BudgetInput) =>
+      finance.createBudget({ ...input, limit: toWire(input.limit) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useUpdateBudget() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: BudgetInput & { id: string; archived?: boolean; sortOrder?: number }) =>
+      finance.updateBudget({ ...input, limit: toWire(input.limit) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useDeleteBudget() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => finance.deleteBudget({ id }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
   });
 }

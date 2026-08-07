@@ -75,6 +75,21 @@ const (
 	// FinanceServiceDeleteTransactionProcedure is the fully-qualified name of the FinanceService's
 	// DeleteTransaction RPC.
 	FinanceServiceDeleteTransactionProcedure = "/finance.v1.FinanceService/DeleteTransaction"
+	// FinanceServiceCreateBudgetProcedure is the fully-qualified name of the FinanceService's
+	// CreateBudget RPC.
+	FinanceServiceCreateBudgetProcedure = "/finance.v1.FinanceService/CreateBudget"
+	// FinanceServiceListBudgetsProcedure is the fully-qualified name of the FinanceService's
+	// ListBudgets RPC.
+	FinanceServiceListBudgetsProcedure = "/finance.v1.FinanceService/ListBudgets"
+	// FinanceServiceGetBudgetProcedure is the fully-qualified name of the FinanceService's GetBudget
+	// RPC.
+	FinanceServiceGetBudgetProcedure = "/finance.v1.FinanceService/GetBudget"
+	// FinanceServiceUpdateBudgetProcedure is the fully-qualified name of the FinanceService's
+	// UpdateBudget RPC.
+	FinanceServiceUpdateBudgetProcedure = "/finance.v1.FinanceService/UpdateBudget"
+	// FinanceServiceDeleteBudgetProcedure is the fully-qualified name of the FinanceService's
+	// DeleteBudget RPC.
+	FinanceServiceDeleteBudgetProcedure = "/finance.v1.FinanceService/DeleteBudget"
 	// FinanceServiceGetSummaryProcedure is the fully-qualified name of the FinanceService's GetSummary
 	// RPC.
 	FinanceServiceGetSummaryProcedure = "/finance.v1.FinanceService/GetSummary"
@@ -99,6 +114,13 @@ type FinanceServiceClient interface {
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
+	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
+	// ListBudgets returns each budget with its progress for the window in force today, which
+	// is the only form the UI ever renders.
+	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
+	GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error)
+	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
+	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
 	// GetSummary is the home screen: totals and balance for one period.
 	GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error)
 	// GetCategoryBreakdown is the pie chart: one slice per category for one period.
@@ -200,6 +222,36 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("DeleteTransaction")),
 			connect.WithClientOptions(opts...),
 		),
+		createBudget: connect.NewClient[v1.CreateBudgetRequest, v1.CreateBudgetResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateBudgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
+			connect.WithClientOptions(opts...),
+		),
+		listBudgets: connect.NewClient[v1.ListBudgetsRequest, v1.ListBudgetsResponse](
+			httpClient,
+			baseURL+FinanceServiceListBudgetsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListBudgets")),
+			connect.WithClientOptions(opts...),
+		),
+		getBudget: connect.NewClient[v1.GetBudgetRequest, v1.GetBudgetResponse](
+			httpClient,
+			baseURL+FinanceServiceGetBudgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetBudget")),
+			connect.WithClientOptions(opts...),
+		),
+		updateBudget: connect.NewClient[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateBudgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateBudget")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteBudget: connect.NewClient[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteBudgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteBudget")),
+			connect.WithClientOptions(opts...),
+		),
 		getSummary: connect.NewClient[v1.GetSummaryRequest, v1.GetSummaryResponse](
 			httpClient,
 			baseURL+FinanceServiceGetSummaryProcedure,
@@ -231,6 +283,11 @@ type financeServiceClient struct {
 	getTransaction       *connect.Client[v1.GetTransactionRequest, v1.GetTransactionResponse]
 	updateTransaction    *connect.Client[v1.UpdateTransactionRequest, v1.UpdateTransactionResponse]
 	deleteTransaction    *connect.Client[v1.DeleteTransactionRequest, v1.DeleteTransactionResponse]
+	createBudget         *connect.Client[v1.CreateBudgetRequest, v1.CreateBudgetResponse]
+	listBudgets          *connect.Client[v1.ListBudgetsRequest, v1.ListBudgetsResponse]
+	getBudget            *connect.Client[v1.GetBudgetRequest, v1.GetBudgetResponse]
+	updateBudget         *connect.Client[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse]
+	deleteBudget         *connect.Client[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse]
 	getSummary           *connect.Client[v1.GetSummaryRequest, v1.GetSummaryResponse]
 	getCategoryBreakdown *connect.Client[v1.GetCategoryBreakdownRequest, v1.GetCategoryBreakdownResponse]
 }
@@ -305,6 +362,31 @@ func (c *financeServiceClient) DeleteTransaction(ctx context.Context, req *conne
 	return c.deleteTransaction.CallUnary(ctx, req)
 }
 
+// CreateBudget calls finance.v1.FinanceService.CreateBudget.
+func (c *financeServiceClient) CreateBudget(ctx context.Context, req *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
+	return c.createBudget.CallUnary(ctx, req)
+}
+
+// ListBudgets calls finance.v1.FinanceService.ListBudgets.
+func (c *financeServiceClient) ListBudgets(ctx context.Context, req *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error) {
+	return c.listBudgets.CallUnary(ctx, req)
+}
+
+// GetBudget calls finance.v1.FinanceService.GetBudget.
+func (c *financeServiceClient) GetBudget(ctx context.Context, req *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error) {
+	return c.getBudget.CallUnary(ctx, req)
+}
+
+// UpdateBudget calls finance.v1.FinanceService.UpdateBudget.
+func (c *financeServiceClient) UpdateBudget(ctx context.Context, req *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error) {
+	return c.updateBudget.CallUnary(ctx, req)
+}
+
+// DeleteBudget calls finance.v1.FinanceService.DeleteBudget.
+func (c *financeServiceClient) DeleteBudget(ctx context.Context, req *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error) {
+	return c.deleteBudget.CallUnary(ctx, req)
+}
+
 // GetSummary calls finance.v1.FinanceService.GetSummary.
 func (c *financeServiceClient) GetSummary(ctx context.Context, req *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error) {
 	return c.getSummary.CallUnary(ctx, req)
@@ -331,6 +413,13 @@ type FinanceServiceHandler interface {
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
+	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
+	// ListBudgets returns each budget with its progress for the window in force today, which
+	// is the only form the UI ever renders.
+	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
+	GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error)
+	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
+	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
 	// GetSummary is the home screen: totals and balance for one period.
 	GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error)
 	// GetCategoryBreakdown is the pie chart: one slice per category for one period.
@@ -428,6 +517,36 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("DeleteTransaction")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceCreateBudgetHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateBudgetProcedure,
+		svc.CreateBudget,
+		connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListBudgetsHandler := connect.NewUnaryHandler(
+		FinanceServiceListBudgetsProcedure,
+		svc.ListBudgets,
+		connect.WithSchema(financeServiceMethods.ByName("ListBudgets")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetBudgetHandler := connect.NewUnaryHandler(
+		FinanceServiceGetBudgetProcedure,
+		svc.GetBudget,
+		connect.WithSchema(financeServiceMethods.ByName("GetBudget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateBudgetHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateBudgetProcedure,
+		svc.UpdateBudget,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateBudget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteBudgetHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteBudgetProcedure,
+		svc.DeleteBudget,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteBudget")),
+		connect.WithHandlerOptions(opts...),
+	)
 	financeServiceGetSummaryHandler := connect.NewUnaryHandler(
 		FinanceServiceGetSummaryProcedure,
 		svc.GetSummary,
@@ -470,6 +589,16 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 			financeServiceUpdateTransactionHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteTransactionProcedure:
 			financeServiceDeleteTransactionHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateBudgetProcedure:
+			financeServiceCreateBudgetHandler.ServeHTTP(w, r)
+		case FinanceServiceListBudgetsProcedure:
+			financeServiceListBudgetsHandler.ServeHTTP(w, r)
+		case FinanceServiceGetBudgetProcedure:
+			financeServiceGetBudgetHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateBudgetProcedure:
+			financeServiceUpdateBudgetHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteBudgetProcedure:
+			financeServiceDeleteBudgetHandler.ServeHTTP(w, r)
 		case FinanceServiceGetSummaryProcedure:
 			financeServiceGetSummaryHandler.ServeHTTP(w, r)
 		case FinanceServiceGetCategoryBreakdownProcedure:
@@ -537,6 +666,26 @@ func (UnimplementedFinanceServiceHandler) UpdateTransaction(context.Context, *co
 
 func (UnimplementedFinanceServiceHandler) DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteTransaction is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateBudget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListBudgets is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetBudget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateBudget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteBudget is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error) {

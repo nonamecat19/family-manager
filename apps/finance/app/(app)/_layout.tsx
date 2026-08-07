@@ -46,6 +46,10 @@ export default function AppLayout() {
         options={{ title: "Reports", tabBarIcon: () => <Text>◔</Text> }}
       />
       <Tabs.Screen
+        name="budgets"
+        options={{ title: "Budgets", tabBarIcon: () => <Text>▤</Text> }}
+      />
+      <Tabs.Screen
         name="accounts"
         options={{ title: "Accounts", tabBarIcon: () => <Text>▣</Text> }}
       />
