@@ -1,0 +1,191 @@
+syntax = "proto3";
+
+package family.v1;
+
+// go_package is set by buf managed mode (libs/proto/buf.gen.yaml) to
+// github.com/nnc/family-manager/sdk/go/family/v1 — do not set it here.
+
+import "google/protobuf/timestamp.proto";
+
+// FamilyService owns the household: who exists, who belongs, who may invite. It is the only
+// source of family membership in this repo — no other service stores a members table, they
+// carry a family_id and ask this service (or trust the family_id claim in the access token).
+service FamilyService {
+  rpc CreateFamily(CreateFamilyRequest) returns (CreateFamilyResponse);
+  rpc GetFamily(GetFamilyRequest) returns (GetFamilyResponse);
+  rpc UpdateFamily(UpdateFamilyRequest) returns (UpdateFamilyResponse);
+
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+  rpc LeaveFamily(LeaveFamilyRequest) returns (LeaveFamilyResponse);
+
+  rpc InviteMember(InviteMemberRequest) returns (InviteMemberResponse);
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (AcceptInvitationResponse);
+  rpc RevokeInvitation(RevokeInvitationRequest) returns (RevokeInvitationResponse);
+  rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse);
+
+  // CheckMembership is the service-to-service call: a sibling service asks whether a user
+  // may act inside a family before it touches family-scoped rows.
+  rpc CheckMembership(CheckMembershipRequest) returns (CheckMembershipResponse);
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  // ROLE_ADMIN may invite, remove members and delete the family.
+  ROLE_ADMIN = 1;
+  ROLE_MEMBER = 2;
+}
+
+enum InvitationStatus {
+  INVITATION_STATUS_UNSPECIFIED = 0;
+  INVITATION_STATUS_PENDING = 1;
+  INVITATION_STATUS_ACCEPTED = 2;
+  INVITATION_STATUS_REVOKED = 3;
+  INVITATION_STATUS_EXPIRED = 4;
+}
+
+message Family {
+  string id = 1;
+  string name = 2;
+  string owner_user_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message Member {
+  string user_id = 1;
+  string family_id = 2;
+  // display_name is denormalised from the account at join time so member lists render
+  // without a fan-out call to services/auth.
+  string display_name = 3;
+  string email = 4;
+  Role role = 5;
+  google.protobuf.Timestamp joined_at = 6;
+}
+
+message Invitation {
+  string id = 1;
+  string family_id = 2;
+  string inviter_user_id = 3;
+  string email = 4;
+  InvitationStatus status = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message CreateFamilyRequest {
+  string name = 1;
+}
+
+message CreateFamilyResponse {
+  Family family = 1;
+}
+
+message GetFamilyRequest {
+  // Empty means "the caller's family", read from the access token.
+  string family_id = 1;
+}
+
+message GetFamilyResponse {
+  Family family = 1;
+  repeated Member members = 2;
+}
+
+message UpdateFamilyRequest {
+  string family_id = 1;
+  string name = 2;
+}
+
+message UpdateFamilyResponse {
+  Family family = 1;
+}
+
+message ListMembersRequest {
+  string family_id = 1;
+}
+
+message ListMembersResponse {
+  repeated Member members = 1;
+}
+
+message RemoveMemberRequest {
+  string family_id = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberResponse {}
+
+message LeaveFamilyRequest {
+  string family_id = 1;
+}
+
+message LeaveFamilyResponse {}
+
+message InviteMemberRequest {
+  string family_id = 1;
+  string email = 2;
+  Role role = 3;
+}
+
+message InviteMemberResponse {
+  Invitation invitation = 1;
+  // token is returned once, at creation, and never stored in plaintext. The caller delivers
+  // it out of band (deep link, email).
+  string token = 2;
+}
+
+message AcceptInvitationRequest {
+  string token = 1;
+}
+
+message AcceptInvitationResponse {
+  Family family = 1;
+  Member member = 2;
+}
+
+message RevokeInvitationRequest {
+  string invitation_id = 1;
+}
+
+message RevokeInvitationResponse {}
+
+message ListInvitationsRequest {
+  string family_id = 1;
+}
+
+message ListInvitationsResponse {
+  repeated Invitation invitations = 1;
+}
+
+message CheckMembershipRequest {
+  string user_id = 1;
+  string family_id = 2;
+}
+
+message CheckMembershipResponse {
+  bool is_member = 1;
+  Role role = 2;
+}
+
+// Events published on `family.member.*` (libs/go/events). Consumers decode these payloads.
+message MemberInvitedEvent {
+  string family_id = 1;
+  string invitation_id = 2;
+  string inviter_user_id = 3;
+  string email = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+message MemberJoinedEvent {
+  string family_id = 1;
+  string user_id = 2;
+  Role role = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}
+
+message MemberRemovedEvent {
+  string family_id = 1;
+  string user_id = 2;
+  string removed_by_user_id = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}

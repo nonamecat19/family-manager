@@ -1,0 +1,22 @@
+{
+  "name": "@fm/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generated protobuf messages and service descriptors. Sources under src/ are produced by `just proto` and are never hand-edited.",
+  "//exports": "No barrel file: buf writes one module per proto file, so consumers import the exact path, e.g. @fm/sdk/finance/v1/finance_pb.",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"generated code is not linted\"",
+    "test": "echo \"no tests in generated code\""
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.2.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
