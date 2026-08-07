@@ -1,6 +1,10 @@
 go 1.23
 
 use (
+	./libs/go/auth
+	./libs/go/database
+	./libs/go/events
+	./libs/go/logger
 	./services/auth
 )
 
