@@ -14,9 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 
-	"github.com/nnc/auth-service/internal/config"
-	grpcserver "github.com/nnc/auth-service/internal/grpc"
-	"github.com/nnc/auth-service/internal/handler"
+	"github.com/nnc/family-manager/services/auth/internal/config"
+	grpcserver "github.com/nnc/family-manager/services/auth/internal/grpc"
+	"github.com/nnc/family-manager/services/auth/internal/handler"
 )
 
 func main() {

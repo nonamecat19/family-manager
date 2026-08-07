@@ -1,4 +1,4 @@
-module github.com/nnc/auth-service
+module github.com/nnc/family-manager/services/auth
 
 go 1.23
 

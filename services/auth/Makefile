@@ -1,9 +1,8 @@
-.PHONY: proto sqlc run dev migrate
+.PHONY: sqlc run dev migrate proto
 
+# Contracts live in libs/proto/auth/v1 and are generated repo-wide with buf.
 proto:
-	protoc --go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		proto/auth/auth.proto
+	cd ../.. && just proto
 
 sqlc:
 	sqlc generate
