@@ -1400,6 +1400,112 @@ func (x *CheckMembershipResponse) GetRole() Role {
 	return Role_ROLE_UNSPECIFIED
 }
 
+type GetUserMembershipRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserMembershipRequest) Reset() {
+	*x = GetUserMembershipRequest{}
+	mi := &file_family_v1_family_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserMembershipRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserMembershipRequest) ProtoMessage() {}
+
+func (x *GetUserMembershipRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_family_v1_family_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserMembershipRequest.ProtoReflect.Descriptor instead.
+func (*GetUserMembershipRequest) Descriptor() ([]byte, []int) {
+	return file_family_v1_family_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetUserMembershipRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetUserMembershipResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// in_family is false for a user who has not created or joined one yet — a normal state on
+	// first launch, not an error.
+	InFamily      bool   `protobuf:"varint,1,opt,name=in_family,json=inFamily,proto3" json:"in_family,omitempty"`
+	FamilyId      string `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Role          Role   `protobuf:"varint,3,opt,name=role,proto3,enum=family.v1.Role" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserMembershipResponse) Reset() {
+	*x = GetUserMembershipResponse{}
+	mi := &file_family_v1_family_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserMembershipResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserMembershipResponse) ProtoMessage() {}
+
+func (x *GetUserMembershipResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_family_v1_family_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserMembershipResponse.ProtoReflect.Descriptor instead.
+func (*GetUserMembershipResponse) Descriptor() ([]byte, []int) {
+	return file_family_v1_family_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *GetUserMembershipResponse) GetInFamily() bool {
+	if x != nil {
+		return x.InFamily
+	}
+	return false
+}
+
+func (x *GetUserMembershipResponse) GetFamilyId() string {
+	if x != nil {
+		return x.FamilyId
+	}
+	return ""
+}
+
+func (x *GetUserMembershipResponse) GetRole() Role {
+	if x != nil {
+		return x.Role
+	}
+	return Role_ROLE_UNSPECIFIED
+}
+
 // Events published on `family.member.*` (libs/go/events). Consumers decode these payloads.
 type MemberInvitedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1414,7 +1520,7 @@ type MemberInvitedEvent struct {
 
 func (x *MemberInvitedEvent) Reset() {
 	*x = MemberInvitedEvent{}
-	mi := &file_family_v1_family_proto_msgTypes[25]
+	mi := &file_family_v1_family_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1426,7 +1532,7 @@ func (x *MemberInvitedEvent) String() string {
 func (*MemberInvitedEvent) ProtoMessage() {}
 
 func (x *MemberInvitedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_family_v1_family_proto_msgTypes[25]
+	mi := &file_family_v1_family_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1439,7 +1545,7 @@ func (x *MemberInvitedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberInvitedEvent.ProtoReflect.Descriptor instead.
 func (*MemberInvitedEvent) Descriptor() ([]byte, []int) {
-	return file_family_v1_family_proto_rawDescGZIP(), []int{25}
+	return file_family_v1_family_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *MemberInvitedEvent) GetFamilyId() string {
@@ -1489,7 +1595,7 @@ type MemberJoinedEvent struct {
 
 func (x *MemberJoinedEvent) Reset() {
 	*x = MemberJoinedEvent{}
-	mi := &file_family_v1_family_proto_msgTypes[26]
+	mi := &file_family_v1_family_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1501,7 +1607,7 @@ func (x *MemberJoinedEvent) String() string {
 func (*MemberJoinedEvent) ProtoMessage() {}
 
 func (x *MemberJoinedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_family_v1_family_proto_msgTypes[26]
+	mi := &file_family_v1_family_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1514,7 +1620,7 @@ func (x *MemberJoinedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberJoinedEvent.ProtoReflect.Descriptor instead.
 func (*MemberJoinedEvent) Descriptor() ([]byte, []int) {
-	return file_family_v1_family_proto_rawDescGZIP(), []int{26}
+	return file_family_v1_family_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MemberJoinedEvent) GetFamilyId() string {
@@ -1557,7 +1663,7 @@ type MemberRemovedEvent struct {
 
 func (x *MemberRemovedEvent) Reset() {
 	*x = MemberRemovedEvent{}
-	mi := &file_family_v1_family_proto_msgTypes[27]
+	mi := &file_family_v1_family_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1569,7 +1675,7 @@ func (x *MemberRemovedEvent) String() string {
 func (*MemberRemovedEvent) ProtoMessage() {}
 
 func (x *MemberRemovedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_family_v1_family_proto_msgTypes[27]
+	mi := &file_family_v1_family_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1582,7 +1688,7 @@ func (x *MemberRemovedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberRemovedEvent.ProtoReflect.Descriptor instead.
 func (*MemberRemovedEvent) Descriptor() ([]byte, []int) {
-	return file_family_v1_family_proto_rawDescGZIP(), []int{27}
+	return file_family_v1_family_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *MemberRemovedEvent) GetFamilyId() string {
@@ -1695,7 +1801,13 @@ const file_family_v1_family_proto_rawDesc = "" +
 	"\tfamily_id\x18\x02 \x01(\tR\bfamilyId\"[\n" +
 	"\x17CheckMembershipResponse\x12\x1b\n" +
 	"\tis_member\x18\x01 \x01(\bR\bisMember\x12#\n" +
-	"\x04role\x18\x02 \x01(\x0e2\x0f.family.v1.RoleR\x04role\"\xd1\x01\n" +
+	"\x04role\x18\x02 \x01(\x0e2\x0f.family.v1.RoleR\x04role\"3\n" +
+	"\x18GetUserMembershipRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"z\n" +
+	"\x19GetUserMembershipResponse\x12\x1b\n" +
+	"\tin_family\x18\x01 \x01(\bR\binFamily\x12\x1b\n" +
+	"\tfamily_id\x18\x02 \x01(\tR\bfamilyId\x12#\n" +
+	"\x04role\x18\x03 \x01(\x0e2\x0f.family.v1.RoleR\x04role\"\xd1\x01\n" +
 	"\x12MemberInvitedEvent\x12\x1b\n" +
 	"\tfamily_id\x18\x01 \x01(\tR\bfamilyId\x12#\n" +
 	"\rinvitation_id\x18\x02 \x01(\tR\finvitationId\x12&\n" +
@@ -1725,7 +1837,7 @@ const file_family_v1_family_proto_rawDesc = "" +
 	"\x19INVITATION_STATUS_PENDING\x10\x01\x12\x1e\n" +
 	"\x1aINVITATION_STATUS_ACCEPTED\x10\x02\x12\x1d\n" +
 	"\x19INVITATION_STATUS_REVOKED\x10\x03\x12\x1d\n" +
-	"\x19INVITATION_STATUS_EXPIRED\x10\x042\xa5\a\n" +
+	"\x19INVITATION_STATUS_EXPIRED\x10\x042\x85\b\n" +
 	"\rFamilyService\x12O\n" +
 	"\fCreateFamily\x12\x1e.family.v1.CreateFamilyRequest\x1a\x1f.family.v1.CreateFamilyResponse\x12F\n" +
 	"\tGetFamily\x12\x1b.family.v1.GetFamilyRequest\x1a\x1c.family.v1.GetFamilyResponse\x12O\n" +
@@ -1737,7 +1849,8 @@ const file_family_v1_family_proto_rawDesc = "" +
 	"\x10AcceptInvitation\x12\".family.v1.AcceptInvitationRequest\x1a#.family.v1.AcceptInvitationResponse\x12[\n" +
 	"\x10RevokeInvitation\x12\".family.v1.RevokeInvitationRequest\x1a#.family.v1.RevokeInvitationResponse\x12X\n" +
 	"\x0fListInvitations\x12!.family.v1.ListInvitationsRequest\x1a\".family.v1.ListInvitationsResponse\x12X\n" +
-	"\x0fCheckMembership\x12!.family.v1.CheckMembershipRequest\x1a\".family.v1.CheckMembershipResponseB\x9a\x01\n" +
+	"\x0fCheckMembership\x12!.family.v1.CheckMembershipRequest\x1a\".family.v1.CheckMembershipResponse\x12^\n" +
+	"\x11GetUserMembership\x12#.family.v1.GetUserMembershipRequest\x1a$.family.v1.GetUserMembershipResponseB\x9a\x01\n" +
 	"\rcom.family.v1B\vFamilyProtoP\x01Z7github.com/nnc/family-manager/sdk/go/family/v1;familyv1\xa2\x02\x03FXX\xaa\x02\tFamily.V1\xca\x02\tFamily\\V1\xe2\x02\x15Family\\V1\\GPBMetadata\xea\x02\n" +
 	"Family::V1b\x06proto3"
 
@@ -1754,48 +1867,50 @@ func file_family_v1_family_proto_rawDescGZIP() []byte {
 }
 
 var file_family_v1_family_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_family_v1_family_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_family_v1_family_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_family_v1_family_proto_goTypes = []any{
-	(Role)(0),                        // 0: family.v1.Role
-	(InvitationStatus)(0),            // 1: family.v1.InvitationStatus
-	(*Family)(nil),                   // 2: family.v1.Family
-	(*Member)(nil),                   // 3: family.v1.Member
-	(*Invitation)(nil),               // 4: family.v1.Invitation
-	(*CreateFamilyRequest)(nil),      // 5: family.v1.CreateFamilyRequest
-	(*CreateFamilyResponse)(nil),     // 6: family.v1.CreateFamilyResponse
-	(*GetFamilyRequest)(nil),         // 7: family.v1.GetFamilyRequest
-	(*GetFamilyResponse)(nil),        // 8: family.v1.GetFamilyResponse
-	(*UpdateFamilyRequest)(nil),      // 9: family.v1.UpdateFamilyRequest
-	(*UpdateFamilyResponse)(nil),     // 10: family.v1.UpdateFamilyResponse
-	(*ListMembersRequest)(nil),       // 11: family.v1.ListMembersRequest
-	(*ListMembersResponse)(nil),      // 12: family.v1.ListMembersResponse
-	(*RemoveMemberRequest)(nil),      // 13: family.v1.RemoveMemberRequest
-	(*RemoveMemberResponse)(nil),     // 14: family.v1.RemoveMemberResponse
-	(*LeaveFamilyRequest)(nil),       // 15: family.v1.LeaveFamilyRequest
-	(*LeaveFamilyResponse)(nil),      // 16: family.v1.LeaveFamilyResponse
-	(*InviteMemberRequest)(nil),      // 17: family.v1.InviteMemberRequest
-	(*InviteMemberResponse)(nil),     // 18: family.v1.InviteMemberResponse
-	(*AcceptInvitationRequest)(nil),  // 19: family.v1.AcceptInvitationRequest
-	(*AcceptInvitationResponse)(nil), // 20: family.v1.AcceptInvitationResponse
-	(*RevokeInvitationRequest)(nil),  // 21: family.v1.RevokeInvitationRequest
-	(*RevokeInvitationResponse)(nil), // 22: family.v1.RevokeInvitationResponse
-	(*ListInvitationsRequest)(nil),   // 23: family.v1.ListInvitationsRequest
-	(*ListInvitationsResponse)(nil),  // 24: family.v1.ListInvitationsResponse
-	(*CheckMembershipRequest)(nil),   // 25: family.v1.CheckMembershipRequest
-	(*CheckMembershipResponse)(nil),  // 26: family.v1.CheckMembershipResponse
-	(*MemberInvitedEvent)(nil),       // 27: family.v1.MemberInvitedEvent
-	(*MemberJoinedEvent)(nil),        // 28: family.v1.MemberJoinedEvent
-	(*MemberRemovedEvent)(nil),       // 29: family.v1.MemberRemovedEvent
-	(*timestamppb.Timestamp)(nil),    // 30: google.protobuf.Timestamp
+	(Role)(0),                         // 0: family.v1.Role
+	(InvitationStatus)(0),             // 1: family.v1.InvitationStatus
+	(*Family)(nil),                    // 2: family.v1.Family
+	(*Member)(nil),                    // 3: family.v1.Member
+	(*Invitation)(nil),                // 4: family.v1.Invitation
+	(*CreateFamilyRequest)(nil),       // 5: family.v1.CreateFamilyRequest
+	(*CreateFamilyResponse)(nil),      // 6: family.v1.CreateFamilyResponse
+	(*GetFamilyRequest)(nil),          // 7: family.v1.GetFamilyRequest
+	(*GetFamilyResponse)(nil),         // 8: family.v1.GetFamilyResponse
+	(*UpdateFamilyRequest)(nil),       // 9: family.v1.UpdateFamilyRequest
+	(*UpdateFamilyResponse)(nil),      // 10: family.v1.UpdateFamilyResponse
+	(*ListMembersRequest)(nil),        // 11: family.v1.ListMembersRequest
+	(*ListMembersResponse)(nil),       // 12: family.v1.ListMembersResponse
+	(*RemoveMemberRequest)(nil),       // 13: family.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),      // 14: family.v1.RemoveMemberResponse
+	(*LeaveFamilyRequest)(nil),        // 15: family.v1.LeaveFamilyRequest
+	(*LeaveFamilyResponse)(nil),       // 16: family.v1.LeaveFamilyResponse
+	(*InviteMemberRequest)(nil),       // 17: family.v1.InviteMemberRequest
+	(*InviteMemberResponse)(nil),      // 18: family.v1.InviteMemberResponse
+	(*AcceptInvitationRequest)(nil),   // 19: family.v1.AcceptInvitationRequest
+	(*AcceptInvitationResponse)(nil),  // 20: family.v1.AcceptInvitationResponse
+	(*RevokeInvitationRequest)(nil),   // 21: family.v1.RevokeInvitationRequest
+	(*RevokeInvitationResponse)(nil),  // 22: family.v1.RevokeInvitationResponse
+	(*ListInvitationsRequest)(nil),    // 23: family.v1.ListInvitationsRequest
+	(*ListInvitationsResponse)(nil),   // 24: family.v1.ListInvitationsResponse
+	(*CheckMembershipRequest)(nil),    // 25: family.v1.CheckMembershipRequest
+	(*CheckMembershipResponse)(nil),   // 26: family.v1.CheckMembershipResponse
+	(*GetUserMembershipRequest)(nil),  // 27: family.v1.GetUserMembershipRequest
+	(*GetUserMembershipResponse)(nil), // 28: family.v1.GetUserMembershipResponse
+	(*MemberInvitedEvent)(nil),        // 29: family.v1.MemberInvitedEvent
+	(*MemberJoinedEvent)(nil),         // 30: family.v1.MemberJoinedEvent
+	(*MemberRemovedEvent)(nil),        // 31: family.v1.MemberRemovedEvent
+	(*timestamppb.Timestamp)(nil),     // 32: google.protobuf.Timestamp
 }
 var file_family_v1_family_proto_depIdxs = []int32{
-	30, // 0: family.v1.Family.created_at:type_name -> google.protobuf.Timestamp
-	30, // 1: family.v1.Family.updated_at:type_name -> google.protobuf.Timestamp
+	32, // 0: family.v1.Family.created_at:type_name -> google.protobuf.Timestamp
+	32, // 1: family.v1.Family.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: family.v1.Member.role:type_name -> family.v1.Role
-	30, // 3: family.v1.Member.joined_at:type_name -> google.protobuf.Timestamp
+	32, // 3: family.v1.Member.joined_at:type_name -> google.protobuf.Timestamp
 	1,  // 4: family.v1.Invitation.status:type_name -> family.v1.InvitationStatus
-	30, // 5: family.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
-	30, // 6: family.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
+	32, // 5: family.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	32, // 6: family.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 7: family.v1.CreateFamilyResponse.family:type_name -> family.v1.Family
 	2,  // 8: family.v1.GetFamilyResponse.family:type_name -> family.v1.Family
 	3,  // 9: family.v1.GetFamilyResponse.members:type_name -> family.v1.Member
@@ -1807,37 +1922,40 @@ var file_family_v1_family_proto_depIdxs = []int32{
 	3,  // 15: family.v1.AcceptInvitationResponse.member:type_name -> family.v1.Member
 	4,  // 16: family.v1.ListInvitationsResponse.invitations:type_name -> family.v1.Invitation
 	0,  // 17: family.v1.CheckMembershipResponse.role:type_name -> family.v1.Role
-	30, // 18: family.v1.MemberInvitedEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	0,  // 19: family.v1.MemberJoinedEvent.role:type_name -> family.v1.Role
-	30, // 20: family.v1.MemberJoinedEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	30, // 21: family.v1.MemberRemovedEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	5,  // 22: family.v1.FamilyService.CreateFamily:input_type -> family.v1.CreateFamilyRequest
-	7,  // 23: family.v1.FamilyService.GetFamily:input_type -> family.v1.GetFamilyRequest
-	9,  // 24: family.v1.FamilyService.UpdateFamily:input_type -> family.v1.UpdateFamilyRequest
-	11, // 25: family.v1.FamilyService.ListMembers:input_type -> family.v1.ListMembersRequest
-	13, // 26: family.v1.FamilyService.RemoveMember:input_type -> family.v1.RemoveMemberRequest
-	15, // 27: family.v1.FamilyService.LeaveFamily:input_type -> family.v1.LeaveFamilyRequest
-	17, // 28: family.v1.FamilyService.InviteMember:input_type -> family.v1.InviteMemberRequest
-	19, // 29: family.v1.FamilyService.AcceptInvitation:input_type -> family.v1.AcceptInvitationRequest
-	21, // 30: family.v1.FamilyService.RevokeInvitation:input_type -> family.v1.RevokeInvitationRequest
-	23, // 31: family.v1.FamilyService.ListInvitations:input_type -> family.v1.ListInvitationsRequest
-	25, // 32: family.v1.FamilyService.CheckMembership:input_type -> family.v1.CheckMembershipRequest
-	6,  // 33: family.v1.FamilyService.CreateFamily:output_type -> family.v1.CreateFamilyResponse
-	8,  // 34: family.v1.FamilyService.GetFamily:output_type -> family.v1.GetFamilyResponse
-	10, // 35: family.v1.FamilyService.UpdateFamily:output_type -> family.v1.UpdateFamilyResponse
-	12, // 36: family.v1.FamilyService.ListMembers:output_type -> family.v1.ListMembersResponse
-	14, // 37: family.v1.FamilyService.RemoveMember:output_type -> family.v1.RemoveMemberResponse
-	16, // 38: family.v1.FamilyService.LeaveFamily:output_type -> family.v1.LeaveFamilyResponse
-	18, // 39: family.v1.FamilyService.InviteMember:output_type -> family.v1.InviteMemberResponse
-	20, // 40: family.v1.FamilyService.AcceptInvitation:output_type -> family.v1.AcceptInvitationResponse
-	22, // 41: family.v1.FamilyService.RevokeInvitation:output_type -> family.v1.RevokeInvitationResponse
-	24, // 42: family.v1.FamilyService.ListInvitations:output_type -> family.v1.ListInvitationsResponse
-	26, // 43: family.v1.FamilyService.CheckMembership:output_type -> family.v1.CheckMembershipResponse
-	33, // [33:44] is the sub-list for method output_type
-	22, // [22:33] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	0,  // 18: family.v1.GetUserMembershipResponse.role:type_name -> family.v1.Role
+	32, // 19: family.v1.MemberInvitedEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	0,  // 20: family.v1.MemberJoinedEvent.role:type_name -> family.v1.Role
+	32, // 21: family.v1.MemberJoinedEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	32, // 22: family.v1.MemberRemovedEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	5,  // 23: family.v1.FamilyService.CreateFamily:input_type -> family.v1.CreateFamilyRequest
+	7,  // 24: family.v1.FamilyService.GetFamily:input_type -> family.v1.GetFamilyRequest
+	9,  // 25: family.v1.FamilyService.UpdateFamily:input_type -> family.v1.UpdateFamilyRequest
+	11, // 26: family.v1.FamilyService.ListMembers:input_type -> family.v1.ListMembersRequest
+	13, // 27: family.v1.FamilyService.RemoveMember:input_type -> family.v1.RemoveMemberRequest
+	15, // 28: family.v1.FamilyService.LeaveFamily:input_type -> family.v1.LeaveFamilyRequest
+	17, // 29: family.v1.FamilyService.InviteMember:input_type -> family.v1.InviteMemberRequest
+	19, // 30: family.v1.FamilyService.AcceptInvitation:input_type -> family.v1.AcceptInvitationRequest
+	21, // 31: family.v1.FamilyService.RevokeInvitation:input_type -> family.v1.RevokeInvitationRequest
+	23, // 32: family.v1.FamilyService.ListInvitations:input_type -> family.v1.ListInvitationsRequest
+	25, // 33: family.v1.FamilyService.CheckMembership:input_type -> family.v1.CheckMembershipRequest
+	27, // 34: family.v1.FamilyService.GetUserMembership:input_type -> family.v1.GetUserMembershipRequest
+	6,  // 35: family.v1.FamilyService.CreateFamily:output_type -> family.v1.CreateFamilyResponse
+	8,  // 36: family.v1.FamilyService.GetFamily:output_type -> family.v1.GetFamilyResponse
+	10, // 37: family.v1.FamilyService.UpdateFamily:output_type -> family.v1.UpdateFamilyResponse
+	12, // 38: family.v1.FamilyService.ListMembers:output_type -> family.v1.ListMembersResponse
+	14, // 39: family.v1.FamilyService.RemoveMember:output_type -> family.v1.RemoveMemberResponse
+	16, // 40: family.v1.FamilyService.LeaveFamily:output_type -> family.v1.LeaveFamilyResponse
+	18, // 41: family.v1.FamilyService.InviteMember:output_type -> family.v1.InviteMemberResponse
+	20, // 42: family.v1.FamilyService.AcceptInvitation:output_type -> family.v1.AcceptInvitationResponse
+	22, // 43: family.v1.FamilyService.RevokeInvitation:output_type -> family.v1.RevokeInvitationResponse
+	24, // 44: family.v1.FamilyService.ListInvitations:output_type -> family.v1.ListInvitationsResponse
+	26, // 45: family.v1.FamilyService.CheckMembership:output_type -> family.v1.CheckMembershipResponse
+	28, // 46: family.v1.FamilyService.GetUserMembership:output_type -> family.v1.GetUserMembershipResponse
+	35, // [35:47] is the sub-list for method output_type
+	23, // [23:35] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_family_v1_family_proto_init() }
@@ -1851,7 +1969,7 @@ func file_family_v1_family_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_family_v1_family_proto_rawDesc), len(file_family_v1_family_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

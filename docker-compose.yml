@@ -43,8 +43,33 @@ services:
       - miniodata:/data
 
   # --- application services -------------------------------------------------
-  # Each owns its own database and applies its own migrations at boot. Both speak
+  # Each owns its own database and applies its own migrations at boot. All speak
   # Connect/JSON to apps and gRPC to each other on the same port (h2c).
+
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    environment:
+      AUTH_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/auth?sslmode=disable
+      # The ES256 signing key. Generate one with:
+      #   openssl ecparam -name prime256v1 -genkey -noout -out infra/secrets/auth-signing-key.pem
+      # There is no default: an auth service that invents its own key is worse than one that
+      # refuses to start.
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth-signing-key
+      # family's internal listener, for the family_id claim. Reachable only on this network.
+      AUTH_FAMILY_ADDR: http://family:9090
+      AUTH_HTTP_PORT: "8080"
+      AUTH_LOG_JSON: "true"
+    secrets:
+      - auth-signing-key
+    ports:
+      - "${AUTH_PORT:-8081}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
+    # served for the reverse proxy and for host-side probes instead.
 
   family:
     build:
@@ -52,11 +77,12 @@ services:
       dockerfile: services/family/Dockerfile
     environment:
       FAMILY_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/family?sslmode=disable
-      # No default: services/auth does not serve JWKS yet and is not a compose service, so a
-      # default here would point at a host that does not resolve. Set JWKS_URL explicitly.
-      FAMILY_JWKS_URL: ${JWKS_URL:?set JWKS_URL to the auth service key set}
+      FAMILY_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
       FAMILY_NATS_URL: nats://nats:4222
       FAMILY_HTTP_PORT: "8080"
+      # Internal gRPC listener. Never published to the host: it serves the procedures that
+      # take a user id as an argument instead of reading it from a token.
+      FAMILY_GRPC_PORT: "9090"
       FAMILY_LOG_JSON: "true"
     ports:
       - "${FAMILY_PORT:-8082}:8080"
@@ -65,6 +91,8 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      auth:
+        condition: service_started
     # No container healthcheck: the distroless image has no shell and no wget. /healthz is
     # served for the reverse proxy and for host-side probes instead.
 
@@ -74,7 +102,7 @@ services:
       dockerfile: services/finance/Dockerfile
     environment:
       FINANCE_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/finance?sslmode=disable
-      FINANCE_JWKS_URL: ${JWKS_URL:?set JWKS_URL to the auth service key set}
+      FINANCE_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
       FINANCE_NATS_URL: nats://nats:4222
       FINANCE_HTTP_PORT: "8080"
       FINANCE_BASE_CURRENCY: ${BASE_CURRENCY:-EUR}
@@ -86,8 +114,14 @@ services:
         condition: service_healthy
       nats:
         condition: service_healthy
+      auth:
+        condition: service_started
     # No container healthcheck: the distroless image has no shell and no wget. /healthz is
     # served for the reverse proxy and for host-side probes instead.
+
+secrets:
+  auth-signing-key:
+    file: ./infra/secrets/auth-signing-key.pem
 
 volumes:
   pgdata:

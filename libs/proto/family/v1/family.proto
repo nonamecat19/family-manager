@@ -27,6 +27,12 @@ service FamilyService {
   // CheckMembership is the service-to-service call: a sibling service asks whether a user
   // may act inside a family before it touches family-scoped rows.
   rpc CheckMembership(CheckMembershipRequest) returns (CheckMembershipResponse);
+
+  // GetUserMembership answers "which family is this user in", which is what services/auth
+  // needs to stamp the family_id claim when it mints a token. It is served on the internal
+  // gRPC listener only: it takes a user_id from the caller rather than from a token, so it
+  // must never be reachable by an app.
+  rpc GetUserMembership(GetUserMembershipRequest) returns (GetUserMembershipResponse);
 }
 
 enum Role {
@@ -165,6 +171,18 @@ message CheckMembershipRequest {
 message CheckMembershipResponse {
   bool is_member = 1;
   Role role = 2;
+}
+
+message GetUserMembershipRequest {
+  string user_id = 1;
+}
+
+message GetUserMembershipResponse {
+  // in_family is false for a user who has not created or joined one yet — a normal state on
+  // first launch, not an error.
+  bool in_family = 1;
+  string family_id = 2;
+  Role role = 3;
 }
 
 // Events published on `family.member.*` (libs/go/events). Consumers decode these payloads.
