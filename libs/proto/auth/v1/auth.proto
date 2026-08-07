@@ -1,12 +1,17 @@
 syntax = "proto3";
 
-package auth;
+package auth.v1;
 
-option go_package = "github.com/nnc/auth-service/proto/auth";
+// go_package is set by buf managed mode (libs/proto/buf.gen.yaml) to
+// github.com/nnc/family-manager/sdk/go/auth/v1 — do not set it here.
 
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Register(RegisterRequest) returns (RegisterResponse);
+  // Exchanges a refresh token for a new access/refresh pair. The old refresh
+  // token is revoked on use (rotation) — see docs/adr/0005-auth.md.
+  rpc Refresh(RefreshRequest) returns (RefreshResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
 }
 
 message LoginRequest {
@@ -15,7 +20,9 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  string token = 1;
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3; // seconds until access_token expiry
 }
 
 message RegisterRequest {
@@ -27,3 +34,19 @@ message RegisterRequest {
 message RegisterResponse {
   string user_id = 1;
 }
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutResponse {}
