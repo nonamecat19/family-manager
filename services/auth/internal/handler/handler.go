@@ -288,6 +288,12 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 		ChainID:   chainID,
 		ExpiresAt: pgconv.TimestampFrom(h.now().Add(h.refreshTTL)),
 	}); err != nil {
+		// No rows means the query's guard fired: the chain was revoked between this
+		// refresh's check and its insert. Refusing is the whole point — resurrecting a
+		// chain a replay just killed would undo the theft response.
+		if errors.Is(err, pgx.ErrNoRows) {
+			return session{}, errInvalidRefresh()
+		}
 		return session{}, internal(err, "store refresh token")
 	}
 
