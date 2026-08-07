@@ -429,3 +429,39 @@ func keysOf(m map[string]db.User) []string {
 
 // pgUUID renders a uuid for comparison in assertions.
 func pgUUID(u pgtype.UUID) string { return pgconv.UUIDString(u) }
+
+// The race the guarded insert closes: a refresh that already passed the "chain alive?"
+// check must not resurrect a chain a concurrent replay revoked in the meantime.
+func TestRefreshCannotResurrectARevokedChain(t *testing.T) {
+	f := newFixture(t)
+	f.register(t, "ada@example.test", "correct horse")
+	session := f.login(t, "ada@example.test", "correct horse")
+
+	// Rotate once so the chain holds more than one row — the shape a real chain has when a
+	// replay and a legitimate refresh race.
+	rotated, err := f.h.Refresh(context.Background(),
+		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: session.GetRefreshToken()}))
+	if err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+
+	newest := hashToken(rotated.Msg.GetRefreshToken())
+	row := f.store.tokens[newest]
+
+	// The replay handler has just revoked the chain.
+	if _, err := f.store.RevokeChain(context.Background(), row.ChainID); err != nil {
+		t.Fatalf("RevokeChain: %v", err)
+	}
+	// Stand where the loser of the race stands: it read its own row before the revocation,
+	// so its early checks pass and the insert is what has to refuse.
+	row.RevokedAt = pgtype.Timestamptz{}
+	row.UsedAt = pgtype.Timestamptz{}
+	f.store.tokens[newest] = row
+
+	_, err = f.h.Refresh(context.Background(),
+		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: rotated.Msg.GetRefreshToken()}))
+	if connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("code = %v, want unauthenticated: a revoked chain accepted a successor",
+			connect.CodeOf(err))
+	}
+}

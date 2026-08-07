@@ -11,6 +11,10 @@ import (
 )
 
 type Querier interface {
+	// The WHERE NOT EXISTS closes a race: a refresh that passed the "is this chain alive?" check
+	// can otherwise insert its successor a moment after a concurrent replay revoked the chain,
+	// resurrecting it. Inserting nothing returns no rows, which the handler treats as a refusal.
+	//
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)

@@ -82,6 +82,13 @@ func (s *fakeStore) CreateRefreshToken(
 	if err := s.fail("CreateRefreshToken"); err != nil {
 		return db.RefreshToken{}, err
 	}
+	// Mirrors the query's WHERE NOT EXISTS: a revoked chain accepts no successor.
+	for _, existing := range s.tokens {
+		if pgconv.UUIDString(existing.ChainID) == pgconv.UUIDString(arg.ChainID) &&
+			existing.RevokedAt.Valid {
+			return db.RefreshToken{}, pgx.ErrNoRows
+		}
+	}
 	t := db.RefreshToken{
 		ID:        pgconv.MustUUID(newUUID()),
 		UserID:    arg.UserID,

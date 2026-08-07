@@ -13,7 +13,11 @@ import (
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
 INSERT INTO refresh_tokens (user_id, token_hash, chain_id, expires_at)
-VALUES ($1, $2, $3, $4)
+SELECT $1, $2, $3, $4
+WHERE NOT EXISTS (
+    SELECT 1 FROM refresh_tokens
+    WHERE chain_id = $3 AND revoked_at IS NOT NULL
+)
 RETURNING id, user_id, token_hash, chain_id, used_at, revoked_at, expires_at, created_at
 `
 
@@ -24,6 +28,9 @@ type CreateRefreshTokenParams struct {
 	ExpiresAt pgtype.Timestamptz
 }
 
+// The WHERE NOT EXISTS closes a race: a refresh that passed the "is this chain alive?" check
+// can otherwise insert its successor a moment after a concurrent replay revoked the chain,
+// resurrecting it. Inserting nothing returns no rows, which the handler treats as a refusal.
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error) {
 	row := q.db.QueryRow(ctx, createRefreshToken,
 		arg.UserID,
