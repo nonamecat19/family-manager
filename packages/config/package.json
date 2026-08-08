@@ -18,5 +18,9 @@
   },
   "devDependencies": {
     "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "expo-asset": "*"
   }
 }

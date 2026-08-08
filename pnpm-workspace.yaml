@@ -3,3 +3,47 @@ packages:
   - "packages/*"
   - "sdk/typescript"
   - "tools/*"
+
+publicHoistPattern:
+  - "*expo*"
+  - "*metro*"
+  - "*react-native*"
+  - "*@babel*"
+  - "babel-*"
+  - "whatwg-fetch"
+  - "promise"
+  - "regenerator-runtime"
+  - "@fm/*"
+  - "@bufbuild/*"
+  - "@connectrpc/*"
+  - "@tanstack/*"
+
+overrides:
+  metro: 0.81.5
+  metro-cache: 0.81.5
+  metro-cache-key: 0.81.5
+  metro-config: 0.81.5
+  metro-core: 0.81.5
+  metro-file-map: 0.81.5
+  metro-minify-terser: 0.81.5
+  metro-resolver: 0.81.5
+  metro-runtime: 0.81.5
+  metro-source-map: 0.81.5
+  metro-symbolicate: 0.81.5
+  metro-transform-plugins: 0.81.5
+  metro-transform-worker: 0.81.5
+  metro-babel-transformer: 0.81.5
+  expo: ~52.0.0
+  expo-asset: ~11.0.0
+  expo-constants: ~17.0.0
+  expo-linking: ~7.0.0
+  expo-router: ~4.0.0
+  expo-secure-store: ~14.0.1
+  expo-status-bar: ~2.0.0
+  expo-modules-core: ~2.2.0
+  expo-modules-autolinking: ~2.0.0
+  babel-preset-expo: ~12.0.0
+  react-native: ~0.76.5
+  react-native-screens: ~4.4.0
+  react-native-safe-area-context: ~4.12.0
+  react-native-svg: ~15.8.0
