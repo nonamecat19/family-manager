@@ -1,0 +1,296 @@
+syntax = "proto3";
+
+package recipes.v1;
+
+// go_package is set by buf managed mode (libs/proto/buf.gen.yaml) to
+// github.com/nnc/family-manager/sdk/go/recipes/v1 — do not set it here.
+
+import "google/protobuf/timestamp.proto";
+
+// RecipesService owns the family cookbook: recipes, their categories and steps, favorites,
+// comments, and the meal-planning calendar. Every row is scoped by family_id, which comes
+// from the access token's family_id claim (stamped by services/auth from services/family) —
+// this service never calls the family service to resolve membership; it trusts the claim.
+service RecipesService {
+  // --- categories ---------------------------------------------------------
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc CreateSubcategory(CreateSubcategoryRequest) returns (CreateSubcategoryResponse);
+  rpc ListSubcategories(ListSubcategoriesRequest) returns (ListSubcategoriesResponse);
+
+  // --- recipes ------------------------------------------------------------
+  rpc CreateRecipe(CreateRecipeRequest) returns (CreateRecipeResponse);
+  rpc GetRecipe(GetRecipeRequest) returns (GetRecipeResponse);
+  rpc ListRecipes(ListRecipesRequest) returns (ListRecipesResponse);
+  rpc UpdateRecipe(UpdateRecipeRequest) returns (UpdateRecipeResponse);
+  rpc DeleteRecipe(DeleteRecipeRequest) returns (DeleteRecipeResponse);
+
+  // --- favorites & comments ----------------------------------------------
+  rpc ToggleFavorite(ToggleFavoriteRequest) returns (ToggleFavoriteResponse);
+  rpc ListFavorites(ListFavoritesRequest) returns (ListFavoritesResponse);
+  rpc AddComment(AddCommentRequest) returns (AddCommentResponse);
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+
+  // --- meal planning ------------------------------------------------------
+  // PlanMeal assigns a recipe to a date+slot for the family. PlanWeek assigns a batch.
+  // TotalIngredients aggregates every ingredient across a date range, summing duplicate
+  // ingredients by name+unit — the server is the source of truth for the shopping list, not
+  // the app's JavaScript.
+  rpc PlanMeal(PlanMealRequest) returns (PlanMealResponse);
+  rpc ListMealPlan(ListMealPlanRequest) returns (ListMealPlanResponse);
+  rpc RemoveMealPlanEntry(RemoveMealPlanEntryRequest) returns (RemoveMealPlanEntryResponse);
+  rpc TotalIngredients(TotalIngredientsRequest) returns (TotalIngredientsResponse);
+}
+
+enum MealSlot {
+  MEAL_SLOT_UNSPECIFIED = 0;
+  MEAL_SLOT_BREAKFAST = 1;
+  MEAL_SLOT_LUNCH = 2;
+  MEAL_SLOT_DINNER = 3;
+  MEAL_SLOT_SNACK = 4;
+  MEAL_SLOT_DESSERT = 5;
+}
+
+message Category {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message Subcategory {
+  string id = 1;
+  string category_id = 2;
+  string family_id = 3;
+  string name = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message Ingredient {
+  string name = 1;
+  // amount is a decimal string (e.g. "200") — the server sums by name+unit, not by typed
+  // number, so recipe authors can write "2 cloves" without a schema for every unit.
+  string amount = 2;
+  string unit = 3;
+}
+
+message Step {
+  int32 position = 1;
+  string instruction = 2;
+  // duration_seconds is 0 for steps with no timer ("chop the onions") and >0 for timed
+  // steps ("bake for 1800 seconds"), which the app renders as a countdown.
+  int32 duration_seconds = 3;
+}
+
+message Recipe {
+  string id = 1;
+  string family_id = 2;
+  string title = 3;
+  string description = 4;
+  string category_id = 5;
+  string subcategory_id = 6;
+  // servings is how many people the recipe feeds — used to scale ingredient totals when a
+  // meal-plan entry overrides the default servings.
+  int32 servings = 7;
+  int32 prep_seconds = 8;
+  int32 cook_seconds = 9;
+  repeated Ingredient ingredients = 10;
+  repeated Step steps = 11;
+  string author_user_id = 12;
+  // favorite_count and comment_count are denormalised counts so list views render without a
+  // second query per row.
+  int32 favorite_count = 13;
+  int32 comment_count = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+message Comment {
+  string id = 1;
+  string recipe_id = 2;
+  string user_id = 3;
+  string body = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message MealPlanEntry {
+  string id = 1;
+  string family_id = 2;
+  string recipe_id = 3;
+  // date is the calendar day (YYYY-MM-DD), not a timestamp — a meal plan is about days, not
+  // instants, and storing a timestamptz would make timezone handling the app's problem.
+  string date = 4;
+  MealSlot slot = 5;
+  // servings overrides the recipe's default; 0 means "use the recipe's servings".
+  int32 servings = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+// --- categories -----------------------------------------------------------
+
+message CreateCategoryRequest {
+  string name = 1;
+}
+message CreateCategoryResponse {
+  Category category = 1;
+}
+message ListCategoriesRequest {}
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+message CreateSubcategoryRequest {
+  string category_id = 1;
+  string name = 2;
+}
+message CreateSubcategoryResponse {
+  Subcategory subcategory = 1;
+}
+message ListSubcategoriesRequest {
+  string category_id = 1;
+}
+message ListSubcategoriesResponse {
+  repeated Subcategory subcategories = 1;
+}
+
+// --- recipes --------------------------------------------------------------
+
+message CreateRecipeRequest {
+  string title = 1;
+  string description = 2;
+  string category_id = 3;
+  string subcategory_id = 4;
+  int32 servings = 5;
+  int32 prep_seconds = 6;
+  int32 cook_seconds = 7;
+  repeated Ingredient ingredients = 8;
+  repeated Step steps = 9;
+}
+message CreateRecipeResponse {
+  Recipe recipe = 1;
+}
+message GetRecipeRequest {
+  string recipe_id = 1;
+}
+message GetRecipeResponse {
+  Recipe recipe = 1;
+}
+message ListRecipesRequest {
+  string category_id = 1;
+  string subcategory_id = 2;
+  // favorite_only filters to the caller's favorites.
+  bool favorite_only = 3;
+  string search = 4;
+}
+message ListRecipesResponse {
+  repeated Recipe recipes = 1;
+}
+message UpdateRecipeRequest {
+  string recipe_id = 1;
+  string title = 2;
+  string description = 3;
+  string category_id = 4;
+  string subcategory_id = 5;
+  int32 servings = 6;
+  int32 prep_seconds = 7;
+  int32 cook_seconds = 8;
+  repeated Ingredient ingredients = 9;
+  repeated Step steps = 10;
+}
+message UpdateRecipeResponse {
+  Recipe recipe = 1;
+}
+message DeleteRecipeRequest {
+  string recipe_id = 1;
+}
+message DeleteRecipeResponse {}
+
+// --- favorites & comments -------------------------------------------------
+
+message ToggleFavoriteRequest {
+  string recipe_id = 1;
+}
+message ToggleFavoriteResponse {
+  bool is_favorite = 1;
+}
+message ListFavoritesRequest {}
+message ListFavoritesResponse {
+  repeated Recipe recipes = 1;
+}
+message AddCommentRequest {
+  string recipe_id = 1;
+  string body = 2;
+}
+message AddCommentResponse {
+  Comment comment = 1;
+}
+message ListCommentsRequest {
+  string recipe_id = 1;
+}
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+// --- meal planning --------------------------------------------------------
+
+message PlanMealRequest {
+  string recipe_id = 1;
+  string date = 2;
+  MealSlot slot = 3;
+  int32 servings = 4;
+}
+message PlanMealResponse {
+  MealPlanEntry entry = 1;
+}
+message ListMealPlanRequest {
+  // from_date and to_date are inclusive, YYYY-MM-DD. Empty from_date means "today".
+  string from_date = 1;
+  string to_date = 2;
+}
+message ListMealPlanResponse {
+  repeated MealPlanEntry entries = 1;
+}
+message RemoveMealPlanEntryRequest {
+  string entry_id = 1;
+}
+message RemoveMealPlanEntryResponse {}
+
+message TotalIngredientsRequest {
+  string from_date = 1;
+  string to_date = 2;
+}
+message TotalIngredientsResponse {
+  repeated IngredientTotal totals = 1;
+}
+message IngredientTotal {
+  string name = 1;
+  string unit = 2;
+  // total_amount is a decimal string sum, summed by name+unit across every meal-plan entry
+  // in the range, scaled by each entry's servings relative to its recipe's servings.
+  string total_amount = 3;
+}
+
+// Events published on `recipes.<entity>.<verb>` (libs/go/events).
+message RecipeCreatedEvent {
+  string family_id = 1;
+  string recipe_id = 2;
+  string author_user_id = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}
+message RecipeUpdatedEvent {
+  string family_id = 1;
+  string recipe_id = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+}
+message RecipeDeletedEvent {
+  string family_id = 1;
+  string recipe_id = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+}
+message MealPlannedEvent {
+  string family_id = 1;
+  string entry_id = 2;
+  string recipe_id = 3;
+  string date = 4;
+  MealSlot slot = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}

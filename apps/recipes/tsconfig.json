@@ -1,0 +1,13 @@
+{
+  "extends": "@fm/config/tsconfig.expo.json",
+  "compilerOptions": {},
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}

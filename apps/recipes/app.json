@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Family Recipes",
+    "slug": "fm-recipes",
+    "scheme": "fmrecipes",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "//": "Development points at each service directly; deployed, apiBaseUrl is the gateway and serviceUrls is removed.",
+      "apiBaseUrl": "http://localhost:8084",
+      "serviceUrls": {
+        "auth": "http://localhost:8081",
+        "family": "http://localhost:8082",
+        "recipes": "http://localhost:8084"
+      }
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.familymanager.recipes"
+    },
+    "android": {
+      "package": "dev.familymanager.recipes",
+      "adaptiveIcon": {
+        "backgroundColor": "#C05621"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    }
+  }
+}
