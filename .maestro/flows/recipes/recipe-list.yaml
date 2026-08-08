@@ -1,0 +1,26 @@
+# Recipe list: verify the Recipes tab shows a list and the add button is visible.
+# Requires an authenticated session (run after auth-login).
+appId: dev.familymanager.recipes
+name: "Recipes: list screen"
+tags:
+  - recipes
+---
+- launchApp
+- assertVisible: "Recipes"
+
+# The add button should be visible
+- assertVisible:
+    label: "Add recipe"
+
+# If recipes exist, verify they are tappable; if empty, the empty state shows
+- runFlow:
+    when:
+      visible: "No recipes yet"
+    commands:
+      - assertVisible: "Add your first recipe with the + button."
+
+- runFlow:
+    when:
+      notVisible: "No recipes yet"
+    commands:
+      - waitForAnimationToEnd

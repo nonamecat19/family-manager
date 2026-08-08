@@ -1,0 +1,6 @@
+# Maestro configuration for the Family Recipes app.
+# The app id is the Android package from app.json.
+appId: dev.familymanager.recipes
+
+# Flow files live in .maestro/flows/ and are discovered by `maestro test .maestro/`.
+# Run with: just test-mobile

@@ -1,0 +1,27 @@
+# Login flow: sign in with an existing account.
+# Requires a running backend and a pre-registered user.
+appId: dev.familymanager.recipes
+name: "Auth: login"
+tags:
+  - auth
+env:
+  TEST_EMAIL: "testchef@example.com"
+  TEST_PASSWORD: "testpass123"
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Family Recipes"
+
+- tapOn:
+    id: "email"
+- inputText: ${TEST_EMAIL}
+- tapOn:
+    id: "password"
+- inputText: ${TEST_PASSWORD}
+
+- tapOn: "Sign in"
+
+# After login, the app should show the recipe list (or onboarding if no family)
+- extendedWaitUntil:
+    visible: "Recipes"
+    timeout: 10000

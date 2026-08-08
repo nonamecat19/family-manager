@@ -1,0 +1,10 @@
+# Smoke test: the app launches and shows the login screen.
+# Does NOT require a running backend — the auth screen renders before any API call.
+appId: dev.familymanager.recipes
+name: "Smoke: app launches"
+tags:
+  - smoke
+---
+- launchApp
+- assertVisible: "Family Recipes"
+- assertVisible: "Sign in"

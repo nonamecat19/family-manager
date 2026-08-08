@@ -23,3 +23,17 @@ go.work.sum
 # flutter/legacy leftovers
 **/.dart_tool/
 **/build/
+
+# maestro
+.maestro/screenshots/
+.maestro/output/
+.maestro/recordings/
+
+# android build artifacts
+*.apk
+*.aab
+apps/*/android/
+
+# local tool config (project-specific, not shared)
+.opencode/
+.pnpm-store/

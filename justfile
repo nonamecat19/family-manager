@@ -94,3 +94,43 @@ backlog *args:
 
 # The verify node of the task graph. Run before any merge.
 verify: check-go check-ts graph
+
+# --------------------------------------------------------------- mobile ----
+
+# Run Maestro mobile UI tests against the recipes app (or a specific flow).
+# Requires: emulator running, APK installed, backend running (`just up`).
+test-mobile flow="":
+    @just test-mobile-run {{flow}}
+
+test-mobile-run flow:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="$PATH:$HOME/.maestro/bin"
+    if [ -z "{{flow}}" ]; then
+      maestro test .maestro/flows/
+    else
+      maestro test ".maestro/flows/recipes/{{flow}}.yaml"
+    fi
+
+# Build the recipes APK (debug). Requires ANDROID_HOME and JAVA_HOME (Java 17).
+# In Docker if local toolchain is unavailable.
+build-apk:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd apps/recipes
+    if [ -d android ]; then
+      echo "Prebuild already done"
+    else
+      npx expo prebuild --platform android --no-install
+    fi
+    cd android
+    JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} \
+    ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} \
+    ./gradlew assembleDebug
+
+# Install the debug APK on a connected emulator/device.
+install-apk:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export ANDROID_HOME=${ANDROID_HOME:-$HOME/Android}
+    "$ANDROID_HOME/platform-tools/adb" install -r apps/recipes/android/app/build/outputs/apk/debug/app-debug.apk

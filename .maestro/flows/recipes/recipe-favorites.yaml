@@ -1,0 +1,26 @@
+# Favorites: tap favorite on a recipe, navigate to the Favorites tab, verify it appears.
+# Requires at least one recipe (run after recipe-create).
+appId: dev.familymanager.recipes
+name: "Recipes: favorites flow"
+tags:
+  - recipes
+  - favorites
+---
+- launchApp
+- assertVisible: "Recipes"
+
+# Tap a recipe to open detail
+- tapOn: "Test Pancakes"
+- assertVisible: "Test Pancakes"
+
+# Tap the favorite button
+- tapOn: "♥ Favorited"
+
+# Navigate to the Favorites tab
+- tapOn: "Favorites"
+- assertVisible: "Test Pancakes"
+
+# Unfavorite from the favorites list
+- tapOn:
+    label: "Remove from favorites"
+- assertVisible: "No favorites yet"

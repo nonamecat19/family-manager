@@ -1,0 +1,55 @@
+# Create recipe: tap the add button, fill the form, save, verify it appears in the list.
+# Requires an authenticated session.
+appId: dev.familymanager.recipes
+name: "Recipes: create recipe"
+tags:
+  - recipes
+  - create
+---
+- launchApp
+- assertVisible: "Recipes"
+
+# Tap the add button
+- tapOn:
+    label: "Add recipe"
+- assertVisible: "New Recipe"
+
+# Fill in the title
+- tapOn:
+    id: "title"
+- inputText: "Test Pancakes"
+
+# Fill in description
+- tapOn:
+    id: "description"
+- inputText: "Fluffy test pancakes"
+
+# Set servings
+- tapOn:
+    id: "servings"
+- eraseText
+- inputText: "4"
+
+# Add an ingredient
+- tapOn:
+    id: "name"
+- inputText: "Flour"
+- tapOn:
+    id: "amount"
+- inputText: "200"
+- tapOn:
+    id: "unit"
+- inputText: "g"
+
+# Add a step
+- tapOn:
+    id: "instruction"
+- inputText: "Mix flour with water"
+
+# Create the recipe
+- tapOn: "Create recipe"
+
+# Verify we're back on the recipe list and the new recipe is visible
+- extendedWaitUntil:
+    visible: "Test Pancakes"
+    timeout: 5000
