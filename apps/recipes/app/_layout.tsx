@@ -1,3 +1,5 @@
+import "../global.css";
+
 import { ApiProvider } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { Loading } from "@fm/ui";

@@ -3,12 +3,14 @@
 // metro.config.js from this factory instead of copy-pasting the resolver settings.
 const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
 
 /**
  * @param {string} projectRoot absolute path of the app, i.e. __dirname in the app's config
+ * @param {string} cssEntry app-relative path to the Tailwind entry file
  * @returns {import('expo/metro-config').MetroConfig}
  */
-function createMetroConfig(projectRoot) {
+function createMetroConfig(projectRoot, cssEntry = "./global.css") {
   const workspaceRoot = path.resolve(projectRoot, "../..");
   const config = getDefaultConfig(projectRoot);
 
@@ -27,7 +29,11 @@ function createMetroConfig(projectRoot) {
   config.resolver.unstable_enableSymlinks = true;
   config.resolver.disableHierarchicalLookup = true;
 
-  return config;
+  // Respect the "exports" field in workspace package.json files so wildcard
+  // exports (e.g. @fm/sdk's "./*": "./src/*.ts") resolve correctly.
+  config.resolver.unstable_enablePackageExports = true;
+
+  return withNativeWind(config, { input: cssEntry });
 }
 
 module.exports = { createMetroConfig };
