@@ -45,6 +45,7 @@ type Querier interface {
 	// "2 cloves" + "3 cloves" becomes "2" — the app shows the breakdown for non-numeric totals.
 	TotalIngredients(ctx context.Context, arg TotalIngredientsParams) ([]TotalIngredientsRow, error)
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error)
+	UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImageParams) (Recipe, error)
 }
 
 var _ Querier = (*Queries)(nil)

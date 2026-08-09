@@ -61,7 +61,7 @@ const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO recipes (family_id, title, description, category_id, subcategory_id,
     servings, prep_seconds, cook_seconds, author_user_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
 `
 
 type CreateRecipeParams struct {
@@ -104,6 +104,7 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		&i.CommentCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ImageUrl,
 	)
 	return i, err
 }
@@ -140,7 +141,7 @@ func (q *Queries) DeleteSteps(ctx context.Context, recipeID pgtype.UUID) error {
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at FROM recipes
+SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url FROM recipes
 WHERE id = $1
 `
 
@@ -162,6 +163,7 @@ func (q *Queries) GetRecipe(ctx context.Context, id pgtype.UUID) (Recipe, error)
 		&i.CommentCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ImageUrl,
 	)
 	return i, err
 }
@@ -176,7 +178,7 @@ func (q *Queries) IncrementCommentCount(ctx context.Context, id pgtype.UUID) err
 }
 
 const listFavoriteRecipes = `-- name: ListFavoriteRecipes :many
-SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at FROM recipes r
+SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url FROM recipes r
 JOIN recipe_favorites f ON f.recipe_id = r.id
 WHERE f.user_id = $1
 ORDER BY f.created_at DESC
@@ -206,6 +208,7 @@ func (q *Queries) ListFavoriteRecipes(ctx context.Context, userID pgtype.UUID) (
 			&i.CommentCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -250,7 +253,7 @@ func (q *Queries) ListIngredients(ctx context.Context, recipeID pgtype.UUID) ([]
 }
 
 const listRecipes = `-- name: ListRecipes :many
-SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at FROM recipes
+SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url FROM recipes
 WHERE family_id = $1
   AND ($2::uuid IS NULL OR category_id = $2)
   AND ($3::uuid IS NULL OR subcategory_id = $3)
@@ -294,6 +297,7 @@ func (q *Queries) ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Rec
 			&i.CommentCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -341,7 +345,7 @@ UPDATE recipes
 SET title = $2, description = $3, category_id = $4, subcategory_id = $5,
     servings = $6, prep_seconds = $7, cook_seconds = $8, updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
 `
 
 type UpdateRecipeParams struct {
@@ -382,6 +386,42 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Rec
 		&i.CommentCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ImageUrl,
+	)
+	return i, err
+}
+
+const updateRecipeImage = `-- name: UpdateRecipeImage :one
+UPDATE recipes
+SET image_url = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
+`
+
+type UpdateRecipeImageParams struct {
+	ID       pgtype.UUID
+	ImageUrl string
+}
+
+func (q *Queries) UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImageParams) (Recipe, error) {
+	row := q.db.QueryRow(ctx, updateRecipeImage, arg.ID, arg.ImageUrl)
+	var i Recipe
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Title,
+		&i.Description,
+		&i.CategoryID,
+		&i.SubcategoryID,
+		&i.Servings,
+		&i.PrepSeconds,
+		&i.CookSeconds,
+		&i.AuthorUserID,
+		&i.FavoriteCount,
+		&i.CommentCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ImageUrl,
 	)
 	return i, err
 }

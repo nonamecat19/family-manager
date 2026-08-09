@@ -19,6 +19,18 @@ type Config struct {
 	Issuer   string
 	Audience string
 
+	// MinIO backs recipe image uploads. Unlike DatabaseURL/JWKSURL these have defaults —
+	// running without image support (Images stays nil in the handler) is a valid degraded
+	// state, not a boot failure, so a missing MinIO in dev doesn't block everything else.
+	MinIOEndpoint  string
+	MinIOAccessKey string
+	MinIOSecretKey string
+	MinIOUseSSL    bool
+	MinIOBucket    string
+	// MinIOPublicURL is the base URL the app fetches images from. Empty means "same as
+	// MinIOEndpoint" (fine for local dev; set explicitly once MinIO sits behind Caddy).
+	MinIOPublicURL string
+
 	LogLevel string
 	LogJSON  bool
 }
@@ -35,17 +47,25 @@ func Load() (*Config, error) {
 	v.SetDefault("LOG_JSON", false)
 	v.SetDefault("ISSUER", "family-manager")
 	v.SetDefault("AUDIENCE", "family-manager")
+	v.SetDefault("MINIO_BUCKET", "recipes")
+	v.SetDefault("MINIO_USE_SSL", false)
 
 	cfg := &Config{
-		DatabaseURL: v.GetString("DATABASE_URL"),
-		HTTPPort:    v.GetString("HTTP_PORT"),
-		GRPCPort:    v.GetString("GRPC_PORT"),
-		NATSURL:     v.GetString("NATS_URL"),
-		JWKSURL:     v.GetString("JWKS_URL"),
-		Issuer:      v.GetString("ISSUER"),
-		Audience:    v.GetString("AUDIENCE"),
-		LogLevel:    v.GetString("LOG_LEVEL"),
-		LogJSON:     v.GetBool("LOG_JSON"),
+		DatabaseURL:    v.GetString("DATABASE_URL"),
+		HTTPPort:       v.GetString("HTTP_PORT"),
+		GRPCPort:       v.GetString("GRPC_PORT"),
+		NATSURL:        v.GetString("NATS_URL"),
+		JWKSURL:        v.GetString("JWKS_URL"),
+		Issuer:         v.GetString("ISSUER"),
+		Audience:       v.GetString("AUDIENCE"),
+		MinIOEndpoint:  v.GetString("MINIO_ENDPOINT"),
+		MinIOAccessKey: v.GetString("MINIO_ACCESS_KEY"),
+		MinIOSecretKey: v.GetString("MINIO_SECRET_KEY"),
+		MinIOUseSSL:    v.GetBool("MINIO_USE_SSL"),
+		MinIOBucket:    v.GetString("MINIO_BUCKET"),
+		MinIOPublicURL: v.GetString("MINIO_PUBLIC_URL"),
+		LogLevel:       v.GetString("LOG_LEVEL"),
+		LogJSON:        v.GetBool("LOG_JSON"),
 	}
 
 	if cfg.DatabaseURL == "" {

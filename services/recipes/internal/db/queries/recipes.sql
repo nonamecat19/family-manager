@@ -33,6 +33,12 @@ RETURNING *;
 DELETE FROM recipes
 WHERE id = $1;
 
+-- name: UpdateRecipeImage :one
+UPDATE recipes
+SET image_url = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
 -- name: IncrementCommentCount :exec
 UPDATE recipes SET comment_count = comment_count + 1 WHERE id = $1;
 

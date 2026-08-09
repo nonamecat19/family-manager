@@ -33,6 +33,7 @@ type Recipe struct {
 	CommentCount  int32
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
+	ImageUrl      string
 }
 
 type RecipeCategory struct {

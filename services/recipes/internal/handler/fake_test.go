@@ -191,6 +191,16 @@ func (s *fakeStore) UpdateRecipe(_ context.Context, arg db.UpdateRecipeParams) (
 	return r, nil
 }
 
+func (s *fakeStore) UpdateRecipeImage(_ context.Context, arg db.UpdateRecipeImageParams) (db.Recipe, error) {
+	r, ok := s.recipes[pgconv.UUIDString(arg.ID)]
+	if !ok {
+		return db.Recipe{}, pgx.ErrNoRows
+	}
+	r.ImageUrl = arg.ImageUrl
+	s.recipes[pgconv.UUIDString(r.ID)] = r
+	return r, nil
+}
+
 func (s *fakeStore) DeleteRecipe(_ context.Context, id pgtype.UUID) (int64, error) {
 	key := pgconv.UUIDString(id)
 	if _, ok := s.recipes[key]; !ok {

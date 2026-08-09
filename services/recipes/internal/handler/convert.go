@@ -146,6 +146,7 @@ func toProtoRecipe(
 		AuthorUserId:  pgconv.UUIDString(r.AuthorUserID),
 		FavoriteCount: r.FavoriteCount,
 		CommentCount:  r.CommentCount,
+		ImageUrl:      r.ImageUrl,
 		CreatedAt:     pgconv.Timestamp(r.CreatedAt),
 		UpdatedAt:     pgconv.Timestamp(r.UpdatedAt),
 	}

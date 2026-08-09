@@ -21,6 +21,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/logger"
+	"github.com/nnc/family-manager/libs/go/storage"
 	"github.com/nnc/family-manager/sdk/go/recipes/v1/recipesv1connect"
 	"github.com/nnc/family-manager/services/recipes/db"
 	"github.com/nnc/family-manager/services/recipes/internal/config"
@@ -82,10 +83,17 @@ func run() error {
 		return err
 	}
 
+	images, err := imagesOrNil(ctx, cfg, log)
+	if err != nil {
+		return err
+	}
+
 	h := handler.New(handler.Options{
-		Queries: db.New(pool),
-		Bus:     busOrNil(bus),
-		Log:     log,
+		Queries:     db.New(pool),
+		Bus:         busOrNil(bus),
+		Images:      images,
+		ImageBucket: cfg.MinIOBucket,
+		Log:         log,
 	})
 
 	// Recipes has no internal-only procedures (unlike family): every procedure takes the
@@ -168,4 +176,28 @@ func busOrNil(bus *events.Bus) handler.EventBus {
 		return nil
 	}
 	return bus
+}
+
+// imagesOrNil builds the MinIO client when configured. A missing MINIO_ENDPOINT means image
+// upload runs in degraded mode (UploadRecipeImage errors, everything else works) rather than
+// blocking boot — same tradeoff as an unreachable NATS.
+func imagesOrNil(ctx context.Context, cfg *config.Config, log *slog.Logger) (handler.ImageStore, error) {
+	if cfg.MinIOEndpoint == "" {
+		log.Warn("image storage disabled: RECIPES_MINIO_ENDPOINT not set")
+		return nil, nil
+	}
+	client, err := storage.New(storage.Config{
+		Endpoint:  cfg.MinIOEndpoint,
+		AccessKey: cfg.MinIOAccessKey,
+		SecretKey: cfg.MinIOSecretKey,
+		UseSSL:    cfg.MinIOUseSSL,
+		PublicURL: cfg.MinIOPublicURL,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err := client.EnsureBucket(ctx, cfg.MinIOBucket); err != nil {
+		return nil, err
+	}
+	return client, nil
 }
