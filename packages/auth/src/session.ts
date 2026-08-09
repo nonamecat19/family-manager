@@ -125,6 +125,23 @@ export class SessionManager {
     return this.inFlight;
   }
 
+  /**
+   * Refreshes unconditionally, ignoring expiry. Use after a mutation that changes what the
+   * access token's claims say about the caller (e.g. joining/creating a family) — those
+   * claims are baked in at issuance, so nothing else picks up the change until the token
+   * is replaced.
+   */
+  async forceRefresh(): Promise<Tokens | null> {
+    await this.load();
+    const tokens = this.tokens;
+    if (!tokens) return null;
+
+    this.inFlight ??= this.doRefresh(tokens.refreshToken).finally(() => {
+      this.inFlight = null;
+    });
+    return this.inFlight;
+  }
+
   private async doRefresh(refreshToken: string): Promise<Tokens | null> {
     try {
       const fresh = await this.refreshFn(refreshToken);

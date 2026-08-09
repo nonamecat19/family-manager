@@ -17,6 +17,8 @@ export interface AuthContextValue {
   /** Called after a successful Login/Register RPC. */
   signIn(tokens: Tokens): Promise<void>;
   signOut(): Promise<void>;
+  /** Forces a token refresh so claims changed server-side (e.g. new family_id) take effect. */
+  refreshNow(): Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,9 +64,14 @@ export function AuthProvider({ store, refresh, children }: AuthProviderProps) {
     setStatus(manager.status());
   }, [manager]);
 
+  const refreshNow = useCallback(async () => {
+    await manager.forceRefresh();
+    setStatus(manager.status());
+  }, [manager]);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ status, getAccessToken, signIn, signOut }),
-    [status, getAccessToken, signIn, signOut],
+    () => ({ status, getAccessToken, signIn, signOut, refreshNow }),
+    [status, getAccessToken, signIn, signOut, refreshNow],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
