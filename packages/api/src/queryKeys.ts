@@ -1,4 +1,5 @@
 import type { DateRange } from "./dates.ts";
+import type { RecipeListFilters } from "./recipes.ts";
 
 /**
  * Query keys, in one place. Every key starts with a domain segment so a mutation can
@@ -31,6 +32,17 @@ export const queryKeys = {
   familyDetail: () => ["family", "detail"] as const,
   members: () => ["family", "members"] as const,
   invitations: () => ["family", "invitations"] as const,
+
+  recipes: ["recipes"] as const,
+  recipeCategories: () => ["recipes", "categories"] as const,
+  recipeSubcategories: (categoryId: string) => ["recipes", "categories", categoryId, "subcategories"] as const,
+  recipesList: (filters: RecipeListFilters) => ["recipes", "list", filters] as const,
+  recipe: (id: string) => ["recipes", "detail", id] as const,
+  favoriteRecipes: () => ["recipes", "favorites"] as const,
+  recipeComments: (recipeId: string) => ["recipes", "comments", recipeId] as const,
+  mealPlan: (fromDate: string, toDate: string) => ["recipes", "mealPlan", fromDate, toDate] as const,
+  totalIngredients: (fromDate: string, toDate: string) =>
+    ["recipes", "totalIngredients", fromDate, toDate] as const,
 } as const;
 
 export interface TransactionFilters {

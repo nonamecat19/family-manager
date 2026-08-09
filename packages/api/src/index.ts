@@ -40,3 +40,4 @@ export { createClients, type Clients, type ClientsOptions } from "./client.ts";
 export { ApiProvider, useClients, createQueryClient, type ApiProviderProps } from "./provider.tsx";
 export { queryKeys, normalizeFilters, type TransactionFilters } from "./queryKeys.ts";
 export * from "./hooks.ts";
+export * from "./recipes.ts";

@@ -4,6 +4,7 @@ import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import { FamilyService } from "@fm/sdk/family/v1/family_pb";
 import { FinanceService } from "@fm/sdk/finance/v1/finance_pb";
+import { RecipesService } from "@fm/sdk/recipes/v1/recipes_pb";
 
 /**
  * Procedures that must go out without a token, or login could never happen. Keyed by
@@ -25,7 +26,7 @@ export interface ClientsOptions {
    * Per-service overrides. In development each service listens on its own port and there is
    * no gateway, so without these every call would land on whichever service baseUrl names.
    */
-  serviceUrls?: Partial<Record<"auth" | "family" | "finance", string>>;
+  serviceUrls?: Partial<Record<"auth" | "family" | "finance" | "recipes", string>>;
   /** Resolves a fresh access token, or null when anonymous. Supplied by @fm/auth. */
   getAccessToken: () => Promise<string | null>;
 }
@@ -50,16 +51,18 @@ export interface Clients {
   auth: Client<typeof AuthService>;
   family: Client<typeof FamilyService>;
   finance: Client<typeof FinanceService>;
+  recipes: Client<typeof RecipesService>;
 }
 
 /** Builds one client per service. Call once per app and put the result in a context. */
 export function createClients(opts: ClientsOptions): Clients {
-  const urlFor = (service: "auth" | "family" | "finance") =>
+  const urlFor = (service: "auth" | "family" | "finance" | "recipes") =>
     opts.serviceUrls?.[service] ?? opts.baseUrl;
 
   return {
     auth: createClient(AuthService, createTransport(urlFor("auth"), opts.getAccessToken)),
     family: createClient(FamilyService, createTransport(urlFor("family"), opts.getAccessToken)),
     finance: createClient(FinanceService, createTransport(urlFor("finance"), opts.getAccessToken)),
+    recipes: createClient(RecipesService, createTransport(urlFor("recipes"), opts.getAccessToken)),
   };
 }
