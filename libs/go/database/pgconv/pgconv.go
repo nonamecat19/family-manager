@@ -70,6 +70,12 @@ func Date(s string) (pgtype.Date, error) {
 	return out, nil
 }
 
+// DateFromToday returns today's UTC calendar date as a pgtype.Date.
+func DateFromToday() pgtype.Date {
+	now := time.Now().UTC()
+	return pgtype.Date{Time: time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC), Valid: true}
+}
+
 // DateString renders a pgtype.Date as YYYY-MM-DD; an invalid value becomes "".
 func DateString(d pgtype.Date) string {
 	if !d.Valid {

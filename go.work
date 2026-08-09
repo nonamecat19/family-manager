@@ -9,6 +9,7 @@ use (
 	./services/auth
 	./services/family
 	./services/finance
+	./services/recipes
 )
 
 // Add every new module here on creation:

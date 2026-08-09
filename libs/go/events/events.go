@@ -29,6 +29,11 @@ const (
 	SubjectFinanceTransactionDeleted Subject = "finance.transaction.deleted"
 	SubjectFinanceBudgetExceeded     Subject = "finance.budget.exceeded"
 	SubjectFinanceRecurringDue       Subject = "finance.recurring.due"
+
+	SubjectRecipesRecipeCreated Subject = "recipes.recipe.created"
+	SubjectRecipesRecipeUpdated Subject = "recipes.recipe.updated"
+	SubjectRecipesRecipeDeleted Subject = "recipes.recipe.deleted"
+	SubjectRecipesMealPlanned   Subject = "recipes.mealplan.planned"
 )
 
 // ErrBadSubject is returned when a subject does not match `<domain>.<entity>.<verb>`.
