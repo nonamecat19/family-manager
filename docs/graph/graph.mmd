@@ -23,6 +23,7 @@ graph LR
     golib_events["golib:events"]
     golib_go["golib:go"]
     golib_logger["golib:logger"]
+    golib_storage["golib:storage"]
   end
   subgraph contracts
     proto_libs_proto_auth_v1_auth_proto["proto:libs/proto/auth/v1/auth.proto"]
@@ -57,6 +58,7 @@ graph LR
     infra_minio["infra:minio"]
     infra_nats["infra:nats"]
     infra_postgres["infra:postgres"]
+    infra_recipes["infra:recipes"]
   end
   app_finance -->|DEPENDS_ON| pkg__fm_api
   app_finance -->|DEPENDS_ON| pkg__fm_auth
@@ -118,6 +120,7 @@ graph LR
   service_recipes -->|DEPENDS_ON| golib_events
   service_recipes -->|DEPENDS_ON| golib_go
   service_recipes -->|DEPENDS_ON| golib_logger
+  service_recipes -->|DEPENDS_ON| golib_storage
   service_recipes -->|IMPLEMENTS| proto_libs_proto_recipes_v1_recipes_proto
   service_recipes -->|PERSISTS_TO| table_meal_plan_entries
   service_recipes -->|PERSISTS_TO| table_recipe_categories
@@ -129,6 +132,7 @@ graph LR
   service_recipes -->|PERSISTS_TO| table_recipes
   service_recipes -->|RUNS_ON| infra_nats
   service_recipes -->|RUNS_ON| infra_postgres
+  service_recipes -->|RUNS_ON| infra_recipes
   table_accounts -->|OWNED_BY| service_finance
   table_budgets -->|OWNED_BY| service_finance
   table_categories -->|OWNED_BY| service_finance
