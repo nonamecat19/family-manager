@@ -1,4 +1,5 @@
 import { useAcceptInvitation, useCreateFamily } from "@fm/api";
+import { useAuth } from "@fm/auth";
 import { Button, Field } from "@fm/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -8,13 +9,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 /** First run: create a household, or join one with an invitation link. */
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { refreshNow } = useAuth();
   const createFamily = useCreateFamily();
   const acceptInvitation = useAcceptInvitation();
 
   const [name, setName] = useState("");
   const [token, setToken] = useState("");
 
-  const done = () => router.replace("/(app)");
+  // The access token's family_id claim is baked in at issuance; refresh it before navigating
+  // back so the family-scoped screens don't hit the same 403 again.
+  const done = () => void refreshNow().then(() => router.replace("/(app)"));
 
   return (
     <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">

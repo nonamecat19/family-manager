@@ -1,4 +1,5 @@
 import { useCreateFamily } from "@fm/api";
+import { useAuth } from "@fm/auth";
 import { Button, Field } from "@fm/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { refreshNow } = useAuth();
   const createFamily = useCreateFamily();
   const [name, setName] = useState("");
 
@@ -26,7 +28,9 @@ export default function OnboardingScreen() {
           disabled={name.trim() === ""}
           onPress={() =>
             createFamily.mutate(name.trim(), {
-              onSuccess: () => router.replace("/(app)"),
+              // The access token's family_id claim is baked in at issuance; refresh it before
+              // navigating back so the family-scoped screens don't hit the same 403 again.
+              onSuccess: () => void refreshNow().then(() => router.replace("/(app)")),
             })
           }
         />
