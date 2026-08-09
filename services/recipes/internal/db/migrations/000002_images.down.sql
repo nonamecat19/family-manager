@@ -1,0 +1,1 @@
+ALTER TABLE recipes DROP COLUMN IF EXISTS image_url;
