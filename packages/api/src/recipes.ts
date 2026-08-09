@@ -51,11 +51,12 @@ export interface RecipeListFilters {
   search?: string;
 }
 
-export function useRecipes(filters: RecipeListFilters = {}) {
+export function useRecipes(filters: RecipeListFilters = {}, opts: { enabled?: boolean } = {}) {
   const { recipes } = useClients();
   return useQuery({
     queryKey: queryKeys.recipesList(filters),
     queryFn: async () => (await recipes.listRecipes(filters)).recipes,
+    enabled: opts.enabled ?? true,
   });
 }
 
