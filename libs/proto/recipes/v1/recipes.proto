@@ -24,6 +24,10 @@ service RecipesService {
   rpc ListRecipes(ListRecipesRequest) returns (ListRecipesResponse);
   rpc UpdateRecipe(UpdateRecipeRequest) returns (UpdateRecipeResponse);
   rpc DeleteRecipe(DeleteRecipeRequest) returns (DeleteRecipeResponse);
+  // UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
+  // on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
+  // server-side) that a second round trip to get an upload URL isn't worth the complexity.
+  rpc UploadRecipeImage(UploadRecipeImageRequest) returns (UploadRecipeImageResponse);
 
   // --- favorites & comments ----------------------------------------------
   rpc ToggleFavorite(ToggleFavoriteRequest) returns (ToggleFavoriteResponse);
@@ -103,6 +107,8 @@ message Recipe {
   int32 comment_count = 14;
   google.protobuf.Timestamp created_at = 15;
   google.protobuf.Timestamp updated_at = 16;
+  // image_url is empty when the recipe has no photo.
+  string image_url = 17;
 }
 
 message Comment {
@@ -203,6 +209,16 @@ message DeleteRecipeRequest {
   string recipe_id = 1;
 }
 message DeleteRecipeResponse {}
+message UploadRecipeImageRequest {
+  string recipe_id = 1;
+  bytes image_data = 2;
+  // content_type is the MIME type the client captured the image as (e.g. "image/jpeg");
+  // the server rejects anything that isn't image/*.
+  string content_type = 3;
+}
+message UploadRecipeImageResponse {
+  Recipe recipe = 1;
+}
 
 // --- favorites & comments -------------------------------------------------
 

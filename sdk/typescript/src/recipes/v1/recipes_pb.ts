@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file recipes/v1/recipes.proto.
  */
 export const file_recipes_v1_recipes: GenFile = /*@__PURE__*/
-  fileDesc("ChhyZWNpcGVzL3YxL3JlY2lwZXMucHJvdG8SCnJlY2lwZXMudjEiZwoIQ2F0ZWdvcnkSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAifwoLU3ViY2F0ZWdvcnkSCgoCaWQYASABKAkSEwoLY2F0ZWdvcnlfaWQYAiABKAkSEQoJZmFtaWx5X2lkGAMgASgJEgwKBG5hbWUYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiOAoKSW5ncmVkaWVudBIMCgRuYW1lGAEgASgJEg4KBmFtb3VudBgCIAEoCRIMCgR1bml0GAMgASgJIkcKBFN0ZXASEAoIcG9zaXRpb24YASABKAUSEwoLaW5zdHJ1Y3Rpb24YAiABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgDIAEoBSKrAwoGUmVjaXBlEgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRINCgV0aXRsZRgDIAEoCRITCgtkZXNjcmlwdGlvbhgEIAEoCRITCgtjYXRlZ29yeV9pZBgFIAEoCRIWCg5zdWJjYXRlZ29yeV9pZBgGIAEoCRIQCghzZXJ2aW5ncxgHIAEoBRIUCgxwcmVwX3NlY29uZHMYCCABKAUSFAoMY29va19zZWNvbmRzGAkgASgFEisKC2luZ3JlZGllbnRzGAogAygLMhYucmVjaXBlcy52MS5JbmdyZWRpZW50Eh8KBXN0ZXBzGAsgAygLMhAucmVjaXBlcy52MS5TdGVwEhYKDmF1dGhvcl91c2VyX2lkGAwgASgJEhYKDmZhdm9yaXRlX2NvdW50GA0gASgFEhUKDWNvbW1lbnRfY291bnQYDiABKAUSLgoKY3JlYXRlZF9hdBgPIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgQIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAidwoHQ29tbWVudBIKCgJpZBgBIAEoCRIRCglyZWNpcGVfaWQYAiABKAkSDwoHdXNlcl9pZBgDIAEoCRIMCgRib2R5GAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIrUBCg1NZWFsUGxhbkVudHJ5EgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRIRCglyZWNpcGVfaWQYAyABKAkSDAoEZGF0ZRgEIAEoCRIiCgRzbG90GAUgASgOMhQucmVjaXBlcy52MS5NZWFsU2xvdBIQCghzZXJ2aW5ncxgGIAEoBRIuCgpjcmVhdGVkX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIlChVDcmVhdGVDYXRlZ29yeVJlcXVlc3QSDAoEbmFtZRgBIAEoCSJAChZDcmVhdGVDYXRlZ29yeVJlc3BvbnNlEiYKCGNhdGVnb3J5GAEgASgLMhQucmVjaXBlcy52MS5DYXRlZ29yeSIXChVMaXN0Q2F0ZWdvcmllc1JlcXVlc3QiQgoWTGlzdENhdGVnb3JpZXNSZXNwb25zZRIoCgpjYXRlZ29yaWVzGAEgAygLMhQucmVjaXBlcy52MS5DYXRlZ29yeSI9ChhDcmVhdGVTdWJjYXRlZ29yeVJlcXVlc3QSEwoLY2F0ZWdvcnlfaWQYASABKAkSDAoEbmFtZRgCIAEoCSJJChlDcmVhdGVTdWJjYXRlZ29yeVJlc3BvbnNlEiwKC3N1YmNhdGVnb3J5GAEgASgLMhcucmVjaXBlcy52MS5TdWJjYXRlZ29yeSIvChhMaXN0U3ViY2F0ZWdvcmllc1JlcXVlc3QSEwoLY2F0ZWdvcnlfaWQYASABKAkiSwoZTGlzdFN1YmNhdGVnb3JpZXNSZXNwb25zZRIuCg1zdWJjYXRlZ29yaWVzGAEgAygLMhcucmVjaXBlcy52MS5TdWJjYXRlZ29yeSLyAQoTQ3JlYXRlUmVjaXBlUmVxdWVzdBINCgV0aXRsZRgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRITCgtjYXRlZ29yeV9pZBgDIAEoCRIWCg5zdWJjYXRlZ29yeV9pZBgEIAEoCRIQCghzZXJ2aW5ncxgFIAEoBRIUCgxwcmVwX3NlY29uZHMYBiABKAUSFAoMY29va19zZWNvbmRzGAcgASgFEisKC2luZ3JlZGllbnRzGAggAygLMhYucmVjaXBlcy52MS5JbmdyZWRpZW50Eh8KBXN0ZXBzGAkgAygLMhAucmVjaXBlcy52MS5TdGVwIjoKFENyZWF0ZVJlY2lwZVJlc3BvbnNlEiIKBnJlY2lwZRgBIAEoCzISLnJlY2lwZXMudjEuUmVjaXBlIiUKEEdldFJlY2lwZVJlcXVlc3QSEQoJcmVjaXBlX2lkGAEgASgJIjcKEUdldFJlY2lwZVJlc3BvbnNlEiIKBnJlY2lwZRgBIAEoCzISLnJlY2lwZXMudjEuUmVjaXBlImgKEkxpc3RSZWNpcGVzUmVxdWVzdBITCgtjYXRlZ29yeV9pZBgBIAEoCRIWCg5zdWJjYXRlZ29yeV9pZBgCIAEoCRIVCg1mYXZvcml0ZV9vbmx5GAMgASgIEg4KBnNlYXJjaBgEIAEoCSI6ChNMaXN0UmVjaXBlc1Jlc3BvbnNlEiMKB3JlY2lwZXMYASADKAsyEi5yZWNpcGVzLnYxLlJlY2lwZSKFAgoTVXBkYXRlUmVjaXBlUmVxdWVzdBIRCglyZWNpcGVfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkSEwoLY2F0ZWdvcnlfaWQYBCABKAkSFgoOc3ViY2F0ZWdvcnlfaWQYBSABKAkSEAoIc2VydmluZ3MYBiABKAUSFAoMcHJlcF9zZWNvbmRzGAcgASgFEhQKDGNvb2tfc2Vjb25kcxgIIAEoBRIrCgtpbmdyZWRpZW50cxgJIAMoCzIWLnJlY2lwZXMudjEuSW5ncmVkaWVudBIfCgVzdGVwcxgKIAMoCzIQLnJlY2lwZXMudjEuU3RlcCI6ChRVcGRhdGVSZWNpcGVSZXNwb25zZRIiCgZyZWNpcGUYASABKAsyEi5yZWNpcGVzLnYxLlJlY2lwZSIoChNEZWxldGVSZWNpcGVSZXF1ZXN0EhEKCXJlY2lwZV9pZBgBIAEoCSIWChREZWxldGVSZWNpcGVSZXNwb25zZSIqChVUb2dnbGVGYXZvcml0ZVJlcXVlc3QSEQoJcmVjaXBlX2lkGAEgASgJIi0KFlRvZ2dsZUZhdm9yaXRlUmVzcG9uc2USEwoLaXNfZmF2b3JpdGUYASABKAgiFgoUTGlzdEZhdm9yaXRlc1JlcXVlc3QiPAoVTGlzdEZhdm9yaXRlc1Jlc3BvbnNlEiMKB3JlY2lwZXMYASADKAsyEi5yZWNpcGVzLnYxLlJlY2lwZSI0ChFBZGRDb21tZW50UmVxdWVzdBIRCglyZWNpcGVfaWQYASABKAkSDAoEYm9keRgCIAEoCSI6ChJBZGRDb21tZW50UmVzcG9uc2USJAoHY29tbWVudBgBIAEoCzITLnJlY2lwZXMudjEuQ29tbWVudCIoChNMaXN0Q29tbWVudHNSZXF1ZXN0EhEKCXJlY2lwZV9pZBgBIAEoCSI9ChRMaXN0Q29tbWVudHNSZXNwb25zZRIlCghjb21tZW50cxgBIAMoCzITLnJlY2lwZXMudjEuQ29tbWVudCJoCg9QbGFuTWVhbFJlcXVlc3QSEQoJcmVjaXBlX2lkGAEgASgJEgwKBGRhdGUYAiABKAkSIgoEc2xvdBgDIAEoDjIULnJlY2lwZXMudjEuTWVhbFNsb3QSEAoIc2VydmluZ3MYBCABKAUiPAoQUGxhbk1lYWxSZXNwb25zZRIoCgVlbnRyeRgBIAEoCzIZLnJlY2lwZXMudjEuTWVhbFBsYW5FbnRyeSI5ChNMaXN0TWVhbFBsYW5SZXF1ZXN0EhEKCWZyb21fZGF0ZRgBIAEoCRIPCgd0b19kYXRlGAIgASgJIkIKFExpc3RNZWFsUGxhblJlc3BvbnNlEioKB2VudHJpZXMYASADKAsyGS5yZWNpcGVzLnYxLk1lYWxQbGFuRW50cnkiLgoaUmVtb3ZlTWVhbFBsYW5FbnRyeVJlcXVlc3QSEAoIZW50cnlfaWQYASABKAkiHQobUmVtb3ZlTWVhbFBsYW5FbnRyeVJlc3BvbnNlIj0KF1RvdGFsSW5ncmVkaWVudHNSZXF1ZXN0EhEKCWZyb21fZGF0ZRgBIAEoCRIPCgd0b19kYXRlGAIgASgJIkcKGFRvdGFsSW5ncmVkaWVudHNSZXNwb25zZRIrCgZ0b3RhbHMYASADKAsyGy5yZWNpcGVzLnYxLkluZ3JlZGllbnRUb3RhbCJDCg9JbmdyZWRpZW50VG90YWwSDAoEbmFtZRgBIAEoCRIMCgR1bml0GAIgASgJEhQKDHRvdGFsX2Ftb3VudBgDIAEoCSKDAQoSUmVjaXBlQ3JlYXRlZEV2ZW50EhEKCWZhbWlseV9pZBgBIAEoCRIRCglyZWNpcGVfaWQYAiABKAkSFgoOYXV0aG9yX3VzZXJfaWQYAyABKAkSLwoLb2NjdXJyZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wImsKElJlY2lwZVVwZGF0ZWRFdmVudBIRCglmYW1pbHlfaWQYASABKAkSEQoJcmVjaXBlX2lkGAIgASgJEi8KC29jY3VycmVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJrChJSZWNpcGVEZWxldGVkRXZlbnQSEQoJZmFtaWx5X2lkGAEgASgJEhEKCXJlY2lwZV9pZBgCIAEoCRIvCgtvY2N1cnJlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAirQEKEE1lYWxQbGFubmVkRXZlbnQSEQoJZmFtaWx5X2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJEhEKCXJlY2lwZV9pZBgDIAEoCRIMCgRkYXRlGAQgASgJEiIKBHNsb3QYBSABKA4yFC5yZWNpcGVzLnYxLk1lYWxTbG90Ei8KC29jY3VycmVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCqVAQoITWVhbFNsb3QSGQoVTUVBTF9TTE9UX1VOU1BFQ0lGSUVEEAASFwoTTUVBTF9TTE9UX0JSRUFLRkFTVBABEhMKD01FQUxfU0xPVF9MVU5DSBACEhQKEE1FQUxfU0xPVF9ESU5ORVIQAxITCg9NRUFMX1NMT1RfU05BQ0sQBBIVChFNRUFMX1NMT1RfREVTU0VSVBAFMskLCg5SZWNpcGVzU2VydmljZRJXCg5DcmVhdGVDYXRlZ29yeRIhLnJlY2lwZXMudjEuQ3JlYXRlQ2F0ZWdvcnlSZXF1ZXN0GiIucmVjaXBlcy52MS5DcmVhdGVDYXRlZ29yeVJlc3BvbnNlElcKDkxpc3RDYXRlZ29yaWVzEiEucmVjaXBlcy52MS5MaXN0Q2F0ZWdvcmllc1JlcXVlc3QaIi5yZWNpcGVzLnYxLkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USYAoRQ3JlYXRlU3ViY2F0ZWdvcnkSJC5yZWNpcGVzLnYxLkNyZWF0ZVN1YmNhdGVnb3J5UmVxdWVzdBolLnJlY2lwZXMudjEuQ3JlYXRlU3ViY2F0ZWdvcnlSZXNwb25zZRJgChFMaXN0U3ViY2F0ZWdvcmllcxIkLnJlY2lwZXMudjEuTGlzdFN1YmNhdGVnb3JpZXNSZXF1ZXN0GiUucmVjaXBlcy52MS5MaXN0U3ViY2F0ZWdvcmllc1Jlc3BvbnNlElEKDENyZWF0ZVJlY2lwZRIfLnJlY2lwZXMudjEuQ3JlYXRlUmVjaXBlUmVxdWVzdBogLnJlY2lwZXMudjEuQ3JlYXRlUmVjaXBlUmVzcG9uc2USSAoJR2V0UmVjaXBlEhwucmVjaXBlcy52MS5HZXRSZWNpcGVSZXF1ZXN0Gh0ucmVjaXBlcy52MS5HZXRSZWNpcGVSZXNwb25zZRJOCgtMaXN0UmVjaXBlcxIeLnJlY2lwZXMudjEuTGlzdFJlY2lwZXNSZXF1ZXN0Gh8ucmVjaXBlcy52MS5MaXN0UmVjaXBlc1Jlc3BvbnNlElEKDFVwZGF0ZVJlY2lwZRIfLnJlY2lwZXMudjEuVXBkYXRlUmVjaXBlUmVxdWVzdBogLnJlY2lwZXMudjEuVXBkYXRlUmVjaXBlUmVzcG9uc2USUQoMRGVsZXRlUmVjaXBlEh8ucmVjaXBlcy52MS5EZWxldGVSZWNpcGVSZXF1ZXN0GiAucmVjaXBlcy52MS5EZWxldGVSZWNpcGVSZXNwb25zZRJXCg5Ub2dnbGVGYXZvcml0ZRIhLnJlY2lwZXMudjEuVG9nZ2xlRmF2b3JpdGVSZXF1ZXN0GiIucmVjaXBlcy52MS5Ub2dnbGVGYXZvcml0ZVJlc3BvbnNlElQKDUxpc3RGYXZvcml0ZXMSIC5yZWNpcGVzLnYxLkxpc3RGYXZvcml0ZXNSZXF1ZXN0GiEucmVjaXBlcy52MS5MaXN0RmF2b3JpdGVzUmVzcG9uc2USSwoKQWRkQ29tbWVudBIdLnJlY2lwZXMudjEuQWRkQ29tbWVudFJlcXVlc3QaHi5yZWNpcGVzLnYxLkFkZENvbW1lbnRSZXNwb25zZRJRCgxMaXN0Q29tbWVudHMSHy5yZWNpcGVzLnYxLkxpc3RDb21tZW50c1JlcXVlc3QaIC5yZWNpcGVzLnYxLkxpc3RDb21tZW50c1Jlc3BvbnNlEkUKCFBsYW5NZWFsEhsucmVjaXBlcy52MS5QbGFuTWVhbFJlcXVlc3QaHC5yZWNpcGVzLnYxLlBsYW5NZWFsUmVzcG9uc2USUQoMTGlzdE1lYWxQbGFuEh8ucmVjaXBlcy52MS5MaXN0TWVhbFBsYW5SZXF1ZXN0GiAucmVjaXBlcy52MS5MaXN0TWVhbFBsYW5SZXNwb25zZRJmChNSZW1vdmVNZWFsUGxhbkVudHJ5EiYucmVjaXBlcy52MS5SZW1vdmVNZWFsUGxhbkVudHJ5UmVxdWVzdBonLnJlY2lwZXMudjEuUmVtb3ZlTWVhbFBsYW5FbnRyeVJlc3BvbnNlEl0KEFRvdGFsSW5ncmVkaWVudHMSIy5yZWNpcGVzLnYxLlRvdGFsSW5ncmVkaWVudHNSZXF1ZXN0GiQucmVjaXBlcy52MS5Ub3RhbEluZ3JlZGllbnRzUmVzcG9uc2VCogEKDmNvbS5yZWNpcGVzLnYxQgxSZWNpcGVzUHJvdG9QAVo5Z2l0aHViLmNvbS9ubmMvZmFtaWx5LW1hbmFnZXIvc2RrL2dvL3JlY2lwZXMvdjE7cmVjaXBlc3YxogIDUlhYqgIKUmVjaXBlcy5WMcoCClJlY2lwZXNcVjHiAhZSZWNpcGVzXFYxXEdQQk1ldGFkYXRh6gILUmVjaXBlczo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChhyZWNpcGVzL3YxL3JlY2lwZXMucHJvdG8SCnJlY2lwZXMudjEiZwoIQ2F0ZWdvcnkSCgoCaWQYASABKAkSEQoJZmFtaWx5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAifwoLU3ViY2F0ZWdvcnkSCgoCaWQYASABKAkSEwoLY2F0ZWdvcnlfaWQYAiABKAkSEQoJZmFtaWx5X2lkGAMgASgJEgwKBG5hbWUYBCABKAkSLgoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiOAoKSW5ncmVkaWVudBIMCgRuYW1lGAEgASgJEg4KBmFtb3VudBgCIAEoCRIMCgR1bml0GAMgASgJIkcKBFN0ZXASEAoIcG9zaXRpb24YASABKAUSEwoLaW5zdHJ1Y3Rpb24YAiABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgDIAEoBSK+AwoGUmVjaXBlEgoKAmlkGAEgASgJEhEKCWZhbWlseV9pZBgCIAEoCRINCgV0aXRsZRgDIAEoCRITCgtkZXNjcmlwdGlvbhgEIAEoCRITCgtjYXRlZ29yeV9pZBgFIAEoCRIWCg5zdWJjYXRlZ29yeV9pZBgGIAEoCRIQCghzZXJ2aW5ncxgHIAEoBRIUCgxwcmVwX3NlY29uZHMYCCABKAUSFAoMY29va19zZWNvbmRzGAkgASgFEisKC2luZ3JlZGllbnRzGAogAygLMhYucmVjaXBlcy52MS5JbmdyZWRpZW50Eh8KBXN0ZXBzGAsgAygLMhAucmVjaXBlcy52MS5TdGVwEhYKDmF1dGhvcl91c2VyX2lkGAwgASgJEhYKDmZhdm9yaXRlX2NvdW50GA0gASgFEhUKDWNvbW1lbnRfY291bnQYDiABKAUSLgoKY3JlYXRlZF9hdBgPIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKdXBkYXRlZF9hdBgQIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEQoJaW1hZ2VfdXJsGBEgASgJIncKB0NvbW1lbnQSCgoCaWQYASABKAkSEQoJcmVjaXBlX2lkGAIgASgJEg8KB3VzZXJfaWQYAyABKAkSDAoEYm9keRgEIAEoCRIuCgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCK1AQoNTWVhbFBsYW5FbnRyeRIKCgJpZBgBIAEoCRIRCglmYW1pbHlfaWQYAiABKAkSEQoJcmVjaXBlX2lkGAMgASgJEgwKBGRhdGUYBCABKAkSIgoEc2xvdBgFIAEoDjIULnJlY2lwZXMudjEuTWVhbFNsb3QSEAoIc2VydmluZ3MYBiABKAUSLgoKY3JlYXRlZF9hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiJQoVQ3JlYXRlQ2F0ZWdvcnlSZXF1ZXN0EgwKBG5hbWUYASABKAkiQAoWQ3JlYXRlQ2F0ZWdvcnlSZXNwb25zZRImCghjYXRlZ29yeRgBIAEoCzIULnJlY2lwZXMudjEuQ2F0ZWdvcnkiFwoVTGlzdENhdGVnb3JpZXNSZXF1ZXN0IkIKFkxpc3RDYXRlZ29yaWVzUmVzcG9uc2USKAoKY2F0ZWdvcmllcxgBIAMoCzIULnJlY2lwZXMudjEuQ2F0ZWdvcnkiPQoYQ3JlYXRlU3ViY2F0ZWdvcnlSZXF1ZXN0EhMKC2NhdGVnb3J5X2lkGAEgASgJEgwKBG5hbWUYAiABKAkiSQoZQ3JlYXRlU3ViY2F0ZWdvcnlSZXNwb25zZRIsCgtzdWJjYXRlZ29yeRgBIAEoCzIXLnJlY2lwZXMudjEuU3ViY2F0ZWdvcnkiLwoYTGlzdFN1YmNhdGVnb3JpZXNSZXF1ZXN0EhMKC2NhdGVnb3J5X2lkGAEgASgJIksKGUxpc3RTdWJjYXRlZ29yaWVzUmVzcG9uc2USLgoNc3ViY2F0ZWdvcmllcxgBIAMoCzIXLnJlY2lwZXMudjEuU3ViY2F0ZWdvcnki8gEKE0NyZWF0ZVJlY2lwZVJlcXVlc3QSDQoFdGl0bGUYASABKAkSEwoLZGVzY3JpcHRpb24YAiABKAkSEwoLY2F0ZWdvcnlfaWQYAyABKAkSFgoOc3ViY2F0ZWdvcnlfaWQYBCABKAkSEAoIc2VydmluZ3MYBSABKAUSFAoMcHJlcF9zZWNvbmRzGAYgASgFEhQKDGNvb2tfc2Vjb25kcxgHIAEoBRIrCgtpbmdyZWRpZW50cxgIIAMoCzIWLnJlY2lwZXMudjEuSW5ncmVkaWVudBIfCgVzdGVwcxgJIAMoCzIQLnJlY2lwZXMudjEuU3RlcCI6ChRDcmVhdGVSZWNpcGVSZXNwb25zZRIiCgZyZWNpcGUYASABKAsyEi5yZWNpcGVzLnYxLlJlY2lwZSIlChBHZXRSZWNpcGVSZXF1ZXN0EhEKCXJlY2lwZV9pZBgBIAEoCSI3ChFHZXRSZWNpcGVSZXNwb25zZRIiCgZyZWNpcGUYASABKAsyEi5yZWNpcGVzLnYxLlJlY2lwZSJoChJMaXN0UmVjaXBlc1JlcXVlc3QSEwoLY2F0ZWdvcnlfaWQYASABKAkSFgoOc3ViY2F0ZWdvcnlfaWQYAiABKAkSFQoNZmF2b3JpdGVfb25seRgDIAEoCBIOCgZzZWFyY2gYBCABKAkiOgoTTGlzdFJlY2lwZXNSZXNwb25zZRIjCgdyZWNpcGVzGAEgAygLMhIucmVjaXBlcy52MS5SZWNpcGUihQIKE1VwZGF0ZVJlY2lwZVJlcXVlc3QSEQoJcmVjaXBlX2lkGAEgASgJEg0KBXRpdGxlGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhMKC2NhdGVnb3J5X2lkGAQgASgJEhYKDnN1YmNhdGVnb3J5X2lkGAUgASgJEhAKCHNlcnZpbmdzGAYgASgFEhQKDHByZXBfc2Vjb25kcxgHIAEoBRIUCgxjb29rX3NlY29uZHMYCCABKAUSKwoLaW5ncmVkaWVudHMYCSADKAsyFi5yZWNpcGVzLnYxLkluZ3JlZGllbnQSHwoFc3RlcHMYCiADKAsyEC5yZWNpcGVzLnYxLlN0ZXAiOgoUVXBkYXRlUmVjaXBlUmVzcG9uc2USIgoGcmVjaXBlGAEgASgLMhIucmVjaXBlcy52MS5SZWNpcGUiKAoTRGVsZXRlUmVjaXBlUmVxdWVzdBIRCglyZWNpcGVfaWQYASABKAkiFgoURGVsZXRlUmVjaXBlUmVzcG9uc2UiVwoYVXBsb2FkUmVjaXBlSW1hZ2VSZXF1ZXN0EhEKCXJlY2lwZV9pZBgBIAEoCRISCgppbWFnZV9kYXRhGAIgASgMEhQKDGNvbnRlbnRfdHlwZRgDIAEoCSI/ChlVcGxvYWRSZWNpcGVJbWFnZVJlc3BvbnNlEiIKBnJlY2lwZRgBIAEoCzISLnJlY2lwZXMudjEuUmVjaXBlIioKFVRvZ2dsZUZhdm9yaXRlUmVxdWVzdBIRCglyZWNpcGVfaWQYASABKAkiLQoWVG9nZ2xlRmF2b3JpdGVSZXNwb25zZRITCgtpc19mYXZvcml0ZRgBIAEoCCIWChRMaXN0RmF2b3JpdGVzUmVxdWVzdCI8ChVMaXN0RmF2b3JpdGVzUmVzcG9uc2USIwoHcmVjaXBlcxgBIAMoCzISLnJlY2lwZXMudjEuUmVjaXBlIjQKEUFkZENvbW1lbnRSZXF1ZXN0EhEKCXJlY2lwZV9pZBgBIAEoCRIMCgRib2R5GAIgASgJIjoKEkFkZENvbW1lbnRSZXNwb25zZRIkCgdjb21tZW50GAEgASgLMhMucmVjaXBlcy52MS5Db21tZW50IigKE0xpc3RDb21tZW50c1JlcXVlc3QSEQoJcmVjaXBlX2lkGAEgASgJIj0KFExpc3RDb21tZW50c1Jlc3BvbnNlEiUKCGNvbW1lbnRzGAEgAygLMhMucmVjaXBlcy52MS5Db21tZW50ImgKD1BsYW5NZWFsUmVxdWVzdBIRCglyZWNpcGVfaWQYASABKAkSDAoEZGF0ZRgCIAEoCRIiCgRzbG90GAMgASgOMhQucmVjaXBlcy52MS5NZWFsU2xvdBIQCghzZXJ2aW5ncxgEIAEoBSI8ChBQbGFuTWVhbFJlc3BvbnNlEigKBWVudHJ5GAEgASgLMhkucmVjaXBlcy52MS5NZWFsUGxhbkVudHJ5IjkKE0xpc3RNZWFsUGxhblJlcXVlc3QSEQoJZnJvbV9kYXRlGAEgASgJEg8KB3RvX2RhdGUYAiABKAkiQgoUTGlzdE1lYWxQbGFuUmVzcG9uc2USKgoHZW50cmllcxgBIAMoCzIZLnJlY2lwZXMudjEuTWVhbFBsYW5FbnRyeSIuChpSZW1vdmVNZWFsUGxhbkVudHJ5UmVxdWVzdBIQCghlbnRyeV9pZBgBIAEoCSIdChtSZW1vdmVNZWFsUGxhbkVudHJ5UmVzcG9uc2UiPQoXVG90YWxJbmdyZWRpZW50c1JlcXVlc3QSEQoJZnJvbV9kYXRlGAEgASgJEg8KB3RvX2RhdGUYAiABKAkiRwoYVG90YWxJbmdyZWRpZW50c1Jlc3BvbnNlEisKBnRvdGFscxgBIAMoCzIbLnJlY2lwZXMudjEuSW5ncmVkaWVudFRvdGFsIkMKD0luZ3JlZGllbnRUb3RhbBIMCgRuYW1lGAEgASgJEgwKBHVuaXQYAiABKAkSFAoMdG90YWxfYW1vdW50GAMgASgJIoMBChJSZWNpcGVDcmVhdGVkRXZlbnQSEQoJZmFtaWx5X2lkGAEgASgJEhEKCXJlY2lwZV9pZBgCIAEoCRIWCg5hdXRob3JfdXNlcl9pZBgDIAEoCRIvCgtvY2N1cnJlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiawoSUmVjaXBlVXBkYXRlZEV2ZW50EhEKCWZhbWlseV9pZBgBIAEoCRIRCglyZWNpcGVfaWQYAiABKAkSLwoLb2NjdXJyZWRfYXQYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wImsKElJlY2lwZURlbGV0ZWRFdmVudBIRCglmYW1pbHlfaWQYASABKAkSEQoJcmVjaXBlX2lkGAIgASgJEi8KC29jY3VycmVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKtAQoQTWVhbFBsYW5uZWRFdmVudBIRCglmYW1pbHlfaWQYASABKAkSEAoIZW50cnlfaWQYAiABKAkSEQoJcmVjaXBlX2lkGAMgASgJEgwKBGRhdGUYBCABKAkSIgoEc2xvdBgFIAEoDjIULnJlY2lwZXMudjEuTWVhbFNsb3QSLwoLb2NjdXJyZWRfYXQYBiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wKpUBCghNZWFsU2xvdBIZChVNRUFMX1NMT1RfVU5TUEVDSUZJRUQQABIXChNNRUFMX1NMT1RfQlJFQUtGQVNUEAESEwoPTUVBTF9TTE9UX0xVTkNIEAISFAoQTUVBTF9TTE9UX0RJTk5FUhADEhMKD01FQUxfU0xPVF9TTkFDSxAEEhUKEU1FQUxfU0xPVF9ERVNTRVJUEAUyqwwKDlJlY2lwZXNTZXJ2aWNlElcKDkNyZWF0ZUNhdGVnb3J5EiEucmVjaXBlcy52MS5DcmVhdGVDYXRlZ29yeVJlcXVlc3QaIi5yZWNpcGVzLnYxLkNyZWF0ZUNhdGVnb3J5UmVzcG9uc2USVwoOTGlzdENhdGVnb3JpZXMSIS5yZWNpcGVzLnYxLkxpc3RDYXRlZ29yaWVzUmVxdWVzdBoiLnJlY2lwZXMudjEuTGlzdENhdGVnb3JpZXNSZXNwb25zZRJgChFDcmVhdGVTdWJjYXRlZ29yeRIkLnJlY2lwZXMudjEuQ3JlYXRlU3ViY2F0ZWdvcnlSZXF1ZXN0GiUucmVjaXBlcy52MS5DcmVhdGVTdWJjYXRlZ29yeVJlc3BvbnNlEmAKEUxpc3RTdWJjYXRlZ29yaWVzEiQucmVjaXBlcy52MS5MaXN0U3ViY2F0ZWdvcmllc1JlcXVlc3QaJS5yZWNpcGVzLnYxLkxpc3RTdWJjYXRlZ29yaWVzUmVzcG9uc2USUQoMQ3JlYXRlUmVjaXBlEh8ucmVjaXBlcy52MS5DcmVhdGVSZWNpcGVSZXF1ZXN0GiAucmVjaXBlcy52MS5DcmVhdGVSZWNpcGVSZXNwb25zZRJICglHZXRSZWNpcGUSHC5yZWNpcGVzLnYxLkdldFJlY2lwZVJlcXVlc3QaHS5yZWNpcGVzLnYxLkdldFJlY2lwZVJlc3BvbnNlEk4KC0xpc3RSZWNpcGVzEh4ucmVjaXBlcy52MS5MaXN0UmVjaXBlc1JlcXVlc3QaHy5yZWNpcGVzLnYxLkxpc3RSZWNpcGVzUmVzcG9uc2USUQoMVXBkYXRlUmVjaXBlEh8ucmVjaXBlcy52MS5VcGRhdGVSZWNpcGVSZXF1ZXN0GiAucmVjaXBlcy52MS5VcGRhdGVSZWNpcGVSZXNwb25zZRJRCgxEZWxldGVSZWNpcGUSHy5yZWNpcGVzLnYxLkRlbGV0ZVJlY2lwZVJlcXVlc3QaIC5yZWNpcGVzLnYxLkRlbGV0ZVJlY2lwZVJlc3BvbnNlEmAKEVVwbG9hZFJlY2lwZUltYWdlEiQucmVjaXBlcy52MS5VcGxvYWRSZWNpcGVJbWFnZVJlcXVlc3QaJS5yZWNpcGVzLnYxLlVwbG9hZFJlY2lwZUltYWdlUmVzcG9uc2USVwoOVG9nZ2xlRmF2b3JpdGUSIS5yZWNpcGVzLnYxLlRvZ2dsZUZhdm9yaXRlUmVxdWVzdBoiLnJlY2lwZXMudjEuVG9nZ2xlRmF2b3JpdGVSZXNwb25zZRJUCg1MaXN0RmF2b3JpdGVzEiAucmVjaXBlcy52MS5MaXN0RmF2b3JpdGVzUmVxdWVzdBohLnJlY2lwZXMudjEuTGlzdEZhdm9yaXRlc1Jlc3BvbnNlEksKCkFkZENvbW1lbnQSHS5yZWNpcGVzLnYxLkFkZENvbW1lbnRSZXF1ZXN0Gh4ucmVjaXBlcy52MS5BZGRDb21tZW50UmVzcG9uc2USUQoMTGlzdENvbW1lbnRzEh8ucmVjaXBlcy52MS5MaXN0Q29tbWVudHNSZXF1ZXN0GiAucmVjaXBlcy52MS5MaXN0Q29tbWVudHNSZXNwb25zZRJFCghQbGFuTWVhbBIbLnJlY2lwZXMudjEuUGxhbk1lYWxSZXF1ZXN0GhwucmVjaXBlcy52MS5QbGFuTWVhbFJlc3BvbnNlElEKDExpc3RNZWFsUGxhbhIfLnJlY2lwZXMudjEuTGlzdE1lYWxQbGFuUmVxdWVzdBogLnJlY2lwZXMudjEuTGlzdE1lYWxQbGFuUmVzcG9uc2USZgoTUmVtb3ZlTWVhbFBsYW5FbnRyeRImLnJlY2lwZXMudjEuUmVtb3ZlTWVhbFBsYW5FbnRyeVJlcXVlc3QaJy5yZWNpcGVzLnYxLlJlbW92ZU1lYWxQbGFuRW50cnlSZXNwb25zZRJdChBUb3RhbEluZ3JlZGllbnRzEiMucmVjaXBlcy52MS5Ub3RhbEluZ3JlZGllbnRzUmVxdWVzdBokLnJlY2lwZXMudjEuVG90YWxJbmdyZWRpZW50c1Jlc3BvbnNlQqIBCg5jb20ucmVjaXBlcy52MUIMUmVjaXBlc1Byb3RvUAFaOWdpdGh1Yi5jb20vbm5jL2ZhbWlseS1tYW5hZ2VyL3Nkay9nby9yZWNpcGVzL3YxO3JlY2lwZXN2MaICA1JYWKoCClJlY2lwZXMuVjHKAgpSZWNpcGVzXFYx4gIWUmVjaXBlc1xWMVxHUEJNZXRhZGF0YeoCC1JlY2lwZXM6OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message recipes.v1.Category
@@ -232,6 +232,13 @@ export type Recipe = Message<"recipes.v1.Recipe"> & {
    * @generated from field: google.protobuf.Timestamp updated_at = 16;
    */
   updatedAt?: Timestamp | undefined;
+
+  /**
+   * image_url is empty when the recipe has no photo.
+   *
+   * @generated from field: string image_url = 17;
+   */
+  imageUrl: string;
 };
 
 /**
@@ -736,6 +743,53 @@ export const DeleteRecipeResponseSchema: GenMessage<DeleteRecipeResponse> = /*@_
   messageDesc(file_recipes_v1_recipes, 24);
 
 /**
+ * @generated from message recipes.v1.UploadRecipeImageRequest
+ */
+export type UploadRecipeImageRequest = Message<"recipes.v1.UploadRecipeImageRequest"> & {
+  /**
+   * @generated from field: string recipe_id = 1;
+   */
+  recipeId: string;
+
+  /**
+   * @generated from field: bytes image_data = 2;
+   */
+  imageData: Uint8Array;
+
+  /**
+   * content_type is the MIME type the client captured the image as (e.g. "image/jpeg");
+   * the server rejects anything that isn't image/*.
+   *
+   * @generated from field: string content_type = 3;
+   */
+  contentType: string;
+};
+
+/**
+ * Describes the message recipes.v1.UploadRecipeImageRequest.
+ * Use `create(UploadRecipeImageRequestSchema)` to create a new message.
+ */
+export const UploadRecipeImageRequestSchema: GenMessage<UploadRecipeImageRequest> = /*@__PURE__*/
+  messageDesc(file_recipes_v1_recipes, 25);
+
+/**
+ * @generated from message recipes.v1.UploadRecipeImageResponse
+ */
+export type UploadRecipeImageResponse = Message<"recipes.v1.UploadRecipeImageResponse"> & {
+  /**
+   * @generated from field: recipes.v1.Recipe recipe = 1;
+   */
+  recipe?: Recipe | undefined;
+};
+
+/**
+ * Describes the message recipes.v1.UploadRecipeImageResponse.
+ * Use `create(UploadRecipeImageResponseSchema)` to create a new message.
+ */
+export const UploadRecipeImageResponseSchema: GenMessage<UploadRecipeImageResponse> = /*@__PURE__*/
+  messageDesc(file_recipes_v1_recipes, 26);
+
+/**
  * @generated from message recipes.v1.ToggleFavoriteRequest
  */
 export type ToggleFavoriteRequest = Message<"recipes.v1.ToggleFavoriteRequest"> & {
@@ -750,7 +804,7 @@ export type ToggleFavoriteRequest = Message<"recipes.v1.ToggleFavoriteRequest"> 
  * Use `create(ToggleFavoriteRequestSchema)` to create a new message.
  */
 export const ToggleFavoriteRequestSchema: GenMessage<ToggleFavoriteRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 25);
+  messageDesc(file_recipes_v1_recipes, 27);
 
 /**
  * @generated from message recipes.v1.ToggleFavoriteResponse
@@ -767,7 +821,7 @@ export type ToggleFavoriteResponse = Message<"recipes.v1.ToggleFavoriteResponse"
  * Use `create(ToggleFavoriteResponseSchema)` to create a new message.
  */
 export const ToggleFavoriteResponseSchema: GenMessage<ToggleFavoriteResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 26);
+  messageDesc(file_recipes_v1_recipes, 28);
 
 /**
  * @generated from message recipes.v1.ListFavoritesRequest
@@ -780,7 +834,7 @@ export type ListFavoritesRequest = Message<"recipes.v1.ListFavoritesRequest"> & 
  * Use `create(ListFavoritesRequestSchema)` to create a new message.
  */
 export const ListFavoritesRequestSchema: GenMessage<ListFavoritesRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 27);
+  messageDesc(file_recipes_v1_recipes, 29);
 
 /**
  * @generated from message recipes.v1.ListFavoritesResponse
@@ -797,7 +851,7 @@ export type ListFavoritesResponse = Message<"recipes.v1.ListFavoritesResponse"> 
  * Use `create(ListFavoritesResponseSchema)` to create a new message.
  */
 export const ListFavoritesResponseSchema: GenMessage<ListFavoritesResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 28);
+  messageDesc(file_recipes_v1_recipes, 30);
 
 /**
  * @generated from message recipes.v1.AddCommentRequest
@@ -819,7 +873,7 @@ export type AddCommentRequest = Message<"recipes.v1.AddCommentRequest"> & {
  * Use `create(AddCommentRequestSchema)` to create a new message.
  */
 export const AddCommentRequestSchema: GenMessage<AddCommentRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 29);
+  messageDesc(file_recipes_v1_recipes, 31);
 
 /**
  * @generated from message recipes.v1.AddCommentResponse
@@ -836,7 +890,7 @@ export type AddCommentResponse = Message<"recipes.v1.AddCommentResponse"> & {
  * Use `create(AddCommentResponseSchema)` to create a new message.
  */
 export const AddCommentResponseSchema: GenMessage<AddCommentResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 30);
+  messageDesc(file_recipes_v1_recipes, 32);
 
 /**
  * @generated from message recipes.v1.ListCommentsRequest
@@ -853,7 +907,7 @@ export type ListCommentsRequest = Message<"recipes.v1.ListCommentsRequest"> & {
  * Use `create(ListCommentsRequestSchema)` to create a new message.
  */
 export const ListCommentsRequestSchema: GenMessage<ListCommentsRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 31);
+  messageDesc(file_recipes_v1_recipes, 33);
 
 /**
  * @generated from message recipes.v1.ListCommentsResponse
@@ -870,7 +924,7 @@ export type ListCommentsResponse = Message<"recipes.v1.ListCommentsResponse"> & 
  * Use `create(ListCommentsResponseSchema)` to create a new message.
  */
 export const ListCommentsResponseSchema: GenMessage<ListCommentsResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 32);
+  messageDesc(file_recipes_v1_recipes, 34);
 
 /**
  * @generated from message recipes.v1.PlanMealRequest
@@ -902,7 +956,7 @@ export type PlanMealRequest = Message<"recipes.v1.PlanMealRequest"> & {
  * Use `create(PlanMealRequestSchema)` to create a new message.
  */
 export const PlanMealRequestSchema: GenMessage<PlanMealRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 33);
+  messageDesc(file_recipes_v1_recipes, 35);
 
 /**
  * @generated from message recipes.v1.PlanMealResponse
@@ -919,7 +973,7 @@ export type PlanMealResponse = Message<"recipes.v1.PlanMealResponse"> & {
  * Use `create(PlanMealResponseSchema)` to create a new message.
  */
 export const PlanMealResponseSchema: GenMessage<PlanMealResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 34);
+  messageDesc(file_recipes_v1_recipes, 36);
 
 /**
  * @generated from message recipes.v1.ListMealPlanRequest
@@ -943,7 +997,7 @@ export type ListMealPlanRequest = Message<"recipes.v1.ListMealPlanRequest"> & {
  * Use `create(ListMealPlanRequestSchema)` to create a new message.
  */
 export const ListMealPlanRequestSchema: GenMessage<ListMealPlanRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 35);
+  messageDesc(file_recipes_v1_recipes, 37);
 
 /**
  * @generated from message recipes.v1.ListMealPlanResponse
@@ -960,7 +1014,7 @@ export type ListMealPlanResponse = Message<"recipes.v1.ListMealPlanResponse"> & 
  * Use `create(ListMealPlanResponseSchema)` to create a new message.
  */
 export const ListMealPlanResponseSchema: GenMessage<ListMealPlanResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 36);
+  messageDesc(file_recipes_v1_recipes, 38);
 
 /**
  * @generated from message recipes.v1.RemoveMealPlanEntryRequest
@@ -977,7 +1031,7 @@ export type RemoveMealPlanEntryRequest = Message<"recipes.v1.RemoveMealPlanEntry
  * Use `create(RemoveMealPlanEntryRequestSchema)` to create a new message.
  */
 export const RemoveMealPlanEntryRequestSchema: GenMessage<RemoveMealPlanEntryRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 37);
+  messageDesc(file_recipes_v1_recipes, 39);
 
 /**
  * @generated from message recipes.v1.RemoveMealPlanEntryResponse
@@ -990,7 +1044,7 @@ export type RemoveMealPlanEntryResponse = Message<"recipes.v1.RemoveMealPlanEntr
  * Use `create(RemoveMealPlanEntryResponseSchema)` to create a new message.
  */
 export const RemoveMealPlanEntryResponseSchema: GenMessage<RemoveMealPlanEntryResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 38);
+  messageDesc(file_recipes_v1_recipes, 40);
 
 /**
  * @generated from message recipes.v1.TotalIngredientsRequest
@@ -1012,7 +1066,7 @@ export type TotalIngredientsRequest = Message<"recipes.v1.TotalIngredientsReques
  * Use `create(TotalIngredientsRequestSchema)` to create a new message.
  */
 export const TotalIngredientsRequestSchema: GenMessage<TotalIngredientsRequest> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 39);
+  messageDesc(file_recipes_v1_recipes, 41);
 
 /**
  * @generated from message recipes.v1.TotalIngredientsResponse
@@ -1029,7 +1083,7 @@ export type TotalIngredientsResponse = Message<"recipes.v1.TotalIngredientsRespo
  * Use `create(TotalIngredientsResponseSchema)` to create a new message.
  */
 export const TotalIngredientsResponseSchema: GenMessage<TotalIngredientsResponse> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 40);
+  messageDesc(file_recipes_v1_recipes, 42);
 
 /**
  * @generated from message recipes.v1.IngredientTotal
@@ -1059,7 +1113,7 @@ export type IngredientTotal = Message<"recipes.v1.IngredientTotal"> & {
  * Use `create(IngredientTotalSchema)` to create a new message.
  */
 export const IngredientTotalSchema: GenMessage<IngredientTotal> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 41);
+  messageDesc(file_recipes_v1_recipes, 43);
 
 /**
  * Events published on `recipes.<entity>.<verb>` (libs/go/events).
@@ -1093,7 +1147,7 @@ export type RecipeCreatedEvent = Message<"recipes.v1.RecipeCreatedEvent"> & {
  * Use `create(RecipeCreatedEventSchema)` to create a new message.
  */
 export const RecipeCreatedEventSchema: GenMessage<RecipeCreatedEvent> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 42);
+  messageDesc(file_recipes_v1_recipes, 44);
 
 /**
  * @generated from message recipes.v1.RecipeUpdatedEvent
@@ -1120,7 +1174,7 @@ export type RecipeUpdatedEvent = Message<"recipes.v1.RecipeUpdatedEvent"> & {
  * Use `create(RecipeUpdatedEventSchema)` to create a new message.
  */
 export const RecipeUpdatedEventSchema: GenMessage<RecipeUpdatedEvent> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 43);
+  messageDesc(file_recipes_v1_recipes, 45);
 
 /**
  * @generated from message recipes.v1.RecipeDeletedEvent
@@ -1147,7 +1201,7 @@ export type RecipeDeletedEvent = Message<"recipes.v1.RecipeDeletedEvent"> & {
  * Use `create(RecipeDeletedEventSchema)` to create a new message.
  */
 export const RecipeDeletedEventSchema: GenMessage<RecipeDeletedEvent> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 44);
+  messageDesc(file_recipes_v1_recipes, 46);
 
 /**
  * @generated from message recipes.v1.MealPlannedEvent
@@ -1189,7 +1243,7 @@ export type MealPlannedEvent = Message<"recipes.v1.MealPlannedEvent"> & {
  * Use `create(MealPlannedEventSchema)` to create a new message.
  */
 export const MealPlannedEventSchema: GenMessage<MealPlannedEvent> = /*@__PURE__*/
-  messageDesc(file_recipes_v1_recipes, 45);
+  messageDesc(file_recipes_v1_recipes, 47);
 
 /**
  * @generated from enum recipes.v1.MealSlot
@@ -1316,6 +1370,18 @@ export const RecipesService: GenService<{
     methodKind: "unary";
     input: typeof DeleteRecipeRequestSchema;
     output: typeof DeleteRecipeResponseSchema;
+  },
+  /**
+   * UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
+   * on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
+   * server-side) that a second round trip to get an upload URL isn't worth the complexity.
+   *
+   * @generated from rpc recipes.v1.RecipesService.UploadRecipeImage
+   */
+  uploadRecipeImage: {
+    methodKind: "unary";
+    input: typeof UploadRecipeImageRequestSchema;
+    output: typeof UploadRecipeImageResponseSchema;
   },
   /**
    * --- favorites & comments ----------------------------------------------

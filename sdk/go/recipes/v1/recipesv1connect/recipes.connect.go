@@ -60,6 +60,9 @@ const (
 	// RecipesServiceDeleteRecipeProcedure is the fully-qualified name of the RecipesService's
 	// DeleteRecipe RPC.
 	RecipesServiceDeleteRecipeProcedure = "/recipes.v1.RecipesService/DeleteRecipe"
+	// RecipesServiceUploadRecipeImageProcedure is the fully-qualified name of the RecipesService's
+	// UploadRecipeImage RPC.
+	RecipesServiceUploadRecipeImageProcedure = "/recipes.v1.RecipesService/UploadRecipeImage"
 	// RecipesServiceToggleFavoriteProcedure is the fully-qualified name of the RecipesService's
 	// ToggleFavorite RPC.
 	RecipesServiceToggleFavoriteProcedure = "/recipes.v1.RecipesService/ToggleFavorite"
@@ -98,6 +101,10 @@ type RecipesServiceClient interface {
 	ListRecipes(context.Context, *connect.Request[v1.ListRecipesRequest]) (*connect.Response[v1.ListRecipesResponse], error)
 	UpdateRecipe(context.Context, *connect.Request[v1.UpdateRecipeRequest]) (*connect.Response[v1.UpdateRecipeResponse], error)
 	DeleteRecipe(context.Context, *connect.Request[v1.DeleteRecipeRequest]) (*connect.Response[v1.DeleteRecipeResponse], error)
+	// UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
+	// on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
+	// server-side) that a second round trip to get an upload URL isn't worth the complexity.
+	UploadRecipeImage(context.Context, *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error)
 	// --- favorites & comments ----------------------------------------------
 	ToggleFavorite(context.Context, *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error)
 	ListFavorites(context.Context, *connect.Request[v1.ListFavoritesRequest]) (*connect.Response[v1.ListFavoritesResponse], error)
@@ -179,6 +186,12 @@ func NewRecipesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(recipesServiceMethods.ByName("DeleteRecipe")),
 			connect.WithClientOptions(opts...),
 		),
+		uploadRecipeImage: connect.NewClient[v1.UploadRecipeImageRequest, v1.UploadRecipeImageResponse](
+			httpClient,
+			baseURL+RecipesServiceUploadRecipeImageProcedure,
+			connect.WithSchema(recipesServiceMethods.ByName("UploadRecipeImage")),
+			connect.WithClientOptions(opts...),
+		),
 		toggleFavorite: connect.NewClient[v1.ToggleFavoriteRequest, v1.ToggleFavoriteResponse](
 			httpClient,
 			baseURL+RecipesServiceToggleFavoriteProcedure,
@@ -241,6 +254,7 @@ type recipesServiceClient struct {
 	listRecipes         *connect.Client[v1.ListRecipesRequest, v1.ListRecipesResponse]
 	updateRecipe        *connect.Client[v1.UpdateRecipeRequest, v1.UpdateRecipeResponse]
 	deleteRecipe        *connect.Client[v1.DeleteRecipeRequest, v1.DeleteRecipeResponse]
+	uploadRecipeImage   *connect.Client[v1.UploadRecipeImageRequest, v1.UploadRecipeImageResponse]
 	toggleFavorite      *connect.Client[v1.ToggleFavoriteRequest, v1.ToggleFavoriteResponse]
 	listFavorites       *connect.Client[v1.ListFavoritesRequest, v1.ListFavoritesResponse]
 	addComment          *connect.Client[v1.AddCommentRequest, v1.AddCommentResponse]
@@ -296,6 +310,11 @@ func (c *recipesServiceClient) DeleteRecipe(ctx context.Context, req *connect.Re
 	return c.deleteRecipe.CallUnary(ctx, req)
 }
 
+// UploadRecipeImage calls recipes.v1.RecipesService.UploadRecipeImage.
+func (c *recipesServiceClient) UploadRecipeImage(ctx context.Context, req *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error) {
+	return c.uploadRecipeImage.CallUnary(ctx, req)
+}
+
 // ToggleFavorite calls recipes.v1.RecipesService.ToggleFavorite.
 func (c *recipesServiceClient) ToggleFavorite(ctx context.Context, req *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error) {
 	return c.toggleFavorite.CallUnary(ctx, req)
@@ -349,6 +368,10 @@ type RecipesServiceHandler interface {
 	ListRecipes(context.Context, *connect.Request[v1.ListRecipesRequest]) (*connect.Response[v1.ListRecipesResponse], error)
 	UpdateRecipe(context.Context, *connect.Request[v1.UpdateRecipeRequest]) (*connect.Response[v1.UpdateRecipeResponse], error)
 	DeleteRecipe(context.Context, *connect.Request[v1.DeleteRecipeRequest]) (*connect.Response[v1.DeleteRecipeResponse], error)
+	// UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
+	// on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
+	// server-side) that a second round trip to get an upload URL isn't worth the complexity.
+	UploadRecipeImage(context.Context, *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error)
 	// --- favorites & comments ----------------------------------------------
 	ToggleFavorite(context.Context, *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error)
 	ListFavorites(context.Context, *connect.Request[v1.ListFavoritesRequest]) (*connect.Response[v1.ListFavoritesResponse], error)
@@ -426,6 +449,12 @@ func NewRecipesServiceHandler(svc RecipesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(recipesServiceMethods.ByName("DeleteRecipe")),
 		connect.WithHandlerOptions(opts...),
 	)
+	recipesServiceUploadRecipeImageHandler := connect.NewUnaryHandler(
+		RecipesServiceUploadRecipeImageProcedure,
+		svc.UploadRecipeImage,
+		connect.WithSchema(recipesServiceMethods.ByName("UploadRecipeImage")),
+		connect.WithHandlerOptions(opts...),
+	)
 	recipesServiceToggleFavoriteHandler := connect.NewUnaryHandler(
 		RecipesServiceToggleFavoriteProcedure,
 		svc.ToggleFavorite,
@@ -494,6 +523,8 @@ func NewRecipesServiceHandler(svc RecipesServiceHandler, opts ...connect.Handler
 			recipesServiceUpdateRecipeHandler.ServeHTTP(w, r)
 		case RecipesServiceDeleteRecipeProcedure:
 			recipesServiceDeleteRecipeHandler.ServeHTTP(w, r)
+		case RecipesServiceUploadRecipeImageProcedure:
+			recipesServiceUploadRecipeImageHandler.ServeHTTP(w, r)
 		case RecipesServiceToggleFavoriteProcedure:
 			recipesServiceToggleFavoriteHandler.ServeHTTP(w, r)
 		case RecipesServiceListFavoritesProcedure:
@@ -553,6 +584,10 @@ func (UnimplementedRecipesServiceHandler) UpdateRecipe(context.Context, *connect
 
 func (UnimplementedRecipesServiceHandler) DeleteRecipe(context.Context, *connect.Request[v1.DeleteRecipeRequest]) (*connect.Response[v1.DeleteRecipeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("recipes.v1.RecipesService.DeleteRecipe is not implemented"))
+}
+
+func (UnimplementedRecipesServiceHandler) UploadRecipeImage(context.Context, *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("recipes.v1.RecipesService.UploadRecipeImage is not implemented"))
 }
 
 func (UnimplementedRecipesServiceHandler) ToggleFavorite(context.Context, *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error) {
