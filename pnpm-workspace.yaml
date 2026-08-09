@@ -5,18 +5,7 @@ packages:
   - "tools/*"
 
 publicHoistPattern:
-  - "*expo*"
-  - "*metro*"
-  - "*react-native*"
-  - "*@babel*"
-  - "babel-*"
-  - "whatwg-fetch"
-  - "promise"
-  - "regenerator-runtime"
-  - "@fm/*"
-  - "@bufbuild/*"
-  - "@connectrpc/*"
-  - "@tanstack/*"
+  - "*"
 
 overrides:
   metro: 0.81.5
@@ -47,3 +36,4 @@ overrides:
   react-native-screens: ~4.4.0
   react-native-safe-area-context: ~4.12.0
   react-native-svg: ~15.8.0
+  semver: ^7.6.0
