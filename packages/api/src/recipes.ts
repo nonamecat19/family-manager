@@ -125,6 +125,18 @@ export function useDeleteRecipe() {
   });
 }
 
+export function useUploadRecipeImage() {
+  const { recipes } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { recipeId: string; imageData: Uint8Array; contentType: string }) => {
+      const res = await recipes.uploadRecipeImage(input);
+      return res.recipe;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.recipes }),
+  });
+}
+
 /* ------------------------------------------------------------------ favorites */
 
 export function useFavoriteRecipes() {

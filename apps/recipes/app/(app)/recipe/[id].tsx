@@ -8,7 +8,7 @@ import {
 import { Button, Card, ErrorState, Field, Loading } from "@fm/ui";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RecipeDetailScreen() {
@@ -51,6 +51,14 @@ export default function RecipeDetailScreen() {
         className="flex-1"
       >
         <ScrollView contentContainerClassName="p-lg gap-md pb-2xl">
+          {r.imageUrl !== "" && (
+            <Image
+              source={{ uri: r.imageUrl }}
+              className="h-56 w-full rounded-lg bg-card dark:bg-card-dark"
+              resizeMode="cover"
+            />
+          )}
+
           {/* Header */}
           <View className="gap-xs">
             <Text className="text-display font-bold text-fg dark:text-fg-dark">{r.title}</Text>

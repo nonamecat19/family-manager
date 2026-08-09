@@ -15,7 +15,16 @@ module.exports = {
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
-    plugins: ["expo-router", "expo-secure-store"],
+    plugins: [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          photosPermission: "Family Recipes uses your photo library to attach a photo to a recipe.",
+        },
+      ],
+    ],
     experiments: {
       typedRoutes: true,
     },

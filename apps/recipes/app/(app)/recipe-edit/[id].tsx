@@ -1,8 +1,9 @@
-import { useCreateRecipe, useUpdateRecipe, useRecipe, useRecipeCategories } from "@fm/api";
+import { useCreateRecipe, useUpdateRecipe, useUploadRecipeImage, useRecipe, useRecipeCategories } from "@fm/api";
 import { Button, Card, ErrorState, Field, Loading } from "@fm/ui";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface IngredientRow {
@@ -24,7 +25,11 @@ export default function RecipeEditScreen() {
   const categories = useRecipeCategories();
   const createRecipe = useCreateRecipe();
   const updateRecipe = useUpdateRecipe();
+  const uploadImage = useUploadRecipeImage();
 
+  const [pickedImage, setPickedImage] = useState<{ uri: string; base64: string; contentType: string } | null>(
+    null,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [servings, setServings] = useState("1");
@@ -57,6 +62,37 @@ export default function RecipeEditScreen() {
     );
   }
 
+  const pickImage = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      base64: true,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    const asset = result.assets?.[0];
+    if (result.canceled || !asset?.base64) return;
+    setPickedImage({
+      uri: asset.uri,
+      base64: asset.base64,
+      contentType: asset.mimeType ?? "image/jpeg",
+    });
+  };
+
+  // The recipe must exist before an image can be attached to it, so a picked photo is
+  // uploaded as a second request once create/update has returned an id — never inline in
+  // the same payload as title/ingredients/steps.
+  const uploadPickedImage = (recipeId: string) => {
+    if (!pickedImage) return;
+    uploadImage.mutate({
+      recipeId,
+      imageData: base64ToBytes(pickedImage.base64),
+      contentType: pickedImage.contentType,
+    });
+  };
+
   const submit = () => {
     const payload = {
       title: title.trim(),
@@ -81,14 +117,19 @@ export default function RecipeEditScreen() {
     if (isNew) {
       createRecipe.mutate(payload, {
         onSuccess: (recipe) => {
-          if (recipe) router.replace(`/(app)/recipe/${recipe.id}`);
+          if (!recipe) return;
+          uploadPickedImage(recipe.id);
+          router.replace(`/(app)/recipe/${recipe.id}`);
         },
       });
     } else {
       updateRecipe.mutate(
         { ...payload, recipeId: id },
         {
-          onSuccess: () => router.replace(`/(app)/recipe/${id}`),
+          onSuccess: () => {
+            uploadPickedImage(id);
+            router.replace(`/(app)/recipe/${id}`);
+          },
         },
       );
     }
@@ -105,6 +146,20 @@ export default function RecipeEditScreen() {
             <Text className="text-body text-muted dark:text-muted-dark">Cancel</Text>
           </Pressable>
         </View>
+
+        <Pressable accessibilityRole="button" onPress={() => void pickImage()}>
+          {pickedImage || (!isNew && recipe.data?.imageUrl) ? (
+            <Image
+              source={{ uri: pickedImage?.uri ?? recipe.data?.imageUrl }}
+              className="h-40 w-full rounded-lg bg-card dark:bg-card-dark"
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="h-40 w-full items-center justify-center rounded-lg bg-card dark:bg-card-dark">
+              <Text className="text-caption text-muted dark:text-muted-dark">+ Add a photo</Text>
+            </View>
+          )}
+        </Pressable>
 
         <Field label="Title" value={title} onChangeText={setTitle} />
 
@@ -253,4 +308,25 @@ function CategoryChip({
       </Text>
     </Pressable>
   );
+}
+
+const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// RN's JS engine has no built-in atob, so ImagePicker's base64 string is decoded by hand
+// rather than pulling in a polyfill for one call site.
+function base64ToBytes(base64: string): Uint8Array {
+  const clean = base64.replace(/=+$/, "");
+  const bytes = new Uint8Array(Math.floor((clean.length * 3) / 4));
+  let byteIndex = 0;
+  for (let i = 0; i < clean.length; i += 4) {
+    const c0 = BASE64_ALPHABET.indexOf(clean[i] ?? "=");
+    const c1 = BASE64_ALPHABET.indexOf(clean[i + 1] ?? "=");
+    const c2 = BASE64_ALPHABET.indexOf(clean[i + 2] ?? "=");
+    const c3 = BASE64_ALPHABET.indexOf(clean[i + 3] ?? "=");
+    const chunk = (c0 << 18) | (c1 << 12) | ((c2 & 63) << 6) | (c3 & 63);
+    bytes[byteIndex++] = (chunk >> 16) & 0xff;
+    if (clean[i + 2] !== undefined) bytes[byteIndex++] = (chunk >> 8) & 0xff;
+    if (clean[i + 3] !== undefined) bytes[byteIndex++] = chunk & 0xff;
+  }
+  return bytes;
 }
