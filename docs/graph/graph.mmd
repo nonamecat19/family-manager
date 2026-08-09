@@ -1,6 +1,7 @@
 graph LR
   subgraph apps
     app_finance["app:finance"]
+    app_recipes["app:recipes"]
   end
   subgraph packages
     pkg__fm_api["pkg:@fm/api"]
@@ -14,6 +15,7 @@ graph LR
     service_auth["service:auth"]
     service_family["service:family"]
     service_finance["service:finance"]
+    service_recipes["service:recipes"]
   end
   subgraph golibs
     golib_auth["golib:auth"]
@@ -26,6 +28,7 @@ graph LR
     proto_libs_proto_auth_v1_auth_proto["proto:libs/proto/auth/v1/auth.proto"]
     proto_libs_proto_family_v1_family_proto["proto:libs/proto/family/v1/family.proto"]
     proto_libs_proto_finance_v1_finance_proto["proto:libs/proto/finance/v1/finance.proto"]
+    proto_libs_proto_recipes_v1_recipes_proto["proto:libs/proto/recipes/v1/recipes.proto"]
   end
   subgraph tables
     table_accounts["table:accounts"]
@@ -34,6 +37,14 @@ graph LR
     table_families["table:families"]
     table_family_invitations["table:family_invitations"]
     table_family_members["table:family_members"]
+    table_meal_plan_entries["table:meal_plan_entries"]
+    table_recipe_categories["table:recipe_categories"]
+    table_recipe_comments["table:recipe_comments"]
+    table_recipe_favorites["table:recipe_favorites"]
+    table_recipe_ingredients["table:recipe_ingredients"]
+    table_recipe_steps["table:recipe_steps"]
+    table_recipe_subcategories["table:recipe_subcategories"]
+    table_recipes["table:recipes"]
     table_refresh_tokens["table:refresh_tokens"]
     table_transactions["table:transactions"]
     table_users["table:users"]
@@ -53,6 +64,12 @@ graph LR
   app_finance -->|DEPENDS_ON| pkg__fm_sdk
   app_finance -->|DEPENDS_ON| pkg__fm_theme
   app_finance -->|DEPENDS_ON| pkg__fm_ui
+  app_recipes -->|DEPENDS_ON| pkg__fm_api
+  app_recipes -->|DEPENDS_ON| pkg__fm_auth
+  app_recipes -->|DEPENDS_ON| pkg__fm_config
+  app_recipes -->|DEPENDS_ON| pkg__fm_sdk
+  app_recipes -->|DEPENDS_ON| pkg__fm_theme
+  app_recipes -->|DEPENDS_ON| pkg__fm_ui
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_auth
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_sdk
@@ -96,12 +113,36 @@ graph LR
   service_finance -->|RUNS_ON| infra_finance
   service_finance -->|RUNS_ON| infra_nats
   service_finance -->|RUNS_ON| infra_postgres
+  service_recipes -->|DEPENDS_ON| golib_auth
+  service_recipes -->|DEPENDS_ON| golib_database
+  service_recipes -->|DEPENDS_ON| golib_events
+  service_recipes -->|DEPENDS_ON| golib_go
+  service_recipes -->|DEPENDS_ON| golib_logger
+  service_recipes -->|IMPLEMENTS| proto_libs_proto_recipes_v1_recipes_proto
+  service_recipes -->|PERSISTS_TO| table_meal_plan_entries
+  service_recipes -->|PERSISTS_TO| table_recipe_categories
+  service_recipes -->|PERSISTS_TO| table_recipe_comments
+  service_recipes -->|PERSISTS_TO| table_recipe_favorites
+  service_recipes -->|PERSISTS_TO| table_recipe_ingredients
+  service_recipes -->|PERSISTS_TO| table_recipe_steps
+  service_recipes -->|PERSISTS_TO| table_recipe_subcategories
+  service_recipes -->|PERSISTS_TO| table_recipes
+  service_recipes -->|RUNS_ON| infra_nats
+  service_recipes -->|RUNS_ON| infra_postgres
   table_accounts -->|OWNED_BY| service_finance
   table_budgets -->|OWNED_BY| service_finance
   table_categories -->|OWNED_BY| service_finance
   table_families -->|OWNED_BY| service_family
   table_family_invitations -->|OWNED_BY| service_family
   table_family_members -->|OWNED_BY| service_family
+  table_meal_plan_entries -->|OWNED_BY| service_recipes
+  table_recipe_categories -->|OWNED_BY| service_recipes
+  table_recipe_comments -->|OWNED_BY| service_recipes
+  table_recipe_favorites -->|OWNED_BY| service_recipes
+  table_recipe_ingredients -->|OWNED_BY| service_recipes
+  table_recipe_steps -->|OWNED_BY| service_recipes
+  table_recipe_subcategories -->|OWNED_BY| service_recipes
+  table_recipes -->|OWNED_BY| service_recipes
   table_refresh_tokens -->|OWNED_BY| service_auth
   table_transactions -->|OWNED_BY| service_finance
   table_users -->|OWNED_BY| service_auth
