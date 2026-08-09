@@ -102,6 +102,12 @@ verify: check-go check-ts graph
 test-mobile flow="":
     @just test-mobile-run {{flow}}
 
+# Fast pre-flight: launches the app and checks the login screen renders. No backend
+# needed. Run this before burning time on device-network setup (see apps/recipes/TESTING.md) —
+# a build/render crash shows up here in seconds instead of a silent timeout on-device.
+test-mobile-smoke:
+    @just test-mobile-run smoke-launch
+
 test-mobile-run flow:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -114,15 +120,16 @@ test-mobile-run flow:
 
 # Build the recipes APK (debug). Requires ANDROID_HOME and JAVA_HOME (Java 17).
 # In Docker if local toolchain is unavailable.
+# For a real device (not emulator), set EXPO_PUBLIC_API_BASE_URL to your machine's LAN
+# IP first, e.g.: EXPO_PUBLIC_API_BASE_URL=http://192.168.1.20:8084 just build-apk
 build-apk:
     #!/usr/bin/env bash
     set -euo pipefail
     cd apps/recipes
-    if [ -d android ]; then
-      echo "Prebuild already done"
-    else
-      npx expo prebuild --platform android --no-install
-    fi
+    # --clean: android/ is gitignored and regenerated from app.config.js every time, so
+    # config changes (API URL, cleartext, etc.) always take effect instead of silently
+    # reusing whatever was prebuilt last.
+    npx expo prebuild --platform android --no-install --clean
     cd android
     JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} \
     ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} \
