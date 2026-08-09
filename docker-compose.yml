@@ -119,6 +119,37 @@ services:
     # No container healthcheck: the distroless image has no shell and no wget. /healthz is
     # served for the reverse proxy and for host-side probes instead.
 
+  recipes:
+    build:
+      context: .
+      dockerfile: services/recipes/Dockerfile
+    environment:
+      RECIPES_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/recipes?sslmode=disable
+      RECIPES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      RECIPES_NATS_URL: nats://nats:4222
+      RECIPES_HTTP_PORT: "8080"
+      RECIPES_MINIO_ENDPOINT: minio:9000
+      RECIPES_MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      RECIPES_MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      RECIPES_MINIO_BUCKET: recipes
+      # The app fetches images through the host-mapped MinIO port, not the in-network
+      # "minio:9000" address the service itself uses to talk to the API.
+      RECIPES_MINIO_PUBLIC_URL: http://localhost:${MINIO_PORT:-9000}
+      RECIPES_LOG_JSON: "true"
+    ports:
+      - "${RECIPES_PORT:-8084}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      auth:
+        condition: service_started
+    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
+    # served for the reverse proxy and for host-side probes instead.
+
 secrets:
   auth-signing-key:
     file: ./infra/secrets/auth-signing-key.pem
