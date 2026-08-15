@@ -5,6 +5,7 @@ use (
 	./libs/go/database
 	./libs/go/events
 	./libs/go/logger
+	./libs/go/rpc
 	./libs/go/storage
 	./sdk/go
 	./services/auth
