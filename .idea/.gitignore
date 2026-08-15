@@ -8,3 +8,10 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# Machine-local, not project config: a cache directory, the list of devices plugged into
+# THIS machine, and the Markdown plugin's per-install preferences. The tracked files here
+# (fm.iml, modules.xml, go.imports.xml, inspectionProfiles/) are the shared ones — these
+# three only ever produce diffs that mean "a different person opened the project".
+/caches/
+/deviceManager.xml
+/markdown.xml
