@@ -387,6 +387,11 @@ func TestStoreFailureBecomesInternal(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodeInternal {
 		t.Fatalf("code = %v, want internal", connect.CodeOf(err))
 	}
+	// Register is unauthenticated: whatever ends up in this message is readable by anyone who
+	// can reach the port, so the cause must not be in it.
+	if strings.Contains(err.Error(), errBoom.Error()) {
+		t.Fatalf("wire message leaked the cause: %q", err.Error())
+	}
 }
 
 func TestLooksLikeEmail(t *testing.T) {

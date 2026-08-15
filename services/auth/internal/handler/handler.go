@@ -29,6 +29,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
+	"github.com/nnc/family-manager/libs/go/rpc"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
 	"github.com/nnc/family-manager/services/auth/internal/password"
@@ -109,7 +110,7 @@ func (h *Handler) Register(
 
 	hash, err := password.Hash(req.Msg.GetPassword(), h.hashParams)
 	if err != nil {
-		return nil, internal(err, "hash password")
+		return nil, h.internal(ctx, err, "hash password")
 	}
 
 	user, err := h.q.CreateUser(ctx, db.CreateUserParams{
@@ -125,7 +126,7 @@ func (h *Handler) Register(
 			return nil, connect.NewError(connect.CodeAlreadyExists,
 				errors.New("that email is already registered"))
 		}
-		return nil, internal(err, "create user")
+		return nil, h.internal(ctx, err, "create user")
 	}
 
 	return connect.NewResponse(&authv1.RegisterResponse{
@@ -147,7 +148,7 @@ func (h *Handler) Login(
 			_, _ = password.Hash(req.Msg.GetPassword(), h.hashParams)
 			return nil, errInvalidCredentials()
 		}
-		return nil, internal(err, "get user")
+		return nil, h.internal(ctx, err, "get user")
 	}
 
 	if err := password.Verify(req.Msg.GetPassword(), user.PasswordHash); err != nil {
@@ -156,7 +157,7 @@ func (h *Handler) Login(
 
 	chainID, err := newChainID()
 	if err != nil {
-		return nil, internal(err, "generate chain id")
+		return nil, h.internal(ctx, err, "generate chain id")
 	}
 
 	tokens, err := h.mintSession(ctx, user, chainID)
@@ -184,7 +185,7 @@ func (h *Handler) Refresh(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errInvalidRefresh()
 		}
-		return nil, internal(err, "get refresh token")
+		return nil, h.internal(ctx, err, "get refresh token")
 	}
 
 	if row.RevokedAt.Valid {
@@ -209,7 +210,7 @@ func (h *Handler) Refresh(
 	// updates a row, and the loser is treated as a replay on its next attempt.
 	spent, err := h.q.MarkRefreshTokenUsed(ctx, row.ID)
 	if err != nil {
-		return nil, internal(err, "mark refresh token used")
+		return nil, h.internal(ctx, err, "mark refresh token used")
 	}
 	if spent == 0 {
 		return nil, errInvalidRefresh()
@@ -220,7 +221,7 @@ func (h *Handler) Refresh(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errInvalidRefresh()
 		}
-		return nil, internal(err, "get user")
+		return nil, h.internal(ctx, err, "get user")
 	}
 
 	// Same chain: rotation replaces a token, it does not start a new session.
@@ -252,11 +253,11 @@ func (h *Handler) Logout(
 			// tokens exist.
 			return connect.NewResponse(&authv1.LogoutResponse{}), nil
 		}
-		return nil, internal(err, "get refresh token")
+		return nil, h.internal(ctx, err, "get refresh token")
 	}
 
 	if _, err := h.q.RevokeChain(ctx, row.ChainID); err != nil {
-		return nil, internal(err, "revoke chain")
+		return nil, h.internal(ctx, err, "revoke chain")
 	}
 	return connect.NewResponse(&authv1.LogoutResponse{}), nil
 }
@@ -279,12 +280,12 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 		FamilyID: familyID,
 	})
 	if err != nil {
-		return session{}, internal(err, "sign access token")
+		return session{}, h.internal(ctx, err, "sign access token")
 	}
 
 	refresh, err := newRefreshToken()
 	if err != nil {
-		return session{}, internal(err, "generate refresh token")
+		return session{}, h.internal(ctx, err, "generate refresh token")
 	}
 
 	if _, err := h.q.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
@@ -299,7 +300,7 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 		if errors.Is(err, pgx.ErrNoRows) {
 			return session{}, errInvalidRefresh()
 		}
-		return session{}, internal(err, "store refresh token")
+		return session{}, h.internal(ctx, err, "store refresh token")
 	}
 
 	return session{
@@ -384,8 +385,11 @@ func invalid(msg string) error {
 	return connect.NewError(connect.CodeInvalidArgument, errors.New(msg))
 }
 
-func internal(err error, what string) error {
-	return connect.NewError(connect.CodeInternal, fmt.Errorf("%s: %w", what, err))
+// internal hands the cause to the log and an opaque reference to the caller. Register, Login
+// and Refresh are unauthenticated, so a pgx error rendered into the response body is readable
+// by anyone who can reach the port.
+func (h *Handler) internal(ctx context.Context, err error, what string) error {
+	return rpc.Internal(ctx, h.log, err, what)
 }
 
 // isUniqueViolation reports whether err is Postgres SQLSTATE 23505.
