@@ -154,7 +154,12 @@ func (h *Handler) Login(
 		return nil, errInvalidCredentials()
 	}
 
-	tokens, err := h.mintSession(ctx, user, uuidValue(newUUID()))
+	chainID, err := newChainID()
+	if err != nil {
+		return nil, internal(err, "generate chain id")
+	}
+
+	tokens, err := h.mintSession(ctx, user, chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -349,18 +354,20 @@ func hashToken(t string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func newUUID() string {
-	buf := make([]byte, 16)
-	if _, err := rand.Read(buf); err != nil {
-		return ""
+// newChainID mints the v4 UUID that identifies one refresh chain.
+//
+// It returns the error rather than a zero value on purpose. The previous version fell back to
+// "", which pgconv turns into an invalid (NULL) pgtype.UUID — the insert would then succeed
+// with chain_id NULL, and RevokeChain(NULL) matches no rows. A CSPRNG failure would have
+// quietly produced sessions that survive the replay response instead of being killed by it.
+func newChainID() (pgtype.UUID, error) {
+	var buf [16]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		return pgtype.UUID{}, fmt.Errorf("read random bytes: %w", err)
 	}
 	buf[6] = (buf[6] & 0x0f) | 0x40 // version 4
 	buf[8] = (buf[8] & 0x3f) | 0x80 // variant 10
-	return fmt.Sprintf("%x-%x-%x-%x-%x", buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])
-}
-
-func uuidValue(s string) pgtype.UUID {
-	return pgconv.MustUUID(s)
+	return pgtype.UUID{Bytes: buf, Valid: true}, nil
 }
 
 // errInvalidCredentials is the single answer to a bad email and a bad password alike:

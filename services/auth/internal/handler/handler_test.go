@@ -404,17 +404,26 @@ func TestLooksLikeEmail(t *testing.T) {
 	}
 }
 
-func TestNewUUIDIsVersion4AndUnique(t *testing.T) {
+func TestNewChainIDIsValidVersion4AndUnique(t *testing.T) {
 	seen := map[string]bool{}
 	for i := 0; i < 100; i++ {
-		id := newUUID()
-		if len(id) != 36 || id[14] != '4' {
-			t.Fatalf("newUUID() = %q, want a v4 uuid", id)
+		id, err := newChainID()
+		if err != nil {
+			t.Fatalf("newChainID() error = %v", err)
 		}
-		if seen[id] {
-			t.Fatalf("newUUID() repeated %q", id)
+		// Valid matters as much as the version: an invalid pgtype.UUID is written as NULL,
+		// and a NULL chain_id is a chain RevokeChain can never revoke.
+		if !id.Valid {
+			t.Fatal("newChainID() returned an invalid (NULL) uuid")
 		}
-		seen[id] = true
+		s := pgconv.UUIDString(id)
+		if len(s) != 36 || s[14] != '4' {
+			t.Fatalf("newChainID() = %q, want a v4 uuid", s)
+		}
+		if seen[s] {
+			t.Fatalf("newChainID() repeated %q", s)
+		}
+		seen[s] = true
 	}
 }
 

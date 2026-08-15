@@ -48,7 +48,7 @@ func (s *fakeStore) CreateUser(_ context.Context, arg db.CreateUserParams) (db.U
 		return db.User{}, uniqueViolation{}
 	}
 	u := db.User{
-		ID:           pgconv.MustUUID(newUUID()),
+		ID:           mustChainID(),
 		Email:        arg.Email,
 		Name:         arg.Name,
 		PasswordHash: arg.PasswordHash,
@@ -90,7 +90,7 @@ func (s *fakeStore) CreateRefreshToken(
 		}
 	}
 	t := db.RefreshToken{
-		ID:        pgconv.MustUUID(newUUID()),
+		ID:        mustChainID(),
 		UserID:    arg.UserID,
 		TokenHash: arg.TokenHash,
 		ChainID:   arg.ChainID,
@@ -190,3 +190,13 @@ func (f *stubFamily) FamilyOf(context.Context, string) (string, error) {
 }
 
 var errBoom = errors.New("boom")
+
+// mustChainID is newChainID for tests, where a CSPRNG failure is not a case worth threading
+// through every fake.
+func mustChainID() pgtype.UUID {
+	id, err := newChainID()
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
