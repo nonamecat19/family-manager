@@ -21,6 +21,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/logger"
+	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/libs/go/storage"
 	"github.com/nnc/family-manager/sdk/go/recipes/v1/recipesv1connect"
 	"github.com/nnc/family-manager/services/recipes/db"
@@ -100,8 +101,8 @@ func run() error {
 	// family_id from the token claim, none from the request body. So the public listener is
 	// the only one — gRPC on :9090 is the same handler without the auth interceptor, for
 	// sibling services that may want to query a recipe by id (e.g. notifications).
-	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool))
-	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool))
+	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool, log))
+	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool, log))
 
 	errc := make(chan error, 2)
 	serve := func(srv *http.Server, name string) {
@@ -127,20 +128,23 @@ func run() error {
 	}
 }
 
-func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger) *http.ServeMux {
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := recipesv1connect.NewRecipesServiceHandler(
-		h, connect.WithInterceptors(fmauth.Interceptor(verifier)),
+		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("/healthz", healthz(pool))
 	return mux
 }
 
-func internalMux(h *handler.Handler, pool pinger) *http.ServeMux {
+func internalMux(h *handler.Handler, pool pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	// No interceptor: the caller is a sibling service on a private network.
-	path, svc := recipesv1connect.NewRecipesServiceHandler(h)
+	path, svc := recipesv1connect.NewRecipesServiceHandler(h,
+		connect.WithInterceptors(rpc.Recover(log)),
+	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("/healthz", healthz(pool))
 	return mux

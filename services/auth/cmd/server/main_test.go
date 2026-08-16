@@ -45,7 +45,7 @@ func testSigner(t *testing.T) *token.Signer {
 // stops verifying tokens.
 func TestJWKSEndpointServesThePublicKey(t *testing.T) {
 	signer := testSigner(t)
-	mux := newMux(handler.New(handler.Options{}), signer, okPinger{})
+	mux := newMux(handler.New(handler.Options{}), signer, okPinger{}, nil)
 
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/.well-known/jwks.json", nil))
@@ -72,7 +72,7 @@ func TestJWKSEndpointServesThePublicKey(t *testing.T) {
 
 // The endpoint is the one place a private key could leak by accident.
 func TestJWKSEndpointNeverLeaksThePrivateKey(t *testing.T) {
-	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{})
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/.well-known/jwks.json", nil))
@@ -86,7 +86,7 @@ func TestJWKSEndpointNeverLeaksThePrivateKey(t *testing.T) {
 }
 
 func TestJWKSEndpointIsReadOnly(t *testing.T) {
-	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{})
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/.well-known/jwks.json", nil))
@@ -98,7 +98,7 @@ func TestJWKSEndpointIsReadOnly(t *testing.T) {
 
 // Auth's own procedures must stay reachable without a token — they are how a caller gets one.
 func TestAuthProceduresAreRegistered(t *testing.T) {
-	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{})
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
 	for _, procedure := range []string{
 		authv1connect.AuthServiceLoginProcedure,
@@ -114,7 +114,7 @@ func TestAuthProceduresAreRegistered(t *testing.T) {
 }
 
 func TestHealthzReportsOK(t *testing.T) {
-	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{})
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
 	if rec.Code != http.StatusOK {

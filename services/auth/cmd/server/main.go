@@ -14,11 +14,13 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/logger"
+	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/sdk/go/auth/v1/authv1connect"
 	"github.com/nnc/family-manager/services/auth/db"
 	"github.com/nnc/family-manager/services/auth/internal/config"
@@ -92,7 +94,7 @@ func run() error {
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler:           h2c.NewHandler(newMux(h, signer, pool), &http2.Server{}),
+		Handler:           h2c.NewHandler(newMux(h, signer, pool, log), &http2.Server{}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -124,12 +126,14 @@ type pinger interface {
 	Ping(ctx context.Context) error
 }
 
-func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool pinger) *http.ServeMux {
+func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Every procedure on this service is public by definition: they are how a caller gets a
 	// token in the first place, so there is no interceptor to apply.
-	path, svc := authv1connect.NewAuthServiceHandler(h)
+	path, svc := authv1connect.NewAuthServiceHandler(h,
+		connect.WithInterceptors(rpc.Recover(log)),
+	)
 	mux.Handle(path, svc)
 
 	mux.HandleFunc("GET /.well-known/jwks.json", func(w http.ResponseWriter, _ *http.Request) {

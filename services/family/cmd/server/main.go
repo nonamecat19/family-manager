@@ -21,6 +21,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/logger"
+	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/sdk/go/family/v1/familyv1connect"
 	"github.com/nnc/family-manager/services/family/db"
 	"github.com/nnc/family-manager/services/family/internal/config"
@@ -98,8 +99,8 @@ func run() error {
 	// Internal (GRPCPort): sibling services. No token — services/auth calls it *before* a
 	// token exists. It must never be published to the host; compose leaves its port unmapped
 	// so it is reachable only on the compose network.
-	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool))
-	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool))
+	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool, log))
+	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool, log))
 
 	errc := make(chan error, 2)
 	serve := func(srv *http.Server, name string) {
@@ -133,10 +134,11 @@ var internalOnly = []string{
 	familyv1connect.FamilyServiceCheckMembershipProcedure,
 }
 
-func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger) *http.ServeMux {
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := familyv1connect.NewFamilyServiceHandler(
-		h, connect.WithInterceptors(fmauth.Interceptor(verifier)),
+		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	// Registered under the service path, then shadowed per procedure: a more specific
 	// pattern wins in ServeMux, so the block cannot be bypassed by casing or query strings.
@@ -150,11 +152,13 @@ func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger) *http
 	return mux
 }
 
-func internalMux(h *handler.Handler, pool pinger) *http.ServeMux {
+func internalMux(h *handler.Handler, pool pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	// No interceptor: the caller is a sibling service on a private network, and auth calls
 	// this before any token exists.
-	path, svc := familyv1connect.NewFamilyServiceHandler(h)
+	path, svc := familyv1connect.NewFamilyServiceHandler(h,
+		connect.WithInterceptors(rpc.Recover(log)),
+	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("/healthz", healthz(pool))
 	return mux

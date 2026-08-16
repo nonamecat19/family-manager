@@ -21,6 +21,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/logger"
+	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/sdk/go/finance/v1/financev1connect"
 	"github.com/nnc/family-manager/services/finance/db"
 	"github.com/nnc/family-manager/services/finance/internal/config"
@@ -95,7 +96,8 @@ func run() error {
 	mux := http.NewServeMux()
 	// No public procedure on this service: every ledger call needs an identity.
 	path, svc := financev1connect.NewFinanceServiceHandler(
-		h, connect.WithInterceptors(fmauth.Interceptor(verifier)),
+		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {

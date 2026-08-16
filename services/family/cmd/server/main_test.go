@@ -24,7 +24,7 @@ func TestPublicMuxRefusesInternalProcedures(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewVerifier: %v", err)
 	}
-	mux := publicMux(handler.New(handler.Options{}), verifier, okPinger{})
+	mux := publicMux(handler.New(handler.Options{}), verifier, okPinger{}, nil)
 
 	for _, procedure := range internalOnly {
 		req := httptest.NewRequest(http.MethodPost, procedure, strings.NewReader("{}"))
@@ -41,7 +41,7 @@ func TestPublicMuxRefusesInternalProcedures(t *testing.T) {
 // The same procedures must be reachable on the internal listener, or services/auth cannot
 // resolve a family_id at token-mint time.
 func TestInternalMuxServesInternalProcedures(t *testing.T) {
-	mux := internalMux(handler.New(handler.Options{}), okPinger{})
+	mux := internalMux(handler.New(handler.Options{}), okPinger{}, nil)
 
 	for _, procedure := range internalOnly {
 		req := httptest.NewRequest(http.MethodPost, procedure, strings.NewReader("{}"))
@@ -63,7 +63,7 @@ func TestPublicMuxRequiresAToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewVerifier: %v", err)
 	}
-	mux := publicMux(handler.New(handler.Options{}), verifier, okPinger{})
+	mux := publicMux(handler.New(handler.Options{}), verifier, okPinger{}, nil)
 
 	req := httptest.NewRequest(http.MethodPost,
 		familyv1connect.FamilyServiceGetFamilyProcedure, strings.NewReader("{}"))
@@ -77,7 +77,7 @@ func TestPublicMuxRequiresAToken(t *testing.T) {
 }
 
 func TestHealthzReportsDatabaseTrouble(t *testing.T) {
-	mux := internalMux(handler.New(handler.Options{}), okPinger{})
+	mux := internalMux(handler.New(handler.Options{}), okPinger{}, nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
 	if rec.Code != http.StatusOK {
