@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	"github.com/jackc/pgx/v5"
+	"github.com/nnc/family-manager/libs/go/rpc"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
@@ -82,7 +84,7 @@ func (h *Handler) CreateFamily(
 	if _, err := h.q.GetMembership(ctx, pgconv.MustUUID(claims.UserID)); err == nil {
 		return nil, connect.NewError(connect.CodeAlreadyExists, errors.New("already in a family"))
 	} else if !errors.Is(err, pgx.ErrNoRows) {
-		return nil, internal(err, "check membership")
+		return nil, h.internal(ctx, err, "check membership")
 	}
 
 	ownerID, err := pgconv.UUID(claims.UserID)
@@ -92,7 +94,7 @@ func (h *Handler) CreateFamily(
 
 	fam, err := h.q.CreateFamily(ctx, db.CreateFamilyParams{Name: name, OwnerUserID: ownerID})
 	if err != nil {
-		return nil, internal(err, "create family")
+		return nil, h.internal(ctx, err, "create family")
 	}
 
 	member, err := h.q.AddMember(ctx, db.AddMemberParams{
@@ -103,7 +105,7 @@ func (h *Handler) CreateFamily(
 		Role:        roleAdmin,
 	})
 	if err != nil {
-		return nil, internal(err, "add owner as member")
+		return nil, h.internal(ctx, err, "add owner as member")
 	}
 
 	h.publishJoined(ctx, fam, member)
@@ -131,11 +133,11 @@ func (h *Handler) GetFamily(
 
 	fam, err := h.q.GetFamily(ctx, membership.FamilyID)
 	if err != nil {
-		return nil, internal(err, "get family")
+		return nil, h.internal(ctx, err, "get family")
 	}
 	members, err := h.q.ListMembers(ctx, membership.FamilyID)
 	if err != nil {
-		return nil, internal(err, "list members")
+		return nil, h.internal(ctx, err, "list members")
 	}
 
 	return connect.NewResponse(&familyv1.GetFamilyResponse{
@@ -158,7 +160,7 @@ func (h *Handler) UpdateFamily(
 
 	fam, err := h.q.UpdateFamily(ctx, db.UpdateFamilyParams{ID: membership.FamilyID, Name: name})
 	if err != nil {
-		return nil, internal(err, "update family")
+		return nil, h.internal(ctx, err, "update family")
 	}
 	return connect.NewResponse(&familyv1.UpdateFamilyResponse{Family: toProtoFamily(fam)}), nil
 }
@@ -172,7 +174,7 @@ func (h *Handler) ListMembers(
 	}
 	members, err := h.q.ListMembers(ctx, membership.FamilyID)
 	if err != nil {
-		return nil, internal(err, "list members")
+		return nil, h.internal(ctx, err, "list members")
 	}
 	return connect.NewResponse(&familyv1.ListMembersResponse{Members: toProtoMembers(members)}), nil
 }
@@ -204,7 +206,7 @@ func (h *Handler) RemoveMember(
 		FamilyID: membership.FamilyID, UserID: targetID,
 	})
 	if err != nil {
-		return nil, internal(err, "remove member")
+		return nil, h.internal(ctx, err, "remove member")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("member not found"))
@@ -236,7 +238,7 @@ func (h *Handler) LeaveFamily(
 	if membership.Role == roleAdmin {
 		admins, err := h.q.CountAdmins(ctx, membership.FamilyID)
 		if err != nil {
-			return nil, internal(err, "count admins")
+			return nil, h.internal(ctx, err, "count admins")
 		}
 		if admins <= 1 {
 			return nil, connect.NewError(connect.CodeFailedPrecondition,
@@ -247,7 +249,7 @@ func (h *Handler) LeaveFamily(
 	if _, err := h.q.RemoveMember(ctx, db.RemoveMemberParams{
 		FamilyID: membership.FamilyID, UserID: membership.UserID,
 	}); err != nil {
-		return nil, internal(err, "leave family")
+		return nil, h.internal(ctx, err, "leave family")
 	}
 
 	h.publish(ctx, events.SubjectFamilyMemberRemoved, &familyv1.MemberRemovedEvent{
@@ -279,7 +281,7 @@ func (h *Handler) InviteMember(
 
 	token, hash, err := newInvitationToken()
 	if err != nil {
-		return nil, internal(err, "generate token")
+		return nil, h.internal(ctx, err, "generate token")
 	}
 
 	inv, err := h.q.CreateInvitation(ctx, db.CreateInvitationParams{
@@ -291,7 +293,7 @@ func (h *Handler) InviteMember(
 		ExpiresAt:     pgconv.TimestampFrom(h.now().Add(h.invitationTTL)),
 	})
 	if err != nil {
-		return nil, internal(err, "create invitation")
+		return nil, h.internal(ctx, err, "create invitation")
 	}
 
 	h.publish(ctx, events.SubjectFamilyMemberInvited, &familyv1.MemberInvitedEvent{
@@ -325,7 +327,7 @@ func (h *Handler) AcceptInvitation(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("invitation not found"))
 		}
-		return nil, internal(err, "get invitation")
+		return nil, h.internal(ctx, err, "get invitation")
 	}
 	if inv.Status != invitationPending {
 		return nil, connect.NewError(connect.CodeFailedPrecondition,
@@ -338,7 +340,7 @@ func (h *Handler) AcceptInvitation(
 	if _, err := h.q.GetMembership(ctx, pgconv.MustUUID(claims.UserID)); err == nil {
 		return nil, connect.NewError(connect.CodeAlreadyExists, errors.New("already in a family"))
 	} else if !errors.Is(err, pgx.ErrNoRows) {
-		return nil, internal(err, "check membership")
+		return nil, h.internal(ctx, err, "check membership")
 	}
 
 	userID, err := pgconv.UUID(claims.UserID)
@@ -354,18 +356,18 @@ func (h *Handler) AcceptInvitation(
 		Role:        inv.Role,
 	})
 	if err != nil {
-		return nil, internal(err, "add member")
+		return nil, h.internal(ctx, err, "add member")
 	}
 
 	if _, err := h.q.MarkInvitationAccepted(ctx, db.MarkInvitationAcceptedParams{
 		ID: inv.ID, AcceptedBy: userID,
 	}); err != nil {
-		return nil, internal(err, "mark invitation accepted")
+		return nil, h.internal(ctx, err, "mark invitation accepted")
 	}
 
 	fam, err := h.q.GetFamily(ctx, inv.FamilyID)
 	if err != nil {
-		return nil, internal(err, "get family")
+		return nil, h.internal(ctx, err, "get family")
 	}
 
 	h.publishJoined(ctx, fam, member)
@@ -389,7 +391,7 @@ func (h *Handler) RevokeInvitation(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("invitation not found"))
 		}
-		return nil, internal(err, "get invitation")
+		return nil, h.internal(ctx, err, "get invitation")
 	}
 
 	if _, err := h.requireAdmin(ctx, pgconv.UUIDString(inv.FamilyID)); err != nil {
@@ -398,7 +400,7 @@ func (h *Handler) RevokeInvitation(
 
 	rows, err := h.q.MarkInvitationRevoked(ctx, invID)
 	if err != nil {
-		return nil, internal(err, "revoke invitation")
+		return nil, h.internal(ctx, err, "revoke invitation")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("invitation is not pending"))
@@ -415,7 +417,7 @@ func (h *Handler) ListInvitations(
 	}
 	rows, err := h.q.ListInvitations(ctx, membership.FamilyID)
 	if err != nil {
-		return nil, internal(err, "list invitations")
+		return nil, h.internal(ctx, err, "list invitations")
 	}
 
 	out := make([]*familyv1.Invitation, 0, len(rows))
@@ -444,7 +446,7 @@ func (h *Handler) CheckMembership(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return connect.NewResponse(&familyv1.CheckMembershipResponse{IsMember: false}), nil
 		}
-		return nil, internal(err, "get member")
+		return nil, h.internal(ctx, err, "get member")
 	}
 
 	return connect.NewResponse(&familyv1.CheckMembershipResponse{
@@ -474,7 +476,7 @@ func (h *Handler) GetUserMembership(
 			// minted without a family_id and the app shows onboarding.
 			return connect.NewResponse(&familyv1.GetUserMembershipResponse{InFamily: false}), nil
 		}
-		return nil, internal(err, "get membership")
+		return nil, h.internal(ctx, err, "get membership")
 	}
 
 	return connect.NewResponse(&familyv1.GetUserMembershipResponse{
@@ -500,7 +502,7 @@ func (h *Handler) membershipOf(ctx context.Context, userID string) (db.FamilyMem
 			return db.FamilyMember{}, connect.NewError(connect.CodeFailedPrecondition,
 				errors.New("caller belongs to no family"))
 		}
-		return db.FamilyMember{}, internal(err, "get membership")
+		return db.FamilyMember{}, h.internal(ctx, err, "get membership")
 	}
 	return member, nil
 }
@@ -544,8 +546,10 @@ func (h *Handler) publishJoined(ctx context.Context, fam db.Family, member db.Fa
 }
 
 // internal hides driver detail from clients while keeping the cause in the log.
-func internal(err error, what string) error {
-	return connect.NewError(connect.CodeInternal, fmt.Errorf("%s: %w", what, err))
+// internal hands the cause to the log and an opaque reference to the caller, so a pgx error
+// never becomes part of a response body.
+func (h *Handler) internal(ctx context.Context, err error, what string) error {
+	return rpc.Internal(ctx, h.log, err, what)
 }
 
 // newInvitationToken returns the plaintext token (shown once) and the hash that is stored.

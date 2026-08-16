@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -367,6 +368,9 @@ func TestStoreFailureBecomesInternal(t *testing.T) {
 		connect.NewRequest(&familyv1.CreateFamilyRequest{Name: "Household"}))
 	if connect.CodeOf(err) != connect.CodeInternal {
 		t.Fatalf("code = %v, want internal", connect.CodeOf(err))
+	}
+	if strings.Contains(err.Error(), errBoom.Error()) {
+		t.Fatalf("wire message leaked the cause: %q", err.Error())
 	}
 }
 
