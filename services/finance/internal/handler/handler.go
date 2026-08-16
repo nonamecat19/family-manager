@@ -17,8 +17,10 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/nnc/family-manager/libs/go/rpc"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
@@ -112,7 +114,7 @@ func (h *Handler) CreateAccount(
 		Icon:                req.Msg.GetIcon(),
 	})
 	if err != nil {
-		return nil, internal(err, "create account")
+		return nil, h.internal(ctx, err, "create account")
 	}
 
 	// A brand-new account's balance is exactly its opening balance.
@@ -134,7 +136,7 @@ func (h *Handler) ListAccounts(
 		IncludeArchived: req.Msg.GetIncludeArchived(),
 	})
 	if err != nil {
-		return nil, internal(err, "list accounts")
+		return nil, h.internal(ctx, err, "list accounts")
 	}
 
 	accounts := make([]*financev1.Account, 0, len(rows))
@@ -170,7 +172,7 @@ func (h *Handler) GetAccount(
 		ID: id, FamilyID: familyID,
 	})
 	if err != nil {
-		return nil, notFoundOr(err, "account")
+		return nil, h.notFoundOr(ctx, err, "account")
 	}
 
 	return connect.NewResponse(&financev1.GetAccountResponse{
@@ -204,7 +206,7 @@ func (h *Handler) UpdateAccount(
 		Archived:  req.Msg.GetArchived(),
 		SortOrder: req.Msg.GetSortOrder(),
 	}); err != nil {
-		return nil, notFoundOr(err, "account")
+		return nil, h.notFoundOr(ctx, err, "account")
 	}
 
 	// Re-read with the balance so the response carries the same shape as ListAccounts —
@@ -213,7 +215,7 @@ func (h *Handler) UpdateAccount(
 		ID: id, FamilyID: familyID,
 	})
 	if err != nil {
-		return nil, internal(err, "read back account")
+		return nil, h.internal(ctx, err, "read back account")
 	}
 
 	return connect.NewResponse(&financev1.UpdateAccountResponse{
@@ -237,7 +239,7 @@ func (h *Handler) DeleteAccount(
 	// operation the UI actually wants.
 	used, err := h.q.CountAccountTransactions(ctx, id)
 	if err != nil {
-		return nil, internal(err, "count account transactions")
+		return nil, h.internal(ctx, err, "count account transactions")
 	}
 	if used > 0 {
 		return nil, connect.NewError(connect.CodeFailedPrecondition,
@@ -246,7 +248,7 @@ func (h *Handler) DeleteAccount(
 
 	rows, err := h.q.DeleteAccount(ctx, db.DeleteAccountParams{ID: id, FamilyID: familyID})
 	if err != nil {
-		return nil, internal(err, "delete account")
+		return nil, h.internal(ctx, err, "delete account")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("account not found"))
@@ -287,7 +289,7 @@ func (h *Handler) CreateCategory(
 		ParentID: parentID,
 	})
 	if err != nil {
-		return nil, internal(err, "create category")
+		return nil, h.internal(ctx, err, "create category")
 	}
 	return connect.NewResponse(&financev1.CreateCategoryResponse{Category: toProtoCategory(cat)}), nil
 }
@@ -312,7 +314,7 @@ func (h *Handler) ListCategories(
 		IncludeArchived: req.Msg.GetIncludeArchived(),
 	})
 	if err != nil {
-		return nil, internal(err, "list categories")
+		return nil, h.internal(ctx, err, "list categories")
 	}
 
 	out := make([]*financev1.Category, 0, len(rows))
@@ -357,7 +359,7 @@ func (h *Handler) UpdateCategory(
 		SortOrder: req.Msg.GetSortOrder(),
 	})
 	if err != nil {
-		return nil, notFoundOr(err, "category")
+		return nil, h.notFoundOr(ctx, err, "category")
 	}
 	return connect.NewResponse(&financev1.UpdateCategoryResponse{Category: toProtoCategory(cat)}), nil
 }
@@ -376,7 +378,7 @@ func (h *Handler) DeleteCategory(
 
 	used, err := h.q.CountCategoryTransactions(ctx, id)
 	if err != nil {
-		return nil, internal(err, "count category transactions")
+		return nil, h.internal(ctx, err, "count category transactions")
 	}
 	if used > 0 {
 		return nil, connect.NewError(connect.CodeFailedPrecondition,
@@ -385,7 +387,7 @@ func (h *Handler) DeleteCategory(
 
 	rows, err := h.q.DeleteCategory(ctx, db.DeleteCategoryParams{ID: id, FamilyID: familyID})
 	if err != nil {
-		return nil, internal(err, "delete category")
+		return nil, h.internal(ctx, err, "delete category")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("category not found"))
@@ -439,7 +441,7 @@ func (h *Handler) CreateTransaction(
 		CreatedByUserID:  createdBy,
 	})
 	if err != nil {
-		return nil, internal(err, "create transaction")
+		return nil, h.internal(ctx, err, "create transaction")
 	}
 
 	h.publish(ctx, events.SubjectFinanceTransactionCreated, &financev1.TransactionCreatedEvent{
@@ -475,7 +477,7 @@ func (h *Handler) GetTransaction(
 
 	tx, err := h.q.GetTransaction(ctx, db.GetTransactionParams{ID: id, FamilyID: familyID})
 	if err != nil {
-		return nil, notFoundOr(err, "transaction")
+		return nil, h.notFoundOr(ctx, err, "transaction")
 	}
 	return connect.NewResponse(&financev1.GetTransactionResponse{
 		Transaction: toProtoTransaction(tx),
@@ -534,7 +536,7 @@ func (h *Handler) ListTransactions(
 
 	rows, err := h.q.ListTransactions(ctx, params)
 	if err != nil {
-		return nil, internal(err, "list transactions")
+		return nil, h.internal(ctx, err, "list transactions")
 	}
 
 	limit := int(params.PageSize - 1)
@@ -600,7 +602,7 @@ func (h *Handler) UpdateTransaction(
 		OccurredOn:       input.date,
 	})
 	if err != nil {
-		return nil, notFoundOr(err, "transaction")
+		return nil, h.notFoundOr(ctx, err, "transaction")
 	}
 
 	h.publish(ctx, events.SubjectFinanceTransactionUpdated, &financev1.TransactionUpdatedEvent{
@@ -637,7 +639,7 @@ func (h *Handler) DeleteTransaction(
 		ID: id, FamilyID: familyID,
 	})
 	if err != nil {
-		return nil, internal(err, "delete transaction")
+		return nil, h.internal(ctx, err, "delete transaction")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("transaction not found"))
@@ -677,7 +679,7 @@ func (h *Handler) GetSummary(
 		AccountIds: accountIDs,
 	})
 	if err != nil {
-		return nil, internal(err, "get summary")
+		return nil, h.internal(ctx, err, "get summary")
 	}
 
 	// The balance is "now", not "in the period": it is the answer to "how much do we have?".
@@ -685,7 +687,7 @@ func (h *Handler) GetSummary(
 		FamilyID: familyID, IncludeArchived: false,
 	})
 	if err != nil {
-		return nil, internal(err, "list accounts")
+		return nil, h.internal(ctx, err, "list accounts")
 	}
 	var balance int64
 	for _, a := range accounts {
@@ -732,7 +734,7 @@ func (h *Handler) GetCategoryBreakdown(
 		AccountIds: accountIDs,
 	})
 	if err != nil {
-		return nil, internal(err, "get category breakdown")
+		return nil, h.internal(ctx, err, "get category breakdown")
 	}
 
 	var total int64
@@ -815,7 +817,7 @@ func (h *Handler) validateTransaction(
 
 	acc, err := h.q.GetAccount(ctx, db.GetAccountParams{ID: account, FamilyID: familyID})
 	if err != nil {
-		return in, notFoundOr(err, "account")
+		return in, h.notFoundOr(ctx, err, "account")
 	}
 	in.currency = acc.CurrencyCode
 	if code := in.amount.GetCurrencyCode(); code != "" && code != acc.CurrencyCode {
@@ -833,7 +835,7 @@ func (h *Handler) validateTransaction(
 		}
 		counterAcc, err := h.q.GetAccount(ctx, db.GetAccountParams{ID: counter, FamilyID: familyID})
 		if err != nil {
-			return in, notFoundOr(err, "counter account")
+			return in, h.notFoundOr(ctx, err, "counter account")
 		}
 		// A cross-currency transfer needs a rate; until this service holds rates, refuse it
 		// rather than move the wrong number.
@@ -851,7 +853,7 @@ func (h *Handler) validateTransaction(
 	}
 	cat, err := h.q.GetCategory(ctx, db.GetCategoryParams{ID: category, FamilyID: familyID})
 	if err != nil {
-		return in, notFoundOr(err, "category")
+		return in, h.notFoundOr(ctx, err, "category")
 	}
 	// An expense filed under an income category makes every report wrong.
 	if cat.Kind != storedType {
@@ -966,16 +968,18 @@ func invalid(msg string) error {
 	return connect.NewError(connect.CodeInvalidArgument, errors.New(msg))
 }
 
-func internal(err error, what string) error {
-	return connect.NewError(connect.CodeInternal, fmt.Errorf("%s: %w", what, err))
+// internal hands the cause to the log and an opaque reference to the caller, so a pgx error
+// never becomes part of a response body.
+func (h *Handler) internal(ctx context.Context, err error, what string) error {
+	return rpc.Internal(ctx, h.log, err, what)
 }
 
 // notFoundOr maps "no rows" to NotFound and everything else to Internal. Scoping every query
 // by family_id means a row belonging to another family is indistinguishable from a missing
 // one — which is the correct answer to give.
-func notFoundOr(err error, what string) error {
+func (h *Handler) notFoundOr(ctx context.Context, err error, what string) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return connect.NewError(connect.CodeNotFound, fmt.Errorf("%s not found", what))
 	}
-	return internal(err, "get "+what)
+	return h.internal(ctx, err, "get "+what)
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
@@ -73,7 +74,7 @@ func (h *Handler) CreateBudget(
 			return nil, connect.NewError(connect.CodeAlreadyExists,
 				errors.New("a budget already covers that category for that period"))
 		}
-		return nil, internal(err, "create budget")
+		return nil, h.internal(ctx, err, "create budget")
 	}
 
 	return connect.NewResponse(&financev1.CreateBudgetResponse{
@@ -98,7 +99,7 @@ func (h *Handler) ListBudgets(
 		IncludeArchived: req.Msg.GetIncludeArchived(),
 	})
 	if err != nil {
-		return nil, internal(err, "list budgets")
+		return nil, h.internal(ctx, err, "list budgets")
 	}
 
 	out := make([]*financev1.BudgetStatus, 0, len(rows))
@@ -131,7 +132,7 @@ func (h *Handler) GetBudget(
 
 	budget, err := h.q.GetBudget(ctx, db.GetBudgetParams{ID: id, FamilyID: familyID})
 	if err != nil {
-		return nil, notFoundOr(err, "budget")
+		return nil, h.notFoundOr(ctx, err, "budget")
 	}
 
 	status, err := h.statusOf(ctx, familyID, budget, asOf)
@@ -188,7 +189,7 @@ func (h *Handler) UpdateBudget(
 			return nil, connect.NewError(connect.CodeAlreadyExists,
 				errors.New("a budget already covers that category for that period"))
 		}
-		return nil, notFoundOr(err, "budget")
+		return nil, h.notFoundOr(ctx, err, "budget")
 	}
 
 	return connect.NewResponse(&financev1.UpdateBudgetResponse{
@@ -212,7 +213,7 @@ func (h *Handler) DeleteBudget(
 	// past report, so there is nothing to protect here.
 	rows, err := h.q.DeleteBudget(ctx, db.DeleteBudgetParams{ID: id, FamilyID: familyID})
 	if err != nil {
-		return nil, internal(err, "delete budget")
+		return nil, h.internal(ctx, err, "delete budget")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("budget not found"))
@@ -230,7 +231,7 @@ func (h *Handler) statusOf(
 	if err != nil {
 		// A period outside the CHECK constraint means the row was written by something other
 		// than this service; report it rather than guessing a window.
-		return nil, internal(err, "budget window")
+		return nil, h.internal(ctx, err, "budget window")
 	}
 
 	spent, err := h.q.SumBudgetSpend(ctx, db.SumBudgetSpendParams{
@@ -240,7 +241,7 @@ func (h *Handler) statusOf(
 		CategoryID: budget.CategoryID,
 	})
 	if err != nil {
-		return nil, internal(err, "sum budget spend")
+		return nil, h.internal(ctx, err, "sum budget spend")
 	}
 
 	// share is computed here so every client draws the same bar; limit_minor is CHECKed above
@@ -278,7 +279,7 @@ func (h *Handler) budgetCategory(
 
 	category, err := h.q.GetCategory(ctx, db.GetCategoryParams{ID: categoryID, FamilyID: familyID})
 	if err != nil {
-		return pgtype.UUID{}, notFoundOr(err, "category")
+		return pgtype.UUID{}, h.notFoundOr(ctx, err, "category")
 	}
 	// Budgeting income makes no sense: a limit exists to cap what leaves.
 	if category.Kind != typeExpense {
