@@ -268,6 +268,7 @@ func max0(v int32) int32 {
 func clampRating(v int32) int16 {
 	return int16(clampInt32(v, 0, 5))
 }
+
 // maxInt32 floors a client-supplied integer, mirroring nonNegative for kcal.
 func maxInt32(v, lo int32) int32 {
 	if v < lo {

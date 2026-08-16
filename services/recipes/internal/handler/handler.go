@@ -14,8 +14,10 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/nnc/family-manager/libs/go/rpc"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
@@ -135,7 +137,7 @@ func (h *Handler) CreateCategory(
 
 	cat, err := h.q.CreateCategory(ctx, db.CreateCategoryParams{FamilyID: famUUID, Name: name})
 	if err != nil {
-		return nil, internal(err, "create category")
+		return nil, h.internal(ctx, err, "create category")
 	}
 	return connect.NewResponse(&recipesv1.CreateCategoryResponse{Category: toProtoCategory(cat)}), nil
 }
@@ -149,7 +151,7 @@ func (h *Handler) ListCategories(
 	}
 	rows, err := h.q.ListCategories(ctx, pgconv.MustUUID(familyID))
 	if err != nil {
-		return nil, internal(err, "list categories")
+		return nil, h.internal(ctx, err, "list categories")
 	}
 	out := make([]*recipesv1.Category, 0, len(rows))
 	for _, c := range rows {
@@ -182,7 +184,7 @@ func (h *Handler) CreateSubcategory(
 		CategoryID: catID, FamilyID: famUUID, Name: name,
 	})
 	if err != nil {
-		return nil, internal(err, "create subcategory")
+		return nil, h.internal(ctx, err, "create subcategory")
 	}
 	return connect.NewResponse(&recipesv1.CreateSubcategoryResponse{Subcategory: toProtoSubcategory(sub)}), nil
 }
@@ -196,7 +198,7 @@ func (h *Handler) ListSubcategories(
 	}
 	rows, err := h.q.ListSubcategories(ctx, catID)
 	if err != nil {
-		return nil, internal(err, "list subcategories")
+		return nil, h.internal(ctx, err, "list subcategories")
 	}
 	out := make([]*recipesv1.Subcategory, 0, len(rows))
 	for _, s := range rows {
@@ -256,7 +258,7 @@ func (h *Handler) CreateRecipe(
 		CarbsG:        nonNegative(req.Msg.GetNutrition().GetCarbsG()),
 	})
 	if err != nil {
-		return nil, internal(err, "create recipe")
+		return nil, h.internal(ctx, err, "create recipe")
 	}
 
 	if err := h.saveIngredientsAndSteps(ctx, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps()); err != nil {
@@ -269,10 +271,10 @@ func (h *Handler) CreateRecipe(
 	}
 
 	h.publish(ctx, events.SubjectRecipesRecipeCreated, &recipesv1.RecipeCreatedEvent{
-		FamilyId:      familyID,
-		RecipeId:      pgconv.UUIDString(r.ID),
-		AuthorUserId:  userID,
-		OccurredAt:    h.timestamp(),
+		FamilyId:     familyID,
+		RecipeId:     pgconv.UUIDString(r.ID),
+		AuthorUserId: userID,
+		OccurredAt:   h.timestamp(),
 	})
 
 	return connect.NewResponse(&recipesv1.CreateRecipeResponse{
@@ -297,7 +299,7 @@ func (h *Handler) GetRecipe(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		// Don't leak that the recipe exists in another family — return NotFound.
@@ -347,7 +349,7 @@ func (h *Handler) ListRecipes(
 	}
 	rows, err := h.q.ListRecipes(ctx, arg)
 	if err != nil {
-		return nil, internal(err, "list recipes")
+		return nil, h.internal(ctx, err, "list recipes")
 	}
 	out := make([]*recipesv1.Recipe, 0, len(rows))
 	for _, r := range rows {
@@ -382,7 +384,7 @@ func (h *Handler) RateRecipe(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -390,7 +392,7 @@ func (h *Handler) RateRecipe(
 
 	r, err = h.q.SetRecipeRating(ctx, db.SetRecipeRatingParams{ID: r.ID, Rating: int16(rating)})
 	if err != nil {
-		return nil, internal(err, "set rating")
+		return nil, h.internal(ctx, err, "set rating")
 	}
 	ingredients, steps, err := h.loadIngredientsAndSteps(ctx, r.ID)
 	if err != nil {
@@ -429,7 +431,7 @@ func (h *Handler) UpdateRecipe(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -457,15 +459,15 @@ func (h *Handler) UpdateRecipe(
 		CarbsG:        n.carbsG,
 	})
 	if err != nil {
-		return nil, internal(err, "update recipe")
+		return nil, h.internal(ctx, err, "update recipe")
 	}
 
 	// Replace ingredients and steps: delete then re-insert. They are owned by the recipe.
 	if err := h.q.DeleteIngredients(ctx, r.ID); err != nil {
-		return nil, internal(err, "clear ingredients")
+		return nil, h.internal(ctx, err, "clear ingredients")
 	}
 	if err := h.q.DeleteSteps(ctx, r.ID); err != nil {
-		return nil, internal(err, "clear steps")
+		return nil, h.internal(ctx, err, "clear steps")
 	}
 	if err := h.saveIngredientsAndSteps(ctx, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps()); err != nil {
 		return nil, err
@@ -504,7 +506,7 @@ func (h *Handler) DeleteRecipe(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -512,7 +514,7 @@ func (h *Handler) DeleteRecipe(
 
 	rows, err := h.q.DeleteRecipe(ctx, recipeID)
 	if err != nil {
-		return nil, internal(err, "delete recipe")
+		return nil, h.internal(ctx, err, "delete recipe")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -561,7 +563,7 @@ func (h *Handler) UploadRecipeImage(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -572,12 +574,12 @@ func (h *Handler) UploadRecipeImage(
 	key := fmt.Sprintf("%s/%s%s", familyID, pgconv.UUIDString(recipeID), ext)
 	url, err := h.images.Put(ctx, h.imageBucket, key, bytes.NewReader(data), int64(len(data)), contentType)
 	if err != nil {
-		return nil, internal(err, "upload image")
+		return nil, h.internal(ctx, err, "upload image")
 	}
 
 	r, err = h.q.UpdateRecipeImage(ctx, db.UpdateRecipeImageParams{ID: recipeID, ImageUrl: url})
 	if err != nil {
-		return nil, internal(err, "save image url")
+		return nil, h.internal(ctx, err, "save image url")
 	}
 
 	ingredients, steps, err := h.loadIngredientsAndSteps(ctx, r.ID)
@@ -625,7 +627,7 @@ func (h *Handler) ToggleFavorite(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -634,24 +636,24 @@ func (h *Handler) ToggleFavorite(
 	userUUID := pgconv.MustUUID(userID)
 	isFav, err := h.q.IsFavorite(ctx, db.IsFavoriteParams{RecipeID: recipeID, UserID: userUUID})
 	if err != nil {
-		return nil, internal(err, "check favorite")
+		return nil, h.internal(ctx, err, "check favorite")
 	}
 
 	if isFav {
 		if err := h.q.RemoveFavorite(ctx, db.RemoveFavoriteParams{RecipeID: recipeID, UserID: userUUID}); err != nil {
-			return nil, internal(err, "remove favorite")
+			return nil, h.internal(ctx, err, "remove favorite")
 		}
 		if err := h.q.DecrementFavoriteCount(ctx, recipeID); err != nil {
-			return nil, internal(err, "decrement count")
+			return nil, h.internal(ctx, err, "decrement count")
 		}
 		return connect.NewResponse(&recipesv1.ToggleFavoriteResponse{IsFavorite: false}), nil
 	}
 
 	if err := h.q.AddFavorite(ctx, db.AddFavoriteParams{RecipeID: recipeID, UserID: userUUID}); err != nil {
-		return nil, internal(err, "add favorite")
+		return nil, h.internal(ctx, err, "add favorite")
 	}
 	if err := h.q.IncrementFavoriteCount(ctx, recipeID); err != nil {
-		return nil, internal(err, "increment count")
+		return nil, h.internal(ctx, err, "increment count")
 	}
 	return connect.NewResponse(&recipesv1.ToggleFavoriteResponse{IsFavorite: true}), nil
 }
@@ -665,7 +667,7 @@ func (h *Handler) ListFavorites(
 	}
 	rows, err := h.q.ListFavoriteRecipes(ctx, pgconv.MustUUID(userID))
 	if err != nil {
-		return nil, internal(err, "list favorites")
+		return nil, h.internal(ctx, err, "list favorites")
 	}
 	out := make([]*recipesv1.Recipe, 0, len(rows))
 	for _, r := range rows {
@@ -703,7 +705,7 @@ func (h *Handler) AddComment(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -712,10 +714,10 @@ func (h *Handler) AddComment(
 	userUUID := pgconv.MustUUID(userID)
 	c, err := h.q.AddComment(ctx, db.AddCommentParams{RecipeID: recipeID, UserID: userUUID, Body: body})
 	if err != nil {
-		return nil, internal(err, "add comment")
+		return nil, h.internal(ctx, err, "add comment")
 	}
 	if err := h.q.IncrementCommentCount(ctx, recipeID); err != nil {
-		return nil, internal(err, "increment comment count")
+		return nil, h.internal(ctx, err, "increment comment count")
 	}
 	return connect.NewResponse(&recipesv1.AddCommentResponse{Comment: toProtoComment(c)}), nil
 }
@@ -737,7 +739,7 @@ func (h *Handler) ListComments(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -745,7 +747,7 @@ func (h *Handler) ListComments(
 
 	rows, err := h.q.ListComments(ctx, recipeID)
 	if err != nil {
-		return nil, internal(err, "list comments")
+		return nil, h.internal(ctx, err, "list comments")
 	}
 	out := make([]*recipesv1.Comment, 0, len(rows))
 	for _, c := range rows {
@@ -777,7 +779,7 @@ func (h *Handler) PlanMeal(
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
-		return nil, internal(err, "get recipe")
+		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -792,7 +794,7 @@ func (h *Handler) PlanMeal(
 		Servings: req.Msg.GetServings(),
 	})
 	if err != nil {
-		return nil, internal(err, "plan meal")
+		return nil, h.internal(ctx, err, "plan meal")
 	}
 
 	h.publish(ctx, events.SubjectRecipesMealPlanned, &recipesv1.MealPlannedEvent{
@@ -828,12 +830,12 @@ func (h *Handler) ListMealPlan(
 	}
 
 	rows, err := h.q.ListMealPlan(ctx, db.ListMealPlanParams{
-		FamilyID: pgconv.MustUUID(familyID),
+		FamilyID:   pgconv.MustUUID(familyID),
 		PlanDate:   fromDate,
 		PlanDate_2: toDate,
 	})
 	if err != nil {
-		return nil, internal(err, "list meal plan")
+		return nil, h.internal(ctx, err, "list meal plan")
 	}
 	out := make([]*recipesv1.MealPlanEntry, 0, len(rows))
 	for _, e := range rows {
@@ -858,7 +860,7 @@ func (h *Handler) RemoveMealPlanEntry(
 		ID: entryID, FamilyID: pgconv.MustUUID(familyID),
 	})
 	if err != nil {
-		return nil, internal(err, "remove meal plan entry")
+		return nil, h.internal(ctx, err, "remove meal plan entry")
 	}
 	if rows == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("entry not found"))
@@ -892,7 +894,7 @@ func (h *Handler) TotalIngredients(
 		PlanDate_2: toDate,
 	})
 	if err != nil {
-		return nil, internal(err, "total ingredients")
+		return nil, h.internal(ctx, err, "total ingredients")
 	}
 	out := make([]*recipesv1.IngredientTotal, 0, len(rows))
 	for _, t := range rows {
@@ -938,7 +940,7 @@ func (h *Handler) SumIngredients(
 		FamilyID:     pgconv.MustUUID(familyID),
 	})
 	if err != nil {
-		return nil, internal(err, "sum ingredients")
+		return nil, h.internal(ctx, err, "sum ingredients")
 	}
 	out := make([]*recipesv1.IngredientTotal, 0, len(rows))
 	for _, t := range rows {
@@ -965,7 +967,7 @@ func (h *Handler) saveIngredientsAndSteps(
 			Amount:   ing.GetAmount(),
 			Unit:     ing.GetUnit(),
 		}); err != nil {
-			return internal(err, "add ingredient")
+			return h.internal(ctx, err, "add ingredient")
 		}
 	}
 	for i, step := range steps {
@@ -979,7 +981,7 @@ func (h *Handler) saveIngredientsAndSteps(
 			Instruction:     instr,
 			DurationSeconds: step.GetDurationSeconds(),
 		}); err != nil {
-			return internal(err, "add step")
+			return h.internal(ctx, err, "add step")
 		}
 	}
 	return nil
@@ -990,16 +992,18 @@ func (h *Handler) loadIngredientsAndSteps(
 ) ([]db.RecipeIngredient, []db.RecipeStep, error) {
 	ingredients, err := h.q.ListIngredients(ctx, recipeID)
 	if err != nil {
-		return nil, nil, internal(err, "list ingredients")
+		return nil, nil, h.internal(ctx, err, "list ingredients")
 	}
 	steps, err := h.q.ListSteps(ctx, recipeID)
 	if err != nil {
-		return nil, nil, internal(err, "list steps")
+		return nil, nil, h.internal(ctx, err, "list steps")
 	}
 	return ingredients, steps, nil
 }
 
 // internal hides driver detail from clients while keeping the cause in the log.
-func internal(err error, what string) error {
-	return connect.NewError(connect.CodeInternal, fmt.Errorf("%s: %w", what, err))
+// internal hands the cause to the log and an opaque reference to the caller, so a pgx error
+// never becomes part of a response body.
+func (h *Handler) internal(ctx context.Context, err error, what string) error {
+	return rpc.Internal(ctx, h.log, err, what)
 }

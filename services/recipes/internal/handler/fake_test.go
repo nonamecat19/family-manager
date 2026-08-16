@@ -27,7 +27,7 @@ type fakeStore struct {
 	recipes       map[string]db.Recipe
 	ingredients   map[string][]db.RecipeIngredient // keyed by recipe_id
 	steps         map[string][]db.RecipeStep
-	favorites     map[string]bool                  // keyed recipe|user
+	favorites     map[string]bool // keyed recipe|user
 	comments      map[string]db.RecipeComment
 	mealPlan      map[string]db.MealPlanEntry
 

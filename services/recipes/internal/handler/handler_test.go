@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -244,6 +245,7 @@ func TestCreateCategory(t *testing.T) {
 		t.Errorf("name = %q, want Dessert", resp.Msg.Category.Name)
 	}
 }
+
 // --- rating, filtering, sorting, ad-hoc basket -----------------------------
 
 // seedRecipe creates a recipe through the handler so ingredients and steps land in the fake
@@ -554,5 +556,23 @@ func TestNutritionAlwaysPresentOnRead(t *testing.T) {
 	}
 	if r.GetNutrition().GetKcal() != 0 {
 		t.Fatalf("kcal = %d, want 0", r.GetNutrition().GetKcal())
+	}
+}
+
+// A store failure is the caller's problem only to the extent of "try again". The pgx error
+// behind it names tables and constraints and must not travel with the response.
+func TestStoreFailureIsInternalAndOpaque(t *testing.T) {
+	h, store, _ := newTestHandler()
+	store.failOn["CreateRecipe"] = errBoom
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	_, err := h.CreateRecipe(ctx, connect.NewRequest(&recipesv1.CreateRecipeRequest{
+		Title: "Pancakes", Servings: 4,
+	}))
+	if connect.CodeOf(err) != connect.CodeInternal {
+		t.Fatalf("code = %v, want internal (err=%v)", connect.CodeOf(err), err)
+	}
+	if strings.Contains(err.Error(), errBoom.Error()) {
+		t.Fatalf("wire message leaked the cause: %q", err.Error())
 	}
 }
