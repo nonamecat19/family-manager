@@ -100,13 +100,7 @@ func run() error {
 		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		if err := pool.Ping(context.Background()); err != nil {
-			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = w.Write([]byte("ok"))
-	})
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 
 	// h2c so gRPC (sibling services) and Connect/JSON (apps) share one port.
 	srv := &http.Server{

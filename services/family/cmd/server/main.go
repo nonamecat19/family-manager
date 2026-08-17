@@ -134,7 +134,7 @@ var internalOnly = []string{
 	familyv1connect.FamilyServiceCheckMembershipProcedure,
 }
 
-func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger, log *slog.Logger) *http.ServeMux {
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := familyv1connect.NewFamilyServiceHandler(
 		// Recover is outermost so a panic inside the auth interceptor is answered too.
@@ -148,11 +148,11 @@ func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger, log *
 			http.Error(w, "not found", http.StatusNotFound)
 		})
 	}
-	mux.HandleFunc("/healthz", healthz(pool))
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }
 
-func internalMux(h *handler.Handler, pool pinger, log *slog.Logger) *http.ServeMux {
+func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	// No interceptor: the caller is a sibling service on a private network, and auth calls
 	// this before any token exists.
@@ -160,22 +160,8 @@ func internalMux(h *handler.Handler, pool pinger, log *slog.Logger) *http.ServeM
 		connect.WithInterceptors(rpc.Recover(log)),
 	)
 	mux.Handle(path, svc)
-	mux.HandleFunc("/healthz", healthz(pool))
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
-}
-
-type pinger interface {
-	Ping(ctx context.Context) error
-}
-
-func healthz(pool pinger) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		if err := pool.Ping(context.Background()); err != nil {
-			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = w.Write([]byte("ok"))
-	}
 }
 
 // h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.

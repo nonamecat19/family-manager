@@ -128,40 +128,26 @@ func run() error {
 	}
 }
 
-func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool pinger, log *slog.Logger) *http.ServeMux {
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := recipesv1connect.NewRecipesServiceHandler(
 		// Recover is outermost so a panic inside the auth interceptor is answered too.
 		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
-	mux.HandleFunc("/healthz", healthz(pool))
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }
 
-func internalMux(h *handler.Handler, pool pinger, log *slog.Logger) *http.ServeMux {
+func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	// No interceptor: the caller is a sibling service on a private network.
 	path, svc := recipesv1connect.NewRecipesServiceHandler(h,
 		connect.WithInterceptors(rpc.Recover(log)),
 	)
 	mux.Handle(path, svc)
-	mux.HandleFunc("/healthz", healthz(pool))
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
-}
-
-type pinger interface {
-	Ping(ctx context.Context) error
-}
-
-func healthz(pool pinger) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		if err := pool.Ping(context.Background()); err != nil {
-			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = w.Write([]byte("ok"))
-	}
 }
 
 // h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.

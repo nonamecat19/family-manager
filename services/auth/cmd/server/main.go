@@ -122,11 +122,7 @@ type jwksProvider interface {
 	JWKS() token.JWKS
 }
 
-type pinger interface {
-	Ping(ctx context.Context) error
-}
-
-func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool pinger, log *slog.Logger) *http.ServeMux {
+func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Every procedure on this service is public by definition: they are how a caller gets a
@@ -146,13 +142,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool pinger, 
 		}
 	})
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		if err := pool.Ping(context.Background()); err != nil {
-			http.Error(w, "db unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		_, _ = w.Write([]byte("ok"))
-	})
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 
 	return mux
 }
