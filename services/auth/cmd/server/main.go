@@ -35,6 +35,9 @@ import (
 // oversize body is refused during the read rather than after it is buffered.
 const maxRequestBytes = 1 << 20 // 1 MiB
 
+// sweepInterval is how often expired refresh tokens are deleted.
+const sweepInterval = time.Hour
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", slog.String("error", err.Error()))
@@ -95,7 +98,7 @@ func run() error {
 
 	// Expired refresh tokens are rows nobody will ever read again; sweeping them keeps the
 	// unique index on token_hash from growing without bound.
-	go sweepExpiredTokens(ctx, db.New(pool), log)
+	go sweepExpiredTokens(ctx, db.New(pool), log, sweepInterval)
 
 	srv := &http.Server{
 		Addr: fmt.Sprintf(":%s", cfg.HTTPPort),
@@ -164,24 +167,39 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 	return mux
 }
 
-func sweepExpiredTokens(ctx context.Context, q *db.Queries, log *slog.Logger) {
-	ticker := time.NewTicker(time.Hour)
+// sweeper is the one query the sweep needs, named so the loop can be tested without a
+// database behind it.
+type sweeper interface {
+	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
+}
+
+// sweepExpiredTokens deletes expired refresh tokens every interval, and once on entry.
+//
+// The immediate pass is the point of the change: the loop used to wait a full interval before
+// its first run, so a service that restarts more often than that — a deploy, a crash loop, a
+// VPS reboot — never swept at all, and the backlog it was written to prevent grew anyway.
+func sweepExpiredTokens(ctx context.Context, q sweeper, log *slog.Logger, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
+	sweepOnce(ctx, q, log)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			deleted, err := q.DeleteExpiredRefreshTokens(ctx)
-			if err != nil {
-				log.WarnContext(ctx, "sweep expired refresh tokens",
-					slog.String("error", err.Error()))
-				continue
-			}
-			if deleted > 0 {
-				log.InfoContext(ctx, "swept expired refresh tokens", slog.Int64("rows", deleted))
-			}
+			sweepOnce(ctx, q, log)
 		}
+	}
+}
+
+func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
+	deleted, err := q.DeleteExpiredRefreshTokens(ctx)
+	if err != nil {
+		log.WarnContext(ctx, "sweep expired refresh tokens", slog.String("error", err.Error()))
+		return
+	}
+	if deleted > 0 {
+		log.InfoContext(ctx, "swept expired refresh tokens", slog.Int64("rows", deleted))
 	}
 }
