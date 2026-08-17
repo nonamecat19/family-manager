@@ -93,9 +93,20 @@ func run() error {
 	go sweepExpiredTokens(ctx, db.New(pool), log)
 
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler:           h2c.NewHandler(newMux(h, signer, pool, log), &http2.Server{}),
+		Addr: fmt.Sprintf(":%s", cfg.HTTPPort),
+		Handler: h2c.NewHandler(newMux(h, signer, pool, log), &http2.Server{
+			// Without this an HTTP/2 connection with no open streams is kept forever; the
+			// http.Server IdleTimeout above governs HTTP/1 only.
+			IdleTimeout:          120 * time.Second,
+			MaxConcurrentStreams: 250,
+		}),
 		ReadHeaderTimeout: 10 * time.Second,
+		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
+		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
+		// connection — which makes them useless as a defence. ReadHeaderTimeout stops the
+		// slowloris that matters, connect.WithReadMaxBytes bounds the body, and IdleTimeout
+		// reclaims connections nobody is using.
+		IdleTimeout: 120 * time.Second,
 	}
 
 	errc := make(chan error, 1)

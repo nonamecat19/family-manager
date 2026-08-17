@@ -167,9 +167,20 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 // h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.
 func newServer(port string, mux *http.ServeMux) *http.Server {
 	return &http.Server{
-		Addr:              fmt.Sprintf(":%s", port),
-		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		Addr: fmt.Sprintf(":%s", port),
+		Handler: h2c.NewHandler(mux, &http2.Server{
+			// Without this an HTTP/2 connection with no open streams is kept forever; the
+			// http.Server IdleTimeout above governs HTTP/1 only.
+			IdleTimeout:          120 * time.Second,
+			MaxConcurrentStreams: 250,
+		}),
 		ReadHeaderTimeout: 10 * time.Second,
+		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
+		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
+		// connection — which makes them useless as a defence. ReadHeaderTimeout stops the
+		// slowloris that matters, connect.WithReadMaxBytes bounds the body, and IdleTimeout
+		// reclaims connections nobody is using.
+		IdleTimeout: 120 * time.Second,
 	}
 }
 
