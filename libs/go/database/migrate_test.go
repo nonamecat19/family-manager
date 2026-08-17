@@ -7,11 +7,11 @@ import (
 
 func TestLoadMigrationsOrdersByVersionAndSkipsDown(t *testing.T) {
 	fsys := fstest.MapFS{
-		"m/000002_second.up.sql":   {Data: []byte("SELECT 2;")},
-		"m/000001_first.up.sql":    {Data: []byte("SELECT 1;")},
-		"m/000001_first.down.sql":  {Data: []byte("DROP 1;")},
-		"m/000010_tenth.up.sql":    {Data: []byte("SELECT 10;")},
-		"m/notes.md":               {Data: []byte("ignored")},
+		"m/000002_second.up.sql":  {Data: []byte("SELECT 2;")},
+		"m/000001_first.up.sql":   {Data: []byte("SELECT 1;")},
+		"m/000001_first.down.sql": {Data: []byte("DROP 1;")},
+		"m/000010_tenth.up.sql":   {Data: []byte("SELECT 10;")},
+		"m/notes.md":              {Data: []byte("ignored")},
 	}
 
 	got, err := LoadMigrations(fsys, "m")
