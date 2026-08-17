@@ -30,6 +30,11 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
+// maxRequestBytes bounds a decoded request body. Nothing this service accepts is large — the
+// biggest message is a household with its members — so the cap is small enough that an
+// oversize body is refused during the read rather than after it is buffered.
+const maxRequestBytes = 1 << 20 // 1 MiB
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", slog.String("error", err.Error()))
@@ -139,6 +144,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 	// Every procedure on this service is public by definition: they are how a caller gets a
 	// token in the first place, so there is no interceptor to apply.
 	path, svc := authv1connect.NewAuthServiceHandler(h,
+		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(rpc.Recover(log)),
 	)
 	mux.Handle(path, svc)

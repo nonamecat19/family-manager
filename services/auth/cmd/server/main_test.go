@@ -121,3 +121,24 @@ func TestHealthzReportsOK(t *testing.T) {
 		t.Errorf("healthz = %d, want 200", rec.Code)
 	}
 }
+
+// An oversize body must be refused while it is being read, not after it has been buffered
+// into memory. Register is unauthenticated, so without the cap anyone who can reach the port
+// can make the process allocate as much as they care to send.
+func TestOversizeRequestIsRejected(t *testing.T) {
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
+
+	body := `{"email":"a@b.co","password":"correct horse","name":"` +
+		strings.Repeat("x", maxRequestBytes+1) + `"}`
+	req := httptest.NewRequest(http.MethodPost,
+		authv1connect.AuthServiceRegisterProcedure, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	// Connect maps CodeResourceExhausted to 429.
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want 429 (body=%s)", rec.Code, rec.Body.String())
+	}
+}

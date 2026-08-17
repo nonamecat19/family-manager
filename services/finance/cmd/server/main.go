@@ -29,6 +29,11 @@ import (
 	"github.com/nnc/family-manager/services/finance/internal/handler"
 )
 
+// maxRequestBytes bounds a decoded request body. Nothing this service accepts is large — the
+// biggest message is a household with its members — so the cap is small enough that an
+// oversize body is refused during the read rather than after it is buffered.
+const maxRequestBytes = 1 << 20 // 1 MiB
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", slog.String("error", err.Error()))
@@ -97,7 +102,9 @@ func run() error {
 	// No public procedure on this service: every ledger call needs an identity.
 	path, svc := financev1connect.NewFinanceServiceHandler(
 		// Recover is outermost so a panic inside the auth interceptor is answered too.
-		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		h,
+		connect.WithReadMaxBytes(maxRequestBytes),
+		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))

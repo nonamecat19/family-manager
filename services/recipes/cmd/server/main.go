@@ -132,7 +132,9 @@ func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Ping
 	mux := http.NewServeMux()
 	path, svc := recipesv1connect.NewRecipesServiceHandler(
 		// Recover is outermost so a panic inside the auth interceptor is answered too.
-		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		h,
+		connect.WithReadMaxBytes(maxRequestBytes),
+		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
@@ -143,12 +145,18 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 	mux := http.NewServeMux()
 	// No interceptor: the caller is a sibling service on a private network.
 	path, svc := recipesv1connect.NewRecipesServiceHandler(h,
+		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(rpc.Recover(log)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }
+
+// maxRequestBytes bounds a decoded request body. UploadRecipeImage caps the photo itself at
+// 8 MiB, but that check runs after the whole body is in memory; this one refuses the read.
+// The headroom covers base64 expansion in the JSON encoding plus the rest of the message.
+const maxRequestBytes = 16 << 20 // 16 MiB
 
 // h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.
 func newServer(port string, mux *http.ServeMux) *http.Server {

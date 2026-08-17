@@ -29,6 +29,11 @@ import (
 	"github.com/nnc/family-manager/services/family/internal/handler"
 )
 
+// maxRequestBytes bounds a decoded request body. Nothing this service accepts is large — the
+// biggest message is a household with its members — so the cap is small enough that an
+// oversize body is refused during the read rather than after it is buffered.
+const maxRequestBytes = 1 << 20 // 1 MiB
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("fatal", slog.String("error", err.Error()))
@@ -138,7 +143,9 @@ func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Ping
 	mux := http.NewServeMux()
 	path, svc := familyv1connect.NewFamilyServiceHandler(
 		// Recover is outermost so a panic inside the auth interceptor is answered too.
-		h, connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		h,
+		connect.WithReadMaxBytes(maxRequestBytes),
+		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
 	)
 	// Registered under the service path, then shadowed per procedure: a more specific
 	// pattern wins in ServeMux, so the block cannot be bypassed by casing or query strings.
@@ -157,6 +164,7 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 	// No interceptor: the caller is a sibling service on a private network, and auth calls
 	// this before any token exists.
 	path, svc := familyv1connect.NewFamilyServiceHandler(h,
+		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(rpc.Recover(log)),
 	)
 	mux.Handle(path, svc)
