@@ -62,6 +62,12 @@ tools:
     go install github.com/air-verse/air@latest
     go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
+# Print an argon2id hash for a password, with the parameters services/auth uses. For seeding
+# the first account into a fresh database, or resetting one when nobody can sign in to do it
+# the normal way. Reads stdin so the password stays out of shell history and `ps`.
+hashpw:
+    cd services/auth && go run ./cmd/hashpw
+
 # ----------------------------------------------------------------- graph ----
 
 # Rebuild the repo knowledge graph (docs/graph/graph.json + graph.mmd).
