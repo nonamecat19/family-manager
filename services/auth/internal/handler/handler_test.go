@@ -479,3 +479,60 @@ func TestRefreshCannotResurrectARevokedChain(t *testing.T) {
 			connect.CodeOf(err))
 	}
 }
+
+func TestRegisterRejectsOversizeFields(t *testing.T) {
+	cases := map[string]*authv1.RegisterRequest{
+		"password": {
+			Email:    "ada@example.test",
+			Password: strings.Repeat("x", maxPasswordBytes+1),
+		},
+		"email": {
+			Email:    strings.Repeat("a", maxEmailLength) + "@example.test",
+			Password: "correct horse",
+		},
+		"name": {
+			Email:    "ada@example.test",
+			Password: "correct horse",
+			Name:     strings.Repeat("я", maxNameLength+1),
+		},
+	}
+	for field, req := range cases {
+		t.Run(field, func(t *testing.T) {
+			f := newFixture(t)
+			_, err := f.h.Register(context.Background(), connect.NewRequest(req))
+			if connect.CodeOf(err) != connect.CodeInvalidArgument {
+				t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+			}
+		})
+	}
+}
+
+// The name bound is in runes: a Cyrillic name of the same length as a Latin one must be
+// equally acceptable, even though it is twice the bytes.
+func TestRegisterAcceptsAMaxLengthCyrillicName(t *testing.T) {
+	f := newFixture(t)
+	_, err := f.h.Register(context.Background(), connect.NewRequest(&authv1.RegisterRequest{
+		Email:    "ada@example.test",
+		Password: "correct horse",
+		Name:     strings.Repeat("я", maxNameLength),
+	}))
+	if err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+}
+
+// An oversize password must not reach the store or the hasher, and must be indistinguishable
+// from any other failed sign-in.
+func TestLoginRejectsAnOversizePasswordWithoutALookup(t *testing.T) {
+	f := newFixture(t)
+	f.store.failOn["GetUserByEmail"] = errBoom
+
+	_, err := f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+		Email:    "ada@example.test",
+		Password: strings.Repeat("x", maxPasswordBytes+1),
+	}))
+	// errBoom would surface as internal if the lookup had run.
+	if connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("code = %v, want unauthenticated (err=%v)", connect.CodeOf(err), err)
+	}
+}

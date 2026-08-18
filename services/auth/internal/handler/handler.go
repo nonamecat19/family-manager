@@ -102,15 +102,39 @@ func New(opts Options) *Handler {
 // push users toward predictable substitutions; length is what actually costs an attacker.
 const minPasswordLength = 8
 
+// Upper bounds. None of these is a policy either — they exist because every one of these
+// fields arrives unauthenticated and goes somewhere that costs something: the password into
+// argon2id, the email into a UNIQUE index, the name into a TEXT column with no width.
+const (
+	// maxPasswordBytes is far above any real passphrase. argon2id's cost does not grow with
+	// input length, so this is not about hashing time; it is about not accepting a megabyte
+	// of body per attempt and not storing what we refuse to bound.
+	maxPasswordBytes = 1024
+	// maxEmailLength is the RFC 5321 limit on a full address (64 local + @ + 255 domain,
+	// capped at 254 in practice). Anything longer is not an address we could deliver to.
+	maxEmailLength = 254
+	// maxNameLength is in runes, not bytes: a Ukrainian name must not be worth half as much
+	// as an English one.
+	maxNameLength = 100
+)
+
 func (h *Handler) Register(
 	ctx context.Context, req *connect.Request[authv1.RegisterRequest],
 ) (*connect.Response[authv1.RegisterResponse], error) {
 	email := normalizeEmail(req.Msg.GetEmail())
-	if !looksLikeEmail(email) {
+	if !looksLikeEmail(email) || len(email) > maxEmailLength {
 		return nil, invalid("a valid email is required")
 	}
 	if len([]rune(req.Msg.GetPassword())) < minPasswordLength {
 		return nil, invalid(fmt.Sprintf("password must be at least %d characters", minPasswordLength))
+	}
+	if len(req.Msg.GetPassword()) > maxPasswordBytes {
+		return nil, invalid(fmt.Sprintf("password must be at most %d bytes", maxPasswordBytes))
+	}
+
+	name := strings.TrimSpace(req.Msg.GetName())
+	if len([]rune(name)) > maxNameLength {
+		return nil, invalid(fmt.Sprintf("name must be at most %d characters", maxNameLength))
 	}
 
 	var hash string
@@ -126,7 +150,7 @@ func (h *Handler) Register(
 
 	user, err := h.q.CreateUser(ctx, db.CreateUserParams{
 		Email:        email,
-		Name:         strings.TrimSpace(req.Msg.GetName()),
+		Name:         name,
 		PasswordHash: hash,
 	})
 	if err != nil {
@@ -149,6 +173,12 @@ func (h *Handler) Login(
 	ctx context.Context, req *connect.Request[authv1.LoginRequest],
 ) (*connect.Response[authv1.LoginResponse], error) {
 	email := normalizeEmail(req.Msg.GetEmail())
+	// Refused before the lookup and before the gate. A password no account could have is not
+	// worth a database round trip, let alone 19 MiB of argon2id — and rejecting it says
+	// nothing about whether the address exists, so the enumeration guarantee holds.
+	if len(email) > maxEmailLength || len(req.Msg.GetPassword()) > maxPasswordBytes {
+		return nil, errInvalidCredentials()
+	}
 
 	user, err := h.q.GetUserByEmail(ctx, email)
 	if err != nil {
