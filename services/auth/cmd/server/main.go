@@ -150,7 +150,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 	// token in the first place, so there is no interceptor to apply.
 	path, svc := authv1connect.NewAuthServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
 	)
 	mux.Handle(path, svc)
 

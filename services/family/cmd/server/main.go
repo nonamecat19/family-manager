@@ -142,10 +142,11 @@ var internalOnly = []string{
 func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := familyv1connect.NewFamilyServiceHandler(
-		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		// Recover is outermost so a panic inside the interceptors below it is answered too, and
+		// Observe is above auth so a rejected token still gets an access line and an id.
 		h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log), fmauth.Interceptor(verifier)),
 	)
 	// Registered under the service path, then shadowed per procedure: a more specific
 	// pattern wins in ServeMux, so the block cannot be bypassed by casing or query strings.
@@ -165,7 +166,7 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 	// this before any token exists.
 	path, svc := familyv1connect.NewFamilyServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))

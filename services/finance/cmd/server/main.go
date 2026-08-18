@@ -101,10 +101,11 @@ func run() error {
 	mux := http.NewServeMux()
 	// No public procedure on this service: every ledger call needs an identity.
 	path, svc := financev1connect.NewFinanceServiceHandler(
-		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		// Recover is outermost so a panic inside the interceptors below it is answered too, and
+		// Observe is above auth so a rejected token still gets an access line and an id.
 		h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))

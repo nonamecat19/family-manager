@@ -131,10 +131,11 @@ func run() error {
 func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := recipesv1connect.NewRecipesServiceHandler(
-		// Recover is outermost so a panic inside the auth interceptor is answered too.
+		// Recover is outermost so a panic inside the interceptors below it is answered too, and
+		// Observe is above auth so a rejected token still gets an access line and an id.
 		h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log), fmauth.Interceptor(verifier)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
@@ -146,7 +147,7 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 	// No interceptor: the caller is a sibling service on a private network.
 	path, svc := recipesv1connect.NewRecipesServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log)),
+		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
