@@ -27,6 +27,7 @@ import (
 	dbfs "github.com/nnc/family-manager/services/auth/internal/db"
 	"github.com/nnc/family-manager/services/auth/internal/family"
 	"github.com/nnc/family-manager/services/auth/internal/handler"
+	"github.com/nnc/family-manager/services/auth/internal/password"
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
@@ -93,6 +94,7 @@ func run() error {
 		Signer:     signer,
 		Family:     lookup,
 		Log:        log,
+		HashGate:   password.NewGate(cfg.HashConcurrency),
 		RefreshTTL: cfg.RefreshTTL,
 	})
 

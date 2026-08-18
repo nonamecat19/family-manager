@@ -30,6 +30,11 @@ type Config struct {
 	// family_id and the apps show onboarding.
 	FamilyAddr string
 
+	// HashConcurrency caps how many argon2id hashes run at once. Each holds ~19 MiB for its
+	// duration and both Register and Login are unauthenticated, so this is the setting that
+	// decides whether a burst of sign-ins queues or exhausts the box. Zero means GOMAXPROCS.
+	HashConcurrency int
+
 	LogLevel string
 	LogJSON  bool
 }
@@ -58,8 +63,10 @@ func Load() (*Config, error) {
 		AccessTTL:     v.GetDuration("ACCESS_TTL"),
 		RefreshTTL:    v.GetDuration("REFRESH_TTL"),
 		FamilyAddr:    v.GetString("FAMILY_ADDR"),
-		LogLevel:      v.GetString("LOG_LEVEL"),
-		LogJSON:       v.GetBool("LOG_JSON"),
+
+		HashConcurrency: v.GetInt("HASH_CONCURRENCY"),
+		LogLevel:        v.GetString("LOG_LEVEL"),
+		LogJSON:         v.GetBool("LOG_JSON"),
 	}
 
 	if path := v.GetString("SIGNING_KEY_FILE"); path != "" {

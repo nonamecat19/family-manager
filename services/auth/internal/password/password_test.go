@@ -66,10 +66,10 @@ func TestVerifyRejectsGarbage(t *testing.T) {
 	for _, bad := range []string{
 		"",
 		"not-a-hash",
-		"$argon2i$v=19$m=64,t=1,p=1$c2FsdA$aGFzaA",     // wrong algorithm
-		"$argon2id$v=18$m=64,t=1,p=1$c2FsdA$aGFzaA",    // wrong version
-		"$argon2id$v=19$m=64,t=1$c2FsdA$aGFzaA",        // missing parallelism
-		"$argon2id$v=19$m=64,t=1,p=1$!!!!$aGFzaA",      // salt is not base64
+		"$argon2i$v=19$m=64,t=1,p=1$c2FsdA$aGFzaA",  // wrong algorithm
+		"$argon2id$v=18$m=64,t=1,p=1$c2FsdA$aGFzaA", // wrong version
+		"$argon2id$v=19$m=64,t=1$c2FsdA$aGFzaA",     // missing parallelism
+		"$argon2id$v=19$m=64,t=1,p=1$!!!!$aGFzaA",   // salt is not base64
 	} {
 		if err := Verify("x", bad); !errors.Is(err, ErrBadHash) {
 			t.Errorf("Verify(%q) = %v, want ErrBadHash", bad, err)

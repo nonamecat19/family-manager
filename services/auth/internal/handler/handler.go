@@ -54,6 +54,7 @@ type Handler struct {
 	family     FamilyLookup
 	log        *slog.Logger
 	hashParams password.Params
+	hashGate   *password.Gate
 	refreshTTL time.Duration
 	now        func() time.Time
 }
@@ -64,6 +65,9 @@ type Options struct {
 	Family     FamilyLookup
 	Log        *slog.Logger
 	HashParams password.Params
+	// HashGate bounds concurrent argon2id work. Nil admits everything, which is what tests
+	// want and what a single-user deployment can live with.
+	HashGate   *password.Gate
 	RefreshTTL time.Duration
 	Now        func() time.Time
 }
@@ -75,6 +79,7 @@ func New(opts Options) *Handler {
 		family:     opts.Family,
 		log:        opts.Log,
 		hashParams: opts.HashParams,
+		hashGate:   opts.HashGate,
 		refreshTTL: opts.RefreshTTL,
 		now:        opts.Now,
 	}
@@ -108,8 +113,14 @@ func (h *Handler) Register(
 		return nil, invalid(fmt.Sprintf("password must be at least %d characters", minPasswordLength))
 	}
 
-	hash, err := password.Hash(req.Msg.GetPassword(), h.hashParams)
-	if err != nil {
+	var hash string
+	if err := h.hashGate.Do(ctx, func() (err error) {
+		hash, err = password.Hash(req.Msg.GetPassword(), h.hashParams)
+		return err
+	}); err != nil {
+		if errors.Is(err, password.ErrBusy) {
+			return nil, errBusy()
+		}
 		return nil, h.internal(ctx, err, "hash password")
 	}
 
@@ -144,14 +155,23 @@ func (h *Handler) Login(
 		if errors.Is(err, pgx.ErrNoRows) {
 			// Hash anyway. Returning early here would make "no such user" measurably faster
 			// than "wrong password", which is an account-enumeration oracle even though the
-			// error text is identical.
-			_, _ = password.Hash(req.Msg.GetPassword(), h.hashParams)
+			// error text is identical. It goes through the gate for the same reason a real
+			// verify does: an unknown address must not be the cheap path to hold a slot.
+			_ = h.hashGate.Do(ctx, func() error {
+				_, err := password.Hash(req.Msg.GetPassword(), h.hashParams)
+				return err
+			})
 			return nil, errInvalidCredentials()
 		}
 		return nil, h.internal(ctx, err, "get user")
 	}
 
-	if err := password.Verify(req.Msg.GetPassword(), user.PasswordHash); err != nil {
+	if err := h.hashGate.Do(ctx, func() error {
+		return password.Verify(req.Msg.GetPassword(), user.PasswordHash)
+	}); err != nil {
+		if errors.Is(err, password.ErrBusy) {
+			return nil, errBusy()
+		}
 		return nil, errInvalidCredentials()
 	}
 
@@ -375,6 +395,13 @@ func newChainID() (pgtype.UUID, error) {
 // distinguishing them tells an attacker which addresses are registered.
 func errInvalidCredentials() error {
 	return connect.NewError(connect.CodeUnauthenticated, errors.New("invalid email or password"))
+}
+
+// errBusy is Unavailable rather than ResourceExhausted: the caller did nothing wrong and
+// should retry, which is exactly what Unavailable tells a Connect client.
+func errBusy() error {
+	return connect.NewError(connect.CodeUnavailable,
+		errors.New("too many sign-in attempts in flight; try again"))
 }
 
 func errInvalidRefresh() error {
