@@ -32,12 +32,22 @@ func Internal(ctx context.Context, log *slog.Logger, err error, what string) err
 	if log == nil {
 		log = slog.Default()
 	}
-	ref := reference()
+	ref := refFrom(ctx)
 	log.ErrorContext(ctx, what,
 		slog.String("error", err.Error()),
 		slog.String("ref", ref),
 	)
 	return connect.NewError(connect.CodeInternal, errors.New(opaque+" (ref "+ref+")"))
+}
+
+// refFrom prefers the request id, so the reference a user reports back names the same trace
+// as the access log and as every other service that handled the call. It falls back to a
+// fresh tag when nothing set one — a call that arrived without the interceptor, or a test.
+func refFrom(ctx context.Context) string {
+	if id := RequestID(ctx); id != "" {
+		return id
+	}
+	return reference()
 }
 
 // reference is a short random tag, not an identifier anything stores. Six bytes is plenty to

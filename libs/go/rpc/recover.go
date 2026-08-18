@@ -45,7 +45,7 @@ func recovered(ctx context.Context, log *slog.Logger, r any, procedure string) e
 		panic(r)
 	}
 
-	ref := reference()
+	ref := refFrom(ctx)
 	log.ErrorContext(ctx, "panic in handler",
 		slog.String("procedure", procedure),
 		slog.String("panic", panicValue(r)),
