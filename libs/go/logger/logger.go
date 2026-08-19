@@ -39,7 +39,7 @@ func New(opts Options) *slog.Logger {
 		h = slog.NewTextHandler(os.Stdout, handlerOpts)
 	}
 
-	l := slog.New(&contextHandler{Handler: h})
+	l := slog.New(ContextHandler(h))
 	if opts.Service != "" {
 		l = l.With(slog.String("service", opts.Service))
 	}
@@ -83,6 +83,11 @@ func UserID(ctx context.Context) string {
 	v, _ := ctx.Value(userIDKey).(string)
 	return v
 }
+
+// ContextHandler wraps h so the correlation ids on a context are copied onto every record made
+// with it. New already does this; it is exported for the case New cannot serve — a test that
+// needs the same correlation behaviour over a buffer instead of stdout.
+func ContextHandler(h slog.Handler) slog.Handler { return &contextHandler{Handler: h} }
 
 // contextHandler copies the correlation ids from the context onto each record, so callers
 // never have to pass them explicitly.

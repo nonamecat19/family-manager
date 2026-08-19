@@ -6,23 +6,27 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
 // RequestIDHeader carries the id across a hop. Apps may send one; if they do not, the first
 // service to handle the call mints it and every service downstream keeps it.
 const RequestIDHeader = "X-Request-Id"
 
-type requestIDKey struct{}
-
 // WithRequestID returns a context carrying id.
+//
+// It delegates to libs/go/logger rather than keeping a key of its own. logger's handler already
+// copies request_id onto every record emitted with that context — a feature written in
+// docs/adr/0006-observability.md and never once called — so routing the id through it means a
+// handler's own log lines are correlated without any handler being changed.
 func WithRequestID(ctx context.Context, id string) context.Context {
-	return context.WithValue(ctx, requestIDKey{}, id)
+	return logger.WithRequestID(ctx, id)
 }
 
 // RequestID returns the id carried by ctx, or "" if there is none.
 func RequestID(ctx context.Context) string {
-	id, _ := ctx.Value(requestIDKey{}).(string)
-	return id
+	return logger.RequestID(ctx)
 }
 
 // maxRequestIDLength bounds what we will echo from a caller. The id is written into every log
@@ -53,9 +57,10 @@ func Observe(log *slog.Logger) connect.UnaryInterceptorFunc {
 			resp, err := next(ctx, req)
 			elapsed := time.Since(started)
 
+			// request_id is not in this list: logger's handler puts it on every record made
+			// with this context, including the ones handlers write themselves.
 			attrs := []any{
 				slog.String("procedure", req.Spec().Procedure),
-				slog.String("request_id", id),
 				slog.Duration("elapsed", elapsed),
 				slog.String("code", codeOf(err)),
 			}

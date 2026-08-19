@@ -9,11 +9,16 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
+// The logger under test is the repo's own, over a buffer: the point of routing ids through
+// logger is that its handler stamps them, and a plain slog handler would not show that.
 func debugLogger() (*slog.Logger, *bytes.Buffer) {
 	var buf bytes.Buffer
-	return slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})), &buf
+	h := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
+	return slog.New(logger.ContextHandler(h)), &buf
 }
 
 func TestObserveMintsAnIDAndLogsTheCall(t *testing.T) {
@@ -101,6 +106,26 @@ func TestObserveLogsTheCodeOfAFailure(t *testing.T) {
 	}
 	if logged := buf.String(); !strings.Contains(logged, "code=not_found") {
 		t.Errorf("log line = %q", logged)
+	}
+}
+
+// A handler's own log lines must carry the id without the handler doing anything.
+func TestObserveCorrelatesAHandlersOwnLogLines(t *testing.T) {
+	log, buf := debugLogger()
+	req := connect.NewRequest(&struct{}{})
+	req.Header().Set(RequestIDHeader, "abc123")
+
+	next := Observe(log)(func(ctx context.Context, _ connect.AnyRequest) (connect.AnyResponse, error) {
+		log.InfoContext(ctx, "handler did something")
+		return connect.NewResponse(&struct{}{}), nil
+	})
+	if _, err := next(context.Background(), req); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+
+	line, _, _ := strings.Cut(buf.String(), "\n")
+	if !strings.Contains(line, "handler did something") || !strings.Contains(line, "request_id=abc123") {
+		t.Fatalf("handler line = %q, want it stamped with the request id", line)
 	}
 }
 
