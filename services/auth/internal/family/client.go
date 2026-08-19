@@ -13,6 +13,7 @@ import (
 
 	"connectrpc.com/connect"
 
+	"github.com/nnc/family-manager/libs/go/rpc"
 	familyv1 "github.com/nnc/family-manager/sdk/go/family/v1"
 	"github.com/nnc/family-manager/sdk/go/family/v1/familyv1connect"
 )
@@ -32,6 +33,9 @@ func New(baseURL string, timeout time.Duration) *Client {
 	return &Client{
 		client: familyv1connect.NewFamilyServiceClient(
 			&http.Client{Timeout: timeout}, baseURL,
+			// The household lookup happens inside a login. Forwarding the id makes the two
+			// services' logs for that login findable as one thing.
+			connect.WithInterceptors(rpc.ForwardRequestID()),
 		),
 	}
 }

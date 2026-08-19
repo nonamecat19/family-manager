@@ -102,3 +102,23 @@ func sanitizeRequestID(s string) string {
 	}
 	return s
 }
+
+// ForwardRequestID returns a client interceptor that copies the request id from the outgoing
+// call's context onto its header.
+//
+// Without it a trace stops at the first hop. auth resolving a household from family during a
+// login is one request as far as anyone debugging it is concerned, but family would mint its
+// own id and the two halves would never be findable together.
+//
+// It sets nothing when the context carries no id, so a call made outside a request — a
+// startup probe, a background job — does not invent a trace it is not part of.
+func ForwardRequestID() connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			if id := RequestID(ctx); id != "" {
+				req.Header().Set(RequestIDHeader, id)
+			}
+			return next(ctx, req)
+		}
+	}
+}

@@ -139,3 +139,31 @@ func TestInternalReusesTheRequestID(t *testing.T) {
 		t.Fatalf("err = %q, want it to carry the request id", err.Error())
 	}
 }
+
+func TestForwardRequestIDSetsTheHeader(t *testing.T) {
+	req := connect.NewRequest(&struct{}{})
+	next := ForwardRequestID()(func(_ context.Context, r connect.AnyRequest) (connect.AnyResponse, error) {
+		if got := r.Header().Get(RequestIDHeader); got != "abc123" {
+			t.Errorf("outgoing header = %q, want %q", got, "abc123")
+		}
+		return connect.NewResponse(&struct{}{}), nil
+	})
+	if _, err := next(WithRequestID(context.Background(), "abc123"), req); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+// A call made outside a request — a startup probe, a background job — is not part of anyone's
+// trace and must not claim to be.
+func TestForwardRequestIDSetsNothingWithoutOne(t *testing.T) {
+	req := connect.NewRequest(&struct{}{})
+	next := ForwardRequestID()(func(_ context.Context, r connect.AnyRequest) (connect.AnyResponse, error) {
+		if got := r.Header().Get(RequestIDHeader); got != "" {
+			t.Errorf("outgoing header = %q, want it unset", got)
+		}
+		return connect.NewResponse(&struct{}{}), nil
+	})
+	if _, err := next(context.Background(), req); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+}
