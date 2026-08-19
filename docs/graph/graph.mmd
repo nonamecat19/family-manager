@@ -23,6 +23,7 @@ graph LR
     golib_events["golib:events"]
     golib_go["golib:go"]
     golib_logger["golib:logger"]
+    golib_rpc["golib:rpc"]
     golib_storage["golib:storage"]
   end
   subgraph contracts
@@ -83,6 +84,7 @@ graph LR
   service_auth -->|DEPENDS_ON| golib_database
   service_auth -->|DEPENDS_ON| golib_go
   service_auth -->|DEPENDS_ON| golib_logger
+  service_auth -->|DEPENDS_ON| golib_rpc
   service_auth -->|IMPLEMENTS| proto_libs_proto_auth_v1_auth_proto
   service_auth -->|PERSISTS_TO| table_refresh_tokens
   service_auth -->|PERSISTS_TO| table_users
@@ -95,6 +97,7 @@ graph LR
   service_family -->|DEPENDS_ON| golib_events
   service_family -->|DEPENDS_ON| golib_go
   service_family -->|DEPENDS_ON| golib_logger
+  service_family -->|DEPENDS_ON| golib_rpc
   service_family -->|IMPLEMENTS| proto_libs_proto_family_v1_family_proto
   service_family -->|PERSISTS_TO| table_families
   service_family -->|PERSISTS_TO| table_family_invitations
@@ -107,6 +110,7 @@ graph LR
   service_finance -->|DEPENDS_ON| golib_events
   service_finance -->|DEPENDS_ON| golib_go
   service_finance -->|DEPENDS_ON| golib_logger
+  service_finance -->|DEPENDS_ON| golib_rpc
   service_finance -->|IMPLEMENTS| proto_libs_proto_finance_v1_finance_proto
   service_finance -->|PERSISTS_TO| table_accounts
   service_finance -->|PERSISTS_TO| table_budgets
@@ -120,6 +124,7 @@ graph LR
   service_recipes -->|DEPENDS_ON| golib_events
   service_recipes -->|DEPENDS_ON| golib_go
   service_recipes -->|DEPENDS_ON| golib_logger
+  service_recipes -->|DEPENDS_ON| golib_rpc
   service_recipes -->|DEPENDS_ON| golib_storage
   service_recipes -->|IMPLEMENTS| proto_libs_proto_recipes_v1_recipes_proto
   service_recipes -->|PERSISTS_TO| table_meal_plan_entries
