@@ -1,11 +1,16 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
 type stubVerifier struct {
@@ -108,5 +113,31 @@ func TestRequireFamily(t *testing.T) {
 	}
 	if c.FamilyID != "f1" {
 		t.Errorf("FamilyID = %q, want f1", c.FamilyID)
+	}
+}
+
+// The interceptor is the only place that knows who the caller is. If it does not put the id on
+// the context, every log line downstream is anonymous.
+func TestInterceptorStampsTheUserIDForLogging(t *testing.T) {
+	v := &stubVerifier{claims: &Claims{UserID: "u1", FamilyID: "f1"}}
+	req := connect.NewRequest(&struct{}{})
+	req.Header().Set("Authorization", "Bearer good")
+
+	var buf bytes.Buffer
+	log := slog.New(logger.ContextHandler(slog.NewTextHandler(&buf, nil)))
+
+	next := func(ctx context.Context, _ connect.AnyRequest) (connect.AnyResponse, error) {
+		if got := logger.UserID(ctx); got != "u1" {
+			t.Errorf("logger.UserID(ctx) = %q, want %q", got, "u1")
+		}
+		log.InfoContext(ctx, "handler ran")
+		return connect.NewResponse(&struct{}{}), nil
+	}
+
+	if _, err := Interceptor(v)(next)(context.Background(), req); err != nil {
+		t.Fatalf("err = %v", err)
+	}
+	if !strings.Contains(buf.String(), "user_id=u1") {
+		t.Fatalf("log line = %q, want it stamped with the user id", buf.String())
 	}
 }

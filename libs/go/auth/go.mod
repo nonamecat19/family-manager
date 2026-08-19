@@ -7,4 +7,9 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 )
 
-require google.golang.org/protobuf v1.34.2 // indirect
+require (
+	github.com/nnc/family-manager/libs/go/logger v0.0.0
+	google.golang.org/protobuf v1.34.2 // indirect
+)
+
+replace github.com/nnc/family-manager/libs/go/logger => ../logger

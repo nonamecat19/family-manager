@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
 // TokenVerifier is what an interceptor needs; *Verifier satisfies it, and tests substitute
@@ -39,7 +41,12 @@ func Interceptor(v TokenVerifier, public ...string) connect.UnaryInterceptorFunc
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}
-			return next(WithClaims(ctx, claims), req)
+			// user_id goes on the context as well as the claims: logger's handler copies it
+			// onto every record made downstream, so a handler's log lines say who the caller
+			// was without any handler passing it. Nothing was doing this before, which meant
+			// an access log could tell you a call failed but never for whom.
+			ctx = logger.WithUserID(WithClaims(ctx, claims), claims.UserID)
+			return next(ctx, req)
 		}
 	}
 }
