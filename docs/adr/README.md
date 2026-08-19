@@ -13,6 +13,8 @@ decision gets a new ADR that supersedes the old one, and the old one's status ch
 | [0004](0004-compose-vps.md) | Docker Compose on a VPS for deployment | accepted |
 | [0005](0005-auth.md) | ES256 JWT + rotating refresh tokens, JWKS verification | accepted |
 | [0006](0006-observability.md) | OTel traces correlated with slog; CI runs the verify node | accepted |
+| [0007](0007-object-storage.md) | MinIO in development, Cloudflare R2 in production | accepted |
+| [0008](0008-rpc-interceptors.md) | Shared interceptor chain in `libs/go/rpc`; request ids before traces | accepted |
 
 Write a new ADR when a change would displace a row in [../stack.md](../stack.md), add a
 container to `docker-compose.yml`, or alter a boundary rule in

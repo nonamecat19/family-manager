@@ -28,7 +28,7 @@ library that displaces a row in that table without an ADR.
 apps/        Expo apps (family-manager, shopping, finance)
 packages/    shared TS: ui, auth, api, theme, config
 services/    Go microservices, app-specific: auth, family, notifications, shopping
-libs/go/     shared Go: auth, logger, database, events
+libs/go/     shared Go: auth, logger, rpc, database, events, storage
 libs/proto/  .proto contracts — the ONLY cross-boundary contract surface
 sdk/         generated clients: typescript/, go/
 infra/       deployment

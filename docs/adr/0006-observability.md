@@ -2,6 +2,8 @@
 
 - Status: accepted
 - Date: 2026-08-06
+- Amended by: [0008](0008-rpc-interceptors.md) — the tracing half is still unbuilt; request-id
+  correlation is what actually runs today
 
 ## Context
 
