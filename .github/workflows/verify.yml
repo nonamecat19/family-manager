@@ -19,6 +19,25 @@ jobs:
       - run: just --version || (curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin)
       - run: just check-go
 
+  lint-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+      # Each module in go.work is linted separately: golangci-lint takes one module at a time,
+      # and a workspace-wide invocation silently lints only the first.
+      - name: golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh |
+            sh -s -- -b "$(go env GOPATH)/bin" v2.12.2
+          for dir in $(go list -m -f '{{.Dir}}'); do
+            echo "--- $dir"
+            (cd "$dir" && "$(go env GOPATH)/bin/golangci-lint" run ./...)
+          done
+
   ts:
     runs-on: ubuntu-latest
     steps:

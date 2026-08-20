@@ -46,6 +46,18 @@ check-go:
       (cd "$dir" && go build ./... && go vet ./... && go test -race -shuffle=on ./...)
     done
 
+# Lint every module in go.work with .golangci.yml. Not part of check-go: it needs a binary
+# that check-go does not, and a missing linter must not be indistinguishable from a clean run.
+lint-go:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v golangci-lint >/dev/null || {
+      echo "golangci-lint not installed; run 'just tools'" >&2; exit 1; }
+    for dir in $(go list -m -f '{{{{.Dir}}'); do
+      echo "--- $dir"
+      (cd "$dir" && golangci-lint run ./...)
+    done
+
 # ------------------------------------------------------------- contracts ----
 
 # Regenerate Go stubs + Connect handlers + TypeScript SDK from libs/proto.
@@ -68,6 +80,7 @@ tools:
     go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
     go install github.com/air-verse/air@latest
     go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
 # Print an argon2id hash for a password, with the parameters services/auth uses. For seeding
 # the first account into a fresh database, or resetting one when nobody can sign in to do it

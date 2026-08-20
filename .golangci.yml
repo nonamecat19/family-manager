@@ -1,0 +1,63 @@
+# golangci-lint v2 configuration, shared by every module in go.work.
+#
+# The rule for adding a linter here: it must catch something that has actually gone wrong in
+# this repo, or something that would be silent if it did. Style opinions belong in review, not
+# in a gate that blocks a merge.
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    # The default four, kept.
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    # An unchecked type assertion panics. Since the recovery interceptor turns that into a 500
+    # rather than a dead connection, it is now a quiet failure rather than a loud one — which
+    # is exactly why it should be caught here instead.
+    - forcetypeassert
+    # rows.Close, resp.Body.Close, tx.Rollback. A leaked pgx row set holds a pool connection,
+    # and this repo has one pool per service.
+    - bodyclose
+    - rowserrcheck
+    - sqlclosecheck
+    # Every handler takes a ctx and every query should use it. A background context inside a
+    # request is how a cancelled call keeps working.
+    - contextcheck
+    - noctx
+    # Wrapped errors are the only reason errors.Is/As work at the call sites that use them.
+    - errorlint
+    # Shadowed err is the classic silent-success bug.
+    - govet
+    - unconvert
+    - unused
+    # Copying a lock or a sync.Once by value.
+    - copyloopvar
+
+  exclusions:
+    rules:
+      # httptest.NewRequest has no context-taking form worth the noise here: these requests are
+      # handed straight to a ServeHTTP call in the same function. noctx earns its place on
+      # non-test code, where a request built without a context outlives the call that wanted it.
+      - path: _test\.go
+        linters: [noctx]
+
+  settings:
+    errcheck:
+      # Deliberate discards are written `_ =` in this repo; the linter should still see them.
+      check-blank: false
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    staticcheck:
+      checks:
+        - all
+
+formatters:
+  enable:
+    - gofmt
