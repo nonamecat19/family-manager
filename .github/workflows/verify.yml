@@ -27,13 +27,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          # No 'cache: pnpm': that keys the dependency cache on the lockfile's hash, and
-          # pnpm-lock.yaml is deliberately untracked, so setup-node fails outright with
-          # "Dependencies lock file is not found". Losing the cache is the second cost of
-          # dropping the lockfile, after losing reproducible resolution.
-      # Nothing to freeze against, so CI resolves versions afresh on every run and can build
-      # a different dependency tree from any local checkout.
-      - run: pnpm install --no-frozen-lockfile
+          cache: pnpm
+      # --frozen-lockfile fails rather than resolving: a package.json edited without a
+      # regenerated lockfile is a build CI must refuse, not silently paper over.
+      - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint typecheck test
 
   contracts:
