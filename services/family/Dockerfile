@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Built from the repo root so the shared modules under libs/go and sdk/go are in context:
 #   docker build -f services/family/Dockerfile .
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS build
 
 WORKDIR /src
 
