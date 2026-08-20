@@ -41,7 +41,7 @@ func Recover(log *slog.Logger) connect.UnaryInterceptorFunc {
 func recovered(ctx context.Context, log *slog.Logger, r any, procedure string) error {
 	// http.ErrAbortHandler is how a handler says "drop this connection, silently". Turning it
 	// into a response would defeat the only thing it does.
-	if r == http.ErrAbortHandler {
+	if err, ok := r.(error); ok && errors.Is(err, http.ErrAbortHandler) {
 		panic(r)
 	}
 

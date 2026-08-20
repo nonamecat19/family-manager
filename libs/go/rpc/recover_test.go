@@ -64,8 +64,9 @@ func TestRecoverKeepsAnOrdinaryErrorIntact(t *testing.T) {
 // would undo the only thing it is for, so it must keep unwinding.
 func TestRecoverRepanicsOnErrAbortHandler(t *testing.T) {
 	defer func() {
-		if r := recover(); r != http.ErrAbortHandler {
-			t.Fatalf("recover() = %v, want it to keep unwinding as ErrAbortHandler", r)
+		err, _ := recover().(error)
+		if !errors.Is(err, http.ErrAbortHandler) {
+			t.Fatalf("recover() = %v, want it to keep unwinding as ErrAbortHandler", err)
 		}
 	}()
 	next := Recover(nil)(panicking(http.ErrAbortHandler))

@@ -60,7 +60,8 @@ func run() error {
 // something the user did not type.
 func readPassword(r io.Reader, prompt io.Writer) (string, error) {
 	if f, ok := r.(*os.File); ok && isTerminal(f) {
-		fmt.Fprint(prompt, "password (input is echoed): ")
+		// A prompt that fails to print is not a reason to refuse to hash.
+		_, _ = fmt.Fprint(prompt, "password (input is echoed): ")
 	}
 
 	line, err := bufio.NewReader(r).ReadString('\n')

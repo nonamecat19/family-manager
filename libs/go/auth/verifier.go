@@ -78,7 +78,9 @@ func (v *Verifier) Verify(ctx context.Context, token string) (*Claims, error) {
 		return v.keyForKID(ctx, kid)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
+		// Both verbs wrap: a caller matching on ErrInvalidToken keeps working, and one
+		// matching on jwt.ErrTokenExpired — which is the interesting half — now can.
+		return nil, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}
 	return claimsFromJWT(mc)
 }

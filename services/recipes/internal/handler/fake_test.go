@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,8 +20,6 @@ import (
 // fakeStore is an in-memory db.Querier. The handler's rules (family scoping, favorite toggle,
 // ingredient totals) are what these tests exercise; Postgres itself is not under test here.
 type fakeStore struct {
-	mu sync.Mutex
-
 	categories    map[string]db.RecipeCategory
 	subcategories map[string]db.RecipeSubcategory
 	recipes       map[string]db.Recipe
@@ -303,7 +301,7 @@ func (s *fakeStore) IncrementCommentCount(_ context.Context, id pgtype.UUID) err
 func (s *fakeStore) AddIngredient(_ context.Context, arg db.AddIngredientParams) error {
 	s.ingredients[pgconv.UUIDString(arg.RecipeID)] = append(
 		s.ingredients[pgconv.UUIDString(arg.RecipeID)],
-		db.RecipeIngredient{RecipeID: arg.RecipeID, Position: arg.Position, Name: arg.Name, Amount: arg.Amount, Unit: arg.Unit},
+		db.RecipeIngredient(arg),
 	)
 	return nil
 }
@@ -311,7 +309,7 @@ func (s *fakeStore) AddIngredient(_ context.Context, arg db.AddIngredientParams)
 func (s *fakeStore) AddStep(_ context.Context, arg db.AddStepParams) error {
 	s.steps[pgconv.UUIDString(arg.RecipeID)] = append(
 		s.steps[pgconv.UUIDString(arg.RecipeID)],
-		db.RecipeStep{RecipeID: arg.RecipeID, Position: arg.Position, Instruction: arg.Instruction, DurationSeconds: arg.DurationSeconds},
+		db.RecipeStep(arg),
 	)
 	return nil
 }
@@ -534,8 +532,13 @@ func splitKey(key string) (string, string) {
 	return key, ""
 }
 
+// parseFloat reads a numeric string from a fake row. An unparseable value is zero, which is
+// what the real column would give for an empty amount — but the error is no longer discarded
+// silently, because a test comparing 0 to 0 passes for the wrong reason.
 func parseFloat(s string) float64 {
-	var f float64
-	fmt.Sscanf(s, "%f", &f)
+	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	if err != nil {
+		return 0
+	}
 	return f
 }
