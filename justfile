@@ -31,12 +31,19 @@ go-sync:
     go work sync
 
 # Build, vet and test every module in go.work (the repo root is not a module).
+#
+# -race: the concurrency in this repo is small but load-bearing — the argon2 gate, the token
+# sweep, the pgx pool shared across handlers. A data race there is a corrupted session, and it
+# will not show up in a sequential test run.
+#
+# -shuffle=on: several suites share a package-level fake store. Order dependence between tests
+# is a bug that only ever appears on someone else's machine.
 check-go:
     #!/usr/bin/env bash
     set -euo pipefail
     for dir in $(go list -m -f '{{{{.Dir}}'); do
       echo "--- $dir"
-      (cd "$dir" && go build ./... && go vet ./... && go test ./...)
+      (cd "$dir" && go build ./... && go vet ./... && go test -race -shuffle=on ./...)
     done
 
 # ------------------------------------------------------------- contracts ----
