@@ -1,0 +1,67 @@
+# Dependabot keeps the two ecosystems that CI cannot notice going stale.
+#
+# `just vuln` answers "is anything we call known-broken", weekly. This answers the other half —
+# "has anything moved" — which is what stops a security bump from also being a two-year jump
+# across three majors. The August pgx and x/net bumps were exactly that: months of drift paid
+# off in one commit, under time pressure, because nothing was tracking it.
+version: 2
+
+updates:
+  # Actions are pinned by tag, and a tag is mutable. A version bump here is the only signal
+  # that an action we depend on has released anything at all.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+
+  # One entry per go.work module: Dependabot does not read go.work, so a directory left out
+  # here is a module nothing watches.
+  - package-ecosystem: gomod
+    directories:
+      - /libs/go/auth
+      - /libs/go/database
+      - /libs/go/events
+      - /libs/go/logger
+      - /libs/go/rpc
+      - /libs/go/storage
+      - /sdk/go
+      - /services/auth
+      - /services/family
+      - /services/finance
+      - /services/recipes
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "build(go)"
+    groups:
+      # The x/ repos move together and are almost always a joint bump; eleven modules times
+      # five golang.org/x packages is a PR list nobody reads.
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+
+  # The workspace root holds the only package.json Dependabot can resolve from — the apps and
+  # packages are pnpm workspace members reached through it.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "build(pnpm)"
+    groups:
+      expo:
+        patterns:
+          - "expo"
+          - "expo-*"
+          - "react-native*"
+    ignore:
+      # Pinned by hand in eb72f00 because Expo's peer resolution drifts off it. A bump here is
+      # an Expo SDK decision, not a dependency one.
+      - dependency-name: "react"
+        versions: ["19.x"]
+      - dependency-name: "react-dom"
+        versions: ["19.x"]
+      - dependency-name: "@types/react"
+        versions: ["19.x"]
