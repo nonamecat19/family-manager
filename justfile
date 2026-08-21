@@ -5,28 +5,35 @@ default:
 
 # ---------------------------------------------------------------- infra ----
 
+# Start Postgres, MinIO and NATS in the background.
 up:
     docker compose up -d
 
+# Stop the local infrastructure containers.
 down:
     docker compose down
 
 # ------------------------------------------------------------- node side ----
 
+# Install the pnpm workspace from the lockfile.
 install:
     pnpm install
 
+# Run every Expo app in development mode.
 dev-apps:
     pnpm turbo run dev
 
+# Build every TypeScript package and app.
 build-apps:
     pnpm turbo run build
 
+# Lint, typecheck and test the whole TypeScript side.
 check-ts:
     pnpm turbo run lint typecheck test
 
 # --------------------------------------------------------------- go side ----
 
+# Reconcile go.work with every module's go.mod.
 go-sync:
     go work sync
 
@@ -38,6 +45,8 @@ go-sync:
 #
 # -shuffle=on: several suites share a package-level fake store. Order dependence between tests
 # is a bug that only ever appears on someone else's machine.
+#
+# Build, vet and race-test every Go module in go.work.
 check-go:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -46,8 +55,10 @@ check-go:
       (cd "$dir" && go build ./... && go vet ./... && go test -race -shuffle=on ./...)
     done
 
-# Lint every module in go.work with .golangci.yml. Not part of check-go: it needs a binary
-# that check-go does not, and a missing linter must not be indistinguishable from a clean run.
+# Not part of check-go: it needs a binary that check-go does not, and a missing linter must not
+# be indistinguishable from a clean run.
+#
+# Lint every module in go.work against .golangci.yml.
 lint-go:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -58,9 +69,10 @@ lint-go:
       (cd "$dir" && golangci-lint run ./...)
     done
 
-# Scan every module for known vulnerabilities in what it actually calls. Reachability, not a
-# dependency list: govulncheck reports the call paths, so an unused vulnerable function is not
-# a reason to bump anything.
+# Reachability, not a dependency list: govulncheck reports the call paths, so an unused
+# vulnerable function is not a reason to bump anything.
+#
+# Scan every Go module for known vulnerabilities it actually calls.
 vuln:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -101,6 +113,8 @@ tools:
 # Print an argon2id hash for a password, with the parameters services/auth uses. For seeding
 # the first account into a fresh database, or resetting one when nobody can sign in to do it
 # the normal way. Reads stdin so the password stays out of shell history and `ps`.
+#
+# Print an argon2id hash for a password typed on stdin.
 hashpw:
     cd services/auth && go run ./cmd/hashpw
 
@@ -151,9 +165,12 @@ test-mobile flow="":
 # Fast pre-flight: launches the app and checks the login screen renders. No backend
 # needed. Run this before burning time on device-network setup (see apps/recipes/TESTING.md) —
 # a build/render crash shows up here in seconds instead of a silent timeout on-device.
+#
+# Pre-flight: launch the app and check the login screen renders. No backend needed.
 test-mobile-smoke:
     @just test-mobile-run smoke-launch
 
+# Run one Maestro flow by name, or the whole directory when flow is empty.
 test-mobile-run flow:
     #!/usr/bin/env bash
     set -euo pipefail
