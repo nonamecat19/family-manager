@@ -103,7 +103,7 @@ jobs:
           # below authenticates fine and is then denied on the pull.
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           # Cache scope is per service, not shared. The four Dockerfiles do share their base
-          # layers (same golang:1.23-alpine, same `go mod download all` over the same module
+          # layers (same golang:1.25-alpine, same `go mod download all` over the same module
           # set), which makes one common scope look attractive — but the matrix legs run
           # concurrently and type=gha,mode=max is last-writer-wins per scope, so a shared key
           # means four jobs overwriting each other's manifest and each finding a cache written

@@ -7,9 +7,24 @@ on:
     branches: [master]
   pull_request:
 
+# Read-only. Nothing here publishes anything: the four jobs build, lint and compare. The
+# workflow-level default would otherwise be whatever the repository setting happens to be,
+# which is a property of a settings page rather than of this file.
+permissions:
+  contents: read
+
+# One verify per ref. A second push to a PR makes the first run's answer irrelevant, and
+# cancelling it returns four runners instead of paying for a result nobody will read.
+# master is excluded from the cancellation: its runs are the record of whether each commit on
+# the branch was green, and cancelling one leaves a gap in that record.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   go:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -21,6 +36,7 @@ jobs:
 
   lint-go:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -40,6 +56,7 @@ jobs:
 
   ts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -54,6 +71,7 @@ jobs:
 
   contracts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -73,6 +91,7 @@ jobs:
   graph:
     # Keeps the knowledge graph honest: a structural change without `just graph` fails here.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
