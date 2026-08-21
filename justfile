@@ -58,6 +58,21 @@ lint-go:
       (cd "$dir" && golangci-lint run ./...)
     done
 
+# Scan every module for known vulnerabilities in what it actually calls. Reachability, not a
+# dependency list: govulncheck reports the call paths, so an unused vulnerable function is not
+# a reason to bump anything.
+vuln:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v govulncheck >/dev/null || {
+      echo "govulncheck not installed; run 'just tools'" >&2; exit 1; }
+    failed=0
+    for dir in $(go list -m -f '{{{{.Dir}}'); do
+      echo "--- $dir"
+      (cd "$dir" && govulncheck ./...) || failed=1
+    done
+    exit "$failed"
+
 # ------------------------------------------------------------- contracts ----
 
 # Regenerate Go stubs + Connect handlers + TypeScript SDK from libs/proto.
@@ -81,6 +96,7 @@ tools:
     go install github.com/air-verse/air@latest
     go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+    go install golang.org/x/vuln/cmd/govulncheck@latest
 
 # Print an argon2id hash for a password, with the parameters services/auth uses. For seeding
 # the first account into a fresh database, or resetting one when nobody can sign in to do it

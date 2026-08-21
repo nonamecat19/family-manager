@@ -1,0 +1,41 @@
+# govulncheck over every module in go.work.
+#
+# Deliberately NOT part of verify. The vulnerability database changes without this repository
+# changing, so a blocking PR check would turn red on a commit that touched nothing — and a
+# check that fails for reasons the author cannot act on is a check people learn to re-run until
+# it passes. This runs on a schedule instead, where "red" means "there is news", which is the
+# actual question.
+name: vuln
+
+on:
+  schedule:
+    # Mondays, 06:00 UTC. Early enough in the week that a bump has somewhere to go.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          # The toolchain is itself a scanned dependency: most of what govulncheck reports for
+          # this repo is the standard library, fixed by a patch release. Reading the version
+          # from go.work means the scan reflects what the Dockerfiles build with.
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          failed=0
+          for dir in $(go list -m -f '{{.Dir}}'); do
+            echo "::group::${dir}"
+            (cd "$dir" && govulncheck ./...) || failed=1
+            echo "::endgroup::"
+          done
+          exit "$failed"
