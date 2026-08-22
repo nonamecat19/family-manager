@@ -101,7 +101,9 @@ services:
       - caddyconfig:/config
     depends_on:
       auth:
-        condition: service_started
+        # service_healthy now that auth reports it: every one of these fetches auth's JWKS at
+        # boot, and a container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
       family:
         condition: service_started
       finance:
@@ -144,8 +146,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
-    # served for the reverse proxy and for deploy.sh's host-side probe instead.
+    # The service binary is its own healthcheck: the distroless image ships no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start
+    # on a 1 vCPU box.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     restart: unless-stopped
     mem_limit: 160m
     logging: *bounded-logs
@@ -172,8 +182,19 @@ services:
       nats:
         condition: service_healthy
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget.
+        # service_healthy now that auth reports it: every one of these fetches auth's JWKS at
+        # boot, and a container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image ships no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start
+    # on a 1 vCPU box.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     restart: unless-stopped
     mem_limit: 160m
     logging: *bounded-logs
@@ -196,8 +217,19 @@ services:
       nats:
         condition: service_healthy
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget.
+        # service_healthy now that auth reports it: every one of these fetches auth's JWKS at
+        # boot, and a container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image ships no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start
+    # on a 1 vCPU box.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     restart: unless-stopped
     mem_limit: 160m
     logging: *bounded-logs
@@ -236,8 +268,19 @@ services:
       nats:
         condition: service_healthy
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget.
+        # service_healthy now that auth reports it: every one of these fetches auth's JWKS at
+        # boot, and a container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image ships no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start
+    # on a 1 vCPU box.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     restart: unless-stopped
     mem_limit: 160m
     logging: *bounded-logs

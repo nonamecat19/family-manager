@@ -68,8 +68,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
-    # served for the reverse proxy and for host-side probes instead.
+    # The service binary is its own healthcheck: the distroless image has no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   family:
     build:
@@ -92,9 +99,19 @@ services:
       nats:
         condition: service_healthy
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
-    # served for the reverse proxy and for host-side probes instead.
+        # service_healthy, not service_started: family, finance and recipes all fetch auth's
+        # JWKS at boot, and a container that exists is not one that has migrated and can serve
+        # it. This is the wait that had nothing to wait on.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image has no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   finance:
     build:
@@ -115,9 +132,19 @@ services:
       nats:
         condition: service_healthy
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
-    # served for the reverse proxy and for host-side probes instead.
+        # service_healthy, not service_started: family, finance and recipes all fetch auth's
+        # JWKS at boot, and a container that exists is not one that has migrated and can serve
+        # it. This is the wait that had nothing to wait on.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image has no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   recipes:
     build:
@@ -149,9 +176,19 @@ services:
       minio:
         condition: service_started
       auth:
-        condition: service_started
-    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
-    # served for the reverse proxy and for host-side probes instead.
+        # service_healthy, not service_started: family, finance and recipes all fetch auth's
+        # JWKS at boot, and a container that exists is not one that has migrated and can serve
+        # it. This is the wait that had nothing to wait on.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image has no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 secrets:
   auth-signing-key:

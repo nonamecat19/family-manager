@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,11 +40,37 @@ const maxRequestBytes = 1 << 20 // 1 MiB
 // sweepInterval is how often expired refresh tokens are deleted.
 const sweepInterval = time.Hour
 
+// healthcheck makes the service binary its own container healthcheck. The distroless image
+// ships no shell and no wget, so this is the only executable available to probe with.
+var healthcheck = flag.Bool("healthcheck", false,
+	"probe this container's own /healthz over loopback and exit")
+
 func main() {
+	flag.Parse()
+
+	if *healthcheck {
+		if err := probe(); err != nil {
+			// stderr, not the service logger: this process is a probe, and its output is read
+			// by `docker inspect`, not collected as service logs.
+			fmt.Fprintln(os.Stderr, "healthcheck:", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if err := run(); err != nil {
 		slog.Error("fatal", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+}
+
+// probe reads the port from the same config the server binds, so the two cannot disagree.
+func probe() error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	return rpc.Probe(cfg.HTTPPort, 0)
 }
 
 func run() error {
