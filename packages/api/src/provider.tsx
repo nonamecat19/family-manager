@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { createClients, type Clients, type ClientsOptions } from "./client.ts";
+import { shouldRetryQuery } from "./retry.ts";
 
 const ClientsContext = createContext<Clients | null>(null);
 
@@ -18,7 +19,9 @@ export function createQueryClient(): QueryClient {
       queries: {
         staleTime: 30_000,
         gcTime: 24 * 60 * 60_000,
-        retry: 2,
+        // Not a count: `retry: 2` retried everything, including the codes that are answers.
+        // "That email is already registered" took three round trips to reach the user.
+        retry: shouldRetryQuery,
         refetchOnWindowFocus: false,
       },
       mutations: { retry: 0 },
