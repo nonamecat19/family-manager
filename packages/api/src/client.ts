@@ -1,6 +1,8 @@
 import { createClient, type Client, type Interceptor } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 
+import { requestIdInterceptor } from "./requestId.ts";
+
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import { FamilyService } from "@fm/sdk/family/v1/family_pb";
 import { FinanceService } from "@fm/sdk/finance/v1/finance_pb";
@@ -44,7 +46,12 @@ function createTransport(url: string, getAccessToken: ClientsOptions["getAccessT
     return next(req);
   };
 
-  return createConnectTransport({ baseUrl: url, useBinaryFormat: false, interceptors: [auth] });
+  // requestId first, so the id is on the request before anything else can fail with it.
+  return createConnectTransport({
+    baseUrl: url,
+    useBinaryFormat: false,
+    interceptors: [requestIdInterceptor, auth],
+  });
 }
 
 export interface Clients {
