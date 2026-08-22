@@ -4,8 +4,8 @@
 #
 #   ssh root@79.108.160.103 '/opt/family-manager/deploy.sh <commit-sha>'
 #
-# Pulls the pinned tag, brings the stack up, waits for /healthz on all four services, and rolls
-# back to the previously deployed tag if any of them does not come healthy. Safe to run twice in
+# Pulls the pinned tag, brings the stack up, waits for all four services to report healthy, and
+# rolls back to the previously deployed tag if any of them does not. Safe to run twice in
 # a row with the same tag: everything it does is idempotent.
 #
 # It never removes volumes. `docker compose down -v`, `docker volume rm` and `docker system
@@ -75,35 +75,51 @@ fi
 previous="$(cat "$STATE_FILE" 2>/dev/null || true)"
 export IMAGE_TAG="$tag"
 
-# --- health probe ------------------------------------------------------------
-# Probed from inside the caddy container rather than from the host: the services publish no
-# ports (only Caddy does), and their own images are distroless — no shell, no wget — so
-# `compose exec` into them is impossible and a container healthcheck cannot be written at all.
-# Caddy's alpine base has busybox wget and is already on the network, which beats the usual
-# throwaway `docker run --network ... curlimages/curl`: no extra image to pull on every deploy,
-# and the probe cannot itself fail because the registry is unreachable. Probing through Caddy's
-# public hostnames instead would conflate "the service is down" with "DNS/TLS is not ready yet".
-probe() {
-	compose exec -T caddy wget -q -T 3 -O /dev/null "http://$1:8080/healthz" 2>/dev/null
+# --- health ------------------------------------------------------------------
+# Read from the containers' own healthchecks (`/server -healthcheck`, added with the compose
+# healthcheck blocks), not probed from outside.
+#
+# This used to `compose exec -T caddy wget` its way to each service, because the service images
+# are distroless — no shell, no wget — and only Caddy publishes ports. That worked, but it made
+# the deploy's notion of health a second, parallel definition of the same thing, and it could
+# not start until Caddy could. Now the container answers the question compose already asks it,
+# which means `docker ps` and this script agree, and a service that goes unhealthy an hour
+# later is visible in the same place.
+health_of() {
+	local cid
+	cid="$(compose ps -q "$1" 2>/dev/null | head -n1)"
+	if [[ -z "$cid" ]]; then
+		printf 'absent\n'
+		return
+	fi
+	docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+		"$cid" 2>/dev/null || printf 'absent\n'
 }
 
 wait_healthy() {
-	local deadline=$((SECONDS + HEALTH_TIMEOUT)) svc
-	# Caddy has to be up before it can be used as the probe vantage point.
-	until compose exec -T caddy true >/dev/null 2>&1; do
-		((SECONDS < deadline)) || { printf 'caddy never started\n' >&2; return 1; }
-		sleep 2
-	done
+	local deadline=$((SECONDS + HEALTH_TIMEOUT)) svc state
 	for svc in "${SERVICES[@]}"; do
-		until probe "$svc"; do
+		while :; do
+			state="$(health_of "$svc")"
+			case "$state" in
+			healthy)
+				log "$svc healthy"
+				break
+				;;
+			# A service with no healthcheck block cannot be waited on, and silently treating
+			# that as success is how this script would stop noticing a broken deploy.
+			none)
+				printf '%s has no healthcheck; cannot verify the deploy\n' "$svc" >&2
+				return 1
+				;;
+			esac
 			if ((SECONDS >= deadline)); then
-				printf '%s did not answer /healthz within %ss\n' "$svc" "$HEALTH_TIMEOUT" >&2
+				printf '%s is %s after %ss\n' "$svc" "$state" "$HEALTH_TIMEOUT" >&2
 				compose logs --tail 50 "$svc" >&2 || true
 				return 1
 			fi
 			sleep 3
 		done
-		log "$svc healthy"
 	done
 }
 
