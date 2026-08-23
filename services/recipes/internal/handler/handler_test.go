@@ -605,3 +605,53 @@ func TestCreateRecipeStillAcceptsNoCategory(t *testing.T) {
 		t.Fatalf("CreateRecipe: %v", err)
 	}
 }
+
+// saveIngredientsAndSteps does one INSERT per element, and the 16 MiB body cap admits hundreds
+// of thousands of them. The bound is what stops one request holding a connection for minutes.
+func TestCreateRecipeRejectsOversizeContent(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	many := func(n int) []*recipesv1.Ingredient {
+		out := make([]*recipesv1.Ingredient, n)
+		for i := range out {
+			out[i] = &recipesv1.Ingredient{Name: "flour"}
+		}
+		return out
+	}
+	steps := func(n int) []*recipesv1.Step {
+		out := make([]*recipesv1.Step, n)
+		for i := range out {
+			out[i] = &recipesv1.Step{Position: int32(i + 1), Instruction: "stir"}
+		}
+		return out
+	}
+
+	cases := map[string]*recipesv1.CreateRecipeRequest{
+		"title":       {Title: strings.Repeat("x", maxTitleRunes+1), Servings: 1},
+		"description": {Title: "Pancakes", Servings: 1, Description: strings.Repeat("x", maxDescriptionRunes+1)},
+		"notes":       {Title: "Pancakes", Servings: 1, Notes: strings.Repeat("x", maxNotesRunes+1)},
+		"ingredients": {Title: "Pancakes", Servings: 1, Ingredients: many(maxIngredients + 1)},
+		"steps":       {Title: "Pancakes", Servings: 1, Steps: steps(maxSteps + 1)},
+	}
+	for field, req := range cases {
+		t.Run(field, func(t *testing.T) {
+			_, err := h.CreateRecipe(ctx, connect.NewRequest(req))
+			if connect.CodeOf(err) != connect.CodeInvalidArgument {
+				t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+			}
+		})
+	}
+}
+
+// The bounds are in runes: a Ukrainian recipe must not be worth half the text of an English one.
+func TestCreateRecipeAcceptsAMaxLengthCyrillicTitle(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	if _, err := h.CreateRecipe(ctx, connect.NewRequest(&recipesv1.CreateRecipeRequest{
+		Title: strings.Repeat("б", maxTitleRunes), Servings: 1,
+	})); err != nil {
+		t.Fatalf("CreateRecipe: %v", err)
+	}
+}

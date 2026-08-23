@@ -224,6 +224,10 @@ func (h *Handler) CreateRecipe(
 	if title == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("title is required"))
 	}
+	if err := checkRecipeSize(title, req.Msg.GetDescription(), req.Msg.GetNotes(),
+		len(req.Msg.GetIngredients()), len(req.Msg.GetSteps())); err != nil {
+		return nil, err
+	}
 	servings := req.Msg.GetServings()
 	if servings <= 0 {
 		servings = 1
@@ -426,6 +430,10 @@ func (h *Handler) UpdateRecipe(
 	title := trimmed(req.Msg.GetTitle())
 	if title == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("title is required"))
+	}
+	if err := checkRecipeSize(title, req.Msg.GetDescription(), req.Msg.GetNotes(),
+		len(req.Msg.GetIngredients()), len(req.Msg.GetSteps())); err != nil {
+		return nil, err
 	}
 
 	r, err := h.q.GetRecipe(ctx, recipeID)
@@ -956,6 +964,52 @@ func (h *Handler) SumIngredients(
 /* ------------------------------------------------------------------ internals */
 
 // saveIngredientsAndSteps inserts ingredients and steps in order. Position is 1-based.
+// Upper bounds on a recipe. None of these is a limit anyone will meet by cooking; they exist
+// because a recipe is written by an authenticated household member into rows nobody prunes,
+// and because saveIngredientsAndSteps does one INSERT per element. maxRequestBytes admits a
+// 16 MiB body, which is room for hundreds of thousands of one-character ingredients — a single
+// request that holds a pool connection for minutes and leaves the table that size afterwards.
+//
+// Runes, not bytes, throughout: a recipe written in Ukrainian must not be worth half as much
+// text as the same recipe in English.
+const (
+	maxTitleRunes       = 200
+	maxDescriptionRunes = 4000
+	maxNotesRunes       = 4000
+	maxIngredients      = 200
+	maxSteps            = 200
+)
+
+// checkRecipeSize enforces those bounds. It reports the first field that is too long rather
+// than a list, because a client that has exceeded one of these has a bug, not a form to fix.
+func checkRecipeSize(title, description, notes string, ingredients, steps int) error {
+	tooLong := func(field string, value string, limit int) error {
+		if len([]rune(value)) <= limit {
+			return nil
+		}
+		return connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("%s must be at most %d characters", field, limit))
+	}
+	if err := tooLong("title", title, maxTitleRunes); err != nil {
+		return err
+	}
+	if err := tooLong("description", description, maxDescriptionRunes); err != nil {
+		return err
+	}
+	if err := tooLong("notes", notes, maxNotesRunes); err != nil {
+		return err
+	}
+	if ingredients > maxIngredients {
+		return connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("a recipe may have at most %d ingredients", maxIngredients))
+	}
+	if steps > maxSteps {
+		return connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("a recipe may have at most %d steps", maxSteps))
+	}
+	return nil
+}
+
 // taxonomyIDs parses the optional category and subcategory ids.
 //
 // Both were parsed with the error discarded, which turns "cat-1" — a client bug, a stale id
