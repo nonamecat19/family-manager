@@ -274,9 +274,15 @@ func (h *Handler) InviteMember(
 		return nil, err
 	}
 
-	email := trimmed(req.Msg.GetEmail())
-	if email == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("email is required"))
+	// Normalised, not merely trimmed. The address stored here is compared — by a person
+	// reading the pending-invitation list, and by anyone who later wires this to email — with
+	// what services/auth stored at registration, which is lowercased. An invitation to
+	// "Ada@Example.com" for an account registered as "ada@example.com" is an invitation to
+	// nobody, and it fails silently: the row exists, the list shows it, and it is never matched.
+	email := fmauth.NormalizeEmail(req.Msg.GetEmail())
+	if !fmauth.LooksLikeEmail(email) {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			errors.New("a valid email is required"))
 	}
 
 	token, hash, err := newInvitationToken()

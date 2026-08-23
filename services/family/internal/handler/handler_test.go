@@ -440,3 +440,34 @@ func TestGetUserMembershipValidatesTheUserID(t *testing.T) {
 		t.Fatalf("code = %v, want invalid_argument", connect.CodeOf(err))
 	}
 }
+
+// The address on an invitation is compared with what services/auth stored at registration,
+// which is lowercased. Storing it as typed makes the invitation one nothing will ever match.
+func TestInviteMemberNormalizesTheAddress(t *testing.T) {
+	f := newFixture(t)
+	fam := f.createFamilyAs(t, alice, "Test Household")
+
+	res, err := f.h.InviteMember(asUser(alice), connect.NewRequest(&familyv1.InviteMemberRequest{
+		FamilyId: fam.GetId(), Email: "  Ada.Lovelace@Example.TEST ",
+	}))
+	if err != nil {
+		t.Fatalf("InviteMember: %v", err)
+	}
+	if got := res.Msg.GetInvitation().GetEmail(); got != "ada.lovelace@example.test" {
+		t.Fatalf("stored email = %q, want it normalized", got)
+	}
+}
+
+func TestInviteMemberRejectsAMalformedAddress(t *testing.T) {
+	f := newFixture(t)
+	fam := f.createFamilyAs(t, alice, "Test Household")
+
+	for _, email := range []string{"", "  ", "ada", "ada@", "@example.test", "ada@example"} {
+		_, err := f.h.InviteMember(asUser(alice), connect.NewRequest(&familyv1.InviteMemberRequest{
+			FamilyId: fam.GetId(), Email: email,
+		}))
+		if connect.CodeOf(err) != connect.CodeInvalidArgument {
+			t.Fatalf("InviteMember(%q) code = %v, want invalid_argument", email, connect.CodeOf(err))
+		}
+	}
+}
