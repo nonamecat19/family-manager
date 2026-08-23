@@ -576,3 +576,32 @@ func TestStoreFailureIsInternalAndOpaque(t *testing.T) {
 		t.Fatalf("wire message leaked the cause: %q", err.Error())
 	}
 }
+
+// A category id the client got wrong used to be discarded and stored as NULL, so the recipe
+// was created uncategorised and the caller was told it worked. It is an argument error.
+func TestCreateRecipeRejectsAMalformedCategoryID(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	for _, req := range []*recipesv1.CreateRecipeRequest{
+		{Title: "Pancakes", Servings: 4, CategoryId: "cat-1"},
+		{Title: "Pancakes", Servings: 4, SubcategoryId: "not-a-uuid"},
+	} {
+		_, err := h.CreateRecipe(ctx, connect.NewRequest(req))
+		if connect.CodeOf(err) != connect.CodeInvalidArgument {
+			t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+		}
+	}
+}
+
+// Uncategorised stays a legitimate state; only an unparseable id is refused.
+func TestCreateRecipeStillAcceptsNoCategory(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	if _, err := h.CreateRecipe(ctx, connect.NewRequest(&recipesv1.CreateRecipeRequest{
+		Title: "Pancakes", Servings: 4,
+	})); err != nil {
+		t.Fatalf("CreateRecipe: %v", err)
+	}
+}

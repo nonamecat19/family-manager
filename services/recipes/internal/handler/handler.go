@@ -237,8 +237,10 @@ func (h *Handler) CreateRecipe(
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("bad user id: %w", err))
 	}
-	catID, _ := pgconv.UUID(req.Msg.GetCategoryId())
-	subID, _ := pgconv.UUID(req.Msg.GetSubcategoryId())
+	catID, subID, err := taxonomyIDs(req.Msg.GetCategoryId(), req.Msg.GetSubcategoryId())
+	if err != nil {
+		return nil, err
+	}
 
 	r, err := h.q.CreateRecipe(ctx, db.CreateRecipeParams{
 		FamilyID:      famUUID,
@@ -437,8 +439,10 @@ func (h *Handler) UpdateRecipe(
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 	}
 
-	catID, _ := pgconv.UUID(req.Msg.GetCategoryId())
-	subID, _ := pgconv.UUID(req.Msg.GetSubcategoryId())
+	catID, subID, err := taxonomyIDs(req.Msg.GetCategoryId(), req.Msg.GetSubcategoryId())
+	if err != nil {
+		return nil, err
+	}
 
 	n := nutritionUpdate(req.Msg.GetNutrition())
 
@@ -952,6 +956,30 @@ func (h *Handler) SumIngredients(
 /* ------------------------------------------------------------------ internals */
 
 // saveIngredientsAndSteps inserts ingredients and steps in order. Position is 1-based.
+// taxonomyIDs parses the optional category and subcategory ids.
+//
+// Both were parsed with the error discarded, which turns "cat-1" — a client bug, a stale id
+// after a category is deleted, a hand-written request — into an invalid pgtype.UUID. That is
+// written as NULL, so the recipe is created or updated as uncategorised and the caller is told
+// it succeeded. The recipe then does not appear under the category the user picked, and
+// nothing anywhere recorded why.
+//
+// Empty stays empty: uncategorised is a legitimate state, just not one an unparseable id
+// should reach by accident.
+func taxonomyIDs(categoryID, subcategoryID string) (cat, sub pgtypeUUID, err error) {
+	cat, err = pgconv.UUID(categoryID)
+	if err != nil {
+		return cat, sub, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("category_id is not a uuid: %w", err))
+	}
+	sub, err = pgconv.UUID(subcategoryID)
+	if err != nil {
+		return cat, sub, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("subcategory_id is not a uuid: %w", err))
+	}
+	return cat, sub, nil
+}
+
 func (h *Handler) saveIngredientsAndSteps(
 	ctx context.Context, recipeID pgtypeUUID, ingredients []*recipesv1.Ingredient, steps []*recipesv1.Step,
 ) error {
