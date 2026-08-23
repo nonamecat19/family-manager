@@ -711,6 +711,10 @@ func (h *Handler) AddComment(
 	if body == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("body is required"))
 	}
+	if len([]rune(body)) > maxCommentRunes {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("a comment may be at most %d characters", maxCommentRunes))
+	}
 
 	r, err := h.q.GetRecipe(ctx, recipeID)
 	if err != nil {
@@ -978,6 +982,9 @@ const (
 	maxNotesRunes       = 4000
 	maxIngredients      = 200
 	maxSteps            = 200
+	// A comment is a cooking note — "halve the sugar", "needs 10 more minutes" — not an
+	// essay, and comments are the one thing here that grows without bound per recipe.
+	maxCommentRunes = 2000
 )
 
 // checkRecipeSize enforces those bounds. It reports the first field that is too long rather

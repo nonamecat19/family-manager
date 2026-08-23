@@ -655,3 +655,16 @@ func TestCreateRecipeAcceptsAMaxLengthCyrillicTitle(t *testing.T) {
 		t.Fatalf("CreateRecipe: %v", err)
 	}
 }
+
+func TestAddCommentRejectsAnOversizeBody(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Borscht", Servings: 4})
+
+	_, err := h.AddComment(ctx, connect.NewRequest(&recipesv1.AddCommentRequest{
+		RecipeId: r.GetId(), Body: strings.Repeat("x", maxCommentRunes+1),
+	}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+	}
+}
