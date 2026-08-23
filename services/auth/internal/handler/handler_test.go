@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
@@ -394,21 +395,6 @@ func TestStoreFailureBecomesInternal(t *testing.T) {
 	}
 }
 
-func TestLooksLikeEmail(t *testing.T) {
-	valid := []string{"a@b.co", "ada.lovelace+tag@example.co.uk"}
-	for _, s := range valid {
-		if !looksLikeEmail(s) {
-			t.Errorf("looksLikeEmail(%q) = false, want true", s)
-		}
-	}
-	invalid := []string{"", "a", "a@", "@b.co", "a@b", "a@@b.co", "a b@c.co", "a@b.co ", "a@.co", "a@b."}
-	for _, s := range invalid {
-		if looksLikeEmail(s) {
-			t.Errorf("looksLikeEmail(%q) = true, want false", s)
-		}
-	}
-}
-
 func TestNewChainIDIsValidVersion4AndUnique(t *testing.T) {
 	seen := map[string]bool{}
 	for i := 0; i < 100; i++ {
@@ -487,7 +473,7 @@ func TestRegisterRejectsOversizeFields(t *testing.T) {
 			Password: strings.Repeat("x", maxPasswordBytes+1),
 		},
 		"email": {
-			Email:    strings.Repeat("a", maxEmailLength) + "@example.test",
+			Email:    strings.Repeat("a", fmauth.MaxEmailLength) + "@example.test",
 			Password: "correct horse",
 		},
 		"name": {

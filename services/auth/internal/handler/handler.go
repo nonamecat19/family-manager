@@ -28,6 +28,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	"github.com/nnc/family-manager/libs/go/rpc"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
@@ -110,9 +111,6 @@ const (
 	// input length, so this is not about hashing time; it is about not accepting a megabyte
 	// of body per attempt and not storing what we refuse to bound.
 	maxPasswordBytes = 1024
-	// maxEmailLength is the RFC 5321 limit on a full address (64 local + @ + 255 domain,
-	// capped at 254 in practice). Anything longer is not an address we could deliver to.
-	maxEmailLength = 254
 	// maxNameLength is in runes, not bytes: a Ukrainian name must not be worth half as much
 	// as an English one.
 	maxNameLength = 100
@@ -121,8 +119,8 @@ const (
 func (h *Handler) Register(
 	ctx context.Context, req *connect.Request[authv1.RegisterRequest],
 ) (*connect.Response[authv1.RegisterResponse], error) {
-	email := normalizeEmail(req.Msg.GetEmail())
-	if !looksLikeEmail(email) || len(email) > maxEmailLength {
+	email := fmauth.NormalizeEmail(req.Msg.GetEmail())
+	if !fmauth.LooksLikeEmail(email) {
 		return nil, invalid("a valid email is required")
 	}
 	if len([]rune(req.Msg.GetPassword())) < minPasswordLength {
@@ -172,11 +170,11 @@ func (h *Handler) Register(
 func (h *Handler) Login(
 	ctx context.Context, req *connect.Request[authv1.LoginRequest],
 ) (*connect.Response[authv1.LoginResponse], error) {
-	email := normalizeEmail(req.Msg.GetEmail())
+	email := fmauth.NormalizeEmail(req.Msg.GetEmail())
 	// Refused before the lookup and before the gate. A password no account could have is not
 	// worth a database round trip, let alone 19 MiB of argon2id — and rejecting it says
 	// nothing about whether the address exists, so the enumeration guarantee holds.
-	if len(email) > maxEmailLength || len(req.Msg.GetPassword()) > maxPasswordBytes {
+	if len(email) > fmauth.MaxEmailLength || len(req.Msg.GetPassword()) > maxPasswordBytes {
 		return nil, errInvalidCredentials()
 	}
 
@@ -374,22 +372,6 @@ func (h *Handler) familyOf(ctx context.Context, userID string) string {
 		return ""
 	}
 	return familyID
-}
-
-func normalizeEmail(s string) string {
-	return strings.ToLower(strings.TrimSpace(s))
-}
-
-// looksLikeEmail is a sanity check, not a validator. RFC 5322 permits addresses no regex
-// should try to describe; the real proof that an address works is that mail to it arrives.
-func looksLikeEmail(s string) bool {
-	at := strings.IndexByte(s, '@')
-	if at <= 0 || at == len(s)-1 || strings.Count(s, "@") != 1 {
-		return false
-	}
-	domain := s[at+1:]
-	return strings.Contains(domain, ".") && !strings.HasPrefix(domain, ".") &&
-		!strings.HasSuffix(domain, ".") && !strings.ContainsAny(s, " \t\r\n")
 }
 
 func newRefreshToken() (string, error) {
