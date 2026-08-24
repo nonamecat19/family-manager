@@ -38,6 +38,7 @@ type ImageStore interface {
 // Handler serves recipes.v1.RecipesService.
 type Handler struct {
 	q           db.Querier
+	tx          Tx
 	bus         EventBus
 	images      ImageStore
 	imageBucket string
@@ -45,10 +46,23 @@ type Handler struct {
 	now         func() time.Time
 }
 
+// Tx is the transaction boundary. Implemented by internal/store over a pgx pool, and by the
+// fake store in tests.
+//
+// It takes a callback rather than returning a transaction handle so that there is no way to
+// begin one and forget to finish it, and so the Querier bound to the transaction is the only
+// one in scope while it is open.
+type Tx interface {
+	InTx(ctx context.Context, fn func(q db.Querier) error) error
+}
+
 // Options configures a Handler. Only Queries is required.
 type Options struct {
 	Queries db.Querier
-	Bus     EventBus
+	// Tx groups the writes that must not half-apply. Nil means every write runs on its own,
+	// which is what a zero-valued Options in a test gets.
+	Tx  Tx
+	Bus EventBus
 	// Images and ImageBucket back UploadRecipeImage. Leaving Images nil makes that one RPC
 	// fail with Unimplemented instead of every other procedure refusing to start — a MinIO
 	// outage shouldn't take down recipe reads and writes any more than a NATS outage does.
@@ -62,6 +76,7 @@ type Options struct {
 func New(opts Options) *Handler {
 	h := &Handler{
 		q:           opts.Queries,
+		tx:          opts.Tx,
 		bus:         opts.Bus,
 		images:      opts.Images,
 		imageBucket: opts.ImageBucket,
@@ -73,6 +88,9 @@ func New(opts Options) *Handler {
 	}
 	if h.now == nil {
 		h.now = time.Now
+	}
+	if h.tx == nil {
+		h.tx = withoutTx{h.q}
 	}
 	if h.bus == nil {
 		h.bus = noopBus{}
@@ -1040,6 +1058,13 @@ func taxonomyIDs(categoryID, subcategoryID string) (cat, sub pgtypeUUID, err err
 	}
 	return cat, sub, nil
 }
+
+// withoutTx is the fallback when no Tx is supplied: it runs the callback against the plain
+// querier, so each statement commits on its own. It keeps a zero-valued Options working; it is
+// not a transaction and does not pretend to be one.
+type withoutTx struct{ q db.Querier }
+
+func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
 func (h *Handler) saveIngredientsAndSteps(
 	ctx context.Context, recipeID pgtypeUUID, ingredients []*recipesv1.Ingredient, steps []*recipesv1.Step,

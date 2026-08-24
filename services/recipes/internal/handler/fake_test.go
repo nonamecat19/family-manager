@@ -542,3 +542,11 @@ func parseFloat(s string) float64 {
 	}
 	return f
 }
+
+// InTx makes the fake store satisfy Tx. There is no transaction to speak of — the fake is a
+// map — so the callback runs against the same store. What it does buy is that the handler's
+// transactional paths are exercised by the same tests as everything else, rather than only
+// being reached in production.
+func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
+	return fn(s)
+}

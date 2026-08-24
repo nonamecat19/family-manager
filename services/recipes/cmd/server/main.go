@@ -25,10 +25,10 @@ import (
 	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/libs/go/storage"
 	"github.com/nnc/family-manager/sdk/go/recipes/v1/recipesv1connect"
-	"github.com/nnc/family-manager/services/recipes/db"
 	"github.com/nnc/family-manager/services/recipes/internal/config"
 	dbfs "github.com/nnc/family-manager/services/recipes/internal/db"
 	"github.com/nnc/family-manager/services/recipes/internal/handler"
+	"github.com/nnc/family-manager/services/recipes/internal/store"
 )
 
 // healthcheck makes the service binary its own container healthcheck. The distroless image
@@ -116,8 +116,10 @@ func run() error {
 		return err
 	}
 
+	st := store.New(pool)
 	h := handler.New(handler.Options{
-		Queries:     db.New(pool),
+		Queries:     st.Queries(),
+		Tx:          st,
 		Bus:         busOrNil(bus),
 		Images:      images,
 		ImageBucket: cfg.StorageBucket,

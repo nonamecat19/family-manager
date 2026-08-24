@@ -27,7 +27,7 @@ const (
 func newTestHandler() (*Handler, *fakeStore, *recorder) {
 	store := newFakeStore()
 	rec := &recorder{}
-	h := New(Options{Queries: store, Bus: rec})
+	h := New(Options{Queries: store, Tx: store, Bus: rec})
 	return h, store, rec
 }
 
