@@ -39,6 +39,7 @@ export { fromWire, toWire } from "./convert.ts";
 export { createClients, type Clients, type ClientsOptions } from "./client.ts";
 export { ApiProvider, useClients, createQueryClient, type ApiProviderProps } from "./provider.tsx";
 export { shouldRetryQuery, MAX_QUERY_RETRIES } from "./retry.ts";
+export { toDisplayError, type DisplayError } from "./errors.ts";
 export { requestIdInterceptor, newRequestId, REQUEST_ID_HEADER } from "./requestId.ts";
 export { queryKeys, normalizeFilters, type TransactionFilters } from "./queryKeys.ts";
 export * from "./hooks.ts";
