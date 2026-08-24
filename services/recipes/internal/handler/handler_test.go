@@ -668,3 +668,89 @@ func TestAddCommentRejectsAnOversizeBody(t *testing.T) {
 		t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
 	}
 }
+
+// Replacing ingredients means deleting them and reinserting. Before the transaction, the
+// delete stood on its own: an edit that failed halfway left the recipe with nothing in it.
+func TestUpdateRecipeKeepsIngredientsWhenTheWriteFails(t *testing.T) {
+	h, store, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title:    "Borscht",
+		Servings: 4,
+		Ingredients: []*recipesv1.Ingredient{
+			{Name: "beetroot", Amount: "3", Unit: "pcs"},
+			{Name: "cabbage", Amount: "200", Unit: "g"},
+		},
+	})
+
+	store.failOn["AddIngredient"] = errBoom
+	_, err := h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
+		RecipeId: r.GetId(),
+		Title:    "Borscht",
+		Servings: 4,
+		Ingredients: []*recipesv1.Ingredient{
+			{Name: "beetroot", Amount: "4", Unit: "pcs"},
+		},
+	}))
+	if err == nil {
+		t.Fatal("UpdateRecipe succeeded despite a failing insert")
+	}
+	delete(store.failOn, "AddIngredient")
+
+	got, err := h.GetRecipe(ctx, connect.NewRequest(&recipesv1.GetRecipeRequest{RecipeId: r.GetId()}))
+	if err != nil {
+		t.Fatalf("GetRecipe: %v", err)
+	}
+	if n := len(got.Msg.GetRecipe().GetIngredients()); n != 2 {
+		t.Fatalf("ingredients after a failed update = %d, want the original 2", n)
+	}
+}
+
+// A failing counter update used to leave the comment behind and report failure, so the count
+// drifted and nothing could reconcile it.
+func TestAddCommentLeavesNothingBehindWhenTheCounterFails(t *testing.T) {
+	h, store, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Borscht", Servings: 4})
+
+	store.failOn["IncrementCommentCount"] = errBoom
+	if _, err := h.AddComment(ctx, connect.NewRequest(&recipesv1.AddCommentRequest{
+		RecipeId: r.GetId(), Body: "needs more dill",
+	})); err == nil {
+		t.Fatal("AddComment succeeded despite a failing counter")
+	}
+	delete(store.failOn, "IncrementCommentCount")
+
+	list, err := h.ListComments(ctx, connect.NewRequest(&recipesv1.ListCommentsRequest{
+		RecipeId: r.GetId(),
+	}))
+	if err != nil {
+		t.Fatalf("ListComments: %v", err)
+	}
+	if n := len(list.Msg.GetComments()); n != 0 {
+		t.Fatalf("comments after a failed add = %d, want 0", n)
+	}
+}
+
+// The recipe row and its children are one write: a failure in the children must not leave the
+// row behind.
+func TestCreateRecipeLeavesNoRowWhenIngredientsFail(t *testing.T) {
+	h, store, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	store.failOn["AddIngredient"] = errBoom
+	_, err := h.CreateRecipe(ctx, connect.NewRequest(&recipesv1.CreateRecipeRequest{
+		Title:       "Borscht",
+		Servings:    4,
+		Ingredients: []*recipesv1.Ingredient{{Name: "beetroot"}},
+	}))
+	if err == nil {
+		t.Fatal("CreateRecipe succeeded despite a failing insert")
+	}
+	delete(store.failOn, "AddIngredient")
+
+	if n := len(store.recipes); n != 0 {
+		t.Fatalf("%d recipe row(s) left behind by a failed create, want 0", n)
+	}
+}

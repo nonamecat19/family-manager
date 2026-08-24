@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -290,6 +292,9 @@ func (s *fakeStore) DeleteRecipe(_ context.Context, id pgtype.UUID) (int64, erro
 }
 
 func (s *fakeStore) IncrementCommentCount(_ context.Context, id pgtype.UUID) error {
+	if err := s.fail("IncrementCommentCount"); err != nil {
+		return err
+	}
 	r, ok := s.recipes[pgconv.UUIDString(id)]
 	if ok {
 		r.CommentCount++
@@ -299,6 +304,9 @@ func (s *fakeStore) IncrementCommentCount(_ context.Context, id pgtype.UUID) err
 }
 
 func (s *fakeStore) AddIngredient(_ context.Context, arg db.AddIngredientParams) error {
+	if err := s.fail("AddIngredient"); err != nil {
+		return err
+	}
 	s.ingredients[pgconv.UUIDString(arg.RecipeID)] = append(
 		s.ingredients[pgconv.UUIDString(arg.RecipeID)],
 		db.RecipeIngredient(arg),
@@ -307,6 +315,9 @@ func (s *fakeStore) AddIngredient(_ context.Context, arg db.AddIngredientParams)
 }
 
 func (s *fakeStore) AddStep(_ context.Context, arg db.AddStepParams) error {
+	if err := s.fail("AddStep"); err != nil {
+		return err
+	}
 	s.steps[pgconv.UUIDString(arg.RecipeID)] = append(
 		s.steps[pgconv.UUIDString(arg.RecipeID)],
 		db.RecipeStep(arg),
@@ -543,10 +554,45 @@ func parseFloat(s string) float64 {
 	return f
 }
 
-// InTx makes the fake store satisfy Tx. There is no transaction to speak of — the fake is a
-// map — so the callback runs against the same store. What it does buy is that the handler's
-// transactional paths are exercised by the same tests as everything else, rather than only
-// being reached in production.
+// InTx makes the fake store satisfy Tx, and rolls back for real.
+//
+// A fake that ran the callback and kept whatever it wrote would let every atomicity test pass
+// whether or not the handler used a transaction at all, which makes the test worthless exactly
+// where it is needed. Instead it snapshots the maps, and restores them if the callback returns
+// an error — the observable half of what Postgres does, which is what the handler's behaviour
+// depends on.
 func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
-	return fn(s)
+	undo := s.snapshot()
+	if err := fn(s); err != nil {
+		undo()
+		return err
+	}
+	return nil
+}
+
+// snapshot copies every map one level deep and returns a function restoring them. One level is
+// enough: the values are structs and the slices are replaced wholesale, never appended to in
+// place by a query.
+func (s *fakeStore) snapshot() func() {
+	categories := maps.Clone(s.categories)
+	subcategories := maps.Clone(s.subcategories)
+	recipes := maps.Clone(s.recipes)
+	favorites := maps.Clone(s.favorites)
+	comments := maps.Clone(s.comments)
+	mealPlan := maps.Clone(s.mealPlan)
+
+	ingredients := make(map[string][]db.RecipeIngredient, len(s.ingredients))
+	for k, v := range s.ingredients {
+		ingredients[k] = slices.Clone(v)
+	}
+	steps := make(map[string][]db.RecipeStep, len(s.steps))
+	for k, v := range s.steps {
+		steps[k] = slices.Clone(v)
+	}
+
+	return func() {
+		s.categories, s.subcategories, s.recipes = categories, subcategories, recipes
+		s.favorites, s.comments, s.mealPlan = favorites, comments, mealPlan
+		s.ingredients, s.steps = ingredients, steps
+	}
 }
