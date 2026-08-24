@@ -264,28 +264,35 @@ func (h *Handler) CreateRecipe(
 		return nil, err
 	}
 
-	r, err := h.q.CreateRecipe(ctx, db.CreateRecipeParams{
-		FamilyID:      famUUID,
-		Title:         title,
-		Description:   req.Msg.GetDescription(),
-		CategoryID:    catID,
-		SubcategoryID: subID,
-		Servings:      servings,
-		PrepSeconds:   req.Msg.GetPrepSeconds(),
-		CookSeconds:   req.Msg.GetCookSeconds(),
-		AuthorUserID:  userUUID,
-		Notes:         req.Msg.GetNotes(),
-		Rating:        clampRating(req.Msg.GetRating()),
-		Kcal:          maxInt32(req.Msg.GetNutrition().GetKcal(), 0),
-		ProteinG:      nonNegative(req.Msg.GetNutrition().GetProteinG()),
-		FatG:          nonNegative(req.Msg.GetNutrition().GetFatG()),
-		CarbsG:        nonNegative(req.Msg.GetNutrition().GetCarbsG()),
-	})
-	if err != nil {
-		return nil, h.internal(ctx, err, "create recipe")
-	}
-
-	if err := h.saveIngredientsAndSteps(ctx, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps()); err != nil {
+	// The recipe row and its ingredients and steps are one thing. Written separately, a
+	// failure partway through the inserts left a recipe with the first four of its nine
+	// ingredients and no indication that the rest were missing — and the response the caller
+	// got was an error, so nobody went looking for a recipe they thought had not been created.
+	var r db.Recipe
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		var err error
+		r, err = q.CreateRecipe(ctx, db.CreateRecipeParams{
+			FamilyID:      famUUID,
+			Title:         title,
+			Description:   req.Msg.GetDescription(),
+			CategoryID:    catID,
+			SubcategoryID: subID,
+			Servings:      servings,
+			PrepSeconds:   req.Msg.GetPrepSeconds(),
+			CookSeconds:   req.Msg.GetCookSeconds(),
+			AuthorUserID:  userUUID,
+			Notes:         req.Msg.GetNotes(),
+			Rating:        clampRating(req.Msg.GetRating()),
+			Kcal:          maxInt32(req.Msg.GetNutrition().GetKcal(), 0),
+			ProteinG:      nonNegative(req.Msg.GetNutrition().GetProteinG()),
+			FatG:          nonNegative(req.Msg.GetNutrition().GetFatG()),
+			CarbsG:        nonNegative(req.Msg.GetNutrition().GetCarbsG()),
+		})
+		if err != nil {
+			return h.internal(ctx, err, "create recipe")
+		}
+		return h.saveIngredientsAndSteps(ctx, q, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps())
+	}); err != nil {
 		return nil, err
 	}
 
@@ -472,34 +479,39 @@ func (h *Handler) UpdateRecipe(
 
 	n := nutritionUpdate(req.Msg.GetNutrition())
 
-	r, err = h.q.UpdateRecipe(ctx, db.UpdateRecipeParams{
-		ID:            r.ID,
-		Title:         title,
-		Description:   req.Msg.GetDescription(),
-		CategoryID:    catID,
-		SubcategoryID: subID,
-		Servings:      req.Msg.GetServings(),
-		PrepSeconds:   req.Msg.GetPrepSeconds(),
-		CookSeconds:   req.Msg.GetCookSeconds(),
-		Notes:         req.Msg.GetNotes(),
-		Rating:        clampRating(req.Msg.GetRating()),
-		Kcal:          n.kcal,
-		ProteinG:      n.proteinG,
-		FatG:          n.fatG,
-		CarbsG:        n.carbsG,
-	})
-	if err != nil {
-		return nil, h.internal(ctx, err, "update recipe")
-	}
-
-	// Replace ingredients and steps: delete then re-insert. They are owned by the recipe.
-	if err := h.q.DeleteIngredients(ctx, r.ID); err != nil {
-		return nil, h.internal(ctx, err, "clear ingredients")
-	}
-	if err := h.q.DeleteSteps(ctx, r.ID); err != nil {
-		return nil, h.internal(ctx, err, "clear steps")
-	}
-	if err := h.saveIngredientsAndSteps(ctx, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps()); err != nil {
+	// Ingredients and steps are replaced by deleting and reinserting, which is the write in
+	// this service that most needed a transaction: the delete committed on its own, so a
+	// failure during the reinsert left the recipe with no ingredients at all. The user's
+	// edit failed and their recipe lost its contents.
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		var err error
+		r, err = q.UpdateRecipe(ctx, db.UpdateRecipeParams{
+			ID:            r.ID,
+			Title:         title,
+			Description:   req.Msg.GetDescription(),
+			CategoryID:    catID,
+			SubcategoryID: subID,
+			Servings:      req.Msg.GetServings(),
+			PrepSeconds:   req.Msg.GetPrepSeconds(),
+			CookSeconds:   req.Msg.GetCookSeconds(),
+			Notes:         req.Msg.GetNotes(),
+			Rating:        clampRating(req.Msg.GetRating()),
+			Kcal:          n.kcal,
+			ProteinG:      n.proteinG,
+			FatG:          n.fatG,
+			CarbsG:        n.carbsG,
+		})
+		if err != nil {
+			return h.internal(ctx, err, "update recipe")
+		}
+		if err := q.DeleteIngredients(ctx, r.ID); err != nil {
+			return h.internal(ctx, err, "clear ingredients")
+		}
+		if err := q.DeleteSteps(ctx, r.ID); err != nil {
+			return h.internal(ctx, err, "clear steps")
+		}
+		return h.saveIngredientsAndSteps(ctx, q, r.ID, req.Msg.GetIngredients(), req.Msg.GetSteps())
+	}); err != nil {
 		return nil, err
 	}
 
@@ -746,12 +758,26 @@ func (h *Handler) AddComment(
 	}
 
 	userUUID := pgconv.MustUUID(userID)
-	c, err := h.q.AddComment(ctx, db.AddCommentParams{RecipeID: recipeID, UserID: userUUID, Body: body})
-	if err != nil {
-		return nil, h.internal(ctx, err, "add comment")
-	}
-	if err := h.q.IncrementCommentCount(ctx, recipeID); err != nil {
-		return nil, h.internal(ctx, err, "increment comment count")
+
+	// comment_count is denormalised onto the recipe. Written outside a transaction, a failed
+	// increment left a comment that exists and a count that does not know about it, and the
+	// caller was told the whole thing failed — so the drift accumulated silently, and every
+	// list view showed a number that was wrong and could never correct itself.
+	var c db.RecipeComment
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		var err error
+		c, err = q.AddComment(ctx, db.AddCommentParams{
+			RecipeID: recipeID, UserID: userUUID, Body: body,
+		})
+		if err != nil {
+			return h.internal(ctx, err, "add comment")
+		}
+		if err := q.IncrementCommentCount(ctx, recipeID); err != nil {
+			return h.internal(ctx, err, "increment comment count")
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	return connect.NewResponse(&recipesv1.AddCommentResponse{Comment: toProtoComment(c)}), nil
 }
@@ -1066,15 +1092,19 @@ type withoutTx struct{ q db.Querier }
 
 func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
+// saveIngredientsAndSteps writes through the querier it is given, not through h.q: inside
+// InTx that is the transaction-bound one, and using the handler's would silently run these
+// inserts on a different connection outside the transaction.
 func (h *Handler) saveIngredientsAndSteps(
-	ctx context.Context, recipeID pgtypeUUID, ingredients []*recipesv1.Ingredient, steps []*recipesv1.Step,
+	ctx context.Context, q db.Querier, recipeID pgtypeUUID,
+	ingredients []*recipesv1.Ingredient, steps []*recipesv1.Step,
 ) error {
 	for i, ing := range ingredients {
 		name := trimmed(ing.GetName())
 		if name == "" {
 			continue
 		}
-		if err := h.q.AddIngredient(ctx, db.AddIngredientParams{
+		if err := q.AddIngredient(ctx, db.AddIngredientParams{
 			RecipeID: recipeID,
 			Position: int32(i + 1),
 			Name:     name,
@@ -1089,7 +1119,7 @@ func (h *Handler) saveIngredientsAndSteps(
 		if instr == "" {
 			continue
 		}
-		if err := h.q.AddStep(ctx, db.AddStepParams{
+		if err := q.AddStep(ctx, db.AddStepParams{
 			RecipeID:        recipeID,
 			Position:        int32(i + 1),
 			Instruction:     instr,
