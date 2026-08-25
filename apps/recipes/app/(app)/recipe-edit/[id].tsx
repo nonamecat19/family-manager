@@ -11,6 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+import { useI18n } from "../../../components/i18n/index.tsx";
 import { formatMacro } from "../../../components/organic/format.ts";
 import { Icon } from "../../../components/organic/icons.tsx";
 import { organic } from "../../../components/organic/tokens.ts";
@@ -40,6 +41,7 @@ interface StepRow {
 export default function RecipeEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useI18n();
   const isNew = id === "new";
   const recipe = useRecipe(isNew ? "" : id);
   const categories = useRecipeCategories();
@@ -68,7 +70,7 @@ export default function RecipeEditScreen() {
 
   const subcategories = useRecipeSubcategories(categoryId);
 
-  if (!isNew && recipe.isPending) return <Placeholder label="Opening the recipe…" />;
+  if (!isNew && recipe.isPending) return <Placeholder label={t("recipeEdit.openingRecipe")} />;
   if (!isNew && recipe.isError) {
     return <Placeholder label={recipe.error.message} />;
   }
@@ -195,14 +197,14 @@ export default function RecipeEditScreen() {
         contentContainerClassName="gap-[20px] px-[22px] pb-[32px] pt-[8px]"
       >
         <View className="flex-row items-center gap-[13px]">
-          <RoundButton icon="close" label="Cancel" onPress={() => router.back()} />
-          <Display size={24}>{isNew ? "New recipe" : "Edit recipe"}</Display>
+          <RoundButton icon="close" label={t("recipeEdit.cancel")} onPress={() => router.back()} />
+          <Display size={24}>{isNew ? t("recipeEdit.newRecipe") : t("recipeEdit.editRecipe")}</Display>
         </View>
 
         <View className="flex-row items-center gap-[16px]">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Add a photo"
+            accessibilityLabel={t("recipeEdit.addAPhoto")}
             onPress={() => void pickImage()}
             className="h-[104px] w-[104px] flex-none items-center justify-center overflow-hidden rounded-full bg-accent-200"
           >
@@ -217,25 +219,24 @@ export default function RecipeEditScreen() {
             )}
           </Pressable>
           <Text className="flex-1 font-fig-semi text-[13.5px] leading-[20px] text-neutral-600">
-            A transparent PNG works best — the dish sits straight on the page with no box
-            around it.
+            {t("recipeEdit.photoHint")}
           </Text>
         </View>
 
-        <Field label="Name" value={title} onChangeText={setTitle} placeholder="Babcia's mushroom soup" />
+        <Field label={t("recipeEdit.name")} value={title} onChangeText={setTitle} placeholder={t("recipeEdit.namePlaceholder")} />
         <Field
-          label="Description"
+          label={t("recipeEdit.description")}
           value={description}
           onChangeText={setDescription}
-          placeholder="What is it, in one line"
+          placeholder={t("recipeEdit.descriptionPlaceholder")}
         />
 
         {categories.data && categories.data.length > 0 && (
           <View>
-            <Kicker className="mb-[10px]">Category</Kicker>
+            <Kicker className="mb-[10px]">{t("recipeEdit.category")}</Kicker>
             <View className="flex-row flex-wrap gap-[8px]">
               <Chip
-                label="None"
+                label={t("common.none")}
                 active={categoryId === ""}
                 onPress={() => {
                   setCategoryId("");
@@ -259,10 +260,10 @@ export default function RecipeEditScreen() {
 
         {categoryId !== "" && subcategories.data && subcategories.data.length > 0 && (
           <View>
-            <Kicker className="mb-[10px]">Subcategory</Kicker>
+            <Kicker className="mb-[10px]">{t("recipeEdit.subcategory")}</Kicker>
             <View className="flex-row flex-wrap gap-[8px]">
               <Chip
-                label="None"
+                label={t("common.none")}
                 active={subcategoryId === ""}
                 onPress={() => setSubcategoryId("")}
                 tone="accent2"
@@ -283,21 +284,21 @@ export default function RecipeEditScreen() {
         <View className="flex-row gap-[12px]">
           <Field
             className="flex-1"
-            label="Servings"
+            label={t("recipeEdit.servings")}
             value={servings}
             onChangeText={setServings}
             keyboardType="numeric"
           />
           <Field
             className="flex-1"
-            label="Prep (min)"
+            label={t("recipeEdit.prepMinutes")}
             value={prepMinutes}
             onChangeText={setPrepMinutes}
             keyboardType="numeric"
           />
           <Field
             className="flex-1"
-            label="Cook (min)"
+            label={t("recipeEdit.cookMinutes")}
             value={cookMinutes}
             onChangeText={setCookMinutes}
             keyboardType="numeric"
@@ -305,32 +306,32 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">Per serving</Kicker>
+          <Kicker className="mb-[10px]">{t("recipeEdit.perServing")}</Kicker>
           <View className="flex-row gap-[12px]">
             <Field
               className="flex-1"
-              label="kcal"
+              label={t("recipeEdit.kcal")}
               value={kcal}
               onChangeText={setKcal}
               keyboardType="numeric"
             />
             <Field
               className="flex-1"
-              label="Protein (g)"
+              label={t("recipeEdit.proteinG")}
               value={proteinG}
               onChangeText={setProteinG}
               keyboardType="numeric"
             />
             <Field
               className="flex-1"
-              label="Fat (g)"
+              label={t("recipeEdit.fatG")}
               value={fatG}
               onChangeText={setFatG}
               keyboardType="numeric"
             />
             <Field
               className="flex-1"
-              label="Carbs (g)"
+              label={t("recipeEdit.carbsG")}
               value={carbsG}
               onChangeText={setCarbsG}
               keyboardType="numeric"
@@ -339,47 +340,47 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">Rating</Kicker>
+          <Kicker className="mb-[10px]">{t("recipeEdit.rating")}</Kicker>
           <StarPicker rating={rating} onChange={setRating} />
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">Ingredients</Kicker>
+          <Kicker className="mb-[10px]">{t("recipeEdit.ingredients")}</Kicker>
           <View className="gap-[8px]">
             {ingredients.map((ing, idx) => (
               <View key={idx} className="flex-row items-end gap-[8px]">
                 <Field
                   className="flex-1"
-                  label={idx === 0 ? "Name" : ""}
+                  label={idx === 0 ? t("recipeEdit.ingredientName") : ""}
                   value={ing.name}
                   onChangeText={(v) => updateRow(ingredients, setIngredients, idx, { name: v })}
-                  placeholder="Chestnut mushrooms"
+                  placeholder={t("recipeEdit.ingredientNamePlaceholder")}
                 />
                 <Field
                   className="w-[76px]"
-                  label={idx === 0 ? "Amount" : ""}
+                  label={idx === 0 ? t("recipeEdit.amount") : ""}
                   value={ing.amount}
                   onChangeText={(v) => updateRow(ingredients, setIngredients, idx, { amount: v })}
-                  placeholder="300"
+                  placeholder={t("recipeEdit.amountPlaceholder")}
                 />
                 <Field
                   className="w-[64px]"
-                  label={idx === 0 ? "Unit" : ""}
+                  label={idx === 0 ? t("recipeEdit.unit") : ""}
                   value={ing.unit}
                   onChangeText={(v) => updateRow(ingredients, setIngredients, idx, { unit: v })}
-                  placeholder="g"
+                  placeholder={t("recipeEdit.unitPlaceholder")}
                 />
               </View>
             ))}
             <DashedButton
-              title="+ Add ingredient"
+              title={t("recipeEdit.addIngredient")}
               onPress={() => setIngredients([...ingredients, { name: "", amount: "", unit: "" }])}
             />
           </View>
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">Steps</Kicker>
+          <Kicker className="mb-[10px]">{t("recipeEdit.steps")}</Kicker>
           <View className="gap-[10px]">
             {steps.map((step, idx) => (
               <View key={idx} className="gap-[8px] rounded-2xl bg-neutral-100 px-[14px] py-[14px]">
@@ -387,17 +388,19 @@ export default function RecipeEditScreen() {
                   <View className="h-[26px] w-[26px] items-center justify-center rounded-full bg-accent2-300">
                     <Text className="font-cap text-[13px] text-accent2-900">{idx + 1}</Text>
                   </View>
-                  <Text className="font-fig-bold text-[12.5px] text-neutral-600">Step {idx + 1}</Text>
+                  <Text className="font-fig-bold text-[12.5px] text-neutral-600">
+                    {t("recipeEdit.stepNumber", { number: idx + 1 })}
+                  </Text>
                 </View>
                 <Field
-                  label="Instruction"
+                  label={t("recipeEdit.instruction")}
                   value={step.instruction}
                   onChangeText={(v) => updateRow(steps, setSteps, idx, { instruction: v })}
                   multiline
-                  placeholder="Sweat the onion and carrot in butter until soft."
+                  placeholder={t("recipeEdit.instructionPlaceholder")}
                 />
                 <Field
-                  label="Timer (min)"
+                  label={t("recipeEdit.timerMinutes")}
                   value={step.durationMinutes}
                   onChangeText={(v) => updateRow(steps, setSteps, idx, { durationMinutes: v })}
                   keyboardType="numeric"
@@ -406,27 +409,27 @@ export default function RecipeEditScreen() {
               </View>
             ))}
             <DashedButton
-              title="+ Add step"
+              title={t("recipeEdit.addStep")}
               onPress={() => setSteps([...steps, { instruction: "", durationMinutes: "" }])}
             />
           </View>
         </View>
 
         <Field
-          label="Notes"
+          label={t("recipeEdit.notes")}
           value={notes}
           onChangeText={setNotes}
           multiline
-          placeholder="Babcia never measured the cream."
+          placeholder={t("recipeEdit.notesPlaceholder")}
         />
 
         <PrimaryButton
           title={
             createRecipe.isPending || updateRecipe.isPending
-              ? "Saving…"
+              ? t("recipeEdit.saving")
               : isNew
-                ? "Save recipe"
-                : "Save changes"
+                ? t("recipeEdit.saveRecipe")
+                : t("recipeEdit.saveChanges")
           }
           disabled={title.trim() === "" || createRecipe.isPending || updateRecipe.isPending}
           onPress={submit}

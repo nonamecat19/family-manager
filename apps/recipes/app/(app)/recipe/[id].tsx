@@ -23,6 +23,7 @@ import {
 } from "react-native";
 
 import { useBasket } from "../../../components/basket.tsx";
+import { useI18n } from "../../../components/i18n/index.tsx";
 import { ClockIcon, HeartIcon, Icon, StarIcon } from "../../../components/organic/icons.tsx";
 import { formatDuration } from "../../../components/organic/format.ts";
 import { scaleAmount } from "../../../components/organic/scale.ts";
@@ -47,6 +48,7 @@ type Tab = (typeof TABS)[number];
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t, locale } = useI18n();
   const recipe = useRecipe(id);
   const comments = useComments(id);
   const categories = useRecipeCategories();
@@ -66,9 +68,9 @@ export default function RecipeDetailScreen() {
     return (
       <Screen>
         <View className="flex-1 justify-center gap-[16px] px-[22px]">
-          <Display size={26}>This one got away</Display>
+          <Display size={26}>{t("recipeDetail.gotAway")}</Display>
           <Text className="font-fig text-[15px] text-neutral-600">{recipe.error.message}</Text>
-          <PrimaryButton title="Try again" onPress={() => void recipe.refetch()} />
+          <PrimaryButton title={t("common.tryAgain")} onPress={() => void recipe.refetch()} />
         </View>
       </Screen>
     );
@@ -84,10 +86,10 @@ export default function RecipeDetailScreen() {
   const inBasket = basket.items.some((i) => i.recipeId === r.id);
 
   const handleDelete = () => {
-    Alert.alert("Delete recipe?", "This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("recipeDetail.deleteRecipeTitle"), t("recipeDetail.deleteRecipeBody"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => deleteRecipe.mutate(r.id, { onSuccess: () => router.replace("/(app)") }),
       },
@@ -105,17 +107,17 @@ export default function RecipeDetailScreen() {
             style={{ backgroundColor: tint.bg }}
           >
             <View className="flex-row justify-between">
-              <RoundButton icon="back" label="Back" onPress={() => router.back()} tone="translucent" />
+              <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} tone="translucent" />
               <View className="flex-row gap-[10px]">
                 <RoundButton
-                  label="Edit recipe"
+                  label={t("recipeDetail.editRecipe")}
                   onPress={() => router.push(`/(app)/recipe-edit/${r.id}`)}
                   tone="translucent"
                 >
                   <Icon name="pencil" size={19} color={organic.accent[700]} />
                 </RoundButton>
                 <RoundButton
-                  label={r.favoriteCount > 0 ? "Remove from favourites" : "Add to favourites"}
+                  label={r.favoriteCount > 0 ? t("recipeDetail.removeFromFavourites") : t("recipeDetail.addToFavourites")}
                   onPress={() => toggleFavorite.mutate(r.id)}
                   tone="translucent"
                 >
@@ -156,14 +158,14 @@ export default function RecipeDetailScreen() {
                   <View className="flex-row items-center gap-[5px]">
                     <ClockIcon />
                     <Text className="font-fig-bold text-[13.5px] text-neutral-700">
-                      {formatDuration(totalSeconds)}
+                      {formatDuration(totalSeconds, t)}
                     </Text>
                   </View>
                 )}
                 <View className="flex-row items-center gap-[5px]">
                   <StarIcon size={15} />
                   <Text className="font-fig-bold text-[13.5px] text-accent-700">
-                    {r.rating > 0 ? `${r.rating}.0` : "Unrated"}
+                    {r.rating > 0 ? `${r.rating}.0` : t("recipeDetail.unrated")}
                     {r.favoriteCount > 0 ? ` · ♥ ${r.favoriteCount}` : ""}
                   </Text>
                 </View>
@@ -184,17 +186,26 @@ export default function RecipeDetailScreen() {
               />
             </View>
 
-            <SegTabs options={TABS} value={tab} onChange={setTab} />
+            <SegTabs
+              options={TABS}
+              value={tab}
+              onChange={setTab}
+              labels={{
+                Ingredients: t("recipeDetail.tabIngredients"),
+                Steps: t("recipeDetail.tabSteps"),
+                Notes: t("recipeDetail.tabNotes"),
+              }}
+            />
 
             {tab === "Ingredients" && (
               <View>
                 <View className="mb-[8px] flex-row items-center justify-between">
-                  <Text className="font-fig-bold text-[13px] text-neutral-600">Batches</Text>
-                  <Stepper value={batch} onChange={setBatch} label="batches" max={6} />
+                  <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipeDetail.batches")}</Text>
+                  <Stepper value={batch} onChange={setBatch} label={t("recipeDetail.batchesLabel")} max={6} />
                 </View>
                 {r.ingredients.length === 0 ? (
                   <Text className="font-fig text-[15px] text-neutral-600">
-                    No ingredients written down yet.
+                    {t("recipeDetail.noIngredientsYet")}
                   </Text>
                 ) : (
                   r.ingredients.map((ing, i) => (
@@ -215,7 +226,7 @@ export default function RecipeDetailScreen() {
             {tab === "Steps" && (
               <View className="gap-[14px]">
                 {r.steps.length === 0 ? (
-                  <Text className="font-fig text-[15px] text-neutral-600">No steps written down yet.</Text>
+                  <Text className="font-fig text-[15px] text-neutral-600">{t("recipeDetail.noStepsYet")}</Text>
                 ) : (
                   r.steps.map((step, i) => (
                     <View key={i} className="flex-row gap-[14px]">
@@ -228,7 +239,7 @@ export default function RecipeDetailScreen() {
                         </Text>
                         {step.durationSeconds > 0 && (
                           <Text className="mt-[4px] font-fig-bold text-[12.5px] text-neutral-600">
-                            {formatDuration(step.durationSeconds)}
+                            {formatDuration(step.durationSeconds, t)}
                           </Text>
                         )}
                       </View>
@@ -242,37 +253,39 @@ export default function RecipeDetailScreen() {
               <View className="gap-[12px]">
                 {r.notes !== "" && (
                   <View className="rounded-2xl bg-accent2-100 px-[18px] py-[16px]">
-                    <Kicker className="text-accent2-700">The cook</Kicker>
+                    <Kicker className="text-accent2-700">{t("recipeDetail.theCook")}</Kicker>
                     <Text className="mt-[7px] font-fig text-[15px] leading-[22px] text-fg">{r.notes}</Text>
                   </View>
                 )}
                 {(comments.data ?? []).map((c) => (
                   <View key={c.id} className="rounded-2xl bg-accent2-100 px-[18px] py-[16px]">
                     <Kicker className="text-accent2-700">
-                      {c.createdAt ? new Date(Number(c.createdAt.seconds) * 1000).toLocaleDateString() : "Family"}
+                      {c.createdAt
+                        ? new Date(Number(c.createdAt.seconds) * 1000).toLocaleDateString(locale)
+                        : t("recipeDetail.family")}
                     </Kicker>
                     <Text className="mt-[7px] font-fig text-[15px] leading-[22px] text-fg">{c.body}</Text>
                   </View>
                 ))}
                 {r.notes === "" && (comments.data ?? []).length === 0 && (
                   <Text className="font-fig text-[15px] text-neutral-600">
-                    Nothing written in the margin yet.
+                    {t("recipeDetail.nothingInTheMargin")}
                   </Text>
                 )}
 
                 <View className="gap-[10px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]">
-                  <Kicker>Add a note</Kicker>
+                  <Kicker>{t("recipeDetail.addANote")}</Kicker>
                   <TextInput
-                    accessibilityLabel="Add a comment"
+                    accessibilityLabel={t("recipeDetail.addAComment")}
                     value={commentBody}
                     onChangeText={setCommentBody}
                     multiline
-                    placeholder="What did you change?"
+                    placeholder={t("recipeDetail.whatDidYouChange")}
                     placeholderTextColor={organic.neutral[500]}
                     className="min-h-[54px] font-fig text-[15px] text-fg"
                   />
                   <PrimaryButton
-                    title="Post"
+                    title={t("recipeDetail.post")}
                     disabled={commentBody.trim() === "" || addComment.isPending}
                     onPress={() =>
                       addComment.mutate(
@@ -284,7 +297,7 @@ export default function RecipeDetailScreen() {
                 </View>
 
                 <View className="gap-[8px] pt-[4px]">
-                  <Kicker>Your rating</Kicker>
+                  <Kicker>{t("recipeDetail.yourRating")}</Kicker>
                   <StarPicker
                     rating={r.rating}
                     onChange={(n) => rateRecipe.mutate({ recipeId: r.id, rating: n })}
@@ -295,7 +308,7 @@ export default function RecipeDetailScreen() {
 
             <View className="mt-[2px] flex-row gap-[10px]">
               <PrimaryButton
-                title={inBasket ? "In the plan" : "Add to plan"}
+                title={inBasket ? t("recipeDetail.inThePlan") : t("recipeDetail.addToPlan")}
                 onPress={() => {
                   basket.add(r.id);
                   router.push("/(app)/meal-plan");
@@ -303,18 +316,18 @@ export default function RecipeDetailScreen() {
                 className="flex-1"
               />
               {r.steps.length > 0 && (
-                <OutlineButton title="Cook" onPress={() => router.push(`/(app)/cook/${r.id}`)} />
+                <OutlineButton title={t("recipeDetail.cook")} onPress={() => router.push(`/(app)/cook/${r.id}`)} />
               )}
             </View>
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Delete recipe"
+              accessibilityLabel={t("recipeDetail.deleteRecipe")}
               onPress={handleDelete}
               className="items-center pt-[6px]"
             >
               <Text className="font-fig-semi text-[13.5px]" style={{ color: organic.danger }}>
-                Delete recipe
+                {t("recipeDetail.deleteRecipe")}
               </Text>
             </Pressable>
           </View>
@@ -325,10 +338,11 @@ export default function RecipeDetailScreen() {
 }
 
 function Loading() {
+  const { t } = useI18n();
   return (
     <Screen>
       <View className="flex-1 items-center justify-center">
-        <Text className="font-fig-semi text-[14px] text-neutral-600">Fetching the recipe…</Text>
+        <Text className="font-fig-semi text-[14px] text-neutral-600">{t("recipeDetail.fetching")}</Text>
       </View>
     </Screen>
   );

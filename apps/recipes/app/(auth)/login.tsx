@@ -3,11 +3,13 @@ import { tokensFromResponse, useAuth } from "@fm/auth";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
 
+import { useI18n } from "../../components/i18n/index.tsx";
 import { Display, Field, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function LoginScreen() {
   const { auth } = useClients();
   const { signIn } = useAuth();
+  const { t } = useI18n();
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -26,11 +28,7 @@ export default function LoginScreen() {
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
     } catch {
-      setError(
-        mode === "register"
-          ? "Could not create that account. Try a different email."
-          : "Email or password is incorrect.",
-      );
+      setError(mode === "register" ? t("login.registerError") : t("login.loginError"));
     } finally {
       setBusy(false);
     }
@@ -45,20 +43,18 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-[18px] px-[24px]"
       >
         <View>
-          <Display size={36}>Family Recipes</Display>
+          <Display size={36}>{t("login.appName")}</Display>
           <Text className="mt-[10px] font-fig text-[15.5px] leading-[23px] text-neutral-700">
-            {mode === "login"
-              ? "Sign in to your family cookbook."
-              : "Create your account and start writing it down."}
+            {mode === "login" ? t("login.signInBody") : t("login.registerBody")}
           </Text>
         </View>
 
         {mode === "register" ? (
-          <Field label="Name" value={name} onChangeText={setName} autoComplete="name" />
+          <Field label={t("login.name")} value={name} onChangeText={setName} autoComplete="name" />
         ) : null}
 
         <Field
-          label="Email"
+          label={t("login.email")}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -66,7 +62,7 @@ export default function LoginScreen() {
           autoComplete="email"
         />
         <Field
-          label="Password"
+          label={t("login.password")}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -75,21 +71,21 @@ export default function LoginScreen() {
         />
 
         <PrimaryButton
-          title={busy ? "One moment…" : mode === "login" ? "Sign in" : "Create account"}
+          title={busy ? t("login.oneMoment") : mode === "login" ? t("login.signIn") : t("login.createAccount")}
           disabled={!canSubmit}
           onPress={() => void submit()}
         />
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={mode === "login" ? "Create an account" : "I already have an account"}
+          accessibilityLabel={mode === "login" ? t("login.switchToRegister") : t("login.switchToLogin")}
           onPress={() => {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
         >
           <Text className="text-center font-fig-bold text-[14.5px] text-accent-700">
-            {mode === "login" ? "Create an account" : "I already have an account"}
+            {mode === "login" ? t("login.switchToRegister") : t("login.switchToLogin")}
           </Text>
         </Pressable>
       </KeyboardAvoidingView>

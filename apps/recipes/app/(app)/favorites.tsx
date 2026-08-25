@@ -3,6 +3,7 @@ import type { Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+import { useI18n } from "../../components/i18n/index.tsx";
 import { formatDuration, metaLine } from "../../components/organic/format.ts";
 import { initialOf, tintFor } from "../../components/organic/tokens.ts";
 import { Display, RoundButton, Screen } from "../../components/organic/ui.tsx";
@@ -10,6 +11,7 @@ import { Display, RoundButton, Screen } from "../../components/organic/ui.tsx";
 /** Favourites is a wall of dishes, not a list of rows — you recognise these by sight. */
 export default function FavoritesScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const favorites = useFavoriteRecipes();
   const recipes = favorites.data ?? [];
 
@@ -21,8 +23,8 @@ export default function FavoritesScreen() {
         refreshControl={undefined}
       >
         <View className="flex-row items-center gap-[12px]">
-          <RoundButton icon="back" label="Back" onPress={() => router.back()} />
-          <Display size={28}>Favourites</Display>
+          <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
+          <Display size={28}>{t("favorites.title")}</Display>
         </View>
 
         <View className="flex-row flex-wrap gap-[12px]">
@@ -38,7 +40,7 @@ export default function FavoritesScreen() {
 
         {!favorites.isPending && recipes.length === 0 && (
           <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
-            Nothing saved yet. Tap the heart on a recipe and it will wait for you here.
+            {t("favorites.empty")}
           </Text>
         )}
       </ScrollView>
@@ -55,6 +57,7 @@ function FavoriteCard({
   index: number;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const tint = tintFor(recipe.categoryId, index);
   return (
     <Pressable
@@ -81,7 +84,7 @@ function FavoriteCard({
       </Text>
       <Text className="mt-[5px] font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>
         {metaLine([
-          formatDuration(recipe.prepSeconds + recipe.cookSeconds),
+          formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),
           recipe.rating > 0 ? `${recipe.rating}.0 ★` : undefined,
         ])}
       </Text>

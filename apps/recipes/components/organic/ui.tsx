@@ -13,6 +13,7 @@ import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { formatMacro } from "./format.ts";
 import { Icon, StarIcon, type IconName } from "./icons.tsx";
 import { organic, type Tint } from "./tokens.ts";
+import { useI18n } from "../i18n/index.tsx";
 
 /** Every screen sits on the same warm ground; no screen paints its own background. */
 export function Screen({
@@ -40,7 +41,7 @@ export function Kicker({ children, className = "" }: { children: ReactNode; clas
   );
 }
 
-/** Display type is always Caprasimo — never a bold body face. */
+/** Display type is always Alegreya — never a bold body face. */
 export function Display({
   children,
   size = 28,
@@ -142,15 +143,21 @@ export function Tag({ label, tone = "accent" }: { label: string; tone?: "accent"
   );
 }
 
-/** The inset segmented control used for detail tabs and the plan's Basket/Week switch. */
+/**
+ * The inset segmented control used for detail tabs and the plan's Basket/Week switch. `options`
+ * stay the screen's own literal ids (they double as the `value` type); `labels` is what actually
+ * gets drawn, so a screen can translate the tab titles without touching its own state type.
+ */
 export function SegTabs<T extends string>({
   options,
   value,
   onChange,
+  labels,
 }: {
   options: readonly T[];
   value: T;
   onChange: (value: T) => void;
+  labels: Record<T, string>;
 }) {
   return (
     <View className="flex-row gap-[6px] rounded-full bg-neutral-200 p-[5px]">
@@ -160,13 +167,13 @@ export function SegTabs<T extends string>({
           <Pressable
             key={option}
             accessibilityRole="button"
-            accessibilityLabel={option}
+            accessibilityLabel={labels[option]}
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option)}
             className={`flex-1 items-center rounded-full py-[9px] ${active ? "bg-neutral-100" : ""}`}
           >
             <Text className={`font-fig-bold text-[14px] ${active ? "text-fg" : "text-neutral-600"}`}>
-              {option}
+              {labels[option]}
             </Text>
           </Pressable>
         );
@@ -259,6 +266,7 @@ export function Stepper({
   max?: number;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const size = compact ? "h-[26px] w-[26px]" : "h-[28px] w-[28px]";
   return (
     <View
@@ -268,7 +276,7 @@ export function Stepper({
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Decrease ${label}`}
+        accessibilityLabel={t("ui.decrease", { label })}
         onPress={() => onChange(Math.max(min, value - 1))}
         className={`${size} items-center justify-center rounded-full bg-neutral-200`}
       >
@@ -277,7 +285,7 @@ export function Stepper({
       <Text className="min-w-[22px] text-center font-fig-x text-[15px] text-fg">×{value}</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Increase ${label}`}
+        accessibilityLabel={t("ui.increase", { label })}
         onPress={() => onChange(Math.min(max, value + 1))}
         className={`${size} items-center justify-center rounded-full bg-accent`}
       >
@@ -311,11 +319,12 @@ export function Avatar({
 
 /** Read-only rating: the star plus the number, as the cards show it. */
 export function RatingMark({ rating, size = 13 }: { rating: number; size?: number }) {
+  const { t } = useI18n();
   if (rating <= 0) return null;
   return (
     <View
       accessible
-      accessibilityLabel={`Rated ${rating} out of 5`}
+      accessibilityLabel={t("ui.ratedOutOf5", { rating })}
       className="flex-none flex-row items-center gap-[3px]"
     >
       <StarIcon size={size} />
@@ -337,13 +346,14 @@ export function StarPicker({
   onChange: (rating: number) => void;
   size?: number;
 }) {
+  const { t } = useI18n();
   return (
     <View className="flex-row gap-[6px]">
       {[1, 2, 3, 4, 5].map((n) => (
         <Pressable
           key={n}
           accessibilityRole="button"
-          accessibilityLabel={`${n} star${n === 1 ? "" : "s"}`}
+          accessibilityLabel={t("ui.stars", { count: n })}
           accessibilityState={{ selected: n <= rating }}
           onPress={() => onChange(n === rating ? 0 : n)}
         >
@@ -366,12 +376,13 @@ export function Sheet({
   title: string;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 justify-end">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("common.close")}
           onPress={onClose}
           className="absolute inset-0"
           style={{ backgroundColor: "rgba(32,30,29,0.4)" }}
@@ -466,17 +477,18 @@ export function NutritionStrip({
   carbsG: number;
   className?: string;
 }) {
+  const { t } = useI18n();
   if (kcal <= 0 && proteinG <= 0 && fatG <= 0 && carbsG <= 0) return null;
-  const cells: { label: string; value: string }[] = [
-    { label: "kcal", value: String(Math.round(kcal)) },
-    { label: "protein", value: `${formatMacro(proteinG)} g` },
-    { label: "fat", value: `${formatMacro(fatG)} g` },
-    { label: "carbs", value: `${formatMacro(carbsG)} g` },
+  const cells: { key: string; label: string; value: string }[] = [
+    { key: "kcal", label: t("nutrition.kcal"), value: String(Math.round(kcal)) },
+    { key: "protein", label: t("nutrition.protein"), value: t("nutrition.grams", { value: formatMacro(proteinG) }) },
+    { key: "fat", label: t("nutrition.fat"), value: t("nutrition.grams", { value: formatMacro(fatG) }) },
+    { key: "carbs", label: t("nutrition.carbs"), value: t("nutrition.grams", { value: formatMacro(carbsG) }) },
   ];
   return (
     <Panel className={`flex-row px-[6px] py-[12px] ${className}`}>
       {cells.map((c) => (
-        <View key={c.label} className="flex-1 items-center">
+        <View key={c.key} className="flex-1 items-center">
           <Text className="font-cap text-[17px] text-accent-800">{c.value}</Text>
           <Text className="mt-[2px] font-fig text-[11px] uppercase tracking-[0.7px] text-neutral-600">
             {c.label}

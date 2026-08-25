@@ -58,6 +58,8 @@ module.exports = {
     plugins: [
       "expo-router",
       "expo-secure-store",
+      // Supplies the device locale that seeds the app's language before a choice is stored.
+      "expo-localization",
       [
         "expo-image-picker",
         {

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+import { useI18n } from "../../components/i18n/index.tsx";
 import { SearchIcon } from "../../components/organic/icons.tsx";
 import { formatDuration, metaLine } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
@@ -16,6 +17,7 @@ import { Avatar, Kicker, RoundButton, Screen } from "../../components/organic/ui
  */
 export default function SearchScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -44,15 +46,15 @@ export default function SearchScreen() {
         contentContainerClassName="gap-[20px] px-[22px] pb-[24px] pt-[8px]"
       >
         <View className="flex-row items-center gap-[12px]">
-          <RoundButton icon="back" label="Back" onPress={() => router.back()} />
+          <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
           <View className="flex-1 flex-row items-center gap-[10px] rounded-full border-2 border-accent bg-neutral-100 px-[18px] py-[9px]">
             <SearchIcon size={18} color={organic.accent[700]} />
             <TextInput
-              accessibilityLabel="Search recipes"
+              accessibilityLabel={t("search.placeholder")}
               autoFocus
               value={query}
               onChangeText={setQuery}
-              placeholder="Search recipes"
+              placeholder={t("search.placeholder")}
               placeholderTextColor={organic.neutral[500]}
               returnKeyType="search"
               className="flex-1 font-fig-semi text-[16px] text-fg"
@@ -62,13 +64,13 @@ export default function SearchScreen() {
 
         {recent.length > 0 && (
           <View>
-            <Kicker className="mb-[11px]">Recent</Kicker>
+            <Kicker className="mb-[11px]">{t("search.recent")}</Kicker>
             <View className="flex-row flex-wrap gap-[8px]">
               {recent.map((term) => (
                 <Pressable
                   key={term}
                   accessibilityRole="button"
-                  accessibilityLabel={`Search ${term}`}
+                  accessibilityLabel={t("search.searchFor", { term })}
                   onPress={() => setQuery(term)}
                   className="rounded-full border border-accent px-[10px] py-[4px]"
                 >
@@ -82,7 +84,7 @@ export default function SearchScreen() {
         {debounced !== "" && (
           <View>
             <Kicker className="mb-[11px]">
-              {results.isPending ? "Searching…" : `${recipes.length} result${recipes.length === 1 ? "" : "s"}`}
+              {results.isPending ? t("search.searching") : t("plurals.resultsCount", { count: recipes.length })}
             </Kicker>
             <View className="gap-[10px]">
               {recipes.map((recipe, index) => (
@@ -95,7 +97,7 @@ export default function SearchScreen() {
               ))}
               {!results.isPending && recipes.length === 0 && (
                 <Text className="font-fig text-[15px] text-neutral-600">
-                  Nothing matches “{debounced}”. Try an ingredient instead of a dish.
+                  {t("search.noMatches", { query: debounced })}
                 </Text>
               )}
             </View>
@@ -115,6 +117,7 @@ function ResultRow({
   index: number;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const tint = tintFor(recipe.categoryId, index);
   return (
     <Pressable
@@ -130,8 +133,8 @@ function ResultRow({
         </Text>
         <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
           {metaLine([
-            `${recipe.servings} serving${recipe.servings === 1 ? "" : "s"}`,
-            formatDuration(recipe.prepSeconds + recipe.cookSeconds),
+            t("plurals.servingsCount", { count: recipe.servings }),
+            formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),
           ])}
         </Text>
       </View>

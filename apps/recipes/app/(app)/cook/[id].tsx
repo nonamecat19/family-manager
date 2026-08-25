@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
+import { useI18n } from "../../../components/i18n/index.tsx";
 import { Icon } from "../../../components/organic/icons.tsx";
 import { organic } from "../../../components/organic/tokens.ts";
 import { Screen } from "../../../components/organic/ui.tsx";
@@ -15,6 +16,7 @@ import { Screen } from "../../../components/organic/ui.tsx";
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useI18n();
   const recipe = useRecipe(id);
 
   const [index, setIndex] = useState(0);
@@ -28,7 +30,7 @@ export default function CookScreen() {
           <View className="flex-row items-center justify-between">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Leave cook mode"
+              accessibilityLabel={t("cook.leaveCookMode")}
               onPress={() => router.back()}
               className="h-10 w-10 items-center justify-center rounded-full"
               style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
@@ -36,7 +38,7 @@ export default function CookScreen() {
               <Icon name="close" size={20} color={organic.accent[100]} />
             </Pressable>
             <Text className="font-fig-x text-[13px] uppercase tracking-[1.5px] text-accent-100 opacity-65">
-              {steps.length > 0 ? `Step ${index + 1} of ${steps.length}` : "Cook"}
+              {steps.length > 0 ? t("cook.stepOf", { index: index + 1, total: steps.length }) : t("cook.cook")}
             </Text>
             <View className="w-10" />
           </View>
@@ -58,7 +60,7 @@ export default function CookScreen() {
               <Text className="font-cap text-[30px] text-white">{index + 1}</Text>
             </View>
             <Text className="font-cap text-[30px] leading-[37px] text-accent-100">
-              {step?.instruction ?? "This recipe has no steps written down yet."}
+              {step?.instruction ?? t("cook.noStepsYet")}
             </Text>
             {step && step.durationSeconds > 0 && (
               <StepTimer key={`${index}-${step.durationSeconds}`} seconds={step.durationSeconds} />
@@ -68,7 +70,7 @@ export default function CookScreen() {
           <View className="flex-row gap-[12px]">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Previous step"
+              accessibilityLabel={t("cook.previousStep")}
               disabled={index === 0}
               onPress={() => setIndex((i) => Math.max(0, i - 1))}
               className={`h-[56px] w-[56px] flex-none items-center justify-center rounded-full border-2 ${
@@ -80,7 +82,7 @@ export default function CookScreen() {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={index >= steps.length - 1 ? "Finish cooking" : "Next step"}
+              accessibilityLabel={index >= steps.length - 1 ? t("cook.finishCooking") : t("cook.nextStep")}
               onPress={() => {
                 if (index >= steps.length - 1) router.back();
                 else setIndex((i) => i + 1);
@@ -88,7 +90,7 @@ export default function CookScreen() {
               className="h-[56px] flex-1 items-center justify-center rounded-full bg-accent"
             >
               <Text className="font-fig-x text-[16px] text-white">
-                {index >= steps.length - 1 ? "Done" : "Next step"}
+                {index >= steps.length - 1 ? t("cook.done") : t("cook.nextStep")}
               </Text>
             </Pressable>
           </View>
@@ -103,6 +105,7 @@ export default function CookScreen() {
  * countdown that should begin the moment you happen to swipe onto it.
  */
 function StepTimer({ seconds }: { seconds: number }) {
+  const { t } = useI18n();
   const [remaining, setRemaining] = useState(seconds);
   const [running, setRunning] = useState(false);
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,7 +131,7 @@ function StepTimer({ seconds }: { seconds: number }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={running ? "Pause timer" : done ? "Reset timer" : "Start timer"}
+      accessibilityLabel={running ? t("cook.pauseTimer") : done ? t("cook.resetTimer") : t("cook.startTimer")}
       onPress={() => {
         if (done) {
           setRemaining(seconds);
@@ -142,11 +145,11 @@ function StepTimer({ seconds }: { seconds: number }) {
     >
       <Icon name="plan" size={18} color={organic.accent[100]} width={2.4} />
       <Text className="font-fig-x text-[16px] text-accent-100">
-        {done ? "Time's up — tap to reset" : mmss(remaining)}
+        {done ? t("cook.timesUp") : mmss(remaining)}
       </Text>
       {!done && (
         <Text className="font-fig-semi text-[13px] text-accent-100 opacity-70">
-          {running ? "tap to pause" : "tap to start"}
+          {running ? t("cook.tapToPause") : t("cook.tapToStart")}
         </Text>
       )}
     </Pressable>

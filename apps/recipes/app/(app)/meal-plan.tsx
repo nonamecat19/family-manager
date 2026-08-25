@@ -12,6 +12,7 @@ import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useBasket } from "../../components/basket.tsx";
+import { useI18n, type TranslationKey } from "../../components/i18n/index.tsx";
 import { Icon } from "../../components/organic/icons.tsx";
 import { formatDuration, formatTotalTime, metaLine } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
@@ -33,21 +34,21 @@ import {
 const TABS = ["Basket", "Week"] as const;
 type Tab = (typeof TABS)[number];
 
-const SLOTS: { label: string; value: MealSlot }[] = [
-  { label: "Breakfast", value: MealSlot.BREAKFAST },
-  { label: "Lunch", value: MealSlot.LUNCH },
-  { label: "Dinner", value: MealSlot.DINNER },
-  { label: "Snack", value: MealSlot.SNACK },
-  { label: "Dessert", value: MealSlot.DESSERT },
+const SLOTS: { labelKey: TranslationKey; value: MealSlot }[] = [
+  { labelKey: "mealPlan.slotBreakfast", value: MealSlot.BREAKFAST },
+  { labelKey: "mealPlan.slotLunch", value: MealSlot.LUNCH },
+  { labelKey: "mealPlan.slotDinner", value: MealSlot.DINNER },
+  { labelKey: "mealPlan.slotSnack", value: MealSlot.SNACK },
+  { labelKey: "mealPlan.slotDessert", value: MealSlot.DESSERT },
 ];
 
-const SLOT_LABELS: Record<number, string> = {
-  0: "Meal",
-  1: "Breakfast",
-  2: "Lunch",
-  3: "Dinner",
-  4: "Snack",
-  5: "Dessert",
+const SLOT_LABEL_KEYS: Record<number, TranslationKey> = {
+  0: "mealPlan.slotMeal",
+  1: "mealPlan.slotBreakfast",
+  2: "mealPlan.slotLunch",
+  3: "mealPlan.slotDinner",
+  4: "mealPlan.slotSnack",
+  5: "mealPlan.slotDessert",
 };
 
 /**
@@ -56,13 +57,19 @@ const SLOT_LABELS: Record<number, string> = {
  * they answer the same question at different resolutions.
  */
 export default function PlanScreen() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("Basket");
 
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]">
-        <Display size={28}>Plan</Display>
-        <SegTabs options={TABS} value={tab} onChange={setTab} />
+        <Display size={28}>{t("mealPlan.title")}</Display>
+        <SegTabs
+          options={TABS}
+          value={tab}
+          onChange={setTab}
+          labels={{ Basket: t("mealPlan.tabBasket"), Week: t("mealPlan.tabWeek") }}
+        />
         {tab === "Basket" ? <BasketTab /> : <WeekTab />}
       </ScrollView>
     </Screen>
@@ -71,6 +78,7 @@ export default function PlanScreen() {
 
 function BasketTab() {
   const router = useRouter();
+  const { t } = useI18n();
   const basket = useBasket();
   const totals = useSumIngredients(basket.items);
   const all = useRecipes();
@@ -92,7 +100,7 @@ function BasketTab() {
       ))}
 
       <DashedButton
-        title={basket.items.length === 0 ? "+ Pick the first recipe" : "+ Add another recipe"}
+        title={basket.items.length === 0 ? t("mealPlan.pickFirstRecipe") : t("mealPlan.addAnotherRecipe")}
         onPress={() => router.push("/(app)/recipes")}
       />
 
@@ -100,18 +108,20 @@ function BasketTab() {
         <View className="mt-[4px] rounded-2xl bg-accent2-200 px-[20px] py-[18px]">
           <View className="flex-row justify-between">
             <Text className="font-fig-bold text-[14px] text-accent2-800">
-              {basket.items.length} recipe{basket.items.length === 1 ? "" : "s"} · {batches} batch
-              {batches === 1 ? "" : "es"}
+              {t("mealPlan.recipesAndBatches", {
+                recipes: t("plurals.recipesCount", { count: basket.items.length }),
+                batches: t("plurals.batchesCount", { count: batches }),
+              })}
             </Text>
             <Text className="font-fig-bold text-[14px] text-accent2-800">
-              {formatTotalTime(totalSeconds)}
+              {formatTotalTime(totalSeconds, t)}
             </Text>
           </View>
           <PrimaryButton
             title={
               totals.data && totals.data.length > 0
-                ? `Shopping list · ${totals.data.length} items`
-                : "Generate shopping list"
+                ? t("mealPlan.shoppingListItems", { count: totals.data.length })
+                : t("mealPlan.generateShoppingList")
             }
             onPress={() => router.push("/(app)/basket")}
             className="mt-[14px]"
@@ -124,6 +134,7 @@ function BasketTab() {
 
 function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
   const recipe = useRecipe(recipeId);
+  const { t } = useI18n();
   const basket = useBasket();
   const r = recipe.data;
   const tint = tintFor(r?.categoryId, index);
@@ -133,12 +144,12 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
       <Avatar initial={initialOf(r?.title ?? "?")} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
         <Text className="font-fig-bold text-[15px] leading-[18px] text-fg" numberOfLines={1}>
-          {r?.title ?? "Loading…"}
+          {r?.title ?? t("mealPlan.loading")}
         </Text>
         <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
           {r
             ? metaLine([
-                formatDuration(r.prepSeconds + r.cookSeconds),
+                formatDuration(r.prepSeconds + r.cookSeconds, t),
                 r.rating > 0 ? `${r.rating}.0 ★` : undefined,
               ])
             : ""}
@@ -150,13 +161,14 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
         min={0}
         value={basket.batchesOf(recipeId)}
         onChange={(n) => basket.setBatches(recipeId, n)}
-        label={`batches of ${r?.title ?? "recipe"}`}
+        label={r?.title ? t("mealPlan.batchesOf", { title: r.title }) : t("mealPlan.batchesOfRecipe")}
       />
     </View>
   );
 }
 
 function WeekTab() {
+  const { t } = useI18n();
   const { from, to } = weekRange(new Date());
   const plan = useMealPlan(from, to);
   const recipes = useRecipes();
@@ -180,7 +192,7 @@ function WeekTab() {
                 {day.num}
               </Text>
               <Text className="mt-[1px] font-fig-x text-[11px] uppercase tracking-[1px] text-neutral-600">
-                {day.day}
+                {t(day.dayKey)}
               </Text>
             </View>
             <View className="min-w-0 flex-1 gap-[7px]">
@@ -191,12 +203,15 @@ function WeekTab() {
                   <Pressable
                     key={entry.id}
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove ${recipe?.title ?? "meal"} from ${day.day}`}
+                    accessibilityLabel={t("mealPlan.removeMealFromDay", {
+                      title: recipe?.title ?? t("mealPlan.unknownRecipe"),
+                      day: t(day.dayKey),
+                    })}
                     onPress={() =>
-                      Alert.alert("Remove from the week?", recipe?.title ?? "This meal", [
-                        { text: "Keep", style: "cancel" },
+                      Alert.alert(t("mealPlan.removeFromWeekTitle"), recipe?.title ?? t("mealPlan.thisMeal"), [
+                        { text: t("common.keep"), style: "cancel" },
                         {
-                          text: "Remove",
+                          text: t("common.remove"),
                           style: "destructive",
                           onPress: () => removeEntry.mutate(entry.id),
                         },
@@ -210,25 +225,25 @@ function WeekTab() {
                       style={{ color: tint.fg }}
                       numberOfLines={1}
                     >
-                      {recipe?.title ?? "Unknown recipe"}
+                      {recipe?.title ?? t("mealPlan.unknownRecipe")}
                     </Text>
                     <Text
                       className="font-fig-bold text-[12.5px] opacity-70"
                       style={{ color: tint.fg }}
                     >
-                      {SLOT_LABELS[entry.slot] ?? "Meal"}
+                      {t(SLOT_LABEL_KEYS[entry.slot] ?? "mealPlan.slotMeal")}
                     </Text>
                   </Pressable>
                 );
               })}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Plan a meal for ${day.day} ${day.num}`}
+                accessibilityLabel={t("mealPlan.planAMealForDay", { day: t(day.dayKey), num: day.num })}
                 onPress={() => setAddingTo(day.iso)}
                 className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-[15px] py-[11px]"
               >
                 <Text className="font-fig-bold text-[13.5px] text-neutral-500">
-                  {dayEntries.length === 0 ? "Nothing planned" : "Add another"}
+                  {dayEntries.length === 0 ? t("mealPlan.nothingPlanned") : t("mealPlan.addAnother")}
                 </Text>
                 <Icon name="plus" size={15} color={organic.neutral[500]} width={2.4} />
               </Pressable>
@@ -237,15 +252,15 @@ function WeekTab() {
         );
       })}
 
-      <Sheet visible={addingTo !== null} onClose={() => setAddingTo(null)} title="Plan a meal">
-        <Kicker className="mb-[10px]">Slot</Kicker>
+      <Sheet visible={addingTo !== null} onClose={() => setAddingTo(null)} title={t("mealPlan.planAMeal")}>
+        <Kicker className="mb-[10px]">{t("mealPlan.slot")}</Kicker>
         <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
           {SLOTS.map((s) => (
-            <Chip key={s.label} label={s.label} active={s.value === slot} onPress={() => setSlot(s.value)} />
+            <Chip key={s.labelKey} label={t(s.labelKey)} active={s.value === slot} onPress={() => setSlot(s.value)} />
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">Recipe</Kicker>
+        <Kicker className="mb-[10px]">{t("mealPlan.recipe")}</Kicker>
         <ScrollView className="max-h-[280px]" showsVerticalScrollIndicator={false}>
           <View className="gap-[8px]">
             {(recipes.data ?? []).map((r, index) => (
@@ -268,7 +283,7 @@ function WeekTab() {
             ))}
             {(recipes.data ?? []).length === 0 && (
               <Text className="font-fig text-[15px] text-neutral-600">
-                No recipes to plan yet — add one first.
+                {t("mealPlan.noRecipesYet")}
               </Text>
             )}
           </View>

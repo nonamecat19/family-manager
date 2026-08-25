@@ -3,6 +3,7 @@ import type { Category, Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+import { useI18n } from "../../components/i18n/index.tsx";
 import { Icon, SearchIcon } from "../../components/organic/icons.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
@@ -17,6 +18,7 @@ import { weekRange } from "../../components/organic/week.ts";
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const { t, locale } = useI18n();
   const all = useRecipes();
   const categories = useRecipeCategories();
   const { from, to } = weekRange(new Date());
@@ -32,14 +34,14 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[22px] px-[22px] pb-[24px] pt-[8px]">
         <View className="flex-row items-start justify-between gap-[12px]">
           <View className="flex-1">
-            <Kicker>{today()}</Kicker>
+            <Kicker>{today(locale)}</Kicker>
             <Display size={33} className="mt-[7px]">
-              The family{"\n"}cookbook
+              {t("home.title")}
             </Display>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Your profile"
+            accessibilityLabel={t("home.yourProfile")}
             onPress={() => router.push("/(app)/settings")}
           >
             <Avatar initial="M" tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }} size={48} />
@@ -48,13 +50,15 @@ export default function HomeScreen() {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Search recipes"
+          accessibilityLabel={t("home.searchRecipes")}
           onPress={() => router.push("/(app)/search")}
           className="flex-row items-center gap-[10px] rounded-full border border-neutral-300 bg-neutral-100 px-[18px] py-[13px]"
         >
           <SearchIcon />
           <Text className="font-fig text-[16px] text-neutral-600">
-            {recipes.length > 0 ? `Search ${recipes.length} recipes` : "Search recipes"}
+            {recipes.length > 0
+              ? t("home.searchRecipesCount", { count: recipes.length })
+              : t("home.searchRecipes")}
           </Text>
         </Pressable>
 
@@ -75,13 +79,13 @@ export default function HomeScreen() {
         {topRated.length > 0 && (
           <>
             <View className="mt-[2px] flex-row items-baseline justify-between">
-              <Display size={21}>Top rated</Display>
+              <Display size={21}>{t("home.topRated")}</Display>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="See all recipes"
+                accessibilityLabel={t("home.seeAllRecipes")}
                 onPress={() => router.push("/(app)/recipes")}
               >
-                <Text className="font-fig-bold text-[14px] text-accent-700">See all</Text>
+                <Text className="font-fig-bold text-[14px] text-accent-700">{t("home.seeAll")}</Text>
               </Pressable>
             </View>
             <ScrollView
@@ -104,18 +108,18 @@ export default function HomeScreen() {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="This week's plan"
+          accessibilityLabel={t("home.thisWeeksPlan")}
           onPress={() => router.push("/(app)/meal-plan")}
           className="flex-row items-center gap-[16px] rounded-2xl bg-accent2-200 px-[20px] py-[18px]"
         >
           <View className="flex-1">
             <Display size={17} className="text-accent2-900">
-              This week&apos;s plan
+              {t("home.thisWeeksPlan")}
             </Display>
             <Text className="mt-[4px] font-fig-semi text-[13.5px] text-accent2-800">
               {planned === 0
-                ? "Nothing planned yet — tap to fill the week"
-                : `${planned} recipe${planned === 1 ? "" : "s"} · ${(totals.data ?? []).length} ingredients to buy`}
+                ? t("home.nothingPlannedYet")
+                : `${t("plurals.recipesCount", { count: planned })} · ${t("plurals.ingredientsToBuyCount", { count: (totals.data ?? []).length })}`}
             </Text>
           </View>
           <Icon name="forward" size={22} color={organic.accent2[800]} />
@@ -123,11 +127,13 @@ export default function HomeScreen() {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Favorites"
+          accessibilityLabel={t("home.favorites")}
           onPress={() => router.push("/(app)/favorites")}
           className="flex-row items-center justify-between rounded-2xl border-2 border-dashed border-neutral-400 px-[20px] py-[15px]"
         >
-          <Text className="font-fig-bold text-[14.5px] text-neutral-700">The ones you keep coming back to</Text>
+          <Text className="flex-1 font-fig-bold text-[14.5px] text-neutral-700" numberOfLines={2}>
+            {t("home.keepComingBackTo")}
+          </Text>
           <Icon name="forward" size={18} color={organic.neutral[700]} />
         </Pressable>
       </ScrollView>
@@ -146,6 +152,7 @@ function CategoryCard({
   count: number;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const tint = tintFor(category.name, index);
   return (
     <Pressable
@@ -168,7 +175,7 @@ function CategoryCard({
           {category.name}
         </Text>
         <Text className="mt-[3px] font-fig-bold text-[12.5px] opacity-70" style={{ color: tint.fg }}>
-          {count} recipe{count === 1 ? "" : "s"}
+          {t("plurals.recipesCount", { count })}
         </Text>
       </View>
     </Pressable>
@@ -184,8 +191,9 @@ function TopRatedCard({
   index: number;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const tint = tintFor(recipe.categoryId, index);
-  const time = formatDuration(recipe.prepSeconds + recipe.cookSeconds);
+  const time = formatDuration(recipe.prepSeconds + recipe.cookSeconds, t);
   return (
     <Pressable
       accessibilityRole="button"
@@ -220,8 +228,8 @@ function TopRatedCard({
   );
 }
 
-function today(): string {
-  return new Date().toLocaleDateString(undefined, {
+function today(locale: string): string {
+  return new Date().toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",

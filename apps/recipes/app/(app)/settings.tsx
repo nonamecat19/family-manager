@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+import { useI18n } from "../../components/i18n/index.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
 import {
@@ -23,6 +24,7 @@ import {
  */
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const { signOut, status } = useAuth();
   const family = useFamily();
   const familyId = family.data?.family?.id ?? "";
@@ -42,26 +44,26 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[20px] px-[22px] pb-[28px] pt-[8px]">
         <View className="flex-row items-center gap-[16px]">
           <Avatar
-            initial={initialOf(family.data?.family?.name ?? "Family")}
+            initial={initialOf(family.data?.family?.name ?? t("profile.familyFallback"))}
             tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }}
             size={72}
           />
           <View className="flex-1">
-            <Display size={23}>{family.data?.family?.name ?? "Your household"}</Display>
+            <Display size={23}>{family.data?.family?.name ?? t("profile.householdFallback")}</Display>
             <Text className="mt-[4px] font-fig-bold text-[13.5px] text-neutral-600">
-              Keeper of the cookbook
+              {t("profile.keeperOfTheCookbook")}
             </Text>
           </View>
         </View>
 
         <View className="flex-row gap-[10px]">
-          <Stat value={`${all.length}`} label="Recipes" />
-          <Stat value={`${members.data?.members.length ?? cooks}`} label="Cooks" />
-          <Stat value={formatDuration(totalMinutes) || "—"} label="Time written down" />
+          <Stat value={`${all.length}`} label={t("profile.statRecipes")} />
+          <Stat value={`${members.data?.members.length ?? cooks}`} label={t("profile.statCooks")} />
+          <Stat value={formatDuration(totalMinutes, t) || "—"} label={t("profile.statTimeWrittenDown")} />
         </View>
 
         <View>
-          <Kicker className="mb-[11px]">Family</Kicker>
+          <Kicker className="mb-[11px]">{t("profile.family")}</Kicker>
           <View className="rounded-2xl bg-neutral-100 px-[16px] py-[4px]">
             {(members.data?.members ?? []).map((member, i, list) => (
               <View
@@ -79,32 +81,41 @@ export default function ProfileScreen() {
                   {member.displayName || member.email}
                 </Text>
                 <Text className="font-fig-bold text-[12.5px] text-neutral-600">
-                  {member.role === Role.ADMIN ? "Owner" : "Cook"}
+                  {member.role === Role.ADMIN ? t("profile.owner") : t("profile.cook")}
                 </Text>
               </View>
             ))}
             {(members.data?.members ?? []).length === 0 && (
               <Text className="py-[14px] font-fig text-[15px] text-neutral-600">
-                Just you so far.
+                {t("profile.justYouSoFar")}
               </Text>
             )}
           </View>
         </View>
 
-        <DashedButton title="Invite someone to the cookbook" onPress={() => setInviteOpen(true)} />
+        <DashedButton title={t("profile.inviteSomeone")} onPress={() => setInviteOpen(true)} />
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Favorites"
+          accessibilityLabel={t("profile.favorites")}
           onPress={() => router.push("/(app)/favorites")}
           className="items-center rounded-full bg-neutral-200 py-[13px]"
         >
-          <Text className="font-fig-bold text-[14.5px] text-neutral-700">Your favourites</Text>
+          <Text className="font-fig-bold text-[14.5px] text-neutral-700">{t("profile.yourFavourites")}</Text>
         </Pressable>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={status === "authenticated" ? "Sign out" : "Sign in"}
+          accessibilityLabel={t("profile.preferences")}
+          onPress={() => router.push("/(app)/preferences")}
+          className="items-center rounded-full bg-neutral-200 py-[13px]"
+        >
+          <Text className="font-fig-bold text-[14.5px] text-neutral-700">{t("profile.preferences")}</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={status === "authenticated" ? t("profile.signOut") : t("profile.signIn")}
           onPress={() => {
             void signOut();
             router.replace("/(auth)/login");
@@ -112,25 +123,25 @@ export default function ProfileScreen() {
           className="items-center pt-[4px]"
         >
           <Text className="font-fig-semi text-[14px]" style={{ color: organic.danger }}>
-            {status === "authenticated" ? "Sign out" : "Sign in"}
+            {status === "authenticated" ? t("profile.signOut") : t("profile.signIn")}
           </Text>
         </Pressable>
       </ScrollView>
 
-      <Sheet visible={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite a cook">
-        <Kicker className="mb-[10px]">Their email</Kicker>
+      <Sheet visible={inviteOpen} onClose={() => setInviteOpen(false)} title={t("profile.inviteACook")}>
+        <Kicker className="mb-[10px]">{t("profile.theirEmail")}</Kicker>
         <TextInput
-          accessibilityLabel="Email"
+          accessibilityLabel={t("profile.email")}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
-          placeholder="babcia@example.com"
+          placeholder={t("profile.emailPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
           className="mb-[20px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-[12px] font-fig text-[15px] text-fg"
         />
         <PrimaryButton
-          title={invite.isPending ? "Sending…" : "Send the invitation"}
+          title={invite.isPending ? t("profile.sending") : t("profile.sendTheInvitation")}
           disabled={email.trim() === "" || familyId === "" || invite.isPending}
           onPress={() =>
             invite.mutate(

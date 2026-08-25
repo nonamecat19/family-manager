@@ -12,6 +12,8 @@ import { NunitoSans_600SemiBold } from "@expo-google-fonts/nunito-sans/600SemiBo
 import { NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans/700Bold";
 import { NunitoSans_800ExtraBold } from "@expo-google-fonts/nunito-sans/800ExtraBold";
 import { useFonts } from "expo-font";
+
+import { bootT } from "../components/i18n/index.tsx";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
@@ -53,7 +55,7 @@ export default function RootLayout() {
     NunitoSans_800ExtraBold,
   });
 
-  if (!fontsLoaded) return <Loading label="Warming the oven…" />;
+  if (!fontsLoaded) return <Loading label={bootT("kitchen.warmingOven")} />;
 
   return (
     <AuthProvider store={secureTokenStore} refresh={refresh}>
@@ -81,7 +83,7 @@ function ApiGate() {
     }
   }, [status, segments, router]);
 
-  if (status === "loading") return <Loading label="Restoring your session…" />;
+  if (status === "loading") return <Loading label={bootT("kitchen.restoringSession")} />;
 
   return (
     <ApiProvider baseUrl={API_BASE_URL} serviceUrls={SERVICE_URLS} getAccessToken={getToken}>

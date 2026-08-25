@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useBasket } from "../../components/basket.tsx";
+import { useI18n } from "../../components/i18n/index.tsx";
 import { groupByAisle } from "../../components/organic/aisles.ts";
 import { CheckIcon } from "../../components/organic/icons.tsx";
 import { weekRange } from "../../components/organic/week.ts";
@@ -17,6 +18,7 @@ import { DashedButton, Display, Screen } from "../../components/organic/ui.tsx";
  */
 export default function ShoppingListScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const basket = useBasket();
   const { from, to } = weekRange(new Date());
 
@@ -39,28 +41,32 @@ export default function ShoppingListScreen() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]">
         <View>
-          <Display size={28}>Shopping list</Display>
+          <Display size={28}>{t("shoppingList.title")}</Display>
           <Text className="mt-[5px] font-fig-bold text-[13px] text-neutral-600">
             {totals.length === 0
-              ? "Nothing to buy yet"
-              : `From ${sourceCount} recipe${sourceCount === 1 ? "" : "s"} · ${bought} of ${totals.length} in the basket`}
+              ? t("shoppingList.nothingToBuyYet")
+              : t("shoppingList.fromRecipesInBasket", {
+                  recipes: t("plurals.recipesCount", { count: sourceCount }),
+                  bought,
+                  total: totals.length,
+                })}
           </Text>
           {!usingBasket && totals.length > 0 && (
             <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-500">
-              Totalled from this week&apos;s plan.
+              {t("shoppingList.totalledFromWeek")}
             </Text>
           )}
         </View>
 
         {groups.map((group) => (
-          <View key={group.aisle.name}>
+          <View key={group.aisle.id}>
             <View className="mb-[9px] flex-row items-center gap-[9px]">
               <View
                 className="h-[9px] w-[9px] rounded-full"
                 style={{ backgroundColor: group.aisle.dot }}
               />
               <Text className="font-fig-x text-[12px] uppercase tracking-[1.2px] text-neutral-700">
-                {group.aisle.name}
+                {t(group.aisle.nameKey)}
               </Text>
             </View>
             <View className="rounded-2xl bg-neutral-100 px-[16px] py-[4px]">
@@ -106,14 +112,13 @@ export default function ShoppingListScreen() {
         {totals.length === 0 ? (
           <View className="gap-[12px] pt-[8px]">
             <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
-              Add recipes to the plan and their ingredients land here, summed and sorted by
-              where you&apos;ll find them in the shop.
+              {t("shoppingList.emptyBody")}
             </Text>
-            <DashedButton title="+ Open the plan" onPress={() => router.push("/(app)/meal-plan")} />
+            <DashedButton title={t("shoppingList.openThePlan")} onPress={() => router.push("/(app)/meal-plan")} />
           </View>
         ) : (
           bought > 0 && (
-            <DashedButton title="Untick everything" onPress={() => basket.clearChecked()} />
+            <DashedButton title={t("shoppingList.untickEverything")} onPress={() => basket.clearChecked()} />
           )
         )}
       </ScrollView>

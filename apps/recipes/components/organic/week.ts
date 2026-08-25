@@ -1,3 +1,5 @@
+import type { TranslationKey } from "../i18n/index.tsx";
+
 /** ISO calendar day (YYYY-MM-DD) — the meal plan's own date format, not a timestamp. */
 export function toISODate(d: Date): string {
   const year = d.getFullYear();
@@ -21,14 +23,22 @@ export function weekRange(date: Date): { from: string; to: string } {
 
 export interface WeekDay {
   iso: string;
-  /** "Mon" — the uppercase label under the date number. */
-  day: string;
+  /** The translation key for the uppercase label under the date number — "Mon"/"Пн". */
+  dayKey: TranslationKey;
   /** The day of the month. */
   num: number;
   isToday: boolean;
 }
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_KEYS: TranslationKey[] = [
+  "weekdays.sun",
+  "weekdays.mon",
+  "weekdays.tue",
+  "weekdays.wed",
+  "weekdays.thu",
+  "weekdays.fri",
+  "weekdays.sat",
+];
 
 export function buildWeek(date: Date): WeekDay[] {
   const start = new Date(date);
@@ -38,6 +48,6 @@ export function buildWeek(date: Date): WeekDay[] {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     const iso = toISODate(d);
-    return { iso, day: DAY_NAMES[d.getDay()]!, num: d.getDate(), isToday: iso === todayISO };
+    return { iso, dayKey: DAY_KEYS[d.getDay()]!, num: d.getDate(), isToday: iso === todayISO };
   });
 }

@@ -4,17 +4,27 @@ import { Slot, Tabs, useRouter, useSegments } from "expo-router";
 import { Text, View } from "react-native";
 
 import { BasketProvider } from "../../components/basket.tsx";
+import { I18nProvider, useI18n } from "../../components/i18n/index.tsx";
 import { Icon, type IconName } from "../../components/organic/icons.tsx";
 import { organic } from "../../components/organic/tokens.ts";
 import { Display, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function AppLayout() {
+  return (
+    <I18nProvider>
+      <Gate />
+    </I18nProvider>
+  );
+}
+
+function Gate() {
+  const { t } = useI18n();
   const family = useFamily();
   const router = useRouter();
   const segments = useSegments();
   const isOnboarding = segments[segments.length - 1] === "onboarding";
 
-  if (family.isPending) return <Kitchen label="Setting the table…" />;
+  if (family.isPending) return <Kitchen label={t("kitchen.settingTheTable")} />;
 
   if (family.isError) {
     const code = (family.error as { code?: Code }).code;
@@ -25,12 +35,12 @@ export default function AppLayout() {
       return (
         <Screen>
           <View className="flex-1 justify-center gap-[18px] px-[22px]">
-            <Display size={30}>No household{"\n"}yet</Display>
+            <Display size={30}>{t("kitchen.noHouseholdTitle")}</Display>
             <Text className="font-fig text-[15.5px] leading-[23px] text-neutral-700">
-              Create one to start cooking, or accept an invitation from a family member.
+              {t("kitchen.noHouseholdBody")}
             </Text>
             <PrimaryButton
-              title="Create a household"
+              title={t("kitchen.createHousehold")}
               onPress={() => router.push("/(app)/onboarding")}
             />
           </View>
@@ -40,11 +50,11 @@ export default function AppLayout() {
     return (
       <Screen>
         <View className="flex-1 justify-center gap-[18px] px-[22px]">
-          <Display size={30}>Something{"\n"}went wrong</Display>
+          <Display size={30}>{t("kitchen.errorTitle")}</Display>
           <Text className="font-fig text-[15.5px] leading-[23px] text-neutral-700">
             {family.error.message}
           </Text>
-          <PrimaryButton title="Try again" onPress={() => void family.refetch()} />
+          <PrimaryButton title={t("common.tryAgain")} onPress={() => void family.refetch()} />
         </View>
       </Screen>
     );
@@ -73,14 +83,15 @@ export default function AppLayout() {
           },
         }}
       >
-        <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: tabIcon("home") }} />
-        <Tabs.Screen name="recipes" options={{ title: "Recipes", tabBarIcon: tabIcon("book") }} />
-        <Tabs.Screen name="meal-plan" options={{ title: "Plan", tabBarIcon: tabIcon("plan") }} />
-        <Tabs.Screen name="basket" options={{ title: "List", tabBarIcon: tabIcon("cart") }} />
-        <Tabs.Screen name="settings" options={{ title: "You", tabBarIcon: tabIcon("user") }} />
+        <Tabs.Screen name="index" options={{ title: t("tabs.home"), tabBarIcon: tabIcon("home") }} />
+        <Tabs.Screen name="recipes" options={{ title: t("tabs.recipes"), tabBarIcon: tabIcon("book") }} />
+        <Tabs.Screen name="meal-plan" options={{ title: t("tabs.plan"), tabBarIcon: tabIcon("plan") }} />
+        <Tabs.Screen name="basket" options={{ title: t("tabs.list"), tabBarIcon: tabIcon("cart") }} />
+        <Tabs.Screen name="settings" options={{ title: t("tabs.you"), tabBarIcon: tabIcon("user") }} />
         {/* Reachable from Home and the profile, but not a tab of its own — the design gives
             favourites a card, not a fifth of the bar. */}
         <Tabs.Screen name="favorites" options={{ href: null }} />
+        <Tabs.Screen name="preferences" options={{ href: null }} />
         <Tabs.Screen name="search" options={{ href: null }} />
         <Tabs.Screen name="onboarding" options={{ href: null }} />
         <Tabs.Screen name="recipe/[id]" options={{ href: null }} />
@@ -101,10 +112,11 @@ function tabIcon(name: IconName) {
 
 /** The gate's own loading state, so the app never flashes a blue-grey spinner screen. */
 function Kitchen({ label }: { label: string }) {
+  const { t } = useI18n();
   return (
     <Screen>
       <View className="flex-1 items-center justify-center gap-[10px]">
-        <Display size={26}>Family Recipes</Display>
+        <Display size={26}>{t("kitchen.appName")}</Display>
         <Text className="font-fig-semi text-[14px] text-neutral-600">{label}</Text>
       </View>
     </Screen>

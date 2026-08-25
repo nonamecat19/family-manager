@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
+import { useI18n, type TranslationKey } from "../../components/i18n/index.tsx";
 import { Icon } from "../../components/organic/icons.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
@@ -19,25 +20,25 @@ import {
   Sheet,
 } from "../../components/organic/ui.tsx";
 
-const SORTS: { label: string; value: RecipeSort }[] = [
-  { label: "Rating", value: RecipeSort.RATING },
-  { label: "Time", value: RecipeSort.TIME },
-  { label: "A–Z", value: RecipeSort.TITLE },
-  { label: "Newest", value: RecipeSort.UNSPECIFIED },
+const SORTS: { labelKey: TranslationKey; value: RecipeSort }[] = [
+  { labelKey: "recipesList.sortRating", value: RecipeSort.RATING },
+  { labelKey: "recipesList.sortTime", value: RecipeSort.TIME },
+  { labelKey: "recipesList.sortTitle", value: RecipeSort.TITLE },
+  { labelKey: "recipesList.sortNewest", value: RecipeSort.UNSPECIFIED },
 ];
 
-const TIME_PRESETS: { label: string; seconds: number }[] = [
-  { label: "Any", seconds: 0 },
-  { label: "20 min", seconds: 1200 },
-  { label: "45 min", seconds: 2700 },
-  { label: "90 min", seconds: 5400 },
+const TIME_PRESETS: { labelKey: TranslationKey; seconds: number }[] = [
+  { labelKey: "recipesList.timeAny", seconds: 0 },
+  { labelKey: "recipesList.time20", seconds: 1200 },
+  { labelKey: "recipesList.time45", seconds: 2700 },
+  { labelKey: "recipesList.time90", seconds: 5400 },
 ];
 
-const RATING_PRESETS: { label: string; value: number }[] = [
-  { label: "Any", value: 0 },
-  { label: "3+", value: 3 },
-  { label: "4+", value: 4 },
-  { label: "5", value: 5 },
+const RATING_PRESETS: { labelKey: TranslationKey; value: number }[] = [
+  { labelKey: "recipesList.ratingAny", value: 0 },
+  { labelKey: "recipesList.rating3", value: 3 },
+  { labelKey: "recipesList.rating4", value: 4 },
+  { labelKey: "recipesList.rating5", value: 5 },
 ];
 
 /**
@@ -47,6 +48,7 @@ const RATING_PRESETS: { label: string; value: number }[] = [
  */
 export default function RecipeListScreen() {
   const router = useRouter();
+  const { t } = useI18n();
   const params = useLocalSearchParams<{ categoryId?: string }>();
 
   const linkedCategoryId = params.categoryId ?? "";
@@ -115,20 +117,20 @@ export default function RecipeListScreen() {
           <View className="-mx-[22px] pb-[12px]">
             <View className="flex-row items-center justify-between gap-[12px] px-[22px] pt-[8px]">
               <View className="flex-1">
-                <Display size={28}>{category?.name ?? "All recipes"}</Display>
+                <Display size={28}>{category?.name ?? t("recipesList.allRecipes")}</Display>
                 <Text className="mt-[4px] font-fig-bold text-[13px] text-neutral-600">
-                  {list.isPending ? "…" : `${recipes.length} recipe${recipes.length === 1 ? "" : "s"}`}
+                  {list.isPending ? t("common.loadingEllipsis") : t("plurals.recipesCount", { count: recipes.length })}
                 </Text>
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Filter"
+                accessibilityLabel={t("recipesList.filter")}
                 onPress={() => setFilterOpen(true)}
                 className="flex-none flex-row items-center gap-[8px] rounded-full bg-accent px-[17px] py-[11px]"
               >
                 <Icon name="filter" size={16} color="#ffffff" />
                 <Text className="font-fig-bold text-[14px] text-white">
-                  {activeFilters > 0 ? `Filter · ${activeFilters}` : "Filter"}
+                  {activeFilters > 0 ? t("recipesList.filterCount", { count: activeFilters }) : t("recipesList.filter")}
                 </Text>
               </Pressable>
             </View>
@@ -139,7 +141,12 @@ export default function RecipeListScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerClassName="gap-[8px] px-[22px] pb-[4px] pt-[16px]"
               >
-                <Chip label="All" active={subcategoryId === ""} onPress={() => setSubcategoryId("")} tone="accent2" />
+                <Chip
+                  label={t("common.all")}
+                  active={subcategoryId === ""}
+                  onPress={() => setSubcategoryId("")}
+                  tone="accent2"
+                />
                 {subcategories.data.map((sub) => (
                   <Chip
                     key={sub.id}
@@ -152,15 +159,20 @@ export default function RecipeListScreen() {
               </ScrollView>
             )}
 
-            <View className="flex-row items-center gap-[9px] px-[22px] pb-[4px] pt-[14px]">
-              <Text className="font-fig-bold text-[13px] text-neutral-600">Sort</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="flex-row items-center gap-[9px] px-[22px] pb-[4px] pt-[14px]"
+            >
+              <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipesList.sort")}</Text>
               {SORTS.map((option) => {
                 const active = option.value === sort;
+                const label = t(option.labelKey);
                 return (
                   <Pressable
-                    key={option.label}
+                    key={option.labelKey}
                     accessibilityRole="button"
-                    accessibilityLabel={`Sort by ${option.label}`}
+                    accessibilityLabel={t("recipesList.sortBy", { label })}
                     accessibilityState={{ selected: active }}
                     onPress={() => setSort(option.value)}
                     className={`rounded-full px-[13px] py-[6px] ${active ? "bg-accent-200" : ""}`}
@@ -168,12 +180,12 @@ export default function RecipeListScreen() {
                     <Text
                       className={`font-fig-bold text-[13px] ${active ? "text-accent-800" : "text-neutral-600"}`}
                     >
-                      {option.label}
+                      {label}
                     </Text>
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
           </View>
         }
         renderItem={({ item, index }) => (
@@ -186,11 +198,11 @@ export default function RecipeListScreen() {
         ListEmptyComponent={
           list.isPending ? null : (
             <View className="gap-[8px] pt-[40px]">
-              <Display size={20}>Nothing here yet</Display>
+              <Display size={20}>{t("recipesList.nothingHereYet")}</Display>
               <Text className="font-fig text-[15px] text-neutral-600">
                 {activeFilters > 0
-                  ? "No recipe matches those filters. Loosen one and try again."
-                  : "Add the first recipe with the + button."}
+                  ? t("recipesList.noneMatchFilters")
+                  : t("recipesList.addFirstWithButton")}
               </Text>
             </View>
           )
@@ -199,7 +211,7 @@ export default function RecipeListScreen() {
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Add recipe"
+        accessibilityLabel={t("recipesList.addRecipe")}
         onPress={() => router.push("/(app)/recipe-edit/new")}
         className="absolute bottom-[24px] right-[22px] h-[58px] w-[58px] items-center justify-center rounded-full bg-accent"
         style={{ boxShadow: "0 12px 32px rgba(46,43,37,0.22)" }}
@@ -207,11 +219,11 @@ export default function RecipeListScreen() {
         <Icon name="plus" size={26} color="#ffffff" />
       </Pressable>
 
-      <Sheet visible={filterOpen} onClose={() => setFilterOpen(false)} title="Filter">
-        <Kicker className="mb-[10px]">Category</Kicker>
+      <Sheet visible={filterOpen} onClose={() => setFilterOpen(false)} title={t("recipesList.filterSheetTitle")}>
+        <Kicker className="mb-[10px]">{t("recipesList.category")}</Kicker>
         <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
           <Chip
-            label="All"
+            label={t("common.all")}
             active={categoryId === ""}
             onPress={() => {
               setCategoryId("");
@@ -231,12 +243,12 @@ export default function RecipeListScreen() {
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">Max time</Kicker>
+        <Kicker className="mb-[10px]">{t("recipesList.maxTime")}</Kicker>
         <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
           {TIME_PRESETS.map((preset) => (
             <Chip
-              key={preset.label}
-              label={preset.label}
+              key={preset.labelKey}
+              label={t(preset.labelKey)}
               active={preset.seconds === maxTotalSeconds}
               onPress={() => setMaxTotalSeconds(preset.seconds)}
               tone="accent2"
@@ -244,31 +256,31 @@ export default function RecipeListScreen() {
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">Minimum rating</Kicker>
+        <Kicker className="mb-[10px]">{t("recipesList.minimumRating")}</Kicker>
         <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
           {RATING_PRESETS.map((preset) => (
             <Chip
-              key={preset.label}
-              label={preset.label}
+              key={preset.labelKey}
+              label={t(preset.labelKey)}
               active={preset.value === minRating}
               onPress={() => setMinRating(preset.value)}
               tone="accent2"
             />
           ))}
           <Chip
-            label="♥ Favourites"
+            label={t("recipesList.favourites")}
             active={favoriteOnly}
             onPress={() => setFavoriteOnly(!favoriteOnly)}
             tone="accent2"
           />
         </View>
 
-        <Kicker className="mb-[10px]">What can I cook with</Kicker>
+        <Kicker className="mb-[10px]">{t("recipesList.whatCanICookWith")}</Kicker>
         <TextInput
-          accessibilityLabel="Ingredient"
+          accessibilityLabel={t("recipesList.ingredient")}
           value={ingredient}
           onChangeText={setIngredient}
-          placeholder="an ingredient you have"
+          placeholder={t("recipesList.ingredientPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
           className="mb-[24px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-[11px] font-fig text-[14px] text-fg"
         />
@@ -276,14 +288,14 @@ export default function RecipeListScreen() {
         <View className="flex-row gap-[10px]">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Reset filters"
+            accessibilityLabel={t("recipesList.resetFilters")}
             onPress={resetFilters}
             className="flex-none rounded-full border-2 border-neutral-400 px-[24px] py-[13px]"
           >
-            <Text className="font-fig-x text-[15px] text-neutral-700">Reset</Text>
+            <Text className="font-fig-x text-[15px] text-neutral-700">{t("recipesList.reset")}</Text>
           </Pressable>
           <PrimaryButton
-            title={`Show ${recipes.length} recipe${recipes.length === 1 ? "" : "s"}`}
+            title={t("recipesList.showRecipes", { count: recipes.length })}
             onPress={() => setFilterOpen(false)}
             className="flex-1"
           />
@@ -302,8 +314,9 @@ function RecipeRow({
   index: number;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const tint = tintFor(recipe.categoryId, index);
-  const time = formatDuration(recipe.prepSeconds + recipe.cookSeconds);
+  const time = formatDuration(recipe.prepSeconds + recipe.cookSeconds, t);
   return (
     <Pressable
       accessibilityRole="button"
@@ -328,7 +341,7 @@ function RecipeRow({
         </Text>
         <View className="mt-[6px] flex-row items-center gap-[7px]">
           <Text className="font-fig-bold text-[12.5px] text-neutral-700">
-            {recipe.servings} serving{recipe.servings === 1 ? "" : "s"}
+            {t("plurals.servingsCount", { count: recipe.servings })}
           </Text>
           {time !== "" && <Text className="font-fig-bold text-[12.5px] text-neutral-700">{time}</Text>}
         </View>
