@@ -14,7 +14,12 @@ WORKDIR /src
 # services/<name>/ prefix that a plain wildcard would flatten into a single collided path.
 # Still manifests only, never `COPY services/`: keeping sources out of this layer is what lets
 # a code change reuse the dependency download below.
-COPY go.work go.work.sum ./
+# go.work.sum is gitignored (.gitignore), so it exists on a developer's disk but never in a
+# clean checkout — which is what CI builds from. The trailing glob makes it optional:
+# Docker treats a wildcard matching nothing as a no-op, where the bare name is a hard
+# error. The per-module go.sum files cover every dependency `go mod download all` needs,
+# verified by building from a fresh clone with the file absent.
+COPY go.work go.work.sum* ./
 COPY libs/go/ libs/go/
 COPY sdk/go/ sdk/go/
 COPY --parents services/*/go.mod services/*/go.sum ./
