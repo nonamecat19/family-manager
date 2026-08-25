@@ -283,6 +283,10 @@ export const en = {
   "login.registerError": "Could not create that account. Try a different email.",
   "login.loginError": "Email or password is incorrect.",
   "login.oneMoment": "One moment…",
+  // Shown when the service says something specific — "that email is already registered",
+  // "password must be at least 8 characters". The two errors above stay as the fallback for
+  // when it does not.
+  "login.errorReference": "Reference {ref}",
   "login.signIn": "Sign in",
   "login.createAccount": "Create account",
   "login.switchToRegister": "Create an account",

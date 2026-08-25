@@ -1,4 +1,4 @@
-import { useClients } from "@fm/api";
+import { toDisplayError, useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
@@ -16,10 +16,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorRef, setErrorRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
     setError(null);
+    setErrorRef(null);
     setBusy(true);
     try {
       if (mode === "register") {
@@ -27,8 +29,18 @@ export default function LoginScreen() {
       }
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
-    } catch {
-      setError(mode === "register" ? t("login.registerError") : t("login.loginError"));
+    } catch (e) {
+      // The service phrases the useful failures itself — "that email is already registered",
+      // "password must be at least 8 characters" — and this screen used to discard all of
+      // them and print the same sentence, so a fixable mistake looked identical to a wrong
+      // password. toDisplayError keeps those and falls back to the generic copy only for
+      // failures with nothing readable in them.
+      const shown = toDisplayError(
+        e,
+        mode === "register" ? t("login.registerError") : t("login.loginError"),
+      );
+      setError(shown.message);
+      setErrorRef(shown.reference ?? null);
     } finally {
       setBusy(false);
     }
@@ -69,6 +81,12 @@ export default function LoginScreen() {
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           error={error ?? undefined}
         />
+
+        {errorRef ? (
+          <Text className="font-fig text-[13px] leading-[19px] text-neutral-600">
+            {t("login.errorReference", { ref: errorRef })}
+          </Text>
+        ) : null}
 
         <PrimaryButton
           title={busy ? t("login.oneMoment") : mode === "login" ? t("login.signIn") : t("login.createAccount")}

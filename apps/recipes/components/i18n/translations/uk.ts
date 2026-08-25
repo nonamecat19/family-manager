@@ -292,6 +292,7 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "login.signIn": "Увійти",
   "login.createAccount": "Створити акаунт",
   "login.switchToRegister": "Створити акаунт",
+  "login.errorReference": "Код помилки: {ref}",
   "login.switchToLogin": "У мене вже є акаунт",
 
   // ---- shared organic UI -----------------------------------------------------------------------
