@@ -31,10 +31,16 @@ for v in R2_ENDPOINT R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
 done
 command -v aws >/dev/null || { echo "aws cli not found" >&2; exit 2; }
 
-# R2_ENDPOINT may carry a /<bucket> suffix (that is the form Cloudflare's dashboard shows).
-# The S3 API wants the bare host, with the bucket named separately.
+# R2_ENDPOINT is written for libs/go/storage, whose client wants a bare host and takes TLS
+# from a separate flag. The aws CLI wants a URL. It may also carry a /<bucket> suffix, which is
+# the form Cloudflare's dashboard copies out, while the S3 API wants the bucket named
+# separately — so normalise both ends.
 ENDPOINT="${R2_ENDPOINT%/}"
 ENDPOINT="${ENDPOINT%/$R2_BUCKET}"
+case "$ENDPOINT" in
+  http://*|https://*) ;;
+  *) ENDPOINT="https://$ENDPOINT" ;;
+esac
 
 export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"

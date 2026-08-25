@@ -335,6 +335,31 @@ if [[ -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" ]]; then
   exit 1
 fi
 
+# Both R2 credentials are fixed-length lowercase hex, so anything else is a paste that went
+# wrong — and pasting into a terminal goes wrong often. A key that arrives with the bucket
+# name glued to the front, or repeated four times because the terminal replayed the paste,
+# still looks fine at the prompt: the ID scrolls past and the secret is not echoed at all.
+# Both of those happened. The signature check in stage 5 would catch them, but only after the
+# bad value is already in the env file, and the failure it prints ("SignatureDoesNotMatch")
+# points at the token rather than at the paste.
+check_hex() {
+  local key="$1" want="$2" value="${!1}"
+  if [[ ! "$value" =~ ^[0-9a-f]{$want}$ ]]; then
+    warn "$key does not look like an R2 credential."
+    warn "expected $want lowercase hex characters, got ${#value}."
+    if (( ${#value} > want )) && [[ "${value:0:$want}" =~ ^[0-9a-f]+$ ]]; then
+      warn "the first $want characters are valid hex — this looks like a repeated or"
+      warn "prefixed paste. Copy the value again and paste it exactly once."
+    fi
+    return 1
+  fi
+}
+
+if ! check_hex R2_ACCESS_KEY_ID 32 || ! check_hex R2_SECRET_ACCESS_KEY 64; then
+  warn "nothing was written. Re-run the wizard."
+  exit 1
+fi
+
 # ── 4 ─────────────────────────────────────────────────────────────────────
 stage "Public read access"
 say "The S3 endpoint from stage 1 serves NO public reads — every request there"
