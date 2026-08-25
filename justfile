@@ -97,8 +97,12 @@ verify: check-go check-ts graph
 
 # --------------------------------------------------------------- mobile ----
 
-# Run Maestro mobile UI tests against the recipes app (or a specific flow).
+# The flows REGISTER ACCOUNTS AND CREATE RECIPES, so build the APK against a local stack —
+# `just build-apk local` — before running them. The default APK points at production, where
+# these flows would write test data into the family's real database. There is no staging tier.
+#
 # Requires: emulator running, APK installed, backend running (`just up`).
+# Run Maestro mobile UI tests against the recipes app (or a specific flow).
 test-mobile flow="":
     @just test-mobile-run {{flow}}
 
@@ -118,13 +122,20 @@ test-mobile-run flow:
       maestro test ".maestro/flows/recipes/{{flow}}.yaml"
     fi
 
-# Build the recipes APK (debug). Requires ANDROID_HOME and JAVA_HOME (Java 17).
-# In Docker if local toolchain is unavailable.
-# For a real device (not emulator), set EXPO_PUBLIC_API_BASE_URL to your machine's LAN
-# IP first, e.g.: EXPO_PUBLIC_API_BASE_URL=http://192.168.1.20:8084 just build-apk
-build-apk:
+# Requires ANDROID_HOME and JAVA_HOME (Java 17). In Docker if local toolchain is unavailable.
+#
+# Defaults to the PRODUCTION backend, matching `pnpm dev` (apps/recipes/app.config.js).
+# `just build-apk local` builds against a local stack instead — which is what the Maestro
+# flows need, since they write data.
+#
+# For a real device (not emulator) against a local stack, localhost resolves to the phone, so
+# also point the service at your machine's LAN IP:
+#   EXPO_PUBLIC_RECIPES_URL=http://192.168.1.20:8084 just build-apk local
+# Build the recipes APK (debug), against production unless told otherwise.
+build-apk env="production":
     #!/usr/bin/env bash
     set -euo pipefail
+    export EXPO_PUBLIC_API_ENV="{{env}}"
     cd apps/recipes
     # --clean: android/ is gitignored and regenerated from app.config.js every time, so
     # config changes (API URL, cleartext, etc.) always take effect instead of silently
