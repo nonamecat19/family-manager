@@ -72,6 +72,13 @@ They currently point at `135.181.41.169`. Verify with `getent ahostsv4 auth.nona
 If you use R2's custom domain for images, that hostname needs a record too — Cloudflare creates
 it for you when the bucket is in a zone you control.
 
+**If the stack started before DNS was correct, restart Caddy after fixing it.** Caddy backs off
+exponentially between failed ACME attempts, and after a handful of failures the next retry can
+be hours away — so certificates do not appear even once DNS is right, with nothing in the log
+but silence. `docker compose -f docker-compose.prod.yml restart caddy` resets the backoff and
+issuance completes in seconds. Check what actually failed first: an `unauthorized` problem
+naming an IP that is not this box means DNS, not Caddy.
+
 ### 2. Provision R2
 
 ```sh
