@@ -1,6 +1,6 @@
 import { ApiProvider } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
-import { Loading } from "@fm/ui";
+import { ErrorBoundary, Loading } from "@fm/ui";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
@@ -41,10 +41,16 @@ async function refresh(refreshToken: string): Promise<Tokens> {
 
 export default function RootLayout() {
   return (
-    <AuthProvider store={secureTokenStore} refresh={refresh}>
-      <ApiGate />
-      <StatusBar style="auto" />
-    </AuthProvider>
+    // Outside AuthProvider, so a crash while restoring the session is caught too.
+    <ErrorBoundary
+      message="The app hit an unexpected problem. Try again, and tell us what you were doing."
+      onError={(error) => console.error("[finance] unhandled render error", error)}
+    >
+      <AuthProvider store={secureTokenStore} refresh={refresh}>
+        <ApiGate />
+        <StatusBar style="auto" />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

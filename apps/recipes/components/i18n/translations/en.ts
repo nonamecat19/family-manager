@@ -33,6 +33,9 @@ export const en = {
   "kitchen.noHouseholdBody": "Create one to start cooking, or accept an invitation from a family member.",
   "kitchen.createHousehold": "Create a household",
   "kitchen.errorTitle": "Something\nwent wrong",
+  // Shown by the root error boundary, when the app itself failed to render rather than a
+  // request failing.
+  "kitchen.somethingBurned": "The app hit an unexpected problem. Try again, and tell us what you were doing.",
 
   // ---- profile screen (app/(app)/settings.tsx — the "You" tab) --------------------------
   "profile.familyFallback": "Family",

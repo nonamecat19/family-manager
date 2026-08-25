@@ -39,6 +39,8 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "kitchen.noHouseholdBody": "Створіть її, щоб почати готувати, або прийміть запрошення від когось із рідних.",
   "kitchen.createHousehold": "Створити родину",
   "kitchen.errorTitle": "Щось\nпішло не так",
+  "kitchen.somethingBurned":
+    "Застосунок несподівано зупинився. Спробуйте ще раз і розкажіть, що ви робили.",
 
   // ---- profile screen ---------------------------------------------------------------------
   "profile.familyFallback": "Родина",

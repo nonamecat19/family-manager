@@ -2,7 +2,7 @@ import "../global.css";
 
 import { ApiProvider } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
-import { Loading } from "@fm/ui";
+import { ErrorBoundary, Loading } from "@fm/ui";
 // Imported per weight rather than from the package root: the root index requires every
 // weight and italic, and Metro bundles what it sees — ~500 kB of TTFs the app never renders.
 import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
@@ -58,10 +58,17 @@ export default function RootLayout() {
   if (!fontsLoaded) return <Loading label={bootT("kitchen.warmingOven")} />;
 
   return (
-    <AuthProvider store={secureTokenStore} refresh={refresh}>
-      <ApiGate />
-      <StatusBar style="dark" />
-    </AuthProvider>
+    // Outside AuthProvider, so a crash while restoring the session is caught too — which is
+    // the one place a user cannot navigate away from.
+    <ErrorBoundary
+      message={bootT("kitchen.somethingBurned")}
+      onError={(error) => console.error("[recipes] unhandled render error", error)}
+    >
+      <AuthProvider store={secureTokenStore} refresh={refresh}>
+        <ApiGate />
+        <StatusBar style="dark" />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
