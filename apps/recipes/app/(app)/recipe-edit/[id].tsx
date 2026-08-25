@@ -11,6 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+import { formatMacro } from "../../../components/organic/format.ts";
 import { Icon } from "../../../components/organic/icons.tsx";
 import { organic } from "../../../components/organic/tokens.ts";
 import {
@@ -58,6 +59,10 @@ export default function RecipeEditScreen() {
   const [subcategoryId, setSubcategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const [rating, setRating] = useState(0);
+  const [kcal, setKcal] = useState("");
+  const [proteinG, setProteinG] = useState("");
+  const [fatG, setFatG] = useState("");
+  const [carbsG, setCarbsG] = useState("");
   const [ingredients, setIngredients] = useState<IngredientRow[]>([{ name: "", amount: "", unit: "" }]);
   const [steps, setSteps] = useState<StepRow[]>([{ instruction: "", durationMinutes: "" }]);
 
@@ -79,6 +84,14 @@ export default function RecipeEditScreen() {
     setSubcategoryId(r.subcategoryId);
     setNotes(r.notes);
     setRating(r.rating);
+    // Blank rather than "0" for an unrecorded figure: a 0 in the box is a claim that the
+    // dish has no calories, and it would be saved back as one.
+    setKcal(r.nutrition?.kcal ? `${r.nutrition.kcal}` : "");
+    // formatMacro, not template interpolation: the column is a 4-byte float, so a typed
+    // 32.3 comes back as 32.29999923706055 and would fill the box with it.
+    setProteinG(r.nutrition?.proteinG ? formatMacro(r.nutrition.proteinG) : "");
+    setFatG(r.nutrition?.fatG ? formatMacro(r.nutrition.fatG) : "");
+    setCarbsG(r.nutrition?.carbsG ? formatMacro(r.nutrition.carbsG) : "");
     setIngredients(
       r.ingredients.length > 0
         ? r.ingredients.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit }))
@@ -133,6 +146,12 @@ export default function RecipeEditScreen() {
       cookSeconds: (parseInt(cookMinutes) || 0) * 60,
       notes: notes.trim(),
       rating,
+      nutrition: {
+        kcal: parseNumber(kcal),
+        proteinG: parseNumber(proteinG),
+        fatG: parseNumber(fatG),
+        carbsG: parseNumber(carbsG),
+      },
       ingredients: ingredients
         .filter((i) => i.name.trim() !== "")
         .map((i) => ({ name: i.name.trim(), amount: i.amount.trim(), unit: i.unit.trim() })),
@@ -286,6 +305,40 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
+          <Kicker className="mb-[10px]">Per serving</Kicker>
+          <View className="flex-row gap-[12px]">
+            <Field
+              className="flex-1"
+              label="kcal"
+              value={kcal}
+              onChangeText={setKcal}
+              keyboardType="numeric"
+            />
+            <Field
+              className="flex-1"
+              label="Protein (g)"
+              value={proteinG}
+              onChangeText={setProteinG}
+              keyboardType="numeric"
+            />
+            <Field
+              className="flex-1"
+              label="Fat (g)"
+              value={fatG}
+              onChangeText={setFatG}
+              keyboardType="numeric"
+            />
+            <Field
+              className="flex-1"
+              label="Carbs (g)"
+              value={carbsG}
+              onChangeText={setCarbsG}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        <View>
           <Kicker className="mb-[10px]">Rating</Kicker>
           <StarPicker rating={rating} onChange={setRating} />
         </View>
@@ -381,6 +434,13 @@ export default function RecipeEditScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+/** Empty means "not recorded", which is 0 on the wire. A decimal comma is accepted because
+ * the keyboard on a Ukrainian locale offers one. */
+function parseNumber(text: string): number {
+  const n = parseFloat(text.replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 function Placeholder({ label }: { label: string }) {

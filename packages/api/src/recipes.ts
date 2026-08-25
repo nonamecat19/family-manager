@@ -104,6 +104,12 @@ export interface CreateRecipeInput {
   notes: string;
   /** 1..5, or 0 for unrated. */
   rating: number;
+  /**
+   * Per-serving figures. Omitting this on an update leaves the stored macros alone rather
+   * than zeroing them — the server COALESCEs it — so a caller that does not collect
+   * nutrition cannot silently erase what a recipe was imported with.
+   */
+  nutrition?: { kcal: number; proteinG: number; fatG: number; carbsG: number };
 }
 
 export function useCreateRecipe() {
