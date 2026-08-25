@@ -146,6 +146,8 @@ func toProtoRecipe(
 		AuthorUserId:  pgconv.UUIDString(r.AuthorUserID),
 		FavoriteCount: r.FavoriteCount,
 		CommentCount:  r.CommentCount,
+		Notes:         r.Notes,
+		Rating:        int32(r.Rating),
 		ImageUrl:      r.ImageUrl,
 		CreatedAt:     pgconv.Timestamp(r.CreatedAt),
 		UpdatedAt:     pgconv.Timestamp(r.UpdatedAt),
@@ -180,4 +182,67 @@ func toProtoIngredientTotal(t db.TotalIngredientsRow) *recipesv1.IngredientTotal
 		Unit:        t.Unit,
 		TotalAmount: t.TotalAmount,
 	}
+}
+
+// toProtoBasketTotal is the same shape as toProtoIngredientTotal over a different sqlc row
+// type: the calendar and the ad-hoc basket run different queries but return one line format.
+func toProtoBasketTotal(t db.SumIngredientsForBasketRow) *recipesv1.IngredientTotal {
+	return &recipesv1.IngredientTotal{
+		Name:        t.Name,
+		Unit:        t.Unit,
+		TotalAmount: t.TotalAmount,
+	}
+}
+
+// sortKey maps the closed RecipeSort enum onto the discriminator string the ListRecipes
+// query switches on. An unknown value falls through to newest-first rather than erroring —
+// a client on a newer contract should get a list, not a 400.
+func sortKey(s recipesv1.RecipeSort) string {
+	switch s {
+	case recipesv1.RecipeSort_RECIPE_SORT_TITLE:
+		return "title"
+	case recipesv1.RecipeSort_RECIPE_SORT_RATING:
+		return "rating"
+	case recipesv1.RecipeSort_RECIPE_SORT_TIME:
+		return "time"
+	case recipesv1.RecipeSort_RECIPE_SORT_FAVORITES:
+		return "favorites"
+	default:
+		return "newest"
+	}
+}
+
+// optionalText turns an empty (or whitespace) filter into SQL NULL — the queries treat NULL
+// as "filter not applied", so an empty search box must not become LIKE '%%'.
+func optionalText(v string) *string {
+	t := trimmed(v)
+	if t == "" {
+		return nil
+	}
+	return &t
+}
+
+func clampInt32(v, lo, hi int32) int32 {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
+}
+
+// max0 floors a value at zero: negative servings or a negative time cap are client bugs, and
+// zero is already the "unset" sentinel for both.
+func max0(v int32) int32 {
+	if v < 0 {
+		return 0
+	}
+	return v
+}
+
+// clampRating keeps a write inside the CHECK constraint instead of letting Postgres reject
+// the whole recipe over a stray star count.
+func clampRating(v int32) int16 {
+	return int16(clampInt32(v, 0, 5))
 }

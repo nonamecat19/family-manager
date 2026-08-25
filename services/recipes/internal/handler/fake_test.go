@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/jackc/pgx/v5"
@@ -125,6 +127,8 @@ func (s *fakeStore) CreateRecipe(_ context.Context, arg db.CreateRecipeParams) (
 		PrepSeconds:   arg.PrepSeconds,
 		CookSeconds:   arg.CookSeconds,
 		AuthorUserID:  arg.AuthorUserID,
+		Notes:         arg.Notes,
+		Rating:        arg.Rating,
 		CreatedAt:     pgtype.Timestamptz{Valid: true},
 		UpdatedAt:     pgtype.Timestamptz{Valid: true},
 	}
@@ -152,9 +156,55 @@ func (s *fakeStore) ListRecipes(_ context.Context, arg db.ListRecipesParams) ([]
 		if arg.SubcategoryID.Valid && pgconv.UUIDString(r.SubcategoryID) != pgconv.UUIDString(arg.SubcategoryID) {
 			continue
 		}
+		if arg.Search != nil && !strings.Contains(
+			strings.ToLower(strings.TrimSpace(r.Title)), strings.ToLower(*arg.Search)) {
+			continue
+		}
+		if arg.Ingredient != nil && !s.hasIngredientLike(r.ID, *arg.Ingredient) {
+			continue
+		}
+		if int32(r.Rating) < arg.MinRating {
+			continue
+		}
+		if arg.MaxTotalSeconds > 0 && r.PrepSeconds+r.CookSeconds > arg.MaxTotalSeconds {
+			continue
+		}
+		if arg.FavoriteOnly && !s.favorites[pgconv.UUIDString(r.ID)+"|"+pgconv.UUIDString(arg.UserID)] {
+			continue
+		}
 		out = append(out, r)
 	}
+	sortRecipes(out, arg.Sort)
 	return out, nil
+}
+
+func (s *fakeStore) hasIngredientLike(recipeID pgtype.UUID, needle string) bool {
+	for _, ri := range s.ingredients[pgconv.UUIDString(recipeID)] {
+		if strings.Contains(strings.ToLower(strings.TrimSpace(ri.Name)), strings.ToLower(needle)) {
+			return true
+		}
+	}
+	return false
+}
+
+// sortRecipes mirrors the ORDER BY in the ListRecipes query. Map iteration above is random,
+// so without this the fake would make sort assertions pass or fail by luck.
+func sortRecipes(rs []db.Recipe, key string) {
+	sort.SliceStable(rs, func(i, j int) bool {
+		a, b := rs[i], rs[j]
+		switch key {
+		case "title":
+			return strings.ToLower(strings.TrimSpace(a.Title)) < strings.ToLower(strings.TrimSpace(b.Title))
+		case "rating":
+			return a.Rating > b.Rating
+		case "time":
+			return a.PrepSeconds+a.CookSeconds < b.PrepSeconds+b.CookSeconds
+		case "favorites":
+			return a.FavoriteCount > b.FavoriteCount
+		default:
+			return a.Title < b.Title
+		}
+	})
 }
 
 func (s *fakeStore) ListFavoriteRecipes(_ context.Context, userID pgtype.UUID) ([]db.Recipe, error) {
@@ -187,6 +237,18 @@ func (s *fakeStore) UpdateRecipe(_ context.Context, arg db.UpdateRecipeParams) (
 	r.Servings = arg.Servings
 	r.PrepSeconds = arg.PrepSeconds
 	r.CookSeconds = arg.CookSeconds
+	r.Notes = arg.Notes
+	r.Rating = arg.Rating
+	s.recipes[pgconv.UUIDString(r.ID)] = r
+	return r, nil
+}
+
+func (s *fakeStore) SetRecipeRating(_ context.Context, arg db.SetRecipeRatingParams) (db.Recipe, error) {
+	r, ok := s.recipes[pgconv.UUIDString(arg.ID)]
+	if !ok {
+		return db.Recipe{}, pgx.ErrNoRows
+	}
+	r.Rating = arg.Rating
 	s.recipes[pgconv.UUIDString(r.ID)] = r
 	return r, nil
 }
@@ -378,6 +440,38 @@ func (s *fakeStore) TotalIngredients(_ context.Context, arg db.TotalIngredientsP
 	for _, t := range totals {
 		out = append(out, t)
 	}
+	return out, nil
+}
+
+func (s *fakeStore) SumIngredientsForBasket(
+	_ context.Context, arg db.SumIngredientsForBasketParams,
+) ([]db.SumIngredientsForBasketRow, error) {
+	totals := map[string]db.SumIngredientsForBasketRow{}
+	for i, id := range arg.RecipeIds {
+		key := pgconv.UUIDString(id)
+		r, ok := s.recipes[key]
+		if !ok || pgconv.UUIDString(r.FamilyID) != pgconv.UUIDString(arg.FamilyID) {
+			continue
+		}
+		scale := 1.0
+		if i < len(arg.ServingsList) && arg.ServingsList[i] > 0 && r.Servings > 0 {
+			scale = float64(arg.ServingsList[i]) / float64(r.Servings)
+		}
+		for _, ri := range s.ingredients[key] {
+			k := ri.Name + "|" + ri.Unit
+			existing, ok := totals[k]
+			if !ok {
+				existing = db.SumIngredientsForBasketRow{Name: ri.Name, Unit: ri.Unit, TotalAmount: "0"}
+			}
+			existing.TotalAmount = fmt.Sprintf("%.2f", parseFloat(existing.TotalAmount)+parseFloat(ri.Amount)*scale)
+			totals[k] = existing
+		}
+	}
+	out := make([]db.SumIngredientsForBasketRow, 0, len(totals))
+	for _, t := range totals {
+		out = append(out, t)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
 }
 

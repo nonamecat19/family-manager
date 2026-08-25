@@ -244,3 +244,237 @@ func TestCreateCategory(t *testing.T) {
 		t.Errorf("name = %q, want Dessert", resp.Msg.Category.Name)
 	}
 }
+// --- rating, filtering, sorting, ad-hoc basket -----------------------------
+
+// seedRecipe creates a recipe through the handler so ingredients and steps land in the fake
+// exactly as the real write path would leave them.
+func seedRecipe(t *testing.T, h *Handler, ctx context.Context, req *recipesv1.CreateRecipeRequest) *recipesv1.Recipe {
+	t.Helper()
+	resp, err := h.CreateRecipe(ctx, connect.NewRequest(req))
+	if err != nil {
+		t.Fatalf("seed %q: %v", req.GetTitle(), err)
+	}
+	return resp.Msg.GetRecipe()
+}
+
+func TestRateRecipe(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Borscht", Servings: 4})
+
+	resp, err := h.RateRecipe(ctx, connect.NewRequest(&recipesv1.RateRecipeRequest{
+		RecipeId: r.GetId(), Rating: 5,
+	}))
+	if err != nil {
+		t.Fatalf("RateRecipe: %v", err)
+	}
+	if got := resp.Msg.GetRecipe().GetRating(); got != 5 {
+		t.Errorf("rating = %d, want 5", got)
+	}
+
+	// 0 clears the rating rather than being rejected as out of range.
+	resp, err = h.RateRecipe(ctx, connect.NewRequest(&recipesv1.RateRecipeRequest{
+		RecipeId: r.GetId(), Rating: 0,
+	}))
+	if err != nil {
+		t.Fatalf("RateRecipe clear: %v", err)
+	}
+	if got := resp.Msg.GetRecipe().GetRating(); got != 0 {
+		t.Errorf("cleared rating = %d, want 0", got)
+	}
+
+	if _, err := h.RateRecipe(ctx, connect.NewRequest(&recipesv1.RateRecipeRequest{
+		RecipeId: r.GetId(), Rating: 9,
+	})); err == nil {
+		t.Error("expected InvalidArgument for rating 9, got nil")
+	}
+}
+
+func TestRateRecipeFamilyScoping(t *testing.T) {
+	h, store, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Not yours"})
+
+	other := withClaims(context.Background(), testUser, "00000000-0000-4000-8000-0000000000ff")
+	if _, err := h.RateRecipe(other, connect.NewRequest(&recipesv1.RateRecipeRequest{
+		RecipeId: r.GetId(), Rating: 1,
+	})); err == nil {
+		t.Fatal("expected NotFound rating another family's recipe, got nil")
+	}
+	if got := store.recipes[r.GetId()].Rating; got != 0 {
+		t.Errorf("rating was written across the family boundary: %d", got)
+	}
+}
+
+func TestListRecipesFiltersAndSort(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Chicken WOK", Servings: 2, Rating: 5, PrepSeconds: 300, CookSeconds: 600,
+		Ingredients: []*recipesv1.Ingredient{{Name: "chicken", Amount: "300", Unit: "g"}},
+	})
+	seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Beef Stew", Servings: 4, Rating: 3, PrepSeconds: 600, CookSeconds: 7200,
+		Ingredients: []*recipesv1.Ingredient{{Name: "beef", Amount: "500", Unit: "g"}},
+	})
+	seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Apple Pie", Servings: 8, Rating: 0, PrepSeconds: 1200, CookSeconds: 2400,
+		Ingredients: []*recipesv1.Ingredient{{Name: "apple", Amount: "4", Unit: "pcs"}},
+	})
+
+	titles := func(t *testing.T, req *recipesv1.ListRecipesRequest) []string {
+		t.Helper()
+		resp, err := h.ListRecipes(ctx, connect.NewRequest(req))
+		if err != nil {
+			t.Fatalf("ListRecipes: %v", err)
+		}
+		out := make([]string, 0, len(resp.Msg.GetRecipes()))
+		for _, r := range resp.Msg.GetRecipes() {
+			out = append(out, r.GetTitle())
+		}
+		return out
+	}
+
+	if got := titles(t, &recipesv1.ListRecipesRequest{Search: "wok"}); len(got) != 1 || got[0] != "Chicken WOK" {
+		t.Errorf("search wok = %v, want [Chicken WOK]", got)
+	}
+	if got := titles(t, &recipesv1.ListRecipesRequest{Ingredient: "beef"}); len(got) != 1 || got[0] != "Beef Stew" {
+		t.Errorf("ingredient beef = %v, want [Beef Stew]", got)
+	}
+	if got := titles(t, &recipesv1.ListRecipesRequest{MinRating: 4}); len(got) != 1 || got[0] != "Chicken WOK" {
+		t.Errorf("min_rating 4 = %v, want [Chicken WOK]", got)
+	}
+	if got := titles(t, &recipesv1.ListRecipesRequest{MaxTotalSeconds: 1000}); len(got) != 1 || got[0] != "Chicken WOK" {
+		t.Errorf("max_total_seconds 1000 = %v, want [Chicken WOK]", got)
+	}
+
+	wantTitle := []string{"Apple Pie", "Beef Stew", "Chicken WOK"}
+	if got := titles(t, &recipesv1.ListRecipesRequest{Sort: recipesv1.RecipeSort_RECIPE_SORT_TITLE}); !equalStrings(got, wantTitle) {
+		t.Errorf("sort title = %v, want %v", got, wantTitle)
+	}
+	wantRating := []string{"Chicken WOK", "Beef Stew", "Apple Pie"}
+	if got := titles(t, &recipesv1.ListRecipesRequest{Sort: recipesv1.RecipeSort_RECIPE_SORT_RATING}); !equalStrings(got, wantRating) {
+		t.Errorf("sort rating = %v, want %v", got, wantRating)
+	}
+	wantTime := []string{"Chicken WOK", "Apple Pie", "Beef Stew"}
+	if got := titles(t, &recipesv1.ListRecipesRequest{Sort: recipesv1.RecipeSort_RECIPE_SORT_TIME}); !equalStrings(got, wantTime) {
+		t.Errorf("sort time = %v, want %v", got, wantTime)
+	}
+}
+
+func TestSumIngredientsBasket(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	wok := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Chicken WOK", Servings: 2,
+		Ingredients: []*recipesv1.Ingredient{
+			{Name: "chicken", Amount: "300", Unit: "g"},
+			{Name: "rice", Amount: "200", Unit: "g"},
+		},
+	})
+	pilaf := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Pilaf", Servings: 4,
+		Ingredients: []*recipesv1.Ingredient{{Name: "rice", Amount: "400", Unit: "g"}},
+	})
+
+	resp, err := h.SumIngredients(ctx, connect.NewRequest(&recipesv1.SumIngredientsRequest{
+		Items: []*recipesv1.RecipeQuantity{
+			// 4 servings of a 2-serving recipe doubles it; 0 means "as written".
+			{RecipeId: wok.GetId(), Servings: 4},
+			{RecipeId: pilaf.GetId(), Servings: 0},
+		},
+	}))
+	if err != nil {
+		t.Fatalf("SumIngredients: %v", err)
+	}
+	got := map[string]string{}
+	for _, tot := range resp.Msg.GetTotals() {
+		got[tot.GetName()] = tot.GetTotalAmount()
+	}
+	if got["chicken"] != "600.00" {
+		t.Errorf("chicken = %q, want 600.00", got["chicken"])
+	}
+	// 200 * 2 (scaled) + 400 (as written) — the two recipes collapse onto one line.
+	if got["rice"] != "800.00" {
+		t.Errorf("rice = %q, want 800.00", got["rice"])
+	}
+}
+
+func TestSumIngredientsEmptyBasketIsNotAnError(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	resp, err := h.SumIngredients(ctx, connect.NewRequest(&recipesv1.SumIngredientsRequest{}))
+	if err != nil {
+		t.Fatalf("SumIngredients empty: %v", err)
+	}
+	if len(resp.Msg.GetTotals()) != 0 {
+		t.Errorf("totals = %d, want 0", len(resp.Msg.GetTotals()))
+	}
+}
+
+func TestSumIngredientsIgnoresOtherFamilies(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	mine := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Mine", Servings: 1,
+		Ingredients: []*recipesv1.Ingredient{{Name: "salt", Amount: "5", Unit: "g"}},
+	})
+
+	otherCtx := withClaims(context.Background(), testUser, "00000000-0000-4000-8000-0000000000ff")
+	theirs := seedRecipe(t, h, otherCtx, &recipesv1.CreateRecipeRequest{
+		Title: "Theirs", Servings: 1,
+		Ingredients: []*recipesv1.Ingredient{{Name: "sugar", Amount: "5", Unit: "g"}},
+	})
+
+	resp, err := h.SumIngredients(ctx, connect.NewRequest(&recipesv1.SumIngredientsRequest{
+		Items: []*recipesv1.RecipeQuantity{
+			{RecipeId: mine.GetId()},
+			{RecipeId: theirs.GetId()},
+		},
+	}))
+	if err != nil {
+		t.Fatalf("SumIngredients: %v", err)
+	}
+	for _, tot := range resp.Msg.GetTotals() {
+		if tot.GetName() == "sugar" {
+			t.Fatal("another family's ingredients leaked into the basket total")
+		}
+	}
+}
+
+func TestUpdateRecipeKeepsNotesAndRating(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Soup", Servings: 2, Notes: "less salt", Rating: 4,
+	})
+	if r.GetNotes() != "less salt" || r.GetRating() != 4 {
+		t.Fatalf("create dropped notes/rating: %q %d", r.GetNotes(), r.GetRating())
+	}
+
+	resp, err := h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
+		RecipeId: r.GetId(), Title: "Soup", Servings: 2, Notes: "more pepper", Rating: 2,
+	}))
+	if err != nil {
+		t.Fatalf("UpdateRecipe: %v", err)
+	}
+	if resp.Msg.GetRecipe().GetNotes() != "more pepper" || resp.Msg.GetRecipe().GetRating() != 2 {
+		t.Errorf("update = %q %d, want \"more pepper\" 2",
+			resp.Msg.GetRecipe().GetNotes(), resp.Msg.GetRecipe().GetRating())
+	}
+}
+
+func equalStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

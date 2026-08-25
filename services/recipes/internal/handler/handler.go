@@ -248,6 +248,8 @@ func (h *Handler) CreateRecipe(
 		PrepSeconds:   req.Msg.GetPrepSeconds(),
 		CookSeconds:   req.Msg.GetCookSeconds(),
 		AuthorUserID:  userUUID,
+		Notes:         req.Msg.GetNotes(),
+		Rating:        clampRating(req.Msg.GetRating()),
 	})
 	if err != nil {
 		return nil, internal(err, "create recipe")
@@ -315,37 +317,29 @@ func (h *Handler) ListRecipes(
 		return nil, err
 	}
 
+	// favorite_only used to take a separate query path, which meant favorites could not be
+	// sorted or filtered like the rest of the cookbook. It is now one more predicate on the
+	// single ListRecipes query; the caller's user id is only resolved when it is needed.
+	var userUUID pgtype.UUID
 	if req.Msg.GetFavoriteOnly() {
 		userID, err := h.userOf(ctx)
 		if err != nil {
 			return nil, err
 		}
-		rows, err := h.q.ListFavoriteRecipes(ctx, pgconv.MustUUID(userID))
-		if err != nil {
-			return nil, internal(err, "list favorite recipes")
-		}
-		out := make([]*recipesv1.Recipe, 0, len(rows))
-		for _, r := range rows {
-			ingredients, steps, err := h.loadIngredientsAndSteps(ctx, r.ID)
-			if err != nil {
-				return nil, err
-			}
-			out = append(out, toProtoRecipe(r, ingredients, steps))
-		}
-		return connect.NewResponse(&recipesv1.ListRecipesResponse{Recipes: out}), nil
+		userUUID = pgconv.MustUUID(userID)
 	}
 
-	famUUID := pgconv.MustUUID(familyID)
-	search := trimmed(req.Msg.GetSearch())
-	var searchPtr *string
-	if search != "" {
-		searchPtr = &search
-	}
 	arg := db.ListRecipesParams{
-		FamilyID:      famUUID,
-		CategoryID:    pgconv.MustUUID(req.Msg.GetCategoryId()),
-		SubcategoryID: pgconv.MustUUID(req.Msg.GetSubcategoryId()),
-		Search:        searchPtr,
+		FamilyID:        pgconv.MustUUID(familyID),
+		CategoryID:      pgconv.MustUUID(req.Msg.GetCategoryId()),
+		SubcategoryID:   pgconv.MustUUID(req.Msg.GetSubcategoryId()),
+		Search:          optionalText(req.Msg.GetSearch()),
+		Ingredient:      optionalText(req.Msg.GetIngredient()),
+		MinRating:       clampInt32(req.Msg.GetMinRating(), 0, 5),
+		MaxTotalSeconds: max0(req.Msg.GetMaxTotalSeconds()),
+		FavoriteOnly:    req.Msg.GetFavoriteOnly(),
+		UserID:          userUUID,
+		Sort:            sortKey(req.Msg.GetSort()),
 	}
 	rows, err := h.q.ListRecipes(ctx, arg)
 	if err != nil {
@@ -360,6 +354,54 @@ func (h *Handler) ListRecipes(
 		out = append(out, toProtoRecipe(r, ingredients, steps))
 	}
 	return connect.NewResponse(&recipesv1.ListRecipesResponse{Recipes: out}), nil
+}
+
+// RateRecipe sets the family's verdict, 1..5, or 0 to clear it.
+func (h *Handler) RateRecipe(
+	ctx context.Context, req *connect.Request[recipesv1.RateRecipeRequest],
+) (*connect.Response[recipesv1.RateRecipeResponse], error) {
+	familyID, err := h.familyOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	recipeID, err := pgconv.UUID(req.Msg.GetRecipeId())
+	if err != nil || !recipeID.Valid {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("recipe_id is required"))
+	}
+	rating := req.Msg.GetRating()
+	if rating < 0 || rating > 5 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("rating must be 0..5"))
+	}
+
+	r, err := h.q.GetRecipe(ctx, recipeID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
+		}
+		return nil, internal(err, "get recipe")
+	}
+	if pgconv.UUIDString(r.FamilyID) != familyID {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
+	}
+
+	r, err = h.q.SetRecipeRating(ctx, db.SetRecipeRatingParams{ID: r.ID, Rating: int16(rating)})
+	if err != nil {
+		return nil, internal(err, "set rating")
+	}
+	ingredients, steps, err := h.loadIngredientsAndSteps(ctx, r.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	h.publish(ctx, events.SubjectRecipesRecipeUpdated, &recipesv1.RecipeUpdatedEvent{
+		FamilyId:   familyID,
+		RecipeId:   pgconv.UUIDString(r.ID),
+		OccurredAt: h.timestamp(),
+	})
+
+	return connect.NewResponse(&recipesv1.RateRecipeResponse{
+		Recipe: toProtoRecipe(r, ingredients, steps),
+	}), nil
 }
 
 func (h *Handler) UpdateRecipe(
@@ -401,6 +443,8 @@ func (h *Handler) UpdateRecipe(
 		Servings:      req.Msg.GetServings(),
 		PrepSeconds:   req.Msg.GetPrepSeconds(),
 		CookSeconds:   req.Msg.GetCookSeconds(),
+		Notes:         req.Msg.GetNotes(),
+		Rating:        clampRating(req.Msg.GetRating()),
 	})
 	if err != nil {
 		return nil, internal(err, "update recipe")
@@ -845,6 +889,52 @@ func (h *Handler) TotalIngredients(
 		out = append(out, toProtoIngredientTotal(t))
 	}
 	return connect.NewResponse(&recipesv1.TotalIngredientsResponse{Totals: out}), nil
+}
+
+// maxBasketItems bounds an ad-hoc basket. The array is unnested into a join server-side, so
+// an unbounded list is an unbounded query; nobody cooks 200 recipes off one shopping trip.
+const maxBasketItems = 200
+
+func (h *Handler) SumIngredients(
+	ctx context.Context, req *connect.Request[recipesv1.SumIngredientsRequest],
+) (*connect.Response[recipesv1.SumIngredientsResponse], error) {
+	familyID, err := h.familyOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	items := req.Msg.GetItems()
+	if len(items) == 0 {
+		return connect.NewResponse(&recipesv1.SumIngredientsResponse{}), nil
+	}
+	if len(items) > maxBasketItems {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("at most %d basket items", maxBasketItems))
+	}
+
+	ids := make([]pgtype.UUID, 0, len(items))
+	servings := make([]int32, 0, len(items))
+	for _, it := range items {
+		id, err := pgconv.UUID(it.GetRecipeId())
+		if err != nil || !id.Valid {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("recipe_id is invalid"))
+		}
+		ids = append(ids, id)
+		servings = append(servings, max0(it.GetServings()))
+	}
+
+	rows, err := h.q.SumIngredientsForBasket(ctx, db.SumIngredientsForBasketParams{
+		RecipeIds:    ids,
+		ServingsList: servings,
+		FamilyID:     pgconv.MustUUID(familyID),
+	})
+	if err != nil {
+		return nil, internal(err, "sum ingredients")
+	}
+	out := make([]*recipesv1.IngredientTotal, 0, len(rows))
+	for _, t := range rows {
+		out = append(out, toProtoBasketTotal(t))
+	}
+	return connect.NewResponse(&recipesv1.SumIngredientsResponse{Totals: out}), nil
 }
 
 /* ------------------------------------------------------------------ internals */
