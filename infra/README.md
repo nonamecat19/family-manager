@@ -142,7 +142,7 @@ wizard.
 |---|---|
 | `VPS_HOST` | `79.108.160.103` |
 | `VPS_SSH_KEY` | private half of the deploy keypair, OpenSSH format, no passphrase |
-| `VPS_SSH_FINGERPRINT` | the box's SHA256 host-key fingerprint — see the recipe in the header of `.github/workflows/deploy.yml`, which is the form `appleboy/ssh-action` documents. The `ssh-keyscan \| ssh-keygen -lf -` form prints extra fields the action does not want. |
+| `VPS_SSH_FINGERPRINT` | `ssh-keygen -l -f /etc/ssh/ssh_host_ecdsa_key.pub \| cut -d' ' -f2`, run on the box. **The ECDSA key, not ed25519** — the action is a Go program and `x/crypto/ssh` prefers `ecdsa-sha2-nistp256`, so an ed25519 fingerprint fails with `host key fingerprint mismatch` despite being a valid key for that host. |
 
 Install the public half on the box with `ssh-copy-id`, or append it to
 `/root/.ssh/authorized_keys` by hand.

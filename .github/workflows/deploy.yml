@@ -10,9 +10,14 @@
 #                         (there is nobody to type one in a runner).
 #   VPS_HOST            — the VPS address, e.g. 79.108.160.103. Kept as a secret rather than
 #                         inlined so re-homing the box is a settings change, not a commit.
-#   VPS_SSH_FINGERPRINT — optional but recommended: the server's SHA256 host key fingerprint.
-#                         The action's own documented recipe is
-#                         `ssh <host> ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub | cut -d ' ' -f2`.
+#   VPS_SSH_FINGERPRINT — optional but recommended: the SHA256 fingerprint of the host key the
+#                         action actually negotiates, which on a stock sshd is the ECDSA one,
+#                         NOT ed25519. drone-ssh is a Go program and x/crypto/ssh orders
+#                         ecdsa-sha2-nistp256 ahead of ssh-ed25519, so fingerprinting
+#                         ssh_host_ed25519_key.pub fails with "host key fingerprint mismatch"
+#                         even though the value is correct for a key the server holds. Get it
+#                         with, on the box:
+#                           ssh-keygen -l -f /etc/ssh/ssh_host_ecdsa_key.pub | cut -d' ' -f2
 #                         Empty means the runner accepts whatever host answers, i.e. no MITM
 #                         protection.
 # That is the complete set — deliberately no registry credential among them. GHCR accepts the
