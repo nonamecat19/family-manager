@@ -18,7 +18,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | database | Postgres 16 + pgx/v5 | `docker-compose.yml`, service `go.mod` | — |
 | SQL → Go | sqlc | `services/*/sqlc.yaml` | — |
 | migrations | golang-migrate, numbered SQL | `services/*/internal/db/migrations` | — |
-| object storage | MinIO (S3 API) | `docker-compose.yml` | — |
+| object storage | MinIO (dev) · Cloudflare R2 (prod), one `minio-go` client | `docker-compose.yml`, `infra/` | [0007](adr/0007-object-storage.md) |
 | Go config | viper, env-prefixed | `services/*/internal/config` | — |
 | auth | ES256 JWT (15 min) + rotating refresh, JWKS | `services/auth`, `libs/go/auth` | [0005](adr/0005-auth.md) |
 | password hashing | argon2id | `services/auth` only | [0005](adr/0005-auth.md) |

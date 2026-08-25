@@ -92,7 +92,7 @@ func run() error {
 		Queries:     db.New(pool),
 		Bus:         busOrNil(bus),
 		Images:      images,
-		ImageBucket: cfg.MinIOBucket,
+		ImageBucket: cfg.StorageBucket,
 		Log:         log,
 	})
 
@@ -178,25 +178,27 @@ func busOrNil(bus *events.Bus) handler.EventBus {
 	return bus
 }
 
-// imagesOrNil builds the MinIO client when configured. A missing MINIO_ENDPOINT means image
-// upload runs in degraded mode (UploadRecipeImage errors, everything else works) rather than
-// blocking boot — same tradeoff as an unreachable NATS.
+// imagesOrNil builds the object storage client when configured. A missing STORAGE_ENDPOINT
+// means image upload runs in degraded mode (UploadRecipeImage errors, everything else works)
+// rather than blocking boot — same tradeoff as an unreachable NATS.
 func imagesOrNil(ctx context.Context, cfg *config.Config, log *slog.Logger) (handler.ImageStore, error) {
-	if cfg.MinIOEndpoint == "" {
-		log.Warn("image storage disabled: RECIPES_MINIO_ENDPOINT not set")
+	if cfg.StorageEndpoint == "" {
+		log.Warn("image storage disabled: RECIPES_STORAGE_ENDPOINT not set")
 		return nil, nil
 	}
 	client, err := storage.New(storage.Config{
-		Endpoint:  cfg.MinIOEndpoint,
-		AccessKey: cfg.MinIOAccessKey,
-		SecretKey: cfg.MinIOSecretKey,
-		UseSSL:    cfg.MinIOUseSSL,
-		PublicURL: cfg.MinIOPublicURL,
+		Provider:  storage.Provider(cfg.StorageProvider),
+		Endpoint:  cfg.StorageEndpoint,
+		AccessKey: cfg.StorageAccessKey,
+		SecretKey: cfg.StorageSecretKey,
+		UseSSL:    cfg.StorageUseSSL,
+		PublicURL: cfg.StoragePublicURL,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err := client.EnsureBucket(ctx, cfg.MinIOBucket); err != nil {
+	// A no-op on R2, where the bucket is provisioned out of band.
+	if err := client.EnsureBucket(ctx, cfg.StorageBucket); err != nil {
 		return nil, err
 	}
 	return client, nil
