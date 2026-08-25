@@ -12,16 +12,14 @@ env:
     clearState: true
 - assertVisible: "Family Recipes"
 
-- tapOn:
-    id: "email"
+- tapOn: "Email"
 - inputText: ${TEST_EMAIL}
-- tapOn:
-    id: "password"
+- tapOn: "Password"
 - inputText: ${TEST_PASSWORD}
 
 - tapOn: "Sign in"
 
-# After login, the app should show the recipe list (or onboarding if no family)
+# After login the app lands on Home (or onboarding if the account has no family yet).
 - extendedWaitUntil:
-    visible: "Recipes"
+    visible: "The family cookbook"
     timeout: 10000

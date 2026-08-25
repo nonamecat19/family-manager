@@ -1,38 +1,40 @@
-# Meal plan: navigate to the meal plan tab, verify the calendar, add a meal, check totals.
+# Plan: basket a recipe, plan it into the week, then check the shopping list totals it.
 # Requires at least one recipe (run after recipe-create).
 appId: dev.familymanager.recipes
-name: "Recipes: meal plan flow"
+name: "Recipes: plan and shopping list"
 tags:
   - recipes
   - meal-plan
 ---
 - launchApp
-- assertVisible: "Recipes"
+- assertVisible: "The family cookbook"
 
-# Navigate to the meal plan tab
-- tapOn: "Meal Plan"
-- assertVisible: "Meal Plan"
-
-# Verify the week calendar is visible
-- assertVisible: "Sun"
-
-# Toggle to ingredients view
-- tapOn: "🛒 Ingredients"
-- assertVisible: "No ingredients to total"
-
-# Toggle back to calendar
-- tapOn: "📅 Calendar"
-
-# Quick-add a recipe to today's dinner
-- assertVisible: "Quick add to today"
+# Add a recipe to the basket from its own screen
+- tapOn: "Recipes"
 - tapOn: "Test Pancakes"
-- tapOn: "Add to dinner"
+- tapOn: "Add to plan"
 
-# Verify the meal appears in the calendar
+- assertVisible: "Plan"
+- assertVisible: "Test Pancakes"
+
+# The week half of the plan
+- tapOn: "Week"
+- assertVisible: "MON"
+- tapOn:
+    text: "Nothing planned"
+    index: 0
+- assertVisible: "Plan a meal"
+- tapOn: "Dinner"
+- tapOn: "Test Pancakes"
 - extendedWaitUntil:
     visible: "Test Pancakes"
     timeout: 5000
 
-# Switch to ingredients to verify totals are computed
-- tapOn: "🛒 Ingredients"
-- waitForAnimationToEnd
+# Back to the basket, then on to the shopping list
+- tapOn: "Basket"
+- tapOn: "List"
+- assertVisible: "Shopping list"
+- extendedWaitUntil:
+    visible: "Flour"
+    timeout: 5000
+- tapOn: "Flour"

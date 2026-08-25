@@ -12,21 +12,16 @@ tags:
 # Switch to register mode
 - tapOn: "Create an account"
 
-# Fill registration form
-- tapOn:
-    id: "name"
+- tapOn: "Name"
 - inputText: "Test Chef"
-- tapOn:
-    id: "email"
+- tapOn: "Email"
 - inputText: "testchef@example.com"
-- tapOn:
-    id: "password"
+- tapOn: "Password"
 - inputText: "testpass123"
 
-# Submit registration
 - tapOn: "Create account"
 
-# The app should either show the family onboarding screen or the recipe list
+# Either the household onboarding screen or Home, depending on whether a family exists.
 - extendedWaitUntil:
-    visible: "Recipes"
+    visible: "Start your"
     timeout: 10000

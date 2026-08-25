@@ -1,4 +1,4 @@
-# Recipe detail: tap a recipe, verify the detail screen shows ingredients, steps, stats.
+# Recipe detail: open a recipe and walk its three tabs.
 # Requires at least one recipe to exist (run after recipe-create).
 appId: dev.familymanager.recipes
 name: "Recipes: detail screen"
@@ -7,21 +7,23 @@ tags:
   - detail
 ---
 - launchApp
-- assertVisible: "Recipes"
+- assertVisible: "The family cookbook"
 
-# Tap the first recipe (Test Pancakes from recipe-create flow)
+- tapOn: "Recipes"
 - tapOn: "Test Pancakes"
 
-# Verify detail screen elements
 - assertVisible: "Test Pancakes"
-- assertVisible: "Servings"
-- assertVisible: "Ingredients"
+- assertVisible: "Batches"
 - assertVisible: "Flour"
-- assertVisible: "Steps"
+
+- tapOn: "Steps"
 - assertVisible: "Mix flour with water"
 
-# Verify action buttons
-- assertVisible: "♥"
+- tapOn: "Notes"
+- assertVisible: "Add a note"
 
-# Go back
-- back
+- tapOn: "Ingredients"
+- assertVisible: "Add to plan"
+
+- tapOn:
+    label: "Back"
