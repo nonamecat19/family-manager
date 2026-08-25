@@ -16,9 +16,22 @@ go.work.sum
 # sdk/go/gen/
 
 # env & secrets
+# Both spellings, plus the editor droppings. The bare `.env` rule already matched at any depth,
+# but an ignored file is exactly what makes its unignored siblings dangerous: the tree looks
+# clean, so a `git add infra/` that sweeps up `.env~` or `.env.prod` gets no second look.
+# `!.env.example` must follow the rules that exclude it — a negation before them does nothing.
 .env
-.env.local
+.env.*
+*.env
+.env*~
+.env*.bak
+.env*.save
 !.env.example
+
+# Private keys, anywhere. Nothing in this repo is a legitimate committed .pem — the auth signing
+# key is generated per environment and never checked in — so a blanket rule costs nothing and
+# catches the key being generated into the repo root by someone following a scp instruction.
+*.pem
 
 # flutter/legacy leftovers
 **/.dart_tool/
