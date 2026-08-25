@@ -18,6 +18,8 @@ being a deploy. CI builds; the VPS only pulls.
 | `nats.conf` | VPS | JetStream store limits — they have no command-line equivalent |
 | `.env.example` | template | copied to `/opt/family-manager/.env` and filled in there |
 | `deploy.sh` | VPS, every deploy | pull, up, health-check, roll back on failure |
+| `backup.sh` | VPS, nightly at 03:20 | `pg_dump` every database, verify it reads back, prune old runs |
+| `restore.sh` | VPS, on demand | restore one database, or `--drill` to rehearse without touching it |
 | `wizards/r2-setup.sh` | your workstation | walks Cloudflare's dashboard, validates the credentials |
 
 `.github/workflows/deploy.yml` is the other half: it builds the four images, pushes them to
@@ -101,9 +103,10 @@ Idempotent — safe to re-run when you are not sure whether a box was ever boots
 ### 4. Copy the runtime files
 
 ```sh
-scp infra/docker-compose.prod.yml infra/Caddyfile infra/nats.conf infra/deploy.sh \
+scp infra/docker-compose.prod.yml infra/Caddyfile infra/nats.conf \
+    infra/deploy.sh infra/backup.sh infra/restore.sh \
     root@79.108.160.103:/opt/family-manager/
-ssh root@79.108.160.103 'chmod 0755 /opt/family-manager/deploy.sh'
+ssh root@79.108.160.103 'chmod 0755 /opt/family-manager/{deploy,backup,restore}.sh'
 
 # Only this one file. init-postgres.sql and init-finance.sql are leftovers from the
 # pre-split layout; init-finance.sql would create a role with a publicly-known password.
@@ -213,13 +216,49 @@ under load grows past `mem_limit` and is OOM-killed instead of collecting.
 
 ## Backups — the load-bearing part
 
-ADR 0004 is explicit that a VPS with no tested restore is worse than a managed platform, and
-this is the part that is **not yet built**. What is needed:
+ADR 0004 is explicit that a VPS with no tested restore is worse than a managed platform. There
+is now a nightly backup, and a restore drill that has been run.
 
-- `pg_dump` of all four databases on a schedule, shipped off-box.
-- A restore drill, run before the box holds anything anyone would miss.
-- Recipe images live in R2 now, so they are outside the `pg_dump` story — the drill has to cover
-  the bucket too, not just the database.
+`family-manager-backup.timer` fires `backup.sh` at 03:20 daily. Each run writes to
+`/var/backups/family-manager/<UTC timestamp>/`:
+
+- `pg_dump -Fc` of every non-template database, discovered from the cluster rather than listed,
+  so a fifth service is backed up without anyone editing the script.
+- `globals.sql` — roles and grants. Without it, a restore onto a fresh cluster produces
+  databases whose owner does not exist.
+- `config.tar.gz` — `.env` and `secrets/`, mode 0600. Not data, but the signing key and the R2
+  secret are the two things that cannot be retyped: rotating the key logs every device out, and
+  Cloudflare shows an R2 secret exactly once.
+
+Every dump is read back with `pg_restore --list` before the run is allowed to succeed, and a run
+that fails partway deletes its own directory — so the newest directory present is always a
+complete backup. Fourteen runs are kept; at ~224 KB a run that is under 4 MB.
+
+### Restoring
+
+```sh
+ssh root@79.108.160.103 /opt/family-manager/restore.sh --drill recipes   # rehearse
+ssh root@79.108.160.103 /opt/family-manager/restore.sh recipes           # for real
+```
+
+`--drill` restores into a scratch database, compares every table's row count against the live
+one, prints the result and drops the scratch copy. Run it after any change to the schema or the
+backup script. It caught a bug in itself on the first run: `docker exec -i` inside the
+comparison loop was consuming the list of tables from stdin, so the drill compared one table and
+reported success.
+
+Restoring for real is destructive and asks for the database name back. Stop the service that
+writes to the database first, or it writes into a half-restored one.
+
+### What this does not cover
+
+The dumps are on the same disk as the database. That is an undo button for a bad migration or a
+mistaken `DELETE`; it is **not** disaster recovery. If the disk or the VPS goes, the backups go
+with it. Shipping a copy off-box is still missing.
+
+Recipe images are in R2 and outside the `pg_dump` story entirely. Cloudflare replicates them, but
+nothing here versions them or would notice a bucket being emptied — and `DeleteRecipe` already
+orphans the object rather than removing it, so the bucket only grows.
 
 Two volumes are the only copy of anything: `pgdata` and `caddydata` (the issued certificates).
 Nothing in `deploy.sh` or the prune timer touches volumes, and nothing added later should —
@@ -228,7 +267,11 @@ is exactly the state the box is in mid-deploy.
 
 ## Known gaps
 
-- **Backups are not implemented.** See above. This is the highest-value next piece of work.
+- **Backups never leave the box.** Nightly dumps exist and restore cleanly (see above), but
+  they share a disk with the database they protect. Off-box copies are the highest-value
+  next piece of work.
+- **R2 has no backup and no lifecycle policy.** Deleted recipes orphan their photos; an
+  emptied bucket would not be noticed.
 - **No rolling deploys.** A service restart is a brief outage; mobile clients retry. Not
   acceptable during a migration, which is why migrations get a human gate.
 - **Observability** is `docker compose logs` and nothing else. See ADR 0006 for the intent.

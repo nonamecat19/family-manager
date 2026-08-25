@@ -279,6 +279,52 @@ systemctl daemon-reload
 systemctl enable --now docker-image-prune.timer
 
 # ---------------------------------------------------------------------------------------------
+# 6b. Nightly database backup.
+# ---------------------------------------------------------------------------------------------
+# The unit is installed here so a rebuilt box has it from the start, but it only fires once
+# backup.sh and the compose stack are actually in place — the script exits non-zero if postgres
+# is not running, which is the correct behaviour for a box that has been bootstrapped but not
+# yet deployed.
+#
+# Local-only, on the same disk as the database. That is an undo button for a bad migration or a
+# mistaken DELETE, not disaster recovery: if this disk dies the backups die with it. The header
+# of backup.sh says so at more length, and off-box copies remain an open gap.
+log "Installing the nightly backup timer"
+cat >/etc/systemd/system/family-manager-backup.service <<EOF
+[Unit]
+Description=Back up the family-manager Postgres databases
+Documentation=file://${DEPLOY_DIR}/backup.sh
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=${DEPLOY_DIR}/backup.sh
+# The box has one vCPU and 1.6 GiB. pg_dump competing with the API for either is how a backup
+# turns into an outage, so it runs at the back of the queue for both.
+Nice=10
+IOSchedulingClass=idle
+EOF
+
+cat >/etc/systemd/system/family-manager-backup.timer <<'EOF'
+[Unit]
+Description=Nightly family-manager database backup
+
+[Timer]
+# 03:20, an hour before the Sunday image prune, so the two never contend for the single vCPU.
+OnCalendar=*-*-* 03:20:00
+# A missed night (box off, timer installed late) is caught on the next boot rather than skipped.
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now family-manager-backup.timer
+
+# ---------------------------------------------------------------------------------------------
 # 7. Unattended security updates.
 # ---------------------------------------------------------------------------------------------
 # Enabled, but security-only and with automatic reboots OFF.
@@ -338,13 +384,17 @@ Nothing is deployed yet. From your workstation, in the repo:
      (getent is part of libc and is always present; dig would need the dnsutils package.)
 
   2. Copy the runtime files:
-         scp infra/docker-compose.prod.yml infra/Caddyfile infra/deploy.sh \\
+         scp infra/docker-compose.prod.yml infra/Caddyfile infra/nats.conf \\
+             infra/deploy.sh infra/backup.sh infra/restore.sh \\
              root@79.108.160.103:${DEPLOY_DIR}/
-         ssh root@79.108.160.103 'chmod 0755 ${DEPLOY_DIR}/deploy.sh'
+         ssh root@79.108.160.103 'chmod 0755 ${DEPLOY_DIR}/{deploy,backup,restore}.sh'
 
      deploy.sh is not optional: the GitHub Actions deploy job SSHes in and runs
      ${DEPLOY_DIR}/deploy.sh <sha>. Skip it and the first automated deploy fails with
      "no such file", after CI has already pushed the images.
+
+     backup.sh is what family-manager-backup.timer (installed above) runs every night.
+     The timer is already enabled, so without the script the first 03:20 fires and fails.
 
      Then exactly ONE init file — not the whole directory:
          scp postgres/init/init-services.sql root@79.108.160.103:${DEPLOY_DIR}/postgres-init/
