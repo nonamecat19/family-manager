@@ -86,6 +86,12 @@ const (
 	// RecipesServiceTotalIngredientsProcedure is the fully-qualified name of the RecipesService's
 	// TotalIngredients RPC.
 	RecipesServiceTotalIngredientsProcedure = "/recipes.v1.RecipesService/TotalIngredients"
+	// RecipesServiceSumIngredientsProcedure is the fully-qualified name of the RecipesService's
+	// SumIngredients RPC.
+	RecipesServiceSumIngredientsProcedure = "/recipes.v1.RecipesService/SumIngredients"
+	// RecipesServiceRateRecipeProcedure is the fully-qualified name of the RecipesService's RateRecipe
+	// RPC.
+	RecipesServiceRateRecipeProcedure = "/recipes.v1.RecipesService/RateRecipe"
 )
 
 // RecipesServiceClient is a client for the recipes.v1.RecipesService service.
@@ -119,6 +125,15 @@ type RecipesServiceClient interface {
 	ListMealPlan(context.Context, *connect.Request[v1.ListMealPlanRequest]) (*connect.Response[v1.ListMealPlanResponse], error)
 	RemoveMealPlanEntry(context.Context, *connect.Request[v1.RemoveMealPlanEntryRequest]) (*connect.Response[v1.RemoveMealPlanEntryResponse], error)
 	TotalIngredients(context.Context, *connect.Request[v1.TotalIngredientsRequest]) (*connect.Response[v1.TotalIngredientsResponse], error)
+	// SumIngredients totals an ad-hoc basket of recipes with a multiplier each, without
+	// touching the calendar. "I am cooking these five things this week, what do I buy" is a
+	// different question from "what is on the plan for Tuesday", and answering it should not
+	// require inventing meal-plan rows the user then has to clean up. Stateless: nothing is
+	// persisted, so the app owns the basket.
+	SumIngredients(context.Context, *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error)
+	// --- rating -------------------------------------------------------------
+	// RateRecipe sets the family's verdict on a recipe, 1..5, or 0 to clear it.
+	RateRecipe(context.Context, *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error)
 }
 
 // NewRecipesServiceClient constructs a client for the recipes.v1.RecipesService service. By
@@ -240,6 +255,18 @@ func NewRecipesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(recipesServiceMethods.ByName("TotalIngredients")),
 			connect.WithClientOptions(opts...),
 		),
+		sumIngredients: connect.NewClient[v1.SumIngredientsRequest, v1.SumIngredientsResponse](
+			httpClient,
+			baseURL+RecipesServiceSumIngredientsProcedure,
+			connect.WithSchema(recipesServiceMethods.ByName("SumIngredients")),
+			connect.WithClientOptions(opts...),
+		),
+		rateRecipe: connect.NewClient[v1.RateRecipeRequest, v1.RateRecipeResponse](
+			httpClient,
+			baseURL+RecipesServiceRateRecipeProcedure,
+			connect.WithSchema(recipesServiceMethods.ByName("RateRecipe")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -263,6 +290,8 @@ type recipesServiceClient struct {
 	listMealPlan        *connect.Client[v1.ListMealPlanRequest, v1.ListMealPlanResponse]
 	removeMealPlanEntry *connect.Client[v1.RemoveMealPlanEntryRequest, v1.RemoveMealPlanEntryResponse]
 	totalIngredients    *connect.Client[v1.TotalIngredientsRequest, v1.TotalIngredientsResponse]
+	sumIngredients      *connect.Client[v1.SumIngredientsRequest, v1.SumIngredientsResponse]
+	rateRecipe          *connect.Client[v1.RateRecipeRequest, v1.RateRecipeResponse]
 }
 
 // CreateCategory calls recipes.v1.RecipesService.CreateCategory.
@@ -355,6 +384,16 @@ func (c *recipesServiceClient) TotalIngredients(ctx context.Context, req *connec
 	return c.totalIngredients.CallUnary(ctx, req)
 }
 
+// SumIngredients calls recipes.v1.RecipesService.SumIngredients.
+func (c *recipesServiceClient) SumIngredients(ctx context.Context, req *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error) {
+	return c.sumIngredients.CallUnary(ctx, req)
+}
+
+// RateRecipe calls recipes.v1.RecipesService.RateRecipe.
+func (c *recipesServiceClient) RateRecipe(ctx context.Context, req *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error) {
+	return c.rateRecipe.CallUnary(ctx, req)
+}
+
 // RecipesServiceHandler is an implementation of the recipes.v1.RecipesService service.
 type RecipesServiceHandler interface {
 	// --- categories ---------------------------------------------------------
@@ -386,6 +425,15 @@ type RecipesServiceHandler interface {
 	ListMealPlan(context.Context, *connect.Request[v1.ListMealPlanRequest]) (*connect.Response[v1.ListMealPlanResponse], error)
 	RemoveMealPlanEntry(context.Context, *connect.Request[v1.RemoveMealPlanEntryRequest]) (*connect.Response[v1.RemoveMealPlanEntryResponse], error)
 	TotalIngredients(context.Context, *connect.Request[v1.TotalIngredientsRequest]) (*connect.Response[v1.TotalIngredientsResponse], error)
+	// SumIngredients totals an ad-hoc basket of recipes with a multiplier each, without
+	// touching the calendar. "I am cooking these five things this week, what do I buy" is a
+	// different question from "what is on the plan for Tuesday", and answering it should not
+	// require inventing meal-plan rows the user then has to clean up. Stateless: nothing is
+	// persisted, so the app owns the basket.
+	SumIngredients(context.Context, *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error)
+	// --- rating -------------------------------------------------------------
+	// RateRecipe sets the family's verdict on a recipe, 1..5, or 0 to clear it.
+	RateRecipe(context.Context, *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error)
 }
 
 // NewRecipesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -503,6 +551,18 @@ func NewRecipesServiceHandler(svc RecipesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(recipesServiceMethods.ByName("TotalIngredients")),
 		connect.WithHandlerOptions(opts...),
 	)
+	recipesServiceSumIngredientsHandler := connect.NewUnaryHandler(
+		RecipesServiceSumIngredientsProcedure,
+		svc.SumIngredients,
+		connect.WithSchema(recipesServiceMethods.ByName("SumIngredients")),
+		connect.WithHandlerOptions(opts...),
+	)
+	recipesServiceRateRecipeHandler := connect.NewUnaryHandler(
+		RecipesServiceRateRecipeProcedure,
+		svc.RateRecipe,
+		connect.WithSchema(recipesServiceMethods.ByName("RateRecipe")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/recipes.v1.RecipesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case RecipesServiceCreateCategoryProcedure:
@@ -541,6 +601,10 @@ func NewRecipesServiceHandler(svc RecipesServiceHandler, opts ...connect.Handler
 			recipesServiceRemoveMealPlanEntryHandler.ServeHTTP(w, r)
 		case RecipesServiceTotalIngredientsProcedure:
 			recipesServiceTotalIngredientsHandler.ServeHTTP(w, r)
+		case RecipesServiceSumIngredientsProcedure:
+			recipesServiceSumIngredientsHandler.ServeHTTP(w, r)
+		case RecipesServiceRateRecipeProcedure:
+			recipesServiceRateRecipeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -620,4 +684,12 @@ func (UnimplementedRecipesServiceHandler) RemoveMealPlanEntry(context.Context, *
 
 func (UnimplementedRecipesServiceHandler) TotalIngredients(context.Context, *connect.Request[v1.TotalIngredientsRequest]) (*connect.Response[v1.TotalIngredientsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("recipes.v1.RecipesService.TotalIngredients is not implemented"))
+}
+
+func (UnimplementedRecipesServiceHandler) SumIngredients(context.Context, *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("recipes.v1.RecipesService.SumIngredients is not implemented"))
+}
+
+func (UnimplementedRecipesServiceHandler) RateRecipe(context.Context, *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("recipes.v1.RecipesService.RateRecipe is not implemented"))
 }

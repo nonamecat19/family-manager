@@ -44,6 +44,30 @@ service RecipesService {
   rpc ListMealPlan(ListMealPlanRequest) returns (ListMealPlanResponse);
   rpc RemoveMealPlanEntry(RemoveMealPlanEntryRequest) returns (RemoveMealPlanEntryResponse);
   rpc TotalIngredients(TotalIngredientsRequest) returns (TotalIngredientsResponse);
+  // SumIngredients totals an ad-hoc basket of recipes with a multiplier each, without
+  // touching the calendar. "I am cooking these five things this week, what do I buy" is a
+  // different question from "what is on the plan for Tuesday", and answering it should not
+  // require inventing meal-plan rows the user then has to clean up. Stateless: nothing is
+  // persisted, so the app owns the basket.
+  rpc SumIngredients(SumIngredientsRequest) returns (SumIngredientsResponse);
+
+  // --- rating -------------------------------------------------------------
+  // RateRecipe sets the family's verdict on a recipe, 1..5, or 0 to clear it.
+  rpc RateRecipe(RateRecipeRequest) returns (RateRecipeResponse);
+}
+
+// RecipeSort orders ListRecipes server-side. The default (UNSPECIFIED) is newest-first,
+// which is what the list did before sorting existed.
+enum RecipeSort {
+  RECIPE_SORT_UNSPECIFIED = 0;
+  RECIPE_SORT_NEWEST = 1;
+  RECIPE_SORT_TITLE = 2;
+  // RATING is descending — a "sort by rating" that puts the worst recipes first is not a
+  // thing anyone wants. Unrated recipes (rating 0) sort last.
+  RECIPE_SORT_RATING = 3;
+  // TIME is ascending on prep_seconds + cook_seconds: "what can I make quickly".
+  RECIPE_SORT_TIME = 4;
+  RECIPE_SORT_FAVORITES = 5;
 }
 
 enum MealSlot {
@@ -109,6 +133,10 @@ message Recipe {
   google.protobuf.Timestamp updated_at = 16;
   // image_url is empty when the recipe has no photo.
   string image_url = 17;
+  // notes are the cook's amendments ("double the garlic"), shown only on the detail screen.
+  string notes = 18;
+  // rating is the family's verdict, 1..5. 0 means nobody has rated it yet.
+  int32 rating = 19;
 }
 
 message Comment {
@@ -170,6 +198,8 @@ message CreateRecipeRequest {
   int32 cook_seconds = 7;
   repeated Ingredient ingredients = 8;
   repeated Step steps = 9;
+  string notes = 10;
+  int32 rating = 11;
 }
 message CreateRecipeResponse {
   Recipe recipe = 1;
@@ -185,7 +215,19 @@ message ListRecipesRequest {
   string subcategory_id = 2;
   // favorite_only filters to the caller's favorites.
   bool favorite_only = 3;
+  // search matches the title anywhere, case-insensitively. It is independent of
+  // category_id/subcategory_id: searching with no category set searches the whole cookbook,
+  // which is the point of a search box.
   string search = 4;
+  RecipeSort sort = 5;
+  // min_rating drops recipes rated below it. 0 disables the filter (and would otherwise be
+  // a no-op anyway, since unrated recipes are rating 0).
+  int32 min_rating = 6;
+  // max_total_seconds drops recipes whose prep + cook exceeds it. 0 disables the filter.
+  int32 max_total_seconds = 7;
+  // ingredient matches recipes containing an ingredient whose name contains this text —
+  // "what can I cook with chicken".
+  string ingredient = 8;
 }
 message ListRecipesResponse {
   repeated Recipe recipes = 1;
@@ -201,6 +243,10 @@ message UpdateRecipeRequest {
   int32 cook_seconds = 8;
   repeated Ingredient ingredients = 9;
   repeated Step steps = 10;
+  string notes = 11;
+  // rating is written by UpdateRecipe too so the edit screen can save everything in one
+  // call; RateRecipe exists for the one-tap star control on the list and detail screens.
+  int32 rating = 12;
 }
 message UpdateRecipeResponse {
   Recipe recipe = 1;
@@ -283,6 +329,28 @@ message IngredientTotal {
   // total_amount is a decimal string sum, summed by name+unit across every meal-plan entry
   // in the range, scaled by each entry's servings relative to its recipe's servings.
   string total_amount = 3;
+}
+
+message SumIngredientsRequest {
+  repeated RecipeQuantity items = 1;
+}
+message RecipeQuantity {
+  string recipe_id = 1;
+  // servings is how many portions of this recipe the basket wants. 0 means "the recipe's
+  // own servings", i.e. cook it once as written.
+  int32 servings = 2;
+}
+message SumIngredientsResponse {
+  repeated IngredientTotal totals = 1;
+}
+
+message RateRecipeRequest {
+  string recipe_id = 1;
+  // rating is 1..5, or 0 to clear it.
+  int32 rating = 2;
+}
+message RateRecipeResponse {
+  Recipe recipe = 1;
 }
 
 // Events published on `recipes.<entity>.<verb>` (libs/go/events).
