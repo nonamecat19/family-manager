@@ -1,0 +1,264 @@
+# Production stack for family-manager. Lives at /opt/family-manager/docker-compose.prod.yml on
+# the VPS, next to .env, Caddyfile, postgres-init/ and secrets/.
+#
+# This file is deliberately SELF-CONTAINED rather than an overlay on the root docker-compose.yml
+# (which ADR 0004 assumed). The repo is not cloned onto the box, so a `-f base -f prod` pair
+# would require shipping the dev file too — including its build: stanzas, its published ports
+# and MinIO — and a fragment that silently inherits a published `5432:5432` is exactly the
+# accident this deployment cannot afford. Duplicating ~40 lines of environment is the cheaper
+# failure mode. Env var names are kept identical to the dev file so the two stay diffable.
+#
+# Images are never built here: 1 vCPU / 1.6 GiB OOMs on `go build`. CI builds and pushes to
+# GHCR; this box only pulls.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    # Defaults are sized for a machine with GBs to spare; this one has ~1.6 GiB for everything.
+    # shared_buffers is the number that matters — Postgres will happily reserve 25% of the
+    # *host's* RAM and then get OOM-killed alongside the services it was sized against.
+    # effective_cache_size is only a planner hint, so it may exceed shared_buffers safely.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=50
+      - -c
+      - effective_cache_size=384MB
+      - -c
+      - work_mem=4MB
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Copied from the repo's postgres/init/ at provision time (it is not cloned here).
+      # docker-entrypoint-initdb.d only runs on an empty volume, so this is a first-boot
+      # bootstrap, not a migration path — the services migrate their own schemas.
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    # No published port. Postgres is reachable only on the compose network; the dev file's
+    # ${POSTGRES_PORT}:5432 must never appear here.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # mem_limit, not deploy.resources.limits: `deploy:` is a swarm-mode key and `docker compose
+    # up` outside swarm ignores it entirely, so the limit would appear to be set and do nothing.
+    # The v2 top-level keys are the ones the Compose CLI actually applies to the container.
+    mem_limit: 320m
+    logging: &bounded-logs
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  nats:
+    image: nats:2.10-alpine
+    # Everything, including the JetStream store limits and the monitoring port, is in nats.conf.
+    # The store limits have no command-line equivalent — the flags that look like they should
+    # exist do not, and the server exits at startup rather than ignoring them — and mixing the
+    # file with the flags that do exist is worse: `-sd` next to the file's store_dir aborts with
+    # "Duplicate 'store_dir' configuration". See the file for the rest.
+    command: ["-c", "/etc/nats/nats.conf"]
+    volumes:
+      - ./nats.conf:/etc/nats/nats.conf:ro
+      - natsdata:/data
+    # :4222 and the :8222 monitoring port stay internal — the dev file publishes 8222 for
+    # convenience, which here would be an unauthenticated status endpoint on the public IP.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    mem_limit: 128m
+    logging: *bounded-logs
+
+  caddy:
+    image: caddy:2-alpine
+    # The only container that publishes anything. Everything else is reachable exclusively on
+    # the compose network. :80 is not optional even though the API is HTTPS-only — ACME's
+    # HTTP-01 challenge and the redirect to HTTPS both need it.
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      AUTH_HOST: ${AUTH_HOST}
+      FAMILY_HOST: ${FAMILY_HOST}
+      FINANCE_HOST: ${FINANCE_HOST}
+      RECIPES_HOST: ${RECIPES_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Issued certificates and ACME account keys. Losing this volume means re-issuing four
+      # certificates and burning Let's Encrypt rate limit; it is the one piece of state here
+      # that is not in Postgres.
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      auth:
+        condition: service_started
+      family:
+        condition: service_started
+      finance:
+        condition: service_started
+      recipes:
+        condition: service_started
+    restart: unless-stopped
+    mem_limit: 96m
+    logging: *bounded-logs
+
+  # --- application services -------------------------------------------------
+  # Each owns its own database and applies its own migrations at boot. All speak Connect/JSON to
+  # apps and gRPC to each other on the same port (h2c).
+  #
+  # GOMEMLIMIT/GOGC on every one of them: the Go runtime sizes its heap against the host's
+  # memory, not the cgroup, so without GOMEMLIMIT a service under load grows past mem_limit and
+  # is OOM-killed instead of collecting. GOGC=50 trades a little CPU for a flatter heap, which
+  # is the right trade when RAM is the scarce resource and traffic is a family's.
+
+  auth:
+    image: ghcr.io/nonamecat19/family-manager/auth:${IMAGE_TAG:-latest}
+    environment:
+      AUTH_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/auth?sslmode=disable
+      # The ES256 signing key, mounted as a compose secret rather than passed inline: an env var
+      # is visible to anything that can run `docker inspect` and lands in shell history on the
+      # box. Generate one with:
+      #   openssl ecparam -name prime256v1 -genkey -noout -out secrets/auth-signing-key.pem
+      # There is no default: an auth service that invents its own key is worse than one that
+      # refuses to start.
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth-signing-key
+      # family's internal listener, for the family_id claim. Reachable only on this network.
+      AUTH_FAMILY_ADDR: http://family:9090
+      AUTH_HTTP_PORT: "8080"
+      AUTH_LOG_JSON: "true"
+      AUTH_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    secrets:
+      - auth-signing-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # No container healthcheck: the distroless image has no shell and no wget. /healthz is
+    # served for the reverse proxy and for deploy.sh's host-side probe instead.
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
+  family:
+    image: ghcr.io/nonamecat19/family-manager/family:${IMAGE_TAG:-latest}
+    environment:
+      FAMILY_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/family?sslmode=disable
+      # In-network HTTP. Routing JWKS through the public hostname would make every token
+      # verification depend on Caddy, DNS and a valid certificate.
+      FAMILY_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      FAMILY_NATS_URL: nats://nats:4222
+      FAMILY_HTTP_PORT: "8080"
+      # Internal gRPC listener. Never published and never proxied by Caddy: it serves the
+      # procedures that take a user id as an argument instead of reading it from a token.
+      FAMILY_GRPC_PORT: "9090"
+      FAMILY_LOG_JSON: "true"
+      FAMILY_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    # No container healthcheck: the distroless image has no shell and no wget.
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
+  finance:
+    image: ghcr.io/nonamecat19/family-manager/finance:${IMAGE_TAG:-latest}
+    environment:
+      FINANCE_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/finance?sslmode=disable
+      FINANCE_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      FINANCE_NATS_URL: nats://nats:4222
+      FINANCE_HTTP_PORT: "8080"
+      FINANCE_BASE_CURRENCY: ${BASE_CURRENCY:-EUR}
+      FINANCE_LOG_JSON: "true"
+      FINANCE_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    # No container healthcheck: the distroless image has no shell and no wget.
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
+  recipes:
+    image: ghcr.io/nonamecat19/family-manager/recipes:${IMAGE_TAG:-latest}
+    environment:
+      RECIPES_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/recipes?sslmode=disable
+      RECIPES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      RECIPES_NATS_URL: nats://nats:4222
+      RECIPES_HTTP_PORT: "8080"
+      # Cloudflare R2, not MinIO (ADR 0007). MinIO's ~350 MB resident set is a fifth of this box
+      # to serve a family's recipe photos, and it would put every photo on one unreplicated VPS
+      # disk. The provider is explicit because the two backends are not interchangeable:
+      # EnsureBucket is a no-op on R2 and the public URL has no bucket segment.
+      RECIPES_STORAGE_PROVIDER: r2
+      # Account-scoped S3 endpoint, host only: "<account-id>.r2.cloudflarestorage.com".
+      RECIPES_STORAGE_ENDPOINT: ${R2_ENDPOINT}
+      RECIPES_STORAGE_ACCESS_KEY: ${R2_ACCESS_KEY_ID}
+      RECIPES_STORAGE_SECRET_KEY: ${R2_SECRET_ACCESS_KEY}
+      # R2 speaks TLS only; the config default is false because it is written for local MinIO.
+      RECIPES_STORAGE_USE_SSL: "true"
+      RECIPES_STORAGE_BUCKET: ${R2_BUCKET:-recipes}
+      # The bucket's public custom domain. Required for r2 — the S3 endpoint serves no public
+      # reads, and libs/go/storage refuses to construct a client without it. Note this is a
+      # different host from RECIPES_STORAGE_ENDPOINT; setting them to the same value yields
+      # image_url values that 401.
+      RECIPES_STORAGE_PUBLIC_URL: ${R2_PUBLIC_URL}
+      RECIPES_LOG_JSON: "true"
+      RECIPES_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    # No container healthcheck: the distroless image has no shell and no wget.
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
+secrets:
+  auth-signing-key:
+    file: ./secrets/auth-signing-key.pem
+    # The host file must be `chown 65532:65532` + `chmod 0400`. 65532 is the distroless
+    # `nonroot` uid the service images run as, and Compose bind-mounts a file-backed secret with
+    # the host's ownership and mode verbatim: `mode:` on this block is rejected outright, and
+    # uid/gid/mode in the service-level long syntax are logged as unsupported and ignored. So
+    # host-side ownership is the only knob that exists.
+    #
+    # Do not "harden" this to 0600 root:root. It reads as the safer choice and it takes auth
+    # down: the container cannot read the key and the service exits at boot. 0400 owned by 65532
+    # is already strictly tighter than the 0444 infra/secrets/README.md suggests for local dev —
+    # readable by one uid rather than by everyone on the box. deploy.sh enforces this before
+    # every `up`.
+
+volumes:
+  pgdata:
+  natsdata:
+  caddydata:
+  caddyconfig:

@@ -1,0 +1,78 @@
+# Caddy is the only process on this box that listens on a public port. It terminates TLS for the
+# four API subdomains and reverse-proxies to the compose-internal service names; nothing else is
+# published. Mounted read-only at /etc/caddy/Caddyfile.
+#
+# One subdomain per service rather than one host with /auth, /family, … path prefixes: the apps
+# already hold a per-service base URL (packages/api/src/client.ts), and Connect's routes are
+# /<package>.<Service>/<Method> at the root — path-prefix routing would need a strip_prefix on
+# every upstream and a matching rewrite in the SDK, i.e. app code changes to save three DNS
+# records.
+#
+# DNS FIRST. Automatic HTTPS issues certificates over ACME HTTP-01, which requires each host
+# below to already resolve to this box's public IP with :80 reachable. If the A records still
+# point elsewhere, Caddy starts, serves the sites over plain HTTP, and retries issuance in a
+# loop — the API looks broken over https:// and `docker compose logs caddy` fills with ACME
+# failures. That is a human step: point auth/family/finance/recipes at the VPS, then restart
+# caddy. Repeated failed issuance also counts against Let's Encrypt rate limits, so fix DNS
+# before restarting in a loop.
+{
+	# A real mailbox: it is where Let's Encrypt sends expiry warnings when renewal is failing.
+	email {$ACME_EMAIL}
+	# Caddy's own logs (ACME, errors) to stdout so the container's bounded json-file driver is
+	# the single place log growth is capped. A file inside the volume would be unbounded on a
+	# 20 GB disk.
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+}
+
+# Shared per-site config. {args[0]} is the upstream host:port.
+(api) {
+	log {
+		output stdout
+		format json
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		# The API answers mobile clients and returns JSON only; nothing here is ever a document
+		# a browser should render or embed.
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	reverse_proxy {args[0]} {
+		# The services serve Connect/JSON and gRPC off the same port via h2c, so proxy upstream
+		# with prior-knowledge HTTP/2. Caddy's default HTTP/1.1 transport carries Connect unary
+		# JSON fine but cannot carry gRPC or Connect streaming, which would fail only for the
+		# streaming calls — the worst kind of half-working. Clients still reach Caddy over
+		# HTTP/1.1 or HTTP/2 as they please; this is only the hop to the container.
+		transport http {
+			versions h2c 2
+		}
+		# Do not buffer: streaming responses must reach the client as they are produced.
+		flush_interval -1
+	}
+}
+
+{$AUTH_HOST} {
+	import api auth:8080
+}
+
+{$FAMILY_HOST} {
+	# family:9090 is deliberately absent. That listener takes a user id as an argument instead
+	# of reading it from a token; proxying it would expose an unauthenticated impersonation API.
+	import api family:8080
+}
+
+{$FINANCE_HOST} {
+	import api finance:8080
+}
+
+{$RECIPES_HOST} {
+	import api recipes:8080
+}

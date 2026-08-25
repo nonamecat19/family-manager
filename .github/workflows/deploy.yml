@@ -1,0 +1,182 @@
+# Build the four service images in CI and push-deploy them to the VPS.
+#
+# The VPS is 1 vCPU / 1.6 GiB with no swap (see the deploy contract): `go build` there would
+# OOM or crawl, so images are NEVER built on the box. CI builds and pushes to GHCR; the VPS
+# only pulls. That asymmetry is the reason this workflow exists at all.
+#
+# Repository secrets this workflow consumes:
+#   VPS_SSH_KEY         — private half of an SSH keypair whose public half is in
+#                         /root/.ssh/authorized_keys on the VPS. OpenSSH format, no passphrase
+#                         (there is nobody to type one in a runner).
+#   VPS_HOST            — the VPS address, e.g. 79.108.160.103. Kept as a secret rather than
+#                         inlined so re-homing the box is a settings change, not a commit.
+#   VPS_SSH_FINGERPRINT — optional but recommended: the server's SHA256 host key fingerprint.
+#                         The action's own documented recipe is
+#                         `ssh <host> ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub | cut -d ' ' -f2`.
+#                         Empty means the runner accepts whatever host answers, i.e. no MITM
+#                         protection.
+# That is the complete set — deliberately no registry credential among them. GHCR accepts the
+# built-in GITHUB_TOKEN for both the push here and the pull on the box, so no PAT exists to
+# leak or rotate.
+# The ACME email is Caddy's business and lives in /opt/family-manager/.env on the VPS — CI
+# never sees it, so it is deliberately not a repository secret.
+name: deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (a commit SHA). Empty = build and deploy this ref."
+        required: false
+        type: string
+
+# No `pull_request` trigger, and no path filters.
+#
+# Path filters were considered and rejected: the four Dockerfiles copy go.work, libs/go/ and
+# sdk/go/ as well as their own service, migrations live under services/*, and the compose
+# overlay on the VPS is not in this repo's blast-radius calculation at all. A filter that is
+# subtly wrong silently skips a deploy and leaves production on an old image with a green
+# check next to the commit — a failure mode nobody notices for days. An extra four-minute
+# build on a README push costs nothing by comparison.
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # Hardcoded rather than derived from github.repository: the contract fixes these names, and
+  # GHCR rejects any uppercase in a path, which an org/repo rename could quietly introduce.
+  IMAGE_PREFIX: ghcr.io/nonamecat19/family-manager
+
+jobs:
+  build:
+    # Deliberately NOT gated on the verify workflow.
+    #
+    # There is no `needs:` across workflows; the only mechanism is `workflow_run`, which runs
+    # the default branch's copy of the workflow, reports its status somewhere nobody looks, and
+    # would serialise a ~4 minute verify in front of every deploy. For a four-service family
+    # app the cheaper failure handling is forward: verify runs on this same push, and because
+    # every image is tagged with its commit SHA, backing out is `workflow_dispatch` with the
+    # previous SHA rather than a revert-and-rebuild. If this ever grows real users, the trade
+    # flips and this should become a workflow_run gate.
+    if: github.event_name == 'push' || inputs.image_tag == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false # one broken service should not hide whether the other three build
+      matrix:
+        service: [auth, family, finance, recipes]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          # Repo root context, not services/<name>/ — the Dockerfiles COPY go.work, libs/go/
+          # and sdk/go/, which are outside the service directory.
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          # linux/amd64 only. The VPS is x86_64; adding arm64 would emulate a second Go build
+          # under QEMU and roughly triple the job for an artifact nothing pulls.
+          platforms: linux/amd64
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
+          # This label is what links the GHCR package back to this repository. The link is not
+          # cosmetic: a repo-scoped GITHUB_TOKEN can only pull a private package that is
+          # actually attached to that repo, so without it the deploy job's ephemeral login
+          # below authenticates fine and is then denied on the pull.
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          # Cache scope is per service, not shared. The four Dockerfiles do share their base
+          # layers (same golang:1.23-alpine, same `go mod download all` over the same module
+          # set), which makes one common scope look attractive — but the matrix legs run
+          # concurrently and type=gha,mode=max is last-writer-wins per scope, so a shared key
+          # means four jobs overwriting each other's manifest and each finding a cache written
+          # for a different final layer. Separate scopes cost four copies of the module cache
+          # and give every leg a stable hit on its own previous run, which is the layer that
+          # actually takes the time.
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+
+  deploy:
+    needs: build
+    # `always()` so a manual redeploy of an already-built SHA (which skips `build`) still runs,
+    # while a genuine build failure still stops the deploy.
+    if: always() && needs.build.result != 'failure' && needs.build.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Declared per-job, not inherited: a job that names its own `permissions:` replaces the
+    # workflow-level block outright rather than merging with it, so this has to restate
+    # everything it needs. `packages: read` is enough — the push side is the build job's
+    # problem, and this job only pulls.
+    permissions:
+      contents: read
+      packages: read
+    # One deploy at a time. cancel-in-progress is false on purpose: interrupting deploy.sh
+    # between `docker compose pull` and `up -d` leaves the box running a mix of old and new
+    # images, which is strictly worse than making the second push wait its turn.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        # The box needs a GHCR credential to `docker compose pull`, because GHCR packages are
+        # private by default. Of the three ways to give it one, this job injects a token that
+        # dies with the job:
+        #   - making the packages public needs no credential at all, but the images are the
+        #     compiled services, and publishing one is a door that does not close — un-pulling
+        #     what someone already pulled is not a thing;
+        #   - a read:packages PAT in root's ~/.docker/config.json is base64, not encryption,
+        #     and nothing ages it out, so it outlives every reason it was created;
+        #   - GITHUB_TOKEN is already scoped to this repo's packages and expires with the job,
+        #     so the box holds a credential for the length of one deploy and not a second past
+        #     the logout below.
+        env:
+          # The action does not forward the job environment on its own; `envs` selects from
+          # this block by name, and a name listed there but missing here arrives as an empty
+          # string rather than an error — which surfaces as a confusing `docker login` failure,
+          # not a missing-variable one.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GitHub's own docs do not pin a required username here: the token is what is
+          # authenticated. `github.actor` just has to be non-empty, which it is under both
+          # triggers this workflow declares (on workflow_dispatch it is whoever clicked).
+          GHCR_USER: ${{ github.actor }}
+          # deploy.sh pins by SHA and is idempotent; on a manual run image_tag may name an
+          # older SHA, which is how a rollback is performed.
+          IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          fingerprint: ${{ secrets.VPS_SSH_FINGERPRINT }}
+          # appleboy/ssh-action over a raw `ssh` call: the plain version needs the key written
+          # to a mode-0600 file, a known_hosts entry and a trap to shred both, which is more
+          # bespoke shell than the thing it runs. The action does exactly that, and its
+          # `fingerprint` input is the host-key check the hand-rolled version usually skips.
+          envs: GHCR_TOKEN,GHCR_USER,IMAGE_TAG
+          # No `script_stop: true`, even though v1.2.0 still accepts it. It is gone from the
+          # action's current release, and an Actions input that no longer exists is ignored
+          # silently rather than rejected — so a routine version bump would turn a failing
+          # deploy green with nothing to read. `set -e` below does the same job and cannot be
+          # dropped by someone else's changelog.
+          script: |
+            set -e
+            # EXIT, not the end of the script: a failed deploy.sh is precisely the run that
+            # must not leave a working registry credential behind on the box, and `set -e`
+            # skips straight past any cleanup written as a trailing command.
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+            # Piped, never `-p "$GHCR_TOKEN"`: an argument is readable in `ps` output by
+            # anyone with a shell on the box for as long as the login runs.
+            printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            /opt/family-manager/deploy.sh "$IMAGE_TAG"
