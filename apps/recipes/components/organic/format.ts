@@ -20,3 +20,9 @@ export function formatTotalTime(seconds: number): string {
 export function metaLine(parts: (string | undefined)[]): string {
   return parts.filter((p) => p !== undefined && p !== "").join(" · ");
 }
+
+/** "18.5" but "48", not "48.0" — book macros are printed both ways and the trailing zero
+ * makes the strip look noisier than the numbers deserve. */
+export function formatMacro(grams: number): string {
+  return Number.isInteger(grams) ? String(grams) : grams.toFixed(1);
+}

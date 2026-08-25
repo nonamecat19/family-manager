@@ -59,9 +59,10 @@ func (q *Queries) AddStep(ctx context.Context, arg AddStepParams) error {
 
 const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO recipes (family_id, title, description, category_id, subcategory_id,
-    servings, prep_seconds, cook_seconds, author_user_id, notes, rating)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
+    servings, prep_seconds, cook_seconds, author_user_id, notes, rating,
+    kcal, protein_g, fat_g, carbs_g)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes, kcal, protein_g, fat_g, carbs_g
 `
 
 type CreateRecipeParams struct {
@@ -76,6 +77,10 @@ type CreateRecipeParams struct {
 	AuthorUserID  pgtype.UUID
 	Notes         string
 	Rating        int16
+	Kcal          int32
+	ProteinG      float32
+	FatG          float32
+	CarbsG        float32
 }
 
 func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Recipe, error) {
@@ -91,6 +96,10 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		arg.AuthorUserID,
 		arg.Notes,
 		arg.Rating,
+		arg.Kcal,
+		arg.ProteinG,
+		arg.FatG,
+		arg.CarbsG,
 	)
 	var i Recipe
 	err := row.Scan(
@@ -111,6 +120,10 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		&i.ImageUrl,
 		&i.Rating,
 		&i.Notes,
+		&i.Kcal,
+		&i.ProteinG,
+		&i.FatG,
+		&i.CarbsG,
 	)
 	return i, err
 }
@@ -147,7 +160,7 @@ func (q *Queries) DeleteSteps(ctx context.Context, recipeID pgtype.UUID) error {
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes FROM recipes
+SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes, kcal, protein_g, fat_g, carbs_g FROM recipes
 WHERE id = $1
 `
 
@@ -172,6 +185,10 @@ func (q *Queries) GetRecipe(ctx context.Context, id pgtype.UUID) (Recipe, error)
 		&i.ImageUrl,
 		&i.Rating,
 		&i.Notes,
+		&i.Kcal,
+		&i.ProteinG,
+		&i.FatG,
+		&i.CarbsG,
 	)
 	return i, err
 }
@@ -186,7 +203,7 @@ func (q *Queries) IncrementCommentCount(ctx context.Context, id pgtype.UUID) err
 }
 
 const listFavoriteRecipes = `-- name: ListFavoriteRecipes :many
-SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes FROM recipes r
+SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes, r.kcal, r.protein_g, r.fat_g, r.carbs_g FROM recipes r
 JOIN recipe_favorites f ON f.recipe_id = r.id
 WHERE f.user_id = $1
 ORDER BY f.created_at DESC
@@ -219,6 +236,10 @@ func (q *Queries) ListFavoriteRecipes(ctx context.Context, userID pgtype.UUID) (
 			&i.ImageUrl,
 			&i.Rating,
 			&i.Notes,
+			&i.Kcal,
+			&i.ProteinG,
+			&i.FatG,
+			&i.CarbsG,
 		); err != nil {
 			return nil, err
 		}
@@ -263,7 +284,7 @@ func (q *Queries) ListIngredients(ctx context.Context, recipeID pgtype.UUID) ([]
 }
 
 const listRecipes = `-- name: ListRecipes :many
-SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes FROM recipes r
+SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes, r.kcal, r.protein_g, r.fat_g, r.carbs_g FROM recipes r
 WHERE r.family_id = $1
   AND ($2::uuid IS NULL OR r.category_id = $2)
   AND ($3::uuid IS NULL OR r.subcategory_id = $3)
@@ -343,6 +364,10 @@ func (q *Queries) ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Rec
 			&i.ImageUrl,
 			&i.Rating,
 			&i.Notes,
+			&i.Kcal,
+			&i.ProteinG,
+			&i.FatG,
+			&i.CarbsG,
 		); err != nil {
 			return nil, err
 		}
@@ -389,7 +414,7 @@ const setRecipeRating = `-- name: SetRecipeRating :one
 UPDATE recipes
 SET rating = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes, kcal, protein_g, fat_g, carbs_g
 `
 
 type SetRecipeRatingParams struct {
@@ -418,6 +443,10 @@ func (q *Queries) SetRecipeRating(ctx context.Context, arg SetRecipeRatingParams
 		&i.ImageUrl,
 		&i.Rating,
 		&i.Notes,
+		&i.Kcal,
+		&i.ProteinG,
+		&i.FatG,
+		&i.CarbsG,
 	)
 	return i, err
 }
@@ -426,9 +455,13 @@ const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE recipes
 SET title = $2, description = $3, category_id = $4, subcategory_id = $5,
     servings = $6, prep_seconds = $7, cook_seconds = $8, notes = $9, rating = $10,
+    kcal      = COALESCE($11::int,       kcal),
+    protein_g = COALESCE($12::real, protein_g),
+    fat_g     = COALESCE($13::real,     fat_g),
+    carbs_g   = COALESCE($14::real,   carbs_g),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes, kcal, protein_g, fat_g, carbs_g
 `
 
 type UpdateRecipeParams struct {
@@ -442,8 +475,15 @@ type UpdateRecipeParams struct {
 	CookSeconds   int32
 	Notes         string
 	Rating        int16
+	Kcal          *int32
+	ProteinG      *float32
+	FatG          *float32
+	CarbsG        *float32
 }
 
+// Nutrition is COALESCEd against the stored value instead of overwritten like every other
+// column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
+// that does not render the macros would otherwise wipe them on every save.
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error) {
 	row := q.db.QueryRow(ctx, updateRecipe,
 		arg.ID,
@@ -456,6 +496,10 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Rec
 		arg.CookSeconds,
 		arg.Notes,
 		arg.Rating,
+		arg.Kcal,
+		arg.ProteinG,
+		arg.FatG,
+		arg.CarbsG,
 	)
 	var i Recipe
 	err := row.Scan(
@@ -476,6 +520,10 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Rec
 		&i.ImageUrl,
 		&i.Rating,
 		&i.Notes,
+		&i.Kcal,
+		&i.ProteinG,
+		&i.FatG,
+		&i.CarbsG,
 	)
 	return i, err
 }
@@ -484,7 +532,7 @@ const updateRecipeImage = `-- name: UpdateRecipeImage :one
 UPDATE recipes
 SET image_url = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes, kcal, protein_g, fat_g, carbs_g
 `
 
 type UpdateRecipeImageParams struct {
@@ -513,6 +561,10 @@ func (q *Queries) UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImagePa
 		&i.ImageUrl,
 		&i.Rating,
 		&i.Notes,
+		&i.Kcal,
+		&i.ProteinG,
+		&i.FatG,
+		&i.CarbsG,
 	)
 	return i, err
 }

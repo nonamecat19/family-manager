@@ -1,7 +1,8 @@
 -- name: CreateRecipe :one
 INSERT INTO recipes (family_id, title, description, category_id, subcategory_id,
-    servings, prep_seconds, cook_seconds, author_user_id, notes, rating)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    servings, prep_seconds, cook_seconds, author_user_id, notes, rating,
+    kcal, protein_g, fat_g, carbs_g)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 RETURNING *;
 
 -- name: GetRecipe :one
@@ -43,10 +44,17 @@ JOIN recipe_favorites f ON f.recipe_id = r.id
 WHERE f.user_id = $1
 ORDER BY f.created_at DESC;
 
+-- Nutrition is COALESCEd against the stored value instead of overwritten like every other
+-- column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
+-- that does not render the macros would otherwise wipe them on every save.
 -- name: UpdateRecipe :one
 UPDATE recipes
 SET title = $2, description = $3, category_id = $4, subcategory_id = $5,
     servings = $6, prep_seconds = $7, cook_seconds = $8, notes = $9, rating = $10,
+    kcal      = COALESCE(sqlc.narg('kcal')::int,       kcal),
+    protein_g = COALESCE(sqlc.narg('protein_g')::real, protein_g),
+    fat_g     = COALESCE(sqlc.narg('fat_g')::real,     fat_g),
+    carbs_g   = COALESCE(sqlc.narg('carbs_g')::real,   carbs_g),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

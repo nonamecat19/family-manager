@@ -478,3 +478,81 @@ func equalStrings(a, b []string) bool {
 	}
 	return true
 }
+
+// Nutrition round-trips on create, and — the part that is easy to get wrong — survives an
+// update that does not mention it. The edit screen predates these fields; if UpdateRecipe
+// treated an absent Nutrition the way it treats an absent title, every save from that screen
+// would silently erase the macros the recipe was imported with.
+func TestNutritionCreateAndPreserveOnUpdate(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title:    "Кіноа з куркою",
+		Servings: 1,
+		Nutrition: &recipesv1.Nutrition{
+			Kcal: 520, ProteinG: 48, FatG: 18.5, CarbsG: 42,
+		},
+	})
+	if got := r.GetNutrition(); got.GetKcal() != 520 || got.GetProteinG() != 48 ||
+		got.GetFatG() != 18.5 || got.GetCarbsG() != 42 {
+		t.Fatalf("nutrition not stored on create: %+v", got)
+	}
+
+	// An update carrying no Nutrition at all must leave the figures untouched.
+	upd, err := h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
+		RecipeId: r.GetId(), Title: "Кіноа з куркою", Servings: 2,
+	}))
+	if err != nil {
+		t.Fatalf("UpdateRecipe: %v", err)
+	}
+	if got := upd.Msg.GetRecipe().GetNutrition(); got.GetKcal() != 520 || got.GetProteinG() != 48 {
+		t.Fatalf("nutrition erased by an update that did not mention it: %+v", got)
+	}
+	if got := upd.Msg.GetRecipe().GetServings(); got != 2 {
+		t.Fatalf("servings = %d, want the update to have applied", got)
+	}
+
+	// An update that does carry Nutrition overwrites it.
+	upd, err = h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
+		RecipeId: r.GetId(), Title: "Кіноа з куркою", Servings: 2,
+		Nutrition: &recipesv1.Nutrition{Kcal: 600, ProteinG: 50, FatG: 20, CarbsG: 45},
+	}))
+	if err != nil {
+		t.Fatalf("UpdateRecipe: %v", err)
+	}
+	if got := upd.Msg.GetRecipe().GetNutrition(); got.GetKcal() != 600 || got.GetProteinG() != 50 {
+		t.Fatalf("nutrition not overwritten when supplied: %+v", got)
+	}
+}
+
+// Negative macros are floored rather than rejected: the CHECK constraint would otherwise turn
+// a bad client value into a 500.
+func TestNutritionNegativeValuesFloored(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{
+		Title: "Nonsense", Servings: 1,
+		Nutrition: &recipesv1.Nutrition{Kcal: -10, ProteinG: -1, FatG: -2, CarbsG: -3},
+	})
+	if got := r.GetNutrition(); got.GetKcal() != 0 || got.GetProteinG() != 0 ||
+		got.GetFatG() != 0 || got.GetCarbsG() != 0 {
+		t.Fatalf("negative nutrition not floored: %+v", got)
+	}
+}
+
+// A recipe created without nutrition still reports a non-nil all-zero message, so the app can
+// read the fields without a nil check.
+func TestNutritionAlwaysPresentOnRead(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Plain", Servings: 1})
+	if r.GetNutrition() == nil {
+		t.Fatal("Nutrition is nil on a recipe created without it; want an all-zero message")
+	}
+	if r.GetNutrition().GetKcal() != 0 {
+		t.Fatalf("kcal = %d, want 0", r.GetNutrition().GetKcal())
+	}
+}

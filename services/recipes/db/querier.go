@@ -58,6 +58,9 @@ type Querier interface {
 	// (recipes store free-form amounts); non-numeric amounts are summed as count (1 per row) so
 	// "2 cloves" + "3 cloves" becomes "2" — the app shows the breakdown for non-numeric totals.
 	TotalIngredients(ctx context.Context, arg TotalIngredientsParams) ([]TotalIngredientsRow, error)
+	// Nutrition is COALESCEd against the stored value instead of overwritten like every other
+	// column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
+	// that does not render the macros would otherwise wipe them on every save.
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error)
 	UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImageParams) (Recipe, error)
 }

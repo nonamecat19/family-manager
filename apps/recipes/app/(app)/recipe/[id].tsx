@@ -30,6 +30,7 @@ import { initialOf, organic, tintFor } from "../../../components/organic/tokens.
 import {
   Display,
   Kicker,
+  NutritionStrip,
   OutlineButton,
   PrimaryButton,
   RoundButton,
@@ -172,6 +173,15 @@ export default function RecipeDetailScreen() {
                   {r.description}
                 </Text>
               )}
+              {/* Per serving, not per recipe — so the figures do not move when the ingredient
+                  stepper scales the list. */}
+              <NutritionStrip
+                className="mt-[14px]"
+                kcal={r.nutrition?.kcal ?? 0}
+                proteinG={r.nutrition?.proteinG ?? 0}
+                fatG={r.nutrition?.fatG ?? 0}
+                carbsG={r.nutrition?.carbsG ?? 0}
+              />
             </View>
 
             <SegTabs options={TABS} value={tab} onChange={setTab} />

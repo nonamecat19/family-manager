@@ -129,6 +129,10 @@ func (s *fakeStore) CreateRecipe(_ context.Context, arg db.CreateRecipeParams) (
 		AuthorUserID:  arg.AuthorUserID,
 		Notes:         arg.Notes,
 		Rating:        arg.Rating,
+		Kcal:          arg.Kcal,
+		ProteinG:      arg.ProteinG,
+		FatG:          arg.FatG,
+		CarbsG:        arg.CarbsG,
 		CreatedAt:     pgtype.Timestamptz{Valid: true},
 		UpdatedAt:     pgtype.Timestamptz{Valid: true},
 	}
@@ -239,6 +243,19 @@ func (s *fakeStore) UpdateRecipe(_ context.Context, arg db.UpdateRecipeParams) (
 	r.CookSeconds = arg.CookSeconds
 	r.Notes = arg.Notes
 	r.Rating = arg.Rating
+	// COALESCE in the real query: a nil pointer leaves the stored figure alone.
+	if arg.Kcal != nil {
+		r.Kcal = *arg.Kcal
+	}
+	if arg.ProteinG != nil {
+		r.ProteinG = *arg.ProteinG
+	}
+	if arg.FatG != nil {
+		r.FatG = *arg.FatG
+	}
+	if arg.CarbsG != nil {
+		r.CarbsG = *arg.CarbsG
+	}
 	s.recipes[pgconv.UUIDString(r.ID)] = r
 	return r, nil
 }

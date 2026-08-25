@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
+import { formatMacro } from "./format.ts";
 import { Icon, StarIcon, type IconName } from "./icons.tsx";
 import { organic, type Tint } from "./tokens.ts";
 
@@ -447,6 +448,43 @@ export function Field({
 /** A white-ish panel: list groups, cards, rows. */
 export function Panel({ className = "", ...props }: ViewProps & { className?: string }) {
   return <View className={`rounded-2xl bg-neutral-100 ${className}`} {...props} />;
+}
+
+/** Per-serving macros, as a four-cell strip. Renders nothing when the recipe carries no
+ * figures — every field is 0 for a recipe nobody recorded them for, and four zeroes read as
+ * a claim rather than as an absence. */
+export function NutritionStrip({
+  kcal,
+  proteinG,
+  fatG,
+  carbsG,
+  className = "",
+}: {
+  kcal: number;
+  proteinG: number;
+  fatG: number;
+  carbsG: number;
+  className?: string;
+}) {
+  if (kcal <= 0 && proteinG <= 0 && fatG <= 0 && carbsG <= 0) return null;
+  const cells: { label: string; value: string }[] = [
+    { label: "kcal", value: String(Math.round(kcal)) },
+    { label: "protein", value: `${formatMacro(proteinG)} g` },
+    { label: "fat", value: `${formatMacro(fatG)} g` },
+    { label: "carbs", value: `${formatMacro(carbsG)} g` },
+  ];
+  return (
+    <Panel className={`flex-row px-[6px] py-[12px] ${className}`}>
+      {cells.map((c) => (
+        <View key={c.label} className="flex-1 items-center">
+          <Text className="font-cap text-[17px] text-accent-800">{c.value}</Text>
+          <Text className="mt-[2px] font-fig text-[11px] uppercase tracking-[0.7px] text-neutral-600">
+            {c.label}
+          </Text>
+        </View>
+      ))}
+    </Panel>
+  );
 }
 
 export { organic };

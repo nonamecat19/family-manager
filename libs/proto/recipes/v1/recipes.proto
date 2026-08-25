@@ -102,6 +102,16 @@ message Ingredient {
   string unit = 3;
 }
 
+// Nutrition is per serving, as printed by the recipe's source. Every field is 0 when the
+// figure was never recorded — there is no "0 kcal" dish, so 0 is unambiguous and saves the
+// app a presence check per field.
+message Nutrition {
+  int32 kcal = 1;
+  float protein_g = 2;
+  float fat_g = 3;
+  float carbs_g = 4;
+}
+
 message Step {
   int32 position = 1;
   string instruction = 2;
@@ -137,6 +147,8 @@ message Recipe {
   string notes = 18;
   // rating is the family's verdict, 1..5. 0 means nobody has rated it yet.
   int32 rating = 19;
+  // nutrition is per serving. Always set on read; every field 0 when unrecorded.
+  Nutrition nutrition = 20;
 }
 
 message Comment {
@@ -200,6 +212,8 @@ message CreateRecipeRequest {
   repeated Step steps = 9;
   string notes = 10;
   int32 rating = 11;
+  // Unset leaves every figure at 0.
+  Nutrition nutrition = 12;
 }
 message CreateRecipeResponse {
   Recipe recipe = 1;
@@ -247,6 +261,11 @@ message UpdateRecipeRequest {
   // rating is written by UpdateRecipe too so the edit screen can save everything in one
   // call; RateRecipe exists for the one-tap star control on the list and detail screens.
   int32 rating = 12;
+  // Unset (not merely zeroed) leaves the stored nutrition alone. Unlike every other field
+  // here, this one is preserved rather than overwritten when absent: an edit screen that
+  // predates these figures — or simply does not show them — must not silently erase the
+  // macros that came in with the recipe.
+  Nutrition nutrition = 13;
 }
 message UpdateRecipeResponse {
   Recipe recipe = 1;

@@ -36,6 +36,10 @@ type Recipe struct {
 	ImageUrl      string
 	Rating        int16
 	Notes         string
+	Kcal          int32
+	ProteinG      float32
+	FatG          float32
+	CarbsG        float32
 }
 
 type RecipeCategory struct {

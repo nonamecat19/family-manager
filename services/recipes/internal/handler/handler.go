@@ -250,6 +250,10 @@ func (h *Handler) CreateRecipe(
 		AuthorUserID:  userUUID,
 		Notes:         req.Msg.GetNotes(),
 		Rating:        clampRating(req.Msg.GetRating()),
+		Kcal:          maxInt32(req.Msg.GetNutrition().GetKcal(), 0),
+		ProteinG:      nonNegative(req.Msg.GetNutrition().GetProteinG()),
+		FatG:          nonNegative(req.Msg.GetNutrition().GetFatG()),
+		CarbsG:        nonNegative(req.Msg.GetNutrition().GetCarbsG()),
 	})
 	if err != nil {
 		return nil, internal(err, "create recipe")
@@ -434,6 +438,8 @@ func (h *Handler) UpdateRecipe(
 	catID, _ := pgconv.UUID(req.Msg.GetCategoryId())
 	subID, _ := pgconv.UUID(req.Msg.GetSubcategoryId())
 
+	n := nutritionUpdate(req.Msg.GetNutrition())
+
 	r, err = h.q.UpdateRecipe(ctx, db.UpdateRecipeParams{
 		ID:            r.ID,
 		Title:         title,
@@ -445,6 +451,10 @@ func (h *Handler) UpdateRecipe(
 		CookSeconds:   req.Msg.GetCookSeconds(),
 		Notes:         req.Msg.GetNotes(),
 		Rating:        clampRating(req.Msg.GetRating()),
+		Kcal:          n.kcal,
+		ProteinG:      n.proteinG,
+		FatG:          n.fatG,
+		CarbsG:        n.carbsG,
 	})
 	if err != nil {
 		return nil, internal(err, "update recipe")

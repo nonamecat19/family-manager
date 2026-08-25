@@ -120,6 +120,27 @@ func toProtoStep(s db.RecipeStep) *recipesv1.Step {
 	}
 }
 
+// Nutrition is never nil on the wire: the columns are NOT NULL, so an all-zero message is
+// the honest representation of "not recorded" and the app can read the fields without a nil
+// check on every one.
+func toProtoNutrition(r db.Recipe) *recipesv1.Nutrition {
+	return &recipesv1.Nutrition{
+		Kcal:     r.Kcal,
+		ProteinG: r.ProteinG,
+		FatG:     r.FatG,
+		CarbsG:   r.CarbsG,
+	}
+}
+
+// nonNegative floors a client-supplied macro at 0 to match the CHECK constraint, so bad input
+// is an ignored value rather than a 500 from the database.
+func nonNegative(v float32) float32 {
+	if v < 0 {
+		return 0
+	}
+	return v
+}
+
 func toProtoRecipe(
 	r db.Recipe, ingredients []db.RecipeIngredient, steps []db.RecipeStep,
 ) *recipesv1.Recipe {
@@ -149,6 +170,7 @@ func toProtoRecipe(
 		Notes:         r.Notes,
 		Rating:        int32(r.Rating),
 		ImageUrl:      r.ImageUrl,
+		Nutrition:     toProtoNutrition(r),
 		CreatedAt:     pgconv.Timestamp(r.CreatedAt),
 		UpdatedAt:     pgconv.Timestamp(r.UpdatedAt),
 	}
@@ -245,4 +267,33 @@ func max0(v int32) int32 {
 // the whole recipe over a stray star count.
 func clampRating(v int32) int16 {
 	return int16(clampInt32(v, 0, 5))
+}
+// maxInt32 floors a client-supplied integer, mirroring nonNegative for kcal.
+func maxInt32(v, lo int32) int32 {
+	if v < lo {
+		return lo
+	}
+	return v
+}
+
+// nutritionParams carries UpdateRecipe's nullable nutrition arguments. nil means "leave the
+// stored value" — the query COALESCEs each one — which is what a caller that sent no
+// nutrition at all wants. This is deliberately different from every other field on
+// UpdateRecipeRequest, all of which overwrite.
+type nutritionParams struct {
+	kcal     *int32
+	proteinG *float32
+	fatG     *float32
+	carbsG   *float32
+}
+
+func nutritionUpdate(n *recipesv1.Nutrition) nutritionParams {
+	if n == nil {
+		return nutritionParams{}
+	}
+	kcal := maxInt32(n.GetKcal(), 0)
+	protein := nonNegative(n.GetProteinG())
+	fat := nonNegative(n.GetFatG())
+	carbs := nonNegative(n.GetCarbsG())
+	return nutritionParams{kcal: &kcal, proteinG: &protein, fatG: &fat, carbsG: &carbs}
 }
