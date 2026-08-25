@@ -101,7 +101,7 @@ export default function RecipeDetailScreen() {
           {/* Hero — the dish sits in a tinted well that runs under the status bar and curves
               away from the content below it. */}
           <View
-            className="rounded-b-3xl px-[22px] pb-[26px] pt-[56px]"
+            className="rounded-b-3xl px-[22px] pb-[16px] pt-[56px]"
             style={{ backgroundColor: tint.bg }}
           >
             <View className="flex-row justify-between">
@@ -123,18 +123,18 @@ export default function RecipeDetailScreen() {
                 </RoundButton>
               </View>
             </View>
-            <View className="mb-[2px] mt-[6px] items-center">
+            <View className="mb-[2px] mt-[2px] items-center">
               {r.imageUrl !== "" ? (
                 // "contain" on the tint, not "cover": a background-removed PNG should read
                 // as the cut-out it is instead of being cropped into a circle.
                 <Image
                   source={{ uri: r.imageUrl }}
-                  className="h-[186px] w-[186px]"
+                  className="h-[244px] w-[244px]"
                   resizeMode="contain"
                 />
               ) : (
-                <View className="h-[186px] w-[186px] items-center justify-center rounded-full bg-neutral-100/50">
-                  <Text className="font-cap text-[64px]" style={{ color: tint.fg }}>
+                <View className="h-[244px] w-[244px] items-center justify-center rounded-full bg-neutral-100/50">
+                  <Text className="font-cap text-[80px]" style={{ color: tint.fg }}>
                     {initialOf(r.title)}
                   </Text>
                 </View>
