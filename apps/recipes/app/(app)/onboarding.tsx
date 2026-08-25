@@ -1,10 +1,10 @@
 import { useCreateFamily } from "@fm/api";
 import { useAuth } from "@fm/auth";
-import { Button, Field } from "@fm/ui";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Display, Field, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -13,19 +13,19 @@ export default function OnboardingScreen() {
   const [name, setName] = useState("");
 
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-      <View className="flex-1 justify-center gap-lg p-xl">
-        <View className="gap-xs">
-          <Text className="text-display font-bold text-fg dark:text-fg-dark">Start your family</Text>
-          <Text className="text-body text-muted dark:text-muted-dark">
-            Name your household to start collecting recipes together.
+    <Screen>
+      <View className="flex-1 justify-center gap-[20px] px-[24px]">
+        <View>
+          <Display size={33}>Start your{"\n"}cookbook</Display>
+          <Text className="mt-[10px] font-fig text-[15.5px] leading-[23px] text-neutral-700">
+            Name your household. Everything you write down from here on belongs to it, and to
+            everyone you invite.
           </Text>
         </View>
-        <Field label="Family name" value={name} onChangeText={setName} />
-        <Button
-          title="Create"
-          loading={createFamily.isPending}
-          disabled={name.trim() === ""}
+        <Field label="Family name" value={name} onChangeText={setName} placeholder="The Kowalskis" />
+        <PrimaryButton
+          title={createFamily.isPending ? "Creating…" : "Create"}
+          disabled={name.trim() === "" || createFamily.isPending}
           onPress={() =>
             createFamily.mutate(name.trim(), {
               // The access token's family_id claim is baked in at issuance; refresh it before
@@ -35,6 +35,6 @@ export default function OnboardingScreen() {
           }
         />
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -1,260 +1,229 @@
-import { useRecipes, useRecipeCategories, useRecipeSubcategories } from "@fm/api";
-import { Card, EmptyState, ErrorState, Loading } from "@fm/ui";
-import type { Category, Recipe, Subcategory } from "@fm/sdk/recipes/v1/recipes_pb";
+import { useMealPlan, useRecipeCategories, useRecipes, useTotalIngredients } from "@fm/api";
+import type { Category, Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { FlatList, Image, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
+
+import { Icon, SearchIcon } from "../../components/organic/icons.tsx";
+import { formatDuration } from "../../components/organic/format.ts";
+import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
+import { Avatar, Display, Kicker, RatingMark, Screen } from "../../components/organic/ui.tsx";
+import { weekRange } from "../../components/organic/week.ts";
 
 /**
- * Browsing is category -> subcategory -> recipes, not a flat filtered list: a category (the
- * book/meal a recipe belongs to) can have a dozen subcategories, so showing every recipe as
- * soon as a category is picked just reproduces the same wall of cards one level down.
+ * Home is the cookbook's front page, not a list: a way in (search), the four ways the family
+ * already organises its food (categories), what it rates highest, and what it has agreed to
+ * cook this week. Browsing lives one tab over — putting the flat list here as well is what
+ * the design replaced.
  */
-export default function RecipeListScreen() {
+export default function HomeScreen() {
   const router = useRouter();
-  const [categoryId, setCategoryId] = useState("");
-  const [subcategoryId, setSubcategoryId] = useState("");
-
+  const all = useRecipes();
   const categories = useRecipeCategories();
-  const subcategories = useRecipeSubcategories(categoryId);
-  // "all" is the sentinel for "every recipe in this category" (see SubcategoryBrowser) —
-  // it is never a real subcategory id, so it must not reach the API as one.
-  const list = useRecipes(
-    {
-      categoryId: categoryId || undefined,
-      subcategoryId: subcategoryId !== "" && subcategoryId !== "all" ? subcategoryId : undefined,
-    },
-    { enabled: subcategoryId !== "" },
-  );
+  const { from, to } = weekRange(new Date());
+  const plan = useMealPlan(from, to);
+  const totals = useTotalIngredients(from, to);
 
-  const selectedCategory = categories.data?.find((c) => c.id === categoryId);
-  const selectedSubcategory = subcategories.data?.find((s) => s.id === subcategoryId);
+  const recipes = all.data ?? [];
+  const topRated = [...recipes].sort((a, b) => b.rating - a.rating).slice(0, 6);
+  const planned = new Set((plan.data ?? []).map((e) => e.recipeId)).size;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-      <View className="flex-row items-center gap-sm p-lg">
-        {categoryId !== "" && (
+    <Screen>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[22px] px-[22px] pb-[24px] pt-[8px]">
+        <View className="flex-row items-start justify-between gap-[12px]">
+          <View className="flex-1">
+            <Kicker>{today()}</Kicker>
+            <Display size={33} className="mt-[7px]">
+              The family{"\n"}cookbook
+            </Display>
+          </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Back"
-            onPress={() => (subcategoryId !== "" ? setSubcategoryId("") : setCategoryId(""))}
+            accessibilityLabel="Your profile"
+            onPress={() => router.push("/(app)/settings")}
           >
-            <Text className="text-title text-fg dark:text-fg-dark">‹</Text>
+            <Avatar initial="M" tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }} size={48} />
           </Pressable>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search recipes"
+          onPress={() => router.push("/(app)/search")}
+          className="flex-row items-center gap-[10px] rounded-full border border-neutral-300 bg-neutral-100 px-[18px] py-[13px]"
+        >
+          <SearchIcon />
+          <Text className="font-fig text-[16px] text-neutral-600">
+            {recipes.length > 0 ? `Search ${recipes.length} recipes` : "Search recipes"}
+          </Text>
+        </Pressable>
+
+        {categories.data && categories.data.length > 0 && (
+          <View className="flex-row flex-wrap gap-[12px]">
+            {categories.data.map((category, index) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                index={index}
+                count={recipes.filter((r) => r.categoryId === category.id).length}
+                onPress={() => router.push(`/(app)/recipes?categoryId=${category.id}`)}
+              />
+            ))}
+          </View>
         )}
-        <Text className="text-display font-bold text-fg dark:text-fg-dark">
-          {selectedSubcategory?.name ?? selectedCategory?.name ?? "Recipes"}
-        </Text>
-      </View>
 
-      {categoryId === "" ? (
-        <CategoryBrowser
-          isPending={categories.isPending}
-          isError={categories.isError}
-          error={categories.error}
-          onRetry={() => void categories.refetch()}
-          categories={categories.data ?? []}
-          onSelect={setCategoryId}
-        />
-      ) : subcategoryId === "" ? (
-        <SubcategoryBrowser
-          isPending={subcategories.isPending}
-          isError={subcategories.isError}
-          error={subcategories.error}
-          onRetry={() => void subcategories.refetch()}
-          subcategories={subcategories.data ?? []}
-          onSelect={setSubcategoryId}
-          onSelectAll={() => setSubcategoryId("all")}
-        />
-      ) : (
-        <RecipeList
-          isPending={list.isPending}
-          isError={list.isError}
-          error={list.error}
-          onRetry={() => void list.refetch()}
-          recipes={list.data ?? []}
-          isRefetching={list.isRefetching}
-          onPressRecipe={(id) => router.push(`/(app)/recipe/${id}`)}
-        />
-      )}
+        {topRated.length > 0 && (
+          <>
+            <View className="mt-[2px] flex-row items-baseline justify-between">
+              <Display size={21}>Top rated</Display>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="See all recipes"
+                onPress={() => router.push("/(app)/recipes")}
+              >
+                <Text className="font-fig-bold text-[14px] text-accent-700">See all</Text>
+              </Pressable>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="-mx-[22px] -mt-[6px]"
+              contentContainerClassName="gap-[14px] px-[22px] pb-[8px] pt-[6px]"
+            >
+              {topRated.map((recipe, index) => (
+                <TopRatedCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  index={index}
+                  onPress={() => router.push(`/(app)/recipe/${recipe.id}`)}
+                />
+              ))}
+            </ScrollView>
+          </>
+        )}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Add recipe"
-        onPress={() => router.push("/(app)/recipe-edit/new")}
-        className="absolute bottom-xl right-xl h-14 w-14 items-center justify-center rounded-full bg-primary"
-      >
-        <Text className="text-title text-primary-fg">+</Text>
-      </Pressable>
-    </SafeAreaView>
-  );
-}
-
-function CategoryBrowser({
-  isPending,
-  isError,
-  error,
-  onRetry,
-  categories,
-  onSelect,
-}: {
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  onRetry: () => void;
-  categories: Category[];
-  onSelect: (id: string) => void;
-}) {
-  if (isPending) return <Loading />;
-  if (isError) return <ErrorState message={error?.message ?? ""} onRetry={onRetry} />;
-  return (
-    <FlatList
-      data={categories}
-      keyExtractor={(c) => c.id}
-      contentContainerClassName="px-lg pb-2xl gap-xs"
-      renderItem={({ item }) => <BrowserRow label={item.name} onPress={() => onSelect(item.id)} />}
-      ListEmptyComponent={
-        <EmptyState title="No categories yet" hint="Add your first recipe with the + button." />
-      }
-    />
-  );
-}
-
-// subcategoryId is set to the sentinel "all" (not "", which means "no category picked yet")
-// when the caller wants every recipe in the category regardless of subcategory.
-function SubcategoryBrowser({
-  isPending,
-  isError,
-  error,
-  onRetry,
-  subcategories,
-  onSelect,
-  onSelectAll,
-}: {
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  onRetry: () => void;
-  subcategories: Subcategory[];
-  onSelect: (id: string) => void;
-  onSelectAll: () => void;
-}) {
-  if (isPending) return <Loading />;
-  if (isError) return <ErrorState message={error?.message ?? ""} onRetry={onRetry} />;
-  if (subcategories.length === 0) {
-    // Nothing to drill into further — go straight to the recipe list for this category.
-    onSelectAll();
-    return <Loading />;
-  }
-  return (
-    <FlatList
-      data={subcategories}
-      keyExtractor={(s) => s.id}
-      contentContainerClassName="px-lg pb-2xl gap-xs"
-      ListHeaderComponent={<BrowserRow label="All" onPress={onSelectAll} />}
-      renderItem={({ item }) => <BrowserRow label={item.name} onPress={() => onSelect(item.id)} />}
-    />
-  );
-}
-
-function RecipeList({
-  isPending,
-  isError,
-  error,
-  onRetry,
-  recipes,
-  isRefetching,
-  onPressRecipe,
-}: {
-  isPending: boolean;
-  isError: boolean;
-  error: Error | null;
-  onRetry: () => void;
-  recipes: Recipe[];
-  isRefetching: boolean;
-  onPressRecipe: (id: string) => void;
-}) {
-  if (isPending) return <Loading />;
-  if (isError) return <ErrorState message={error?.message ?? ""} onRetry={onRetry} />;
-  return (
-    <FlatList
-      data={recipes}
-      keyExtractor={(r) => r.id}
-      contentContainerClassName="px-lg pb-2xl gap-xs"
-      renderItem={({ item }) => <RecipeCard recipe={item} onPress={() => onPressRecipe(item.id)} />}
-      ListEmptyComponent={
-        <EmptyState title="No recipes yet" hint="Add your first recipe with the + button." />
-      }
-      refreshing={isRefetching}
-      onRefresh={onRetry}
-    />
-  );
-}
-
-function BrowserRow({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
-      <Card className="flex-row items-center justify-between p-md">
-        <Text className="text-body font-semibold text-fg dark:text-fg-dark">{label}</Text>
-        <Text className="text-body text-muted dark:text-muted-dark">›</Text>
-      </Card>
-    </Pressable>
-  );
-}
-
-function RecipeCard({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
-      <Card className="gap-xs p-md">
-        <View className="flex-row gap-md">
-          {recipe.imageUrl !== "" && (
-            <Image
-              source={{ uri: recipe.imageUrl }}
-              className="h-14 w-14 rounded-md bg-bg dark:bg-bg-dark"
-              resizeMode="cover"
-            />
-          )}
-          <View className="flex-1 gap-xs">
-            <Text className="text-body font-semibold text-fg dark:text-fg-dark" numberOfLines={1}>
-              {recipe.title}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="This week's plan"
+          onPress={() => router.push("/(app)/meal-plan")}
+          className="flex-row items-center gap-[16px] rounded-2xl bg-accent2-200 px-[20px] py-[18px]"
+        >
+          <View className="flex-1">
+            <Display size={17} className="text-accent2-900">
+              This week&apos;s plan
+            </Display>
+            <Text className="mt-[4px] font-fig-semi text-[13.5px] text-accent2-800">
+              {planned === 0
+                ? "Nothing planned yet — tap to fill the week"
+                : `${planned} recipe${planned === 1 ? "" : "s"} · ${(totals.data ?? []).length} ingredients to buy`}
             </Text>
           </View>
-        </View>
-        {recipe.description !== "" && (
-          <Text className="text-caption text-muted dark:text-muted-dark" numberOfLines={2}>
-            {recipe.description}
-          </Text>
-        )}
-        <View className="flex-row gap-md">
-          <Text className="text-caption text-muted dark:text-muted-dark">
-            {recipe.servings} servings
-          </Text>
-          {(recipe.prepSeconds > 0 || recipe.cookSeconds > 0) && (
-            <Text className="text-caption text-muted dark:text-muted-dark">
-              {formatDuration(recipe.prepSeconds + recipe.cookSeconds)}
-            </Text>
-          )}
-          {recipe.favoriteCount > 0 && (
-            <Text className="text-caption text-muted dark:text-muted-dark">
-              ♥ {recipe.favoriteCount}
-            </Text>
-          )}
-          {recipe.commentCount > 0 && (
-            <Text className="text-caption text-muted dark:text-muted-dark">
-              💬 {recipe.commentCount}
-            </Text>
-          )}
-        </View>
-      </Card>
+          <Icon name="forward" size={22} color={organic.accent2[800]} />
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Favorites"
+          onPress={() => router.push("/(app)/favorites")}
+          className="flex-row items-center justify-between rounded-2xl border-2 border-dashed border-neutral-400 px-[20px] py-[15px]"
+        >
+          <Text className="font-fig-bold text-[14.5px] text-neutral-700">The ones you keep coming back to</Text>
+          <Icon name="forward" size={18} color={organic.neutral[700]} />
+        </Pressable>
+      </ScrollView>
+    </Screen>
+  );
+}
+
+function CategoryCard({
+  category,
+  index,
+  count,
+  onPress,
+}: {
+  category: Category;
+  index: number;
+  count: number;
+  onPress: () => void;
+}) {
+  const tint = tintFor(category.name, index);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={category.name}
+      onPress={onPress}
+      className="min-h-[100px] flex-1 basis-[45%] justify-between gap-[24px] rounded-2xl px-[16px] pb-[17px] pt-[15px]"
+      style={{ backgroundColor: tint.bg }}
+    >
+      <View
+        className="h-[32px] w-[32px] items-center justify-center rounded-full"
+        style={{ backgroundColor: "rgba(255,255,255,0.6)" }}
+      >
+        <Text className="font-cap text-[14px]" style={{ color: tint.fg }}>
+          {initialOf(category.name)}
+        </Text>
+      </View>
+      <View>
+        <Text className="font-cap text-[18px] leading-[20px]" style={{ color: tint.fg }}>
+          {category.name}
+        </Text>
+        <Text className="mt-[3px] font-fig-bold text-[12.5px] opacity-70" style={{ color: tint.fg }}>
+          {count} recipe{count === 1 ? "" : "s"}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  return `${hrs}h ${mins % 60}m`;
+function TopRatedCard({
+  recipe,
+  index,
+  onPress,
+}: {
+  recipe: Recipe;
+  index: number;
+  onPress: () => void;
+}) {
+  const tint = tintFor(recipe.categoryId, index);
+  const time = formatDuration(recipe.prepSeconds + recipe.cookSeconds);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={recipe.title}
+      onPress={onPress}
+      className="w-[158px] flex-none rounded-2xl bg-neutral-100 p-[14px]"
+      style={{ boxShadow: "0 1px 2px rgba(46,43,37,0.14)" }}
+    >
+      <View
+        className="h-[104px] items-center justify-center overflow-hidden rounded-xl"
+        style={{ backgroundColor: tint.bg }}
+      >
+        {/* "contain", not "cover": a background-removed PNG should read as the cut-out it is
+            rather than being cropped to fill the tint. */}
+        {recipe.imageUrl !== "" ? (
+          <Image source={{ uri: recipe.imageUrl }} className="h-[92px] w-[92px]" resizeMode="contain" />
+        ) : (
+          <Text className="font-cap text-[32px]" style={{ color: tint.fg }}>
+            {initialOf(recipe.title)}
+          </Text>
+        )}
+      </View>
+      <Text className="mt-[11px] font-cap text-[15.5px] leading-[18px]" numberOfLines={2}>
+        {recipe.title}
+      </Text>
+      <View className="mt-[7px] flex-row items-center gap-[8px]">
+        {time !== "" && <Text className="font-fig-bold text-[12.5px] text-neutral-700">{time}</Text>}
+        {time !== "" && recipe.rating > 0 && <Text className="text-neutral-400">·</Text>}
+        <RatingMark rating={recipe.rating} size={12} />
+      </View>
+    </Pressable>
+  );
+}
+
+function today(): string {
+  return new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }

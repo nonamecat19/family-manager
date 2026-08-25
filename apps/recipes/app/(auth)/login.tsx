@@ -1,9 +1,9 @@
 import { useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
-import { Button, Field } from "@fm/ui";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Display, Field, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function LoginScreen() {
   const { auth } = useClients();
@@ -39,15 +39,17 @@ export default function LoginScreen() {
   const canSubmit = email.trim() !== "" && password !== "" && !busy;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
+    <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 justify-center gap-lg p-xl"
+        className="flex-1 justify-center gap-[18px] px-[24px]"
       >
-        <View className="gap-xs">
-          <Text className="text-display font-bold text-fg dark:text-fg-dark">Family Recipes</Text>
-          <Text className="text-body text-muted dark:text-muted-dark">
-            {mode === "login" ? "Sign in to your family cookbook." : "Create your account."}
+        <View>
+          <Display size={36}>Family Recipes</Display>
+          <Text className="mt-[10px] font-fig text-[15.5px] leading-[23px] text-neutral-700">
+            {mode === "login"
+              ? "Sign in to your family cookbook."
+              : "Create your account and start writing it down."}
           </Text>
         </View>
 
@@ -72,25 +74,25 @@ export default function LoginScreen() {
           error={error ?? undefined}
         />
 
-        <Button
-          title={mode === "login" ? "Sign in" : "Create account"}
-          loading={busy}
+        <PrimaryButton
+          title={busy ? "One moment…" : mode === "login" ? "Sign in" : "Create account"}
           disabled={!canSubmit}
           onPress={() => void submit()}
         />
 
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={mode === "login" ? "Create an account" : "I already have an account"}
           onPress={() => {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
         >
-          <Text className="text-center text-body text-primary">
+          <Text className="text-center font-fig-bold text-[14.5px] text-accent-700">
             {mode === "login" ? "Create an account" : "I already have an account"}
           </Text>
         </Pressable>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }

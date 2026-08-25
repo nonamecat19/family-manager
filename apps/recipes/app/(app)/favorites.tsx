@@ -1,82 +1,90 @@
-import { useFavoriteRecipes, useToggleFavorite } from "@fm/api";
-import { Card, EmptyState, ErrorState, Loading } from "@fm/ui";
+import { useFavoriteRecipes } from "@fm/api";
 import type { Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
-import { FlatList, Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+import { formatDuration, metaLine } from "../../components/organic/format.ts";
+import { initialOf, tintFor } from "../../components/organic/tokens.ts";
+import { Display, RoundButton, Screen } from "../../components/organic/ui.tsx";
+
+/** Favourites is a wall of dishes, not a list of rows — you recognise these by sight. */
 export default function FavoritesScreen() {
   const router = useRouter();
   const favorites = useFavoriteRecipes();
-  const toggleFavorite = useToggleFavorite();
+  const recipes = favorites.data ?? [];
 
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-      <View className="p-lg">
-        <Text className="text-display font-bold text-fg dark:text-fg-dark">Favorites</Text>
-      </View>
+    <Screen>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]"
+        refreshControl={undefined}
+      >
+        <View className="flex-row items-center gap-[12px]">
+          <RoundButton icon="back" label="Back" onPress={() => router.back()} />
+          <Display size={28}>Favourites</Display>
+        </View>
 
-      {favorites.isPending ? (
-        <Loading />
-      ) : favorites.isError ? (
-        <ErrorState message={favorites.error.message} onRetry={() => void favorites.refetch()} />
-      ) : (
-        <FlatList
-          data={favorites.data ?? []}
-          keyExtractor={(r) => r.id}
-          contentContainerClassName="px-lg pb-2xl gap-xs"
-          renderItem={({ item }) => (
+        <View className="flex-row flex-wrap gap-[12px]">
+          {recipes.map((recipe, index) => (
             <FavoriteCard
-              recipe={item}
-              onPress={() => router.push(`/(app)/recipe/${item.id}`)}
-              onUnfavorite={() => toggleFavorite.mutate(item.id)}
+              key={recipe.id}
+              recipe={recipe}
+              index={index}
+              onPress={() => router.push(`/(app)/recipe/${recipe.id}`)}
             />
-          )}
-          ListEmptyComponent={
-            <EmptyState
-              title="No favorites yet"
-              hint="Tap the ♥ on a recipe to save it here."
-            />
-          }
-          refreshing={favorites.isRefetching}
-          onRefresh={() => void favorites.refetch()}
-        />
-      )}
-    </SafeAreaView>
+          ))}
+        </View>
+
+        {!favorites.isPending && recipes.length === 0 && (
+          <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
+            Nothing saved yet. Tap the heart on a recipe and it will wait for you here.
+          </Text>
+        )}
+      </ScrollView>
+    </Screen>
   );
 }
 
 function FavoriteCard({
   recipe,
+  index,
   onPress,
-  onUnfavorite,
 }: {
   recipe: Recipe;
+  index: number;
   onPress: () => void;
-  onUnfavorite: () => void;
 }) {
+  const tint = tintFor(recipe.categoryId, index);
   return (
-    <Pressable accessibilityRole="button" onPress={onPress}>
-      <Card className="flex-row items-center justify-between gap-md p-md">
-        <View className="flex-1">
-          <Text className="text-body font-semibold text-fg dark:text-fg-dark" numberOfLines={1}>
-            {recipe.title}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={recipe.title}
+      onPress={onPress}
+      className="flex-1 basis-[45%] rounded-2xl bg-neutral-100 p-[14px]"
+      style={{ boxShadow: "0 1px 2px rgba(46,43,37,0.14)" }}
+    >
+      <View
+        className="h-[88px] items-center justify-center overflow-hidden rounded-xl"
+        style={{ backgroundColor: tint.bg }}
+      >
+        {recipe.imageUrl !== "" ? (
+          <Image source={{ uri: recipe.imageUrl }} className="h-[76px] w-[76px]" resizeMode="contain" />
+        ) : (
+          <Text className="font-cap text-[26px]" style={{ color: tint.fg }}>
+            {initialOf(recipe.title)}
           </Text>
-          {recipe.description !== "" && (
-            <Text className="text-caption text-muted dark:text-muted-dark" numberOfLines={1}>
-              {recipe.description}
-            </Text>
-          )}
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Remove from favorites"
-          onPress={onUnfavorite}
-          className="h-10 w-10 items-center justify-center rounded-full bg-card dark:bg-card-dark"
-        >
-          <Text className="text-body text-error">♥</Text>
-        </Pressable>
-      </Card>
+        )}
+      </View>
+      <Text className="mt-[10px] font-cap text-[15px] leading-[17px]" numberOfLines={2}>
+        {recipe.title}
+      </Text>
+      <Text className="mt-[5px] font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>
+        {metaLine([
+          formatDuration(recipe.prepSeconds + recipe.cookSeconds),
+          recipe.rating > 0 ? `${recipe.rating}.0 ★` : undefined,
+        ])}
+      </Text>
     </Pressable>
   );
 }
