@@ -1,10 +1,4 @@
-import {
-  useCategories,
-  useCreateCategory,
-  useFamily,
-  useInviteMember,
-  useMembers,
-} from "@fm/api";
+import { toDisplayError, useCategories, useCreateCategory, useFamily, useInviteMember, useMembers } from "@fm/api";
 import { useAuth } from "@fm/auth";
 import { TransactionType } from "@fm/sdk/finance/v1/finance_pb";
 import { categoryColor, categoryPalette } from "@fm/theme";
@@ -21,7 +15,10 @@ export default function SettingsScreen() {
 
   if (family.isPending) return <Loading />;
   if (family.isError) {
-    return <ErrorState message={family.error.message} onRetry={() => void family.refetch()} />;
+    return <ErrorState
+            {...toDisplayError(family.error, "Could not load your household.")}
+            onRetry={() => void family.refetch()}
+          />;
   }
 
   return (

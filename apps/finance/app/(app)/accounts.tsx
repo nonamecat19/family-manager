@@ -1,4 +1,4 @@
-import { parseAmount, useAccounts, useCreateAccount } from "@fm/api";
+import { parseAmount, toDisplayError, useAccounts, useCreateAccount } from "@fm/api";
 import { AccountType } from "@fm/sdk/finance/v1/finance_pb";
 import { Button, Card, EmptyState, ErrorState, Field, Loading } from "@fm/ui";
 import { useState } from "react";
@@ -30,7 +30,10 @@ export default function AccountsScreen() {
         {accounts.isPending ? (
           <Loading />
         ) : accounts.isError ? (
-          <ErrorState message={accounts.error.message} onRetry={() => void accounts.refetch()} />
+          <ErrorState
+            {...toDisplayError(accounts.error, "Could not load your accounts.")}
+            onRetry={() => void accounts.refetch()}
+          />
         ) : accounts.data.accounts.length === 0 ? (
           <EmptyState
             title="No accounts yet"

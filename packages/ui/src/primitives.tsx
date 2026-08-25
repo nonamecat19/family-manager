@@ -115,12 +115,37 @@ export function EmptyState({
   );
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorState({
+  message,
+  reference,
+  retryable,
+  onRetry,
+}: {
+  message: string;
+  /**
+   * The reference from an opaque internal error. Shown quietly under the message: it means
+   * nothing to the user on its own, and it is the only thing that lets someone find the
+   * request in the service logs once they report it.
+   */
+  reference?: string;
+  /**
+   * Whether trying again could plausibly work. When it is explicitly false the retry button is
+   * hidden: refetching a PermissionDenied or a NotFound produces the same answer, and a button
+   * that cannot help is worse than none. Omitted means "offer it", which is the old behaviour.
+   */
+  retryable?: boolean;
+  onRetry?: () => void;
+}) {
   return (
     <View className="flex-1 items-center justify-center gap-md p-xl">
       <Text className="text-title font-semibold text-expense">Something went wrong</Text>
       <Text className="text-center text-body text-muted dark:text-muted-dark">{message}</Text>
-      {onRetry ? <Button title="Try again" variant="secondary" onPress={onRetry} /> : null}
+      {reference ? (
+        <Text className="text-caption text-muted dark:text-muted-dark">Reference {reference}</Text>
+      ) : null}
+      {onRetry && retryable !== false ? (
+        <Button title="Try again" variant="secondary" onPress={onRetry} />
+      ) : null}
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useFamily } from "@fm/api";
+import { toDisplayError, useFamily } from "@fm/api";
 import { Button, EmptyState, ErrorState, Loading } from "@fm/ui";
 import { Code } from "@connectrpc/connect";
 import { Slot, Tabs, useRouter, useSegments } from "expo-router";
@@ -33,7 +33,10 @@ export default function AppLayout() {
         />
       );
     }
-    return <ErrorState message={family.error.message} onRetry={() => void family.refetch()} />;
+    return <ErrorState
+            {...toDisplayError(family.error, "Could not load your household.")}
+            onRetry={() => void family.refetch()}
+          />;
   }
 
   return (

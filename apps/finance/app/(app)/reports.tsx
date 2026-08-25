@@ -1,4 +1,4 @@
-import { periodRange, useCategoryBreakdown, type DateRange } from "@fm/api";
+import { periodRange, toDisplayError, type DateRange, useCategoryBreakdown } from "@fm/api";
 import { TransactionType } from "@fm/sdk/finance/v1/finance_pb";
 import { categoryColor, categoryPalette } from "@fm/theme";
 import { Card, Dot, EmptyState, ErrorState, Loading, PieChart } from "@fm/ui";
@@ -46,7 +46,10 @@ export default function ReportsScreen() {
         {breakdown.isPending ? (
           <Loading />
         ) : breakdown.isError ? (
-          <ErrorState message={breakdown.error.message} onRetry={() => void breakdown.refetch()} />
+          <ErrorState
+            {...toDisplayError(breakdown.error, "Could not load this report.")}
+            onRetry={() => void breakdown.refetch()}
+          />
         ) : slices.length === 0 ? (
           <EmptyState
             title="Nothing in this period"

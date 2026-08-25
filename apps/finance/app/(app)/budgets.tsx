@@ -1,15 +1,4 @@
-import {
-  abs,
-  format,
-  fromWire,
-  parseAmount,
-  toISODate,
-  useBudgets,
-  useCategories,
-  useCreateBudget,
-  useDeleteBudget,
-  type Money,
-} from "@fm/api";
+import { abs, format, fromWire, parseAmount, toDisplayError, toISODate, type Money, useBudgets, useCategories, useCreateBudget, useDeleteBudget } from "@fm/api";
 import type { BudgetStatus, Money as WireMoney } from "@fm/sdk/finance/v1/finance_pb";
 import { BudgetPeriod, TransactionType } from "@fm/sdk/finance/v1/finance_pb";
 import { Button, Card, EmptyState, ErrorState, Field, Loading } from "@fm/ui";
@@ -37,7 +26,10 @@ export default function BudgetsScreen() {
         {budgets.isPending ? (
           <Loading />
         ) : budgets.isError ? (
-          <ErrorState message={budgets.error.message} onRetry={() => void budgets.refetch()} />
+          <ErrorState
+            {...toDisplayError(budgets.error, "Could not load your budgets.")}
+            onRetry={() => void budgets.refetch()}
+          />
         ) : budgets.data.budgets.length === 0 ? (
           <EmptyState
             title="No budgets yet"
