@@ -43,6 +43,8 @@ export const queryKeys = {
   mealPlan: (fromDate: string, toDate: string) => ["recipes", "mealPlan", fromDate, toDate] as const,
   totalIngredients: (fromDate: string, toDate: string) =>
     ["recipes", "totalIngredients", fromDate, toDate] as const,
+  sumIngredients: (items: readonly { recipeId: string; servings: number }[]) =>
+    ["recipes", "sumIngredients", items] as const,
 } as const;
 
 export interface TransactionFilters {

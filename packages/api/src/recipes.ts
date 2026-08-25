@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { MealSlot } from "@fm/sdk/recipes/v1/recipes_pb";
+import type { MealSlot, RecipeSort } from "@fm/sdk/recipes/v1/recipes_pb";
 
 import { useClients } from "./provider.tsx";
 import { queryKeys } from "./queryKeys.ts";
@@ -49,6 +49,13 @@ export interface RecipeListFilters {
   subcategoryId?: string;
   favoriteOnly?: boolean;
   search?: string;
+  sort?: RecipeSort;
+  /** 0..5; 0 means "don't filter on rating". */
+  minRating?: number;
+  /** prep + cook ceiling in seconds; 0 means "don't filter on time". */
+  maxTotalSeconds?: number;
+  /** substring match on an ingredient name — "what can I cook with chicken". */
+  ingredient?: string;
 }
 
 export function useRecipes(filters: RecipeListFilters = {}, opts: { enabled?: boolean } = {}) {
@@ -94,6 +101,9 @@ export interface CreateRecipeInput {
   cookSeconds: number;
   ingredients: IngredientInput[];
   steps: StepInput[];
+  notes: string;
+  /** 1..5, or 0 for unrated. */
+  rating: number;
 }
 
 export function useCreateRecipe() {
@@ -132,6 +142,22 @@ export function useUploadRecipeImage() {
   return useMutation({
     mutationFn: async (input: { recipeId: string; imageData: Uint8Array; contentType: string }) => {
       const res = await recipes.uploadRecipeImage(input);
+      return res.recipe;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.recipes }),
+  });
+}
+
+/**
+ * useRateRecipe is the one-tap star control. It is separate from useUpdateRecipe because
+ * rating from a list row must not require sending the recipe's whole body back.
+ */
+export function useRateRecipe() {
+  const { recipes } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { recipeId: string; rating: number }) => {
+      const res = await recipes.rateRecipe(input);
       return res.recipe;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.recipes }),
@@ -215,5 +241,26 @@ export function useTotalIngredients(fromDate: string, toDate: string) {
     queryKey: queryKeys.totalIngredients(fromDate, toDate),
     queryFn: async () => (await recipes.totalIngredients({ fromDate, toDate })).totals,
     enabled: fromDate !== "" && toDate !== "",
+  });
+}
+
+/** One line of an ad-hoc cooking basket: a recipe and how many servings of it. */
+export interface BasketItem {
+  recipeId: string;
+  /** 0 means "cook it as written" (the recipe's own servings). */
+  servings: number;
+}
+
+/**
+ * useSumIngredients totals an ad-hoc basket. It is a query, not a mutation, because nothing
+ * is persisted — the basket lives in the app and the server just does the arithmetic, which
+ * keeps the summing rules identical to the meal-plan totals.
+ */
+export function useSumIngredients(items: BasketItem[]) {
+  const { recipes } = useClients();
+  return useQuery({
+    queryKey: queryKeys.sumIngredients(items),
+    queryFn: async () => (await recipes.sumIngredients({ items })).totals,
+    enabled: items.length > 0,
   });
 }
