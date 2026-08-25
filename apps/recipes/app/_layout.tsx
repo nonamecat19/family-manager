@@ -5,12 +5,12 @@ import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Token
 import { Loading } from "@fm/ui";
 // Imported per weight rather than from the package root: the root index requires every
 // weight and italic, and Metro bundles what it sees — ~500 kB of TTFs the app never renders.
-import { Caprasimo_400Regular } from "@expo-google-fonts/caprasimo/400Regular";
-import { Figtree_400Regular } from "@expo-google-fonts/figtree/400Regular";
-import { Figtree_500Medium } from "@expo-google-fonts/figtree/500Medium";
-import { Figtree_600SemiBold } from "@expo-google-fonts/figtree/600SemiBold";
-import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
-import { Figtree_800ExtraBold } from "@expo-google-fonts/figtree/800ExtraBold";
+import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
+import { NunitoSans_400Regular } from "@expo-google-fonts/nunito-sans/400Regular";
+import { NunitoSans_500Medium } from "@expo-google-fonts/nunito-sans/500Medium";
+import { NunitoSans_600SemiBold } from "@expo-google-fonts/nunito-sans/600SemiBold";
+import { NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans/700Bold";
+import { NunitoSans_800ExtraBold } from "@expo-google-fonts/nunito-sans/800ExtraBold";
 import { useFonts } from "expo-font";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
@@ -41,16 +41,16 @@ async function refresh(refreshToken: string): Promise<Tokens> {
 }
 
 export default function RootLayout() {
-  // Organic is a two-face system — Caprasimo for display, Figtree for everything else — and
+  // Organic is a two-face system — Alegreya for display, Nunito Sans for everything else — and
   // every weight is a separate file, so the whole set is loaded up front rather than letting
   // screens render in the platform font and reflow a frame later.
   const [fontsLoaded] = useFonts({
-    Caprasimo_400Regular,
-    Figtree_400Regular,
-    Figtree_500Medium,
-    Figtree_600SemiBold,
-    Figtree_700Bold,
-    Figtree_800ExtraBold,
+    Alegreya_800ExtraBold,
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
+    NunitoSans_800ExtraBold,
   });
 
   if (!fontsLoaded) return <Loading label="Warming the oven…" />;

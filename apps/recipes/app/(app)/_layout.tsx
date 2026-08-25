@@ -67,7 +67,7 @@ export default function AppLayout() {
             elevation: 0,
           },
           tabBarLabelStyle: {
-            fontFamily: "Figtree_800ExtraBold",
+            fontFamily: "NunitoSans_800ExtraBold",
             fontSize: 11,
             letterSpacing: 0.2,
           },

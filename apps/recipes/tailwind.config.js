@@ -79,13 +79,14 @@ module.exports = {
       fontFamily: {
         // Named `cap`/`fig` rather than `heading`/`bold` so they can never collide with
         // Tailwind's own font-weight utilities — with per-weight TTFs, `font-bold` alone
-        // would not pick the right file.
-        cap: ["Caprasimo_400Regular"],
-        fig: ["Figtree_400Regular"],
-        "fig-med": ["Figtree_500Medium"],
-        "fig-semi": ["Figtree_600SemiBold"],
-        "fig-bold": ["Figtree_700Bold"],
-        "fig-x": ["Figtree_800ExtraBold"],
+        // would not pick the right file. Faces are Alegreya (display) and Nunito Sans (body);
+        // the utility keys keep their original names so no screen has to change.
+        cap: ["Alegreya_800ExtraBold"],
+        fig: ["NunitoSans_400Regular"],
+        "fig-med": ["NunitoSans_500Medium"],
+        "fig-semi": ["NunitoSans_600SemiBold"],
+        "fig-bold": ["NunitoSans_700Bold"],
+        "fig-x": ["NunitoSans_800ExtraBold"],
       },
     },
   },
