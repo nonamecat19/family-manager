@@ -108,6 +108,84 @@ func (q *Queries) RemoveMealPlanEntry(ctx context.Context, arg RemoveMealPlanEnt
 	return result.RowsAffected(), nil
 }
 
+const sumIngredientsForBasket = `-- name: SumIngredientsForBasket :many
+WITH ids AS (
+    SELECT t.recipe_id, t.ord
+    FROM unnest($1::uuid[]) WITH ORDINALITY AS t(recipe_id, ord)
+), servs AS (
+    SELECT t.servings, t.ord
+    FROM unnest($2::int[]) WITH ORDINALITY AS t(servings, ord)
+), basket AS (
+    SELECT ids.recipe_id, servs.servings
+    FROM ids JOIN servs ON servs.ord = ids.ord
+), scaled AS (
+    SELECT
+        lower(btrim(ri.name)) AS name,
+        lower(btrim(ri.unit)) AS unit,
+        CASE
+            WHEN b.servings = 0 THEN 1.0
+            ELSE b.servings::numeric / NULLIF(r.servings, 0)
+        END AS scale,
+        ri.amount
+    FROM basket b
+    JOIN recipes r ON r.id = b.recipe_id AND r.family_id = $3
+    JOIN recipe_ingredients ri ON ri.recipe_id = r.id
+)
+SELECT
+    name,
+    unit,
+    COALESCE(
+        SUM(CASE
+            WHEN amount ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN amount::numeric * scale
+            ELSE 1
+        END),
+        0
+    )::text AS total_amount
+FROM scaled
+GROUP BY name, unit
+ORDER BY name, unit
+`
+
+type SumIngredientsForBasketParams struct {
+	RecipeIds    []pgtype.UUID
+	ServingsList []int32
+	FamilyID     pgtype.UUID
+}
+
+type SumIngredientsForBasketRow struct {
+	Name        string
+	Unit        string
+	TotalAmount string
+}
+
+// SumIngredientsForBasket answers the ad-hoc question ("I plan to cook these, what do I
+// buy") without persisting anything: the basket arrives as two parallel arrays and is
+// unnested into rows. Same scaling and same name+unit grouping as TotalIngredients, so the
+// calendar and the basket produce identical lines for identical input. The family_id join
+// condition is what stops a caller totalling another family's recipes by id.
+// The two arrays are unnested separately and re-joined on ordinality rather than with the
+// two-argument unnest(a, b) form, which sqlc's query analyser cannot type.
+func (q *Queries) SumIngredientsForBasket(ctx context.Context, arg SumIngredientsForBasketParams) ([]SumIngredientsForBasketRow, error) {
+	rows, err := q.db.Query(ctx, sumIngredientsForBasket, arg.RecipeIds, arg.ServingsList, arg.FamilyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SumIngredientsForBasketRow
+	for rows.Next() {
+		var i SumIngredientsForBasketRow
+		if err := rows.Scan(&i.Name, &i.Unit, &i.TotalAmount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const totalIngredients = `-- name: TotalIngredients :many
 WITH scaled AS (
     SELECT

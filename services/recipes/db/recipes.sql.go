@@ -59,9 +59,9 @@ func (q *Queries) AddStep(ctx context.Context, arg AddStepParams) error {
 
 const createRecipe = `-- name: CreateRecipe :one
 INSERT INTO recipes (family_id, title, description, category_id, subcategory_id,
-    servings, prep_seconds, cook_seconds, author_user_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
+    servings, prep_seconds, cook_seconds, author_user_id, notes, rating)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
 `
 
 type CreateRecipeParams struct {
@@ -74,6 +74,8 @@ type CreateRecipeParams struct {
 	PrepSeconds   int32
 	CookSeconds   int32
 	AuthorUserID  pgtype.UUID
+	Notes         string
+	Rating        int16
 }
 
 func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Recipe, error) {
@@ -87,6 +89,8 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		arg.PrepSeconds,
 		arg.CookSeconds,
 		arg.AuthorUserID,
+		arg.Notes,
+		arg.Rating,
 	)
 	var i Recipe
 	err := row.Scan(
@@ -105,6 +109,8 @@ func (q *Queries) CreateRecipe(ctx context.Context, arg CreateRecipeParams) (Rec
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ImageUrl,
+		&i.Rating,
+		&i.Notes,
 	)
 	return i, err
 }
@@ -141,7 +147,7 @@ func (q *Queries) DeleteSteps(ctx context.Context, recipeID pgtype.UUID) error {
 }
 
 const getRecipe = `-- name: GetRecipe :one
-SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url FROM recipes
+SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes FROM recipes
 WHERE id = $1
 `
 
@@ -164,6 +170,8 @@ func (q *Queries) GetRecipe(ctx context.Context, id pgtype.UUID) (Recipe, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ImageUrl,
+		&i.Rating,
+		&i.Notes,
 	)
 	return i, err
 }
@@ -178,7 +186,7 @@ func (q *Queries) IncrementCommentCount(ctx context.Context, id pgtype.UUID) err
 }
 
 const listFavoriteRecipes = `-- name: ListFavoriteRecipes :many
-SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url FROM recipes r
+SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes FROM recipes r
 JOIN recipe_favorites f ON f.recipe_id = r.id
 WHERE f.user_id = $1
 ORDER BY f.created_at DESC
@@ -209,6 +217,8 @@ func (q *Queries) ListFavoriteRecipes(ctx context.Context, userID pgtype.UUID) (
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.ImageUrl,
+			&i.Rating,
+			&i.Notes,
 		); err != nil {
 			return nil, err
 		}
@@ -253,27 +263,60 @@ func (q *Queries) ListIngredients(ctx context.Context, recipeID pgtype.UUID) ([]
 }
 
 const listRecipes = `-- name: ListRecipes :many
-SELECT id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url FROM recipes
-WHERE family_id = $1
-  AND ($2::uuid IS NULL OR category_id = $2)
-  AND ($3::uuid IS NULL OR subcategory_id = $3)
-  AND ($4::text IS NULL OR lower(btrim(title)) LIKE '%' || lower($4) || '%')
-ORDER BY created_at DESC
+SELECT r.id, r.family_id, r.title, r.description, r.category_id, r.subcategory_id, r.servings, r.prep_seconds, r.cook_seconds, r.author_user_id, r.favorite_count, r.comment_count, r.created_at, r.updated_at, r.image_url, r.rating, r.notes FROM recipes r
+WHERE r.family_id = $1
+  AND ($2::uuid IS NULL OR r.category_id = $2)
+  AND ($3::uuid IS NULL OR r.subcategory_id = $3)
+  AND ($4::text IS NULL
+       OR lower(btrim(r.title)) LIKE '%' || lower($4) || '%')
+  AND ($5::text IS NULL OR EXISTS (
+        SELECT 1 FROM recipe_ingredients ri
+        WHERE ri.recipe_id = r.id
+          AND lower(btrim(ri.name)) LIKE '%' || lower($5) || '%'))
+  AND r.rating >= $6::int
+  AND ($7::int = 0
+       OR r.prep_seconds + r.cook_seconds <= $7::int)
+  AND (NOT $8::bool OR EXISTS (
+        SELECT 1 FROM recipe_favorites f
+        WHERE f.recipe_id = r.id AND f.user_id = $9::uuid))
+ORDER BY
+    CASE WHEN $10::text = 'title' THEN lower(btrim(r.title)) END ASC,
+    CASE WHEN $10::text = 'rating' THEN r.rating END DESC,
+    CASE WHEN $10::text = 'time' THEN r.prep_seconds + r.cook_seconds END ASC,
+    CASE WHEN $10::text = 'favorites' THEN r.favorite_count END DESC,
+    r.created_at DESC
 `
 
 type ListRecipesParams struct {
-	FamilyID      pgtype.UUID
-	CategoryID    pgtype.UUID
-	SubcategoryID pgtype.UUID
-	Search        *string
+	FamilyID        pgtype.UUID
+	CategoryID      pgtype.UUID
+	SubcategoryID   pgtype.UUID
+	Search          *string
+	Ingredient      *string
+	MinRating       int32
+	MaxTotalSeconds int32
+	FavoriteOnly    bool
+	UserID          pgtype.UUID
+	Sort            string
 }
 
+// ListRecipes is the one filtered/sorted read behind the browse screen. Every filter is a
+// no-op sentinel when unset (NULL for the text/uuid ones, 0 for the numeric ones) so the app
+// sends one shape of request whether it is browsing a subcategory or searching the whole
+// cookbook. Sorting is a text discriminator rather than string-built SQL: the set of orders
+// is closed (see RecipeSort in the proto), so it belongs in the query, not in Go.
 func (q *Queries) ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Recipe, error) {
 	rows, err := q.db.Query(ctx, listRecipes,
 		arg.FamilyID,
 		arg.CategoryID,
 		arg.SubcategoryID,
 		arg.Search,
+		arg.Ingredient,
+		arg.MinRating,
+		arg.MaxTotalSeconds,
+		arg.FavoriteOnly,
+		arg.UserID,
+		arg.Sort,
 	)
 	if err != nil {
 		return nil, err
@@ -298,6 +341,8 @@ func (q *Queries) ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Rec
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.ImageUrl,
+			&i.Rating,
+			&i.Notes,
 		); err != nil {
 			return nil, err
 		}
@@ -340,12 +385,50 @@ func (q *Queries) ListSteps(ctx context.Context, recipeID pgtype.UUID) ([]Recipe
 	return items, nil
 }
 
+const setRecipeRating = `-- name: SetRecipeRating :one
+UPDATE recipes
+SET rating = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
+`
+
+type SetRecipeRatingParams struct {
+	ID     pgtype.UUID
+	Rating int16
+}
+
+func (q *Queries) SetRecipeRating(ctx context.Context, arg SetRecipeRatingParams) (Recipe, error) {
+	row := q.db.QueryRow(ctx, setRecipeRating, arg.ID, arg.Rating)
+	var i Recipe
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Title,
+		&i.Description,
+		&i.CategoryID,
+		&i.SubcategoryID,
+		&i.Servings,
+		&i.PrepSeconds,
+		&i.CookSeconds,
+		&i.AuthorUserID,
+		&i.FavoriteCount,
+		&i.CommentCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ImageUrl,
+		&i.Rating,
+		&i.Notes,
+	)
+	return i, err
+}
+
 const updateRecipe = `-- name: UpdateRecipe :one
 UPDATE recipes
 SET title = $2, description = $3, category_id = $4, subcategory_id = $5,
-    servings = $6, prep_seconds = $7, cook_seconds = $8, updated_at = NOW()
+    servings = $6, prep_seconds = $7, cook_seconds = $8, notes = $9, rating = $10,
+    updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
 `
 
 type UpdateRecipeParams struct {
@@ -357,6 +440,8 @@ type UpdateRecipeParams struct {
 	Servings      int32
 	PrepSeconds   int32
 	CookSeconds   int32
+	Notes         string
+	Rating        int16
 }
 
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error) {
@@ -369,6 +454,8 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Rec
 		arg.Servings,
 		arg.PrepSeconds,
 		arg.CookSeconds,
+		arg.Notes,
+		arg.Rating,
 	)
 	var i Recipe
 	err := row.Scan(
@@ -387,6 +474,8 @@ func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Rec
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ImageUrl,
+		&i.Rating,
+		&i.Notes,
 	)
 	return i, err
 }
@@ -395,7 +484,7 @@ const updateRecipeImage = `-- name: UpdateRecipeImage :one
 UPDATE recipes
 SET image_url = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url
+RETURNING id, family_id, title, description, category_id, subcategory_id, servings, prep_seconds, cook_seconds, author_user_id, favorite_count, comment_count, created_at, updated_at, image_url, rating, notes
 `
 
 type UpdateRecipeImageParams struct {
@@ -422,6 +511,8 @@ func (q *Queries) UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImagePa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.ImageUrl,
+		&i.Rating,
+		&i.Notes,
 	)
 	return i, err
 }

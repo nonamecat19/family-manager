@@ -52,3 +52,48 @@ SELECT
 FROM scaled
 GROUP BY name, unit
 ORDER BY name, unit;
+
+-- SumIngredientsForBasket answers the ad-hoc question ("I plan to cook these, what do I
+-- buy") without persisting anything: the basket arrives as two parallel arrays and is
+-- unnested into rows. Same scaling and same name+unit grouping as TotalIngredients, so the
+-- calendar and the basket produce identical lines for identical input. The family_id join
+-- condition is what stops a caller totalling another family's recipes by id.
+-- name: SumIngredientsForBasket :many
+-- The two arrays are unnested separately and re-joined on ordinality rather than with the
+-- two-argument unnest(a, b) form, which sqlc's query analyser cannot type.
+WITH ids AS (
+    SELECT t.recipe_id, t.ord
+    FROM unnest(@recipe_ids::uuid[]) WITH ORDINALITY AS t(recipe_id, ord)
+), servs AS (
+    SELECT t.servings, t.ord
+    FROM unnest(@servings_list::int[]) WITH ORDINALITY AS t(servings, ord)
+), basket AS (
+    SELECT ids.recipe_id, servs.servings
+    FROM ids JOIN servs ON servs.ord = ids.ord
+), scaled AS (
+    SELECT
+        lower(btrim(ri.name)) AS name,
+        lower(btrim(ri.unit)) AS unit,
+        CASE
+            WHEN b.servings = 0 THEN 1.0
+            ELSE b.servings::numeric / NULLIF(r.servings, 0)
+        END AS scale,
+        ri.amount
+    FROM basket b
+    JOIN recipes r ON r.id = b.recipe_id AND r.family_id = @family_id
+    JOIN recipe_ingredients ri ON ri.recipe_id = r.id
+)
+SELECT
+    name,
+    unit,
+    COALESCE(
+        SUM(CASE
+            WHEN amount ~ '^[0-9]+(\.[0-9]+)?$'
+            THEN amount::numeric * scale
+            ELSE 1
+        END),
+        0
+    )::text AS total_amount
+FROM scaled
+GROUP BY name, unit
+ORDER BY name, unit;

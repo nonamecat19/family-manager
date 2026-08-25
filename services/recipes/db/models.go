@@ -34,6 +34,8 @@ type Recipe struct {
 	CreatedAt     pgtype.Timestamptz
 	UpdatedAt     pgtype.Timestamptz
 	ImageUrl      string
+	Rating        int16
+	Notes         string
 }
 
 type RecipeCategory struct {
