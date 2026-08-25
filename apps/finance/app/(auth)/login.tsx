@@ -1,4 +1,4 @@
-import { useClients } from "@fm/api";
+import { toDisplayError, useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
 import { Button, Field } from "@fm/ui";
 import { useState } from "react";
@@ -14,10 +14,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [errorRef, setErrorRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
     setError(null);
+    setErrorRef(null);
     setBusy(true);
     try {
       if (mode === "register") {
@@ -25,14 +27,26 @@ export default function LoginScreen() {
       }
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
-    } catch {
-      // Never echo the server's message verbatim on an auth screen: it distinguishes
-      // "no such user" from "wrong password", which is an account-enumeration oracle.
-      setError(
+    } catch (e) {
+      // The comment that used to be here said the server's message must never be echoed on an
+      // auth screen, because it would distinguish "no such user" from "wrong password". That
+      // is not what services/auth does: Login answers both with one identical
+      // invalid-credentials error, deliberately, and hashes on the missing-user path so the
+      // timing matches too. The enumeration guarantee is enforced there, not by this screen
+      // throwing text away — and throwing it away also lost "password must be at least 8
+      // characters", which is a message the user needs.
+      //
+      // Register's AlreadyExists does confirm an address is registered. That is a decision
+      // services/auth documents and accepts as unavoidable for a self-service signup form; it
+      // is not made better by the app rewording it.
+      const shown = toDisplayError(
+        e,
         mode === "register"
           ? "Could not create that account. Try a different email."
           : "Email or password is incorrect.",
       );
+      setError(shown.message);
+      setErrorRef(shown.reference ?? null);
     } finally {
       setBusy(false);
     }
@@ -73,6 +87,12 @@ export default function LoginScreen() {
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           error={error ?? undefined}
         />
+
+        {errorRef ? (
+          <Text className="text-caption text-muted dark:text-muted-dark">
+            Reference {errorRef}
+          </Text>
+        ) : null}
 
         <Button
           title={mode === "login" ? "Sign in" : "Create account"}
