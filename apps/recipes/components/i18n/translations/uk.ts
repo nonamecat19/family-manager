@@ -18,6 +18,8 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "common.keep": "Залишити",
   "common.remove": "Прибрати",
   "common.tryAgain": "Спробувати ще раз",
+  "common.errorReference": "Код помилки: {ref}",
+  "common.loadFailed": "Не вдалося завантажити. Перевірте зв'язок і спробуйте ще раз.",
   "common.none": "Немає",
   "common.all": "Усі",
   "common.any": "Будь-який",
@@ -294,7 +296,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "login.signIn": "Увійти",
   "login.createAccount": "Створити акаунт",
   "login.switchToRegister": "Створити акаунт",
-  "login.errorReference": "Код помилки: {ref}",
   "login.switchToLogin": "У мене вже є акаунт",
 
   // ---- shared organic UI -----------------------------------------------------------------------

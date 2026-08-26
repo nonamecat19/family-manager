@@ -1,11 +1,4 @@
-import {
-  useCreateRecipe,
-  useRecipe,
-  useRecipeCategories,
-  useRecipeSubcategories,
-  useUpdateRecipe,
-  useUploadRecipeImage,
-} from "@fm/api";
+import { toDisplayError, useCreateRecipe, useRecipe, useRecipeCategories, useRecipeSubcategories, useUpdateRecipe, useUploadRecipeImage } from "@fm/api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
@@ -72,7 +65,7 @@ export default function RecipeEditScreen() {
 
   if (!isNew && recipe.isPending) return <Placeholder label={t("recipeEdit.openingRecipe")} />;
   if (!isNew && recipe.isError) {
-    return <Placeholder label={recipe.error.message} />;
+    return <Placeholder label={toDisplayError(recipe.error, t("common.loadFailed")).message} />;
   }
   // Load the existing recipe into the form once, on the render where it first arrives.
   if (!isNew && recipe.data && title === "" && recipe.data.title !== "") {

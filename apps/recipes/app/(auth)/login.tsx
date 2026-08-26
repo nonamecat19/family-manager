@@ -84,7 +84,7 @@ export default function LoginScreen() {
 
         {errorRef ? (
           <Text className="font-fig text-[13px] leading-[19px] text-neutral-600">
-            {t("login.errorReference", { ref: errorRef })}
+            {t("common.errorReference", { ref: errorRef })}
           </Text>
         ) : null}
 

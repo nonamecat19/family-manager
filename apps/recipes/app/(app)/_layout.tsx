@@ -1,4 +1,4 @@
-import { useFamily } from "@fm/api";
+import { toDisplayError, useFamily } from "@fm/api";
 import { Code } from "@connectrpc/connect";
 import { Slot, Tabs, useRouter, useSegments } from "expo-router";
 import { Text, View } from "react-native";
@@ -47,13 +47,19 @@ function Gate() {
         </Screen>
       );
     }
+    const shown = toDisplayError(family.error, t("common.loadFailed"));
     return (
       <Screen>
         <View className="flex-1 justify-center gap-[18px] px-[22px]">
           <Display size={30}>{t("kitchen.errorTitle")}</Display>
           <Text className="font-fig text-[15.5px] leading-[23px] text-neutral-700">
-            {family.error.message}
+            {shown.message}
           </Text>
+          {shown.reference ? (
+            <Text className="font-fig text-[13px] leading-[19px] text-neutral-600">
+              {t("common.errorReference", { ref: shown.reference })}
+            </Text>
+          ) : null}
           <PrimaryButton title={t("common.tryAgain")} onPress={() => void family.refetch()} />
         </View>
       </Screen>

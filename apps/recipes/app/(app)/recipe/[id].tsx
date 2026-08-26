@@ -1,13 +1,4 @@
-import {
-  useAddComment,
-  useComments,
-  useDeleteRecipe,
-  useRateRecipe,
-  useRecipe,
-  useRecipeCategories,
-  useRecipeSubcategories,
-  useToggleFavorite,
-} from "@fm/api";
+import { toDisplayError, useAddComment, useComments, useDeleteRecipe, useRateRecipe, useRecipe, useRecipeCategories, useRecipeSubcategories, useToggleFavorite } from "@fm/api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -65,11 +56,17 @@ export default function RecipeDetailScreen() {
 
   if (recipe.isPending) return <Loading />;
   if (recipe.isError) {
+    const shown = toDisplayError(recipe.error, t("common.loadFailed"));
     return (
       <Screen>
         <View className="flex-1 justify-center gap-[16px] px-[22px]">
           <Display size={26}>{t("recipeDetail.gotAway")}</Display>
-          <Text className="font-fig text-[15px] text-neutral-600">{recipe.error.message}</Text>
+          <Text className="font-fig text-[15px] text-neutral-600">{shown.message}</Text>
+          {shown.reference ? (
+            <Text className="font-fig text-[13px] text-neutral-500">
+              {t("common.errorReference", { ref: shown.reference })}
+            </Text>
+          ) : null}
           <PrimaryButton title={t("common.tryAgain")} onPress={() => void recipe.refetch()} />
         </View>
       </Screen>

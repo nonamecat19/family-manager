@@ -16,6 +16,10 @@ export const en = {
   "common.all": "All",
   "common.any": "Any",
   "common.loadingEllipsis": "…",
+  // Shown under a failure message when the service returned an opaque internal error. The
+  // code means nothing to the reader; it is what lets someone find the request in the logs.
+  "common.errorReference": "Reference {ref}",
+  "common.loadFailed": "Could not load this. Check your connection and try again.",
 
   // ---- tabs (app/(app)/_layout.tsx) -----------------------------------------------------
   "tabs.home": "Home",
@@ -286,10 +290,6 @@ export const en = {
   "login.registerError": "Could not create that account. Try a different email.",
   "login.loginError": "Email or password is incorrect.",
   "login.oneMoment": "One moment…",
-  // Shown when the service says something specific — "that email is already registered",
-  // "password must be at least 8 characters". The two errors above stay as the fallback for
-  // when it does not.
-  "login.errorReference": "Reference {ref}",
   "login.signIn": "Sign in",
   "login.createAccount": "Create account",
   "login.switchToRegister": "Create an account",
