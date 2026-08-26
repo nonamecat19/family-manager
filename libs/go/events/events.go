@@ -144,6 +144,72 @@ func (b *Bus) Publish(ctx context.Context, subject Subject, msg proto.Message) e
 	return nil
 }
 
+// maxDeliver is how many times JetStream will redeliver before giving up on a message.
+const maxDeliver = 5
+
+// redeliveryBackoff is the delay before each redelivery, indexed by how many attempts have
+// already been made.
+//
+// A bare Nak asks for immediate redelivery, so a handler failing for a reason that takes time
+// to clear — the database is restarting, a sibling service is mid-deploy — burned all five
+// attempts inside a few milliseconds and the event was gone. MaxDeliver: 5 was not a retry
+// policy; it was five attempts at the same instant.
+//
+// The last value is used for any attempt beyond the list, though MaxDeliver stops it first.
+var redeliveryBackoff = []time.Duration{
+	1 * time.Second,
+	5 * time.Second,
+	30 * time.Second,
+	2 * time.Minute,
+}
+
+// ackable is the part of jetstream.Msg dispatch needs, so the delivery logic is testable
+// without a NATS server.
+type ackable interface {
+	Subject() string
+	Data() []byte
+	Ack() error
+	NakWithDelay(delay time.Duration) error
+	Metadata() (*jetstream.MsgMetadata, error)
+}
+
+// dispatch runs the handler for one message and acks or nacks it.
+//
+// A panic in a handler is treated as a failure of that message, not of the consumer. Without
+// the recover it propagates out of the library's goroutine and takes the whole service with
+// it — an event a service cannot parse should not be able to kill the service.
+func dispatch(ctx context.Context, h Handler, m ackable) {
+	err := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("events: handler panicked: %v", r)
+			}
+		}()
+		return h(ctx, Subject(m.Subject()), m.Data())
+	}()
+
+	if err == nil {
+		_ = m.Ack()
+		return
+	}
+	_ = m.NakWithDelay(backoffFor(m))
+}
+
+// backoffFor picks the delay from how many times this message has already been delivered.
+// Metadata is unavailable for a message that did not come from a stream, in which case the
+// first delay is the safe answer.
+func backoffFor(m ackable) time.Duration {
+	meta, err := m.Metadata()
+	if err != nil || meta == nil || meta.NumDelivered == 0 {
+		return redeliveryBackoff[0]
+	}
+	i := int(meta.NumDelivered) - 1
+	if i >= len(redeliveryBackoff) {
+		i = len(redeliveryBackoff) - 1
+	}
+	return redeliveryBackoff[i]
+}
+
 // Handler processes one delivered event. Returning an error nacks the message so JetStream
 // redelivers it; returning nil acks.
 type Handler func(ctx context.Context, subject Subject, payload []byte) error
@@ -163,19 +229,13 @@ func (b *Bus) Subscribe(ctx context.Context, subject Subject, durable string, h 
 		Durable:       durable,
 		FilterSubject: string(subject),
 		AckPolicy:     jetstream.AckExplicitPolicy,
-		MaxDeliver:    5,
+		MaxDeliver:    maxDeliver,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("events: consumer %s: %w", durable, err)
 	}
 
-	cc, err := cons.Consume(func(m jetstream.Msg) {
-		if err := h(ctx, Subject(m.Subject()), m.Data()); err != nil {
-			_ = m.Nak()
-			return
-		}
-		_ = m.Ack()
-	})
+	cc, err := cons.Consume(func(m jetstream.Msg) { dispatch(ctx, h, m) })
 	if err != nil {
 		return nil, fmt.Errorf("events: consume %s: %w", durable, err)
 	}
