@@ -6,7 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
 func TestSubjectValidate(t *testing.T) {
@@ -42,6 +45,7 @@ func TestSubjectDomain(t *testing.T) {
 type fakeMsg struct {
 	subject   string
 	data      []byte
+	headers   nats.Header
 	delivered uint64
 	noMeta    bool
 
@@ -51,7 +55,14 @@ type fakeMsg struct {
 
 func (m *fakeMsg) Subject() string { return m.subject }
 func (m *fakeMsg) Data() []byte    { return m.data }
-func (m *fakeMsg) Ack() error      { m.acked = true; return nil }
+
+func (m *fakeMsg) Headers() nats.Header {
+	if m.headers == nil {
+		return nats.Header{}
+	}
+	return m.headers
+}
+func (m *fakeMsg) Ack() error { m.acked = true; return nil }
 
 func (m *fakeMsg) NakWithDelay(d time.Duration) error {
 	m.nakDelays = append(m.nakDelays, d)
@@ -129,5 +140,41 @@ func TestDispatchSurvivesAPanickingHandler(t *testing.T) {
 	}
 	if len(m.nakDelays) != 1 {
 		t.Fatalf("panicking handler produced %d nak(s), want 1", len(m.nakDelays))
+	}
+}
+
+// The whole point of putting the id on the message: the consumer's work belongs to the trace
+// of the request that caused it.
+func TestDispatchRestoresThePublishersRequestID(t *testing.T) {
+	m := &fakeMsg{
+		subject:   string(SubjectFamilyMemberJoined),
+		delivered: 1,
+		headers:   nats.Header{RequestIDHeader: []string{"abc123"}},
+	}
+
+	var seen string
+	dispatch(context.Background(), func(ctx context.Context, _ Subject, _ []byte) error {
+		seen = logger.RequestID(ctx)
+		return nil
+	}, m)
+
+	if seen != "abc123" {
+		t.Fatalf("request id in handler context = %q, want %q", seen, "abc123")
+	}
+}
+
+// An event published outside a request carries no id, and the handler must not be handed an
+// empty one that looks like a trace.
+func TestDispatchWithoutARequestID(t *testing.T) {
+	m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: 1}
+
+	var seen string
+	dispatch(context.Background(), func(ctx context.Context, _ Subject, _ []byte) error {
+		seen = logger.RequestID(ctx)
+		return nil
+	}, m)
+
+	if seen != "" {
+		t.Fatalf("request id = %q, want empty", seen)
 	}
 }

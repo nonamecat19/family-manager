@@ -13,6 +13,8 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/nnc/family-manager/libs/go/logger"
 )
 
 // Subject is a `<domain>.<entity>.<verb>` subject, the naming scheme fixed in AGENTS.md.
@@ -138,11 +140,24 @@ func (b *Bus) Publish(ctx context.Context, subject Subject, msg proto.Message) e
 	if err != nil {
 		return fmt.Errorf("events: marshal %s: %w", subject, err)
 	}
-	if _, err := b.js.Publish(ctx, string(subject), payload); err != nil {
+	m := &nats.Msg{Subject: string(subject), Data: payload}
+	// The request that caused the event travels with it. Without this the causal chain stops
+	// at the publisher: a consumer's log lines are a separate trace, and "the invite never
+	// arrived" cannot be followed from the request that sent it to the handler that dropped
+	// it — which docs/adr/0006 names as the reason events are the hard case.
+	if id := logger.RequestID(ctx); id != "" {
+		m.Header = nats.Header{RequestIDHeader: []string{id}}
+	}
+	if _, err := b.js.PublishMsg(ctx, m); err != nil {
 		return fmt.Errorf("events: publish %s: %w", subject, err)
 	}
 	return nil
 }
+
+// RequestIDHeader carries the publishing request's id on the message. Same name as the HTTP
+// header services exchange, so one id spans an RPC, the event it produced and the handler that
+// consumed it.
+const RequestIDHeader = "X-Request-Id"
 
 // maxDeliver is how many times JetStream will redeliver before giving up on a message.
 const maxDeliver = 5
@@ -168,6 +183,7 @@ var redeliveryBackoff = []time.Duration{
 type ackable interface {
 	Subject() string
 	Data() []byte
+	Headers() nats.Header
 	Ack() error
 	NakWithDelay(delay time.Duration) error
 	Metadata() (*jetstream.MsgMetadata, error)
@@ -179,6 +195,12 @@ type ackable interface {
 // the recover it propagates out of the library's goroutine and takes the whole service with
 // it — an event a service cannot parse should not be able to kill the service.
 func dispatch(ctx context.Context, h Handler, m ackable) {
+	// Put the publisher's id back on the context, so the handler's log lines join the trace
+	// of the request that caused the event rather than starting a new one.
+	if id := m.Headers().Get(RequestIDHeader); id != "" {
+		ctx = logger.WithRequestID(ctx, id)
+	}
+
 	err := func() (err error) {
 		defer func() {
 			if r := recover(); r != nil {
