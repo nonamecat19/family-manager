@@ -93,9 +93,9 @@ func (h *Handler) CreateAccount(
 		return nil, err
 	}
 
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	opening := req.Msg.GetOpeningBalance()
@@ -191,9 +191,9 @@ func (h *Handler) UpdateAccount(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	if _, err := h.q.UpdateAccount(ctx, db.UpdateAccountParams{
@@ -265,9 +265,9 @@ func (h *Handler) CreateCategory(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	kind, ok := txTypeToStored(req.Msg.GetKind())
@@ -335,9 +335,9 @@ func (h *Handler) UpdateCategory(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 	parentID, err := optionalUUID(req.Msg.GetParentId(), "parent_id")
 	if err != nil {
@@ -428,6 +428,11 @@ func (h *Handler) CreateTransaction(
 		return nil, err
 	}
 
+	note, err := checkNote(req.Msg.GetNote())
+	if err != nil {
+		return nil, err
+	}
+
 	tx, err := h.q.CreateTransaction(ctx, db.CreateTransactionParams{
 		FamilyID:         familyID,
 		AccountID:        input.account,
@@ -436,7 +441,7 @@ func (h *Handler) CreateTransaction(
 		Type:             input.storedType,
 		AmountMinor:      input.amountMinor,
 		CurrencyCode:     input.currency,
-		Note:             trimmed(req.Msg.GetNote()),
+		Note:             note,
 		OccurredOn:       input.date,
 		CreatedByUserID:  createdBy,
 	})
@@ -589,6 +594,11 @@ func (h *Handler) UpdateTransaction(
 		return nil, err
 	}
 
+	note, err := checkNote(req.Msg.GetNote())
+	if err != nil {
+		return nil, err
+	}
+
 	tx, err := h.q.UpdateTransaction(ctx, db.UpdateTransactionParams{
 		ID:               id,
 		FamilyID:         familyID,
@@ -598,7 +608,7 @@ func (h *Handler) UpdateTransaction(
 		Type:             input.storedType,
 		AmountMinor:      input.amountMinor,
 		CurrencyCode:     input.currency,
-		Note:             trimmed(req.Msg.GetNote()),
+		Note:             note,
 		OccurredOn:       input.date,
 	})
 	if err != nil {
@@ -962,6 +972,38 @@ func isCurrencyCode(s string) bool {
 		}
 	}
 	return true
+}
+
+// Upper bounds on the free text a ledger accepts. Every one of these fields is written by an
+// authenticated household member into a TEXT column with no width, and read back into a list
+// on a phone — so the ceiling that matters is the one a row can be rendered under, long before
+// anything the database would object to.
+//
+// Runes, not bytes: a Ukrainian account name must not be worth half an English one.
+const (
+	maxNameRunes = 120
+	maxNoteRunes = 1000
+)
+
+// requiredName trims, refuses empty, and refuses absurd.
+func requiredName(raw string) (string, error) {
+	name := trimmed(raw)
+	if name == "" {
+		return "", invalid("name is required")
+	}
+	if len([]rune(name)) > maxNameRunes {
+		return "", invalid(fmt.Sprintf("name must be at most %d characters", maxNameRunes))
+	}
+	return name, nil
+}
+
+// checkNote bounds a transaction note. It is the only field here a user writes prose into.
+func checkNote(raw string) (string, error) {
+	note := trimmed(raw)
+	if len([]rune(note)) > maxNoteRunes {
+		return "", invalid(fmt.Sprintf("note must be at most %d characters", maxNoteRunes))
+	}
+	return note, nil
 }
 
 func invalid(msg string) error {

@@ -772,3 +772,25 @@ func TestCursorRoundTrip(t *testing.T) {
 		t.Error("expected an error for a malformed cursor")
 	}
 }
+
+// Names and notes are written by an authenticated member into TEXT columns with no width, and
+// read back into a list on a phone. The bound that matters is the one a row renders under.
+func TestCreateAccountRejectsAnOversizeName(t *testing.T) {
+	f := newFixture(t)
+	_, err := f.h.CreateAccount(asA(), connect.NewRequest(&financev1.CreateAccountRequest{
+		Name: strings.Repeat("x", maxNameRunes+1), CurrencyCode: "EUR",
+	}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+	}
+}
+
+// Runes, not bytes: a Ukrainian account name must not be worth half an English one.
+func TestCreateAccountAcceptsAMaxLengthCyrillicName(t *testing.T) {
+	f := newFixture(t)
+	if _, err := f.h.CreateAccount(asA(), connect.NewRequest(&financev1.CreateAccountRequest{
+		Name: strings.Repeat("г", maxNameRunes), CurrencyCode: "EUR",
+	})); err != nil {
+		t.Fatalf("CreateAccount: %v", err)
+	}
+}

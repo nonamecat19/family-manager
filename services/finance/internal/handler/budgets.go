@@ -30,9 +30,9 @@ func (h *Handler) CreateBudget(
 		return nil, err
 	}
 
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 	period, ok := periodToStored(req.Msg.GetPeriod())
 	if !ok {
@@ -153,9 +153,9 @@ func (h *Handler) UpdateBudget(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, invalid("name is required")
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 	period, ok := periodToStored(req.Msg.GetPeriod())
 	if !ok {
