@@ -158,11 +158,20 @@ just install       # pnpm install
 just dev-apps      # turbo dev (persistent)
 just proto         # buf generate libs/proto -> sdk/go + sdk/typescript
 just sqlc auth     # sqlc generate for services/auth
-just check-go      # go build + vet + test across the workspace
+just check-go      # go build + vet + race-test across the workspace
 just check-ts      # turbo lint + typecheck + test
 just verify        # everything above + graph rebuild — the verify node
+just lint-go       # golangci-lint over every go.work module (.golangci.yml)
+just vuln          # govulncheck: known vulnerabilities this code actually calls
+just hashpw        # argon2id hash for seeding or resetting an account
 just impact <id>   # blast radius
 ```
+
+`lint-go` and `vuln` are not inside `verify`: both need a binary `verify` does not, and a
+missing linter must not be indistinguishable from a clean run. CI runs lint-go on every PR and
+govulncheck weekly ([`.github/workflows/vuln.yml`](.github/workflows/vuln.yml)) — the
+vulnerability database changes without this repo changing, so a blocking PR check there would
+fail for reasons the author cannot act on.
 
 ## Conventions
 
@@ -170,6 +179,18 @@ just impact <id>   # blast radius
 through the `libs/go/auth` interceptor (JWKS, cached) — never by calling the auth service, never
 with a shared secret. Apps keep tokens in expo-secure-store via `@fm/auth`. See
 [ADR 0005](docs/adr/0005-auth.md); do not hand-roll token logic anywhere else.
+
+**Errors and observability**: an unexpected failure goes back as `rpc.Internal(ctx, log, err,
+what)` — never `connect.NewError(CodeInternal, fmt.Errorf(...))`, which puts the pgx error in the
+response body. Every mux installs `rpc.Recover`, `rpc.Observe` and the auth interceptor in that
+order. Correlation is a request id, not yet a trace: `X-Request-Id` in, on the context via
+`logger.WithRequestID`, onto outgoing calls with `rpc.ForwardRequestID`, onto published events as
+a NATS header. See [ADR 0008](docs/adr/0008-rpc-interceptors.md).
+
+**Writes that touch more than one row** go through the service's `internal/store` `InTx`, taking
+the transaction-bound `db.Querier` as an argument rather than reaching for `h.q`. Free text
+arriving from a client is bounded in runes, not bytes — a Ukrainian recipe must not be worth half
+an English one.
 
 **Go services** (`services/<name>`, module `github.com/nnc/family-manager/services/<name>`):
 `cmd/server/main.go` · `internal/config` (viper) · `internal/grpc` · `internal/handler` ·
@@ -191,8 +212,8 @@ or spacing in an app. Cross-package imports use `workspace:*`.
 **Every new module registers itself**: a Go module in `go.work`, a TS package in
 `pnpm-workspace.yaml` globs (automatic under `apps/`, `packages/`). Then `just graph`.
 
-CI (`.github/workflows/verify.yml`) runs the same verify node on every PR as four independent
-jobs: go, ts, contracts (`buf lint` + `buf breaking`), graph (`--check`). A structural change
+CI (`.github/workflows/verify.yml`) runs the same verify node on every PR as five independent
+jobs: go, lint-go, ts, contracts (`buf lint` + `buf breaking`), graph (`--check`). A structural change
 committed without `just graph` fails CI — that is deliberate, it keeps the graph trustworthy.
 
 ## Definition of done
