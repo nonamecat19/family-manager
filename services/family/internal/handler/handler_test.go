@@ -471,3 +471,23 @@ func TestInviteMemberRejectsAMalformedAddress(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateFamilyRejectsAnOversizeName(t *testing.T) {
+	f := newFixture(t)
+	_, err := f.h.CreateFamily(asUser(alice), connect.NewRequest(&familyv1.CreateFamilyRequest{
+		Name: strings.Repeat("x", maxNameRunes+1),
+	}))
+	if connect.CodeOf(err) != connect.CodeInvalidArgument {
+		t.Fatalf("code = %v, want invalid_argument (err=%v)", connect.CodeOf(err), err)
+	}
+}
+
+// Runes, not bytes: a Ukrainian household name must not be worth half an English one.
+func TestCreateFamilyAcceptsAMaxLengthCyrillicName(t *testing.T) {
+	f := newFixture(t)
+	if _, err := f.h.CreateFamily(asUser(alice), connect.NewRequest(&familyv1.CreateFamilyRequest{
+		Name: strings.Repeat("д", maxNameRunes),
+	})); err != nil {
+		t.Fatalf("CreateFamily: %v", err)
+	}
+}

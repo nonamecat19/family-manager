@@ -75,9 +75,9 @@ func (h *Handler) CreateFamily(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	// One family per user: creating a second would orphan the first family's ledger.
@@ -153,9 +153,9 @@ func (h *Handler) UpdateFamily(
 	if err != nil {
 		return nil, err
 	}
-	name := trimmed(req.Msg.GetName())
-	if name == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+	name, err := requiredName(req.Msg.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	fam, err := h.q.UpdateFamily(ctx, db.UpdateFamilyParams{ID: membership.FamilyID, Name: name})
@@ -556,6 +556,24 @@ func (h *Handler) publishJoined(ctx context.Context, fam db.Family, member db.Fa
 // never becomes part of a response body.
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)
+}
+
+// maxNameRunes bounds a household name. It is a label on a screen — "The Lovelaces", "Home" —
+// written by an authenticated member into a TEXT column with no width, and the ceiling that
+// matters is the one a header renders under. Runes, not bytes, so a Ukrainian household name
+// is not worth half an English one.
+const maxNameRunes = 80
+
+func requiredName(raw string) (string, error) {
+	name := trimmed(raw)
+	if name == "" {
+		return "", connect.NewError(connect.CodeInvalidArgument, errors.New("name is required"))
+	}
+	if len([]rune(name)) > maxNameRunes {
+		return "", connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("name must be at most %d characters", maxNameRunes))
+	}
+	return name, nil
 }
 
 // newInvitationToken returns the plaintext token (shown once) and the hash that is stored.
