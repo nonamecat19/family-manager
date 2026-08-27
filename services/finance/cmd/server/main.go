@@ -1,5 +1,5 @@
 // Command server runs the finance service: Connect/JSON on :8080 for apps, gRPC on the same
-// port via h2c for sibling services.
+// port as cleartext HTTP/2 for sibling services.
 package main
 
 import (
@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database"
@@ -137,15 +135,11 @@ func run() error {
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 
-	// h2c so gRPC (sibling services) and Connect/JSON (apps) share one port.
+	// One port for gRPC (sibling services) and Connect/JSON (apps).
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler: h2c.NewHandler(mux, &http2.Server{
-			// Without this an HTTP/2 connection with no open streams is kept forever; the
-			// http.Server IdleTimeout above governs HTTP/1 only.
-			IdleTimeout:          120 * time.Second,
-			MaxConcurrentStreams: 250,
-		}),
+		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
+		Handler:           mux,
+		Protocols:         h1AndUnencryptedH2(),
 		ReadHeaderTimeout: 10 * time.Second,
 		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
 		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
@@ -172,4 +166,19 @@ func run() error {
 		defer cancel()
 		return srv.Shutdown(shutdownCtx)
 	}
+}
+
+// h1AndUnencryptedH2 is the protocol set every listener here uses: HTTP/1.1 for Connect/JSON
+// from the apps, and cleartext HTTP/2 for gRPC from sibling services, on one port.
+//
+// This replaces golang.org/x/net/http2/h2c, which is deprecated in favour of this field.
+// Beyond the deprecation, the wrapper had a real cost: it ran its own http2.Server whose
+// timeouts the http.Server fields did not reach, so every setting had to be written twice and
+// the two could silently disagree. net/http's own HTTP/2 honours IdleTimeout and
+// ReadHeaderTimeout directly.
+func h1AndUnencryptedH2() *http.Protocols {
+	p := new(http.Protocols)
+	p.SetHTTP1(true)
+	p.SetUnencryptedHTTP2(true)
+	return p
 }

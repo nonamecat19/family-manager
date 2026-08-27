@@ -16,8 +16,6 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/logger"
@@ -130,13 +128,9 @@ func run() error {
 	go sweepExpiredTokens(ctx, db.New(pool), log, sweepInterval)
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%s", cfg.HTTPPort),
-		Handler: h2c.NewHandler(newMux(h, signer, pool, log), &http2.Server{
-			// Without this an HTTP/2 connection with no open streams is kept forever; the
-			// http.Server IdleTimeout above governs HTTP/1 only.
-			IdleTimeout:          120 * time.Second,
-			MaxConcurrentStreams: 250,
-		}),
+		Addr:              fmt.Sprintf(":%s", cfg.HTTPPort),
+		Handler:           newMux(h, signer, pool, log),
+		Protocols:         h1AndUnencryptedH2(),
 		ReadHeaderTimeout: 10 * time.Second,
 		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
 		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
@@ -231,4 +225,19 @@ func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
 	if deleted > 0 {
 		log.InfoContext(ctx, "swept expired refresh tokens", slog.Int64("rows", deleted))
 	}
+}
+
+// h1AndUnencryptedH2 is the protocol set every listener here uses: HTTP/1.1 for Connect/JSON
+// from the apps, and cleartext HTTP/2 for gRPC from sibling services, on one port.
+//
+// This replaces golang.org/x/net/http2/h2c, which is deprecated in favour of this field.
+// Beyond the deprecation, the wrapper had a real cost: it ran its own http2.Server whose
+// timeouts the http.Server fields did not reach, so every setting had to be written twice and
+// the two could silently disagree. net/http's own HTTP/2 honours IdleTimeout and
+// ReadHeaderTimeout directly.
+func h1AndUnencryptedH2() *http.Protocols {
+	p := new(http.Protocols)
+	p.SetHTTP1(true)
+	p.SetUnencryptedHTTP2(true)
+	return p
 }

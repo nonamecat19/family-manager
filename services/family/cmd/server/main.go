@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database"
@@ -200,16 +198,12 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 	return mux
 }
 
-// h2c so gRPC clients and Connect/JSON clients share one port without TLS termination here.
+// One port for gRPC clients and Connect/JSON clients, with no TLS termination here.
 func newServer(port string, mux *http.ServeMux) *http.Server {
 	return &http.Server{
-		Addr: fmt.Sprintf(":%s", port),
-		Handler: h2c.NewHandler(mux, &http2.Server{
-			// Without this an HTTP/2 connection with no open streams is kept forever; the
-			// http.Server IdleTimeout above governs HTTP/1 only.
-			IdleTimeout:          120 * time.Second,
-			MaxConcurrentStreams: 250,
-		}),
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           mux,
+		Protocols:         h1AndUnencryptedH2(),
 		ReadHeaderTimeout: 10 * time.Second,
 		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
 		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
@@ -227,4 +221,19 @@ func busOrNil(bus *events.Bus) handler.EventBus {
 		return nil
 	}
 	return bus
+}
+
+// h1AndUnencryptedH2 is the protocol set every listener here uses: HTTP/1.1 for Connect/JSON
+// from the apps, and cleartext HTTP/2 for gRPC from sibling services, on one port.
+//
+// This replaces golang.org/x/net/http2/h2c, which is deprecated in favour of this field.
+// Beyond the deprecation, the wrapper had a real cost: it ran its own http2.Server whose
+// timeouts the http.Server fields did not reach, so every setting had to be written twice and
+// the two could silently disagree. net/http's own HTTP/2 honours IdleTimeout and
+// ReadHeaderTimeout directly.
+func h1AndUnencryptedH2() *http.Protocols {
+	p := new(http.Protocols)
+	p.SetHTTP1(true)
+	p.SetUnencryptedHTTP2(true)
+	return p
 }

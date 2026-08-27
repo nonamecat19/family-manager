@@ -22,7 +22,6 @@ require (
 	github.com/nnc/family-manager/sdk/go v0.0.0
 	github.com/spf13/viper v1.19.0
 	golang.org/x/crypto v0.51.0
-	golang.org/x/net v0.55.0
 )
 
 require (
