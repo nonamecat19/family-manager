@@ -74,6 +74,7 @@ graph LR
   app_recipes -->|DEPENDS_ON| pkg__fm_theme
   app_recipes -->|DEPENDS_ON| pkg__fm_ui
   golib_auth -->|DEPENDS_ON| golib_logger
+  golib_events -->|DEPENDS_ON| golib_logger
   golib_rpc -->|DEPENDS_ON| golib_logger
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_auth
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_config
