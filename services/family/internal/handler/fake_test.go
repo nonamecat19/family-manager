@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -194,6 +195,9 @@ func (s *fakeStore) ListInvitations(
 func (s *fakeStore) MarkInvitationAccepted(
 	_ context.Context, arg db.MarkInvitationAcceptedParams,
 ) (db.FamilyInvitation, error) {
+	if err := s.fail("MarkInvitationAccepted"); err != nil {
+		return db.FamilyInvitation{}, err
+	}
 	inv, ok := s.invitations[pgconv.UUIDString(arg.ID)]
 	if !ok || inv.Status != invitationPending {
 		return db.FamilyInvitation{}, pgx.ErrNoRows
@@ -247,4 +251,19 @@ var uuidCounter int
 func newUUID() string {
 	uuidCounter++
 	return fmt.Sprintf("00000000-0000-4000-8000-%012d", uuidCounter)
+}
+
+// InTx makes the fake store satisfy Tx, and rolls back for real: a fake that kept whatever the
+// callback wrote would let an atomicity test pass against a handler that used no transaction
+// at all.
+func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
+	families := maps.Clone(s.families)
+	members := maps.Clone(s.members)
+	invitations := maps.Clone(s.invitations)
+
+	if err := fn(s); err != nil {
+		s.families, s.members, s.invitations = families, members, invitations
+		return err
+	}
+	return nil
 }

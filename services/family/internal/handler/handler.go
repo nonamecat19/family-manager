@@ -29,15 +29,24 @@ import (
 // Handler serves family.v1.FamilyService.
 type Handler struct {
 	q             db.Querier
+	tx            Tx
 	bus           EventBus
 	log           *slog.Logger
 	invitationTTL time.Duration
 	now           func() time.Time
 }
 
+// Tx is the transaction boundary. Implemented by internal/store over a pgx pool, and by the
+// fake store in tests.
+type Tx interface {
+	InTx(ctx context.Context, fn func(q db.Querier) error) error
+}
+
 // Options configures a Handler. Only Queries is required.
 type Options struct {
-	Queries       db.Querier
+	Queries db.Querier
+	// Tx groups the writes that must not half-apply. Nil runs each on its own.
+	Tx            Tx
 	Bus           EventBus
 	Log           *slog.Logger
 	InvitationTTL time.Duration
@@ -48,6 +57,7 @@ type Options struct {
 func New(opts Options) *Handler {
 	h := &Handler{
 		q:             opts.Queries,
+		tx:            opts.Tx,
 		bus:           opts.Bus,
 		log:           opts.Log,
 		invitationTTL: opts.InvitationTTL,
@@ -61,6 +71,9 @@ func New(opts Options) *Handler {
 	}
 	if h.now == nil {
 		h.now = time.Now
+	}
+	if h.tx == nil {
+		h.tx = withoutTx{h.q}
 	}
 	if h.bus == nil {
 		h.bus = noopBus{}
@@ -92,20 +105,32 @@ func (h *Handler) CreateFamily(
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("bad user id: %w", err))
 	}
 
-	fam, err := h.q.CreateFamily(ctx, db.CreateFamilyParams{Name: name, OwnerUserID: ownerID})
-	if err != nil {
-		return nil, h.internal(ctx, err, "create family")
-	}
-
-	member, err := h.q.AddMember(ctx, db.AddMemberParams{
-		FamilyID:    fam.ID,
-		UserID:      ownerID,
-		DisplayName: claims.Email,
-		Email:       claims.Email,
-		Role:        roleAdmin,
-	})
-	if err != nil {
-		return nil, h.internal(ctx, err, "add owner as member")
+	// A household with no members is not a household. Written separately, a failure on the
+	// second statement left the family row behind with nobody in it: invisible to its owner,
+	// who has no membership to find it through, and permanent, because nothing deletes it.
+	var (
+		fam    db.Family
+		member db.FamilyMember
+	)
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		var err error
+		fam, err = q.CreateFamily(ctx, db.CreateFamilyParams{Name: name, OwnerUserID: ownerID})
+		if err != nil {
+			return h.internal(ctx, err, "create family")
+		}
+		member, err = q.AddMember(ctx, db.AddMemberParams{
+			FamilyID:    fam.ID,
+			UserID:      ownerID,
+			DisplayName: claims.Email,
+			Email:       claims.Email,
+			Role:        roleAdmin,
+		})
+		if err != nil {
+			return h.internal(ctx, err, "add owner as member")
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
 	h.publishJoined(ctx, fam, member)
@@ -354,21 +379,31 @@ func (h *Handler) AcceptInvitation(
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("bad user id: %w", err))
 	}
 
-	member, err := h.q.AddMember(ctx, db.AddMemberParams{
-		FamilyID:    inv.FamilyID,
-		UserID:      userID,
-		DisplayName: claims.Email,
-		Email:       claims.Email,
-		Role:        inv.Role,
-	})
-	if err != nil {
-		return nil, h.internal(ctx, err, "add member")
-	}
-
-	if _, err := h.q.MarkInvitationAccepted(ctx, db.MarkInvitationAcceptedParams{
-		ID: inv.ID, AcceptedBy: userID,
+	// Joining and spending the invitation are one act. Separately, a failure on the second
+	// left the person in the household with the invitation still pending — a token that has
+	// already been used and can be used again, which is precisely what marking it accepted
+	// is for.
+	var member db.FamilyMember
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		var err error
+		member, err = q.AddMember(ctx, db.AddMemberParams{
+			FamilyID:    inv.FamilyID,
+			UserID:      userID,
+			DisplayName: claims.Email,
+			Email:       claims.Email,
+			Role:        inv.Role,
+		})
+		if err != nil {
+			return h.internal(ctx, err, "add member")
+		}
+		if _, err := q.MarkInvitationAccepted(ctx, db.MarkInvitationAcceptedParams{
+			ID: inv.ID, AcceptedBy: userID,
+		}); err != nil {
+			return h.internal(ctx, err, "mark invitation accepted")
+		}
+		return nil
 	}); err != nil {
-		return nil, h.internal(ctx, err, "mark invitation accepted")
+		return nil, err
 	}
 
 	fam, err := h.q.GetFamily(ctx, inv.FamilyID)
@@ -557,6 +592,12 @@ func (h *Handler) publishJoined(ctx context.Context, fam db.Family, member db.Fa
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)
 }
+
+// withoutTx is the fallback when no Tx is supplied: each statement commits on its own. It
+// keeps a zero-valued Options working and does not pretend to be a transaction.
+type withoutTx struct{ q db.Querier }
+
+func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
 // maxNameRunes bounds a household name. It is a label on a screen — "The Lovelaces", "Home" —
 // written by an authenticated member into a TEXT column with no width, and the ceiling that

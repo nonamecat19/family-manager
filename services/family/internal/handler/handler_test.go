@@ -27,6 +27,7 @@ func newFixture(t *testing.T) *fixture {
 	bus := &recorder{}
 	h := New(Options{
 		Queries:       store,
+		Tx:            store,
 		Bus:           bus,
 		InvitationTTL: 48 * time.Hour,
 		Now:           func() time.Time { return fixedNow },
@@ -489,5 +490,40 @@ func TestCreateFamilyAcceptsAMaxLengthCyrillicName(t *testing.T) {
 		Name: strings.Repeat("д", maxNameRunes),
 	})); err != nil {
 		t.Fatalf("CreateFamily: %v", err)
+	}
+}
+
+// A household with no members is invisible to its owner — they have no membership to find it
+// through — and permanent, because nothing deletes it.
+func TestCreateFamilyLeavesNoEmptyHouseholdWhenAddingTheOwnerFails(t *testing.T) {
+	f := newFixture(t)
+	f.store.failOn["AddMember"] = errBoom
+
+	if _, err := f.h.CreateFamily(asUser(alice),
+		connect.NewRequest(&familyv1.CreateFamilyRequest{Name: "Test Household"})); err == nil {
+		t.Fatal("CreateFamily succeeded despite a failing AddMember")
+	}
+	if n := len(f.store.families); n != 0 {
+		t.Fatalf("%d family row(s) left behind, want 0", n)
+	}
+}
+
+// A used invitation that stays pending is a token that can be used again, which is the whole
+// reason it is marked accepted.
+func TestAcceptInvitationLeavesNoMemberWhenTheInvitationCannotBeSpent(t *testing.T) {
+	f := newFixture(t)
+	fam := f.createFamilyAs(t, alice, "Test Household")
+	token := f.invite(t, alice, fam.GetId(), "bob@example.test")
+
+	f.store.failOn["MarkInvitationAccepted"] = errBoom
+	if _, err := f.h.AcceptInvitation(asUser(bob),
+		connect.NewRequest(&familyv1.AcceptInvitationRequest{Token: token})); err == nil {
+		t.Fatal("AcceptInvitation succeeded despite a failing MarkInvitationAccepted")
+	}
+	delete(f.store.failOn, "MarkInvitationAccepted")
+
+	// One member: alice. bob must not have been added by the half that succeeded.
+	if n := len(f.store.members); n != 1 {
+		t.Fatalf("%d member(s) after a failed accept, want 1", n)
 	}
 }
