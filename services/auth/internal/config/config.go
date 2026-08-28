@@ -35,6 +35,15 @@ type Config struct {
 	// decides whether a burst of sign-ins queues or exhausts the box. Zero means GOMAXPROCS.
 	HashConcurrency int
 
+	// LoginFailureThreshold is how many consecutive failed sign-ins one address is allowed
+	// before the next attempt is refused, and LoginLockoutBase/Max bound the wait that
+	// follows. Exposed because the right numbers depend on who is using the deployment: a
+	// household of four wants a low threshold, and a demo instance being poked at by five
+	// people sharing a password does not. Zero means the package defaults.
+	LoginFailureThreshold int
+	LoginLockoutBase      time.Duration
+	LoginLockoutMax       time.Duration
+
 	LogLevel string
 	LogJSON  bool
 }
@@ -65,8 +74,12 @@ func Load() (*Config, error) {
 		FamilyAddr:    v.GetString("FAMILY_ADDR"),
 
 		HashConcurrency: v.GetInt("HASH_CONCURRENCY"),
-		LogLevel:        v.GetString("LOG_LEVEL"),
-		LogJSON:         v.GetBool("LOG_JSON"),
+
+		LoginFailureThreshold: v.GetInt("LOGIN_FAILURE_THRESHOLD"),
+		LoginLockoutBase:      v.GetDuration("LOGIN_LOCKOUT_BASE"),
+		LoginLockoutMax:       v.GetDuration("LOGIN_LOCKOUT_MAX"),
+		LogLevel:              v.GetString("LOG_LEVEL"),
+		LogJSON:               v.GetBool("LOG_JSON"),
 	}
 
 	if path := v.GetString("SIGNING_KEY_FILE"); path != "" {

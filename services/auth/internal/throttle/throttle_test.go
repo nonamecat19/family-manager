@@ -137,3 +137,17 @@ func TestConcurrentUse(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+// Setting one field must not silently reset the others: a whole-struct fallback would have
+// done exactly that the first time someone configured only the threshold.
+func TestPartialParamsFallBackFieldByField(t *testing.T) {
+	d := DefaultParams()
+	th := New(Params{Threshold: 2}, time.Now)
+
+	if th.params.Threshold != 2 {
+		t.Fatalf("Threshold = %d, want the configured 2", th.params.Threshold)
+	}
+	if th.params.Base != d.Base || th.params.Max != d.Max || th.params.Forget != d.Forget {
+		t.Fatalf("params = %+v, want the remaining fields defaulted", th.params)
+	}
+}

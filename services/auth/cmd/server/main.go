@@ -116,12 +116,16 @@ func run() error {
 	}
 
 	h := handler.New(handler.Options{
-		Queries:    db.New(pool),
-		Signer:     signer,
-		Family:     lookup,
-		Log:        log,
-		HashGate:   password.NewGate(cfg.HashConcurrency),
-		Throttle:   throttle.New(throttle.DefaultParams(), nil),
+		Queries:  db.New(pool),
+		Signer:   signer,
+		Family:   lookup,
+		Log:      log,
+		HashGate: password.NewGate(cfg.HashConcurrency),
+		Throttle: throttle.New(throttle.Params{
+			Threshold: cfg.LoginFailureThreshold,
+			Base:      cfg.LoginLockoutBase,
+			Max:       cfg.LoginLockoutMax,
+		}, nil),
 		RefreshTTL: cfg.RefreshTTL,
 	})
 

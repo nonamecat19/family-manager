@@ -62,10 +62,24 @@ type Throttle struct {
 	entries map[string]*entry
 }
 
-// New returns a Throttle. A zero Params means DefaultParams; now is injected by tests.
+// New returns a Throttle. now is injected by tests.
+//
+// Each zero field falls back to its default individually, so configuring one setting does not
+// silently reset the others — which a whole-struct fallback would do the first time someone set
+// only AUTH_LOGIN_FAILURE_THRESHOLD.
 func New(p Params, now func() time.Time) *Throttle {
-	if p == (Params{}) {
-		p = DefaultParams()
+	d := DefaultParams()
+	if p.Threshold <= 0 {
+		p.Threshold = d.Threshold
+	}
+	if p.Base <= 0 {
+		p.Base = d.Base
+	}
+	if p.Max <= 0 {
+		p.Max = d.Max
+	}
+	if p.Forget <= 0 {
+		p.Forget = d.Forget
 	}
 	if now == nil {
 		now = time.Now
