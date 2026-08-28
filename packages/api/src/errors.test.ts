@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { Code, ConnectError } from "@connectrpc/connect";
 
-import { toDisplayError } from "./errors.ts";
+import { isRefreshRejection, toDisplayError } from "./errors.ts";
 
 const FALLBACK = "Something went wrong.";
 
@@ -45,4 +45,24 @@ test("a non-Connect throw becomes the fallback", () => {
 // An empty message is a service bug, not a message; the user gets the fallback either way.
 test("an empty message falls back", () => {
   assert.equal(toDisplayError(new ConnectError("", Code.NotFound), FALLBACK).message, FALLBACK);
+});
+
+test("a rejected refresh token ends the session", () => {
+  for (const code of [
+    Code.Unauthenticated,
+    Code.PermissionDenied,
+    Code.InvalidArgument,
+    Code.NotFound,
+  ]) {
+    assert.equal(isRefreshRejection(new ConnectError("no", code)), true, Code[code]);
+  }
+});
+
+// A phone that briefly had no signal has learned nothing about its refresh token.
+test("a transport failure does not end the session", () => {
+  for (const code of [Code.Unavailable, Code.DeadlineExceeded, Code.Unknown, Code.Internal]) {
+    assert.equal(isRefreshRejection(new ConnectError("no", code)), false, Code[code]);
+  }
+  assert.equal(isRefreshRejection(new TypeError("Network request failed")), false);
+  assert.equal(isRefreshRejection(undefined), false);
 });

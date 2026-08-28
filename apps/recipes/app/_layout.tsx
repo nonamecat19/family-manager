@@ -1,6 +1,6 @@
 import "../global.css";
 
-import { ApiProvider } from "@fm/api";
+import { ApiProvider, isRefreshRejection } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { ErrorBoundary, Loading } from "@fm/ui";
 // Imported per weight rather than from the package root: the root index requires every
@@ -64,7 +64,11 @@ export default function RootLayout() {
       message={bootT("kitchen.somethingBurned")}
       onError={(error) => console.error("[recipes] unhandled render error", error)}
     >
-      <AuthProvider store={secureTokenStore} refresh={refresh}>
+      <AuthProvider
+        store={secureTokenStore}
+        refresh={refresh}
+        isRefreshRejection={isRefreshRejection}
+      >
         <ApiGate />
         <StatusBar style="dark" />
       </AuthProvider>

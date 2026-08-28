@@ -1,4 +1,4 @@
-import { ApiProvider } from "@fm/api";
+import { ApiProvider, isRefreshRejection } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { ErrorBoundary, Loading } from "@fm/ui";
 import { createClient } from "@connectrpc/connect";
@@ -46,7 +46,11 @@ export default function RootLayout() {
       message="The app hit an unexpected problem. Try again, and tell us what you were doing."
       onError={(error) => console.error("[finance] unhandled render error", error)}
     >
-      <AuthProvider store={secureTokenStore} refresh={refresh}>
+      <AuthProvider
+        store={secureTokenStore}
+        refresh={refresh}
+        isRefreshRejection={isRefreshRejection}
+      >
         <ApiGate />
         <StatusBar style="auto" />
       </AuthProvider>

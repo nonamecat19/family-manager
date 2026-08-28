@@ -68,3 +68,29 @@ export function toDisplayError(error: unknown, fallback: string): DisplayError {
   const message = error.rawMessage.trim();
   return { message: message === "" ? fallback : message, reference, retryable };
 }
+
+/**
+ * Whether a failed refresh means the server rejected the token, as opposed to the request never
+ * arriving.
+ *
+ * Passed to @fm/auth's AuthProvider, which cannot answer this itself: classifying it needs the
+ * RPC library and that package deliberately does not import one.
+ *
+ * Only a Connect error with a code the server chose counts. A transport failure — which
+ * connect-web reports as Unavailable, and a non-Connect throw likewise — leaves the session
+ * alone, because a phone that briefly had no signal has learned nothing about its refresh
+ * token.
+ */
+export function isRefreshRejection(error: unknown): boolean {
+  if (!(error instanceof ConnectError)) return false;
+
+  switch (error.code) {
+    case Code.Unauthenticated:
+    case Code.PermissionDenied:
+    case Code.InvalidArgument:
+    case Code.NotFound:
+      return true;
+    default:
+      return false;
+  }
+}
