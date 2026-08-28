@@ -15,6 +15,7 @@ import (
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/throttle"
 )
 
 type fixture struct {
@@ -520,5 +521,89 @@ func TestLoginRejectsAnOversizePasswordWithoutALookup(t *testing.T) {
 	// errBoom would surface as internal if the lookup had run.
 	if connect.CodeOf(err) != connect.CodeUnauthenticated {
 		t.Fatalf("code = %v, want unauthenticated (err=%v)", connect.CodeOf(err), err)
+	}
+}
+
+// Eight characters is the right floor and is not, on its own, a defence against someone trying
+// passwords as fast as the service will answer.
+func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
+	f := newFixture(t)
+	th := throttle.New(throttle.Params{
+		Threshold: 3, Base: time.Minute, Max: time.Minute, Forget: time.Hour,
+	}, nil)
+	f.h.throttle = th
+
+	f.register(t, "ada@example.test", "correct horse")
+
+	wrong := connect.NewRequest(&authv1.LoginRequest{
+		Email: "ada@example.test", Password: "not the password",
+	})
+	for i := 0; i < 3; i++ {
+		if _, err := f.h.Login(context.Background(), wrong); connect.CodeOf(err) != connect.CodeUnauthenticated {
+			t.Fatalf("attempt %d code = %v, want unauthenticated", i+1, connect.CodeOf(err))
+		}
+	}
+
+	_, err := f.h.Login(context.Background(), wrong)
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("code = %v, want resource_exhausted (err=%v)", connect.CodeOf(err), err)
+	}
+
+	// Locked means locked: the correct password is refused too, or the lockout is no defence.
+	_, err = f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+		Email: "ada@example.test", Password: "correct horse",
+	}))
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("code = %v, want resource_exhausted while locked", connect.CodeOf(err))
+	}
+}
+
+// A person mistyping twice and then getting it right must not be counting down to a lockout.
+func TestLoginSuccessClearsTheFailureCount(t *testing.T) {
+	f := newFixture(t)
+	f.h.throttle = throttle.New(throttle.Params{
+		Threshold: 3, Base: time.Minute, Max: time.Minute, Forget: time.Hour,
+	}, nil)
+
+	f.register(t, "ada@example.test", "correct horse")
+
+	for i := 0; i < 2; i++ {
+		_, _ = f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+			Email: "ada@example.test", Password: "wrong",
+		}))
+	}
+	if _, err := f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+		Email: "ada@example.test", Password: "correct horse",
+	})); err != nil {
+		t.Fatalf("Login with the right password: %v", err)
+	}
+
+	// The counter is back to zero, so two more failures are still under the threshold.
+	for i := 0; i < 2; i++ {
+		_, err := f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+			Email: "ada@example.test", Password: "wrong",
+		}))
+		if connect.CodeOf(err) != connect.CodeUnauthenticated {
+			t.Fatalf("attempt %d code = %v, want unauthenticated", i+1, connect.CodeOf(err))
+		}
+	}
+}
+
+// An address nobody registered must be throttled too: otherwise it is the unthrottled way to
+// probe, and which addresses start refusing leaks which ones exist.
+func TestLoginThrottlesUnknownAddressesToo(t *testing.T) {
+	f := newFixture(t)
+	f.h.throttle = throttle.New(throttle.Params{
+		Threshold: 2, Base: time.Minute, Max: time.Minute, Forget: time.Hour,
+	}, nil)
+
+	req := connect.NewRequest(&authv1.LoginRequest{
+		Email: "nobody@example.test", Password: "guess",
+	})
+	for i := 0; i < 2; i++ {
+		_, _ = f.h.Login(context.Background(), req)
+	}
+	if _, err := f.h.Login(context.Background(), req); connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("code = %v, want resource_exhausted", connect.CodeOf(err))
 	}
 }

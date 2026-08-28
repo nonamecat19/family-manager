@@ -27,6 +27,7 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/family"
 	"github.com/nnc/family-manager/services/auth/internal/handler"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
@@ -120,6 +121,7 @@ func run() error {
 		Family:     lookup,
 		Log:        log,
 		HashGate:   password.NewGate(cfg.HashConcurrency),
+		Throttle:   throttle.New(throttle.DefaultParams(), nil),
 		RefreshTTL: cfg.RefreshTTL,
 	})
 

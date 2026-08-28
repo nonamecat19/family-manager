@@ -34,6 +34,7 @@ import (
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
@@ -56,6 +57,7 @@ type Handler struct {
 	log        *slog.Logger
 	hashParams password.Params
 	hashGate   *password.Gate
+	throttle   *throttle.Throttle
 	refreshTTL time.Duration
 	now        func() time.Time
 }
@@ -68,7 +70,9 @@ type Options struct {
 	HashParams password.Params
 	// HashGate bounds concurrent argon2id work. Nil admits everything, which is what tests
 	// want and what a single-user deployment can live with.
-	HashGate   *password.Gate
+	HashGate *password.Gate
+	// Throttle limits repeated failed sign-ins for one account. Nil disables it.
+	Throttle   *throttle.Throttle
 	RefreshTTL time.Duration
 	Now        func() time.Time
 }
@@ -81,6 +85,7 @@ func New(opts Options) *Handler {
 		log:        opts.Log,
 		hashParams: opts.HashParams,
 		hashGate:   opts.HashGate,
+		throttle:   opts.Throttle,
 		refreshTTL: opts.RefreshTTL,
 		now:        opts.Now,
 	}
@@ -178,6 +183,13 @@ func (h *Handler) Login(
 		return nil, errInvalidCredentials()
 	}
 
+	// Checked before the lookup and before the hash: a locked account must cost an attacker a
+	// round trip and nothing else. The wait is reported so a person who has genuinely mistyped
+	// their password knows to come back rather than assuming the app is broken.
+	if wait := h.throttle.Retry(email); wait > 0 {
+		return nil, errTooManyAttempts(wait)
+	}
+
 	user, err := h.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -189,6 +201,10 @@ func (h *Handler) Login(
 				_, err := password.Hash(req.Msg.GetPassword(), h.hashParams)
 				return err
 			})
+			// Counted like any other failure. Not counting it would make an unregistered
+			// address the unthrottled way to probe, and would leak which addresses exist by
+			// which ones start refusing.
+			h.throttle.Failed(email)
 			return nil, errInvalidCredentials()
 		}
 		return nil, h.internal(ctx, err, "get user")
@@ -200,8 +216,10 @@ func (h *Handler) Login(
 		if errors.Is(err, password.ErrBusy) {
 			return nil, errBusy()
 		}
+		h.throttle.Failed(email)
 		return nil, errInvalidCredentials()
 	}
+	h.throttle.Succeeded(email)
 
 	chainID, err := newChainID()
 	if err != nil {
@@ -407,6 +425,13 @@ func newChainID() (pgtype.UUID, error) {
 // distinguishing them tells an attacker which addresses are registered.
 func errInvalidCredentials() error {
 	return connect.NewError(connect.CodeUnauthenticated, errors.New("invalid email or password"))
+}
+
+// errTooManyAttempts reports the lockout. ResourceExhausted rather than Unauthenticated: the
+// caller has not failed to authenticate this time, they have been refused the chance to try.
+func errTooManyAttempts(wait time.Duration) error {
+	return connect.NewError(connect.CodeResourceExhausted,
+		fmt.Errorf("too many failed sign-in attempts; try again in %s", wait.Round(time.Second)))
 }
 
 // errBusy is Unavailable rather than ResourceExhausted: the caller did nothing wrong and
