@@ -27,11 +27,27 @@ export interface AuthProviderProps {
   store: TokenStore;
   /** Calls auth.v1.AuthService/Refresh. Injected so this package never imports the SDK. */
   refresh: (refreshToken: string) => Promise<Tokens>;
+  /**
+   * Whether a refresh failure means the server rejected the token, as opposed to the request
+   * never arriving. Only a rejection ends the session. Injected for the same reason `refresh`
+   * is: classifying it needs the RPC library, which this package does not import.
+   *
+   * Omitted, every failure is treated as a rejection — the behaviour before this existed.
+   */
+  isRefreshRejection?: (error: unknown) => boolean;
   children: ReactNode;
 }
 
-export function AuthProvider({ store, refresh, children }: AuthProviderProps) {
-  const manager = useMemo(() => new SessionManager(store, refresh), [store, refresh]);
+export function AuthProvider({
+  store,
+  refresh,
+  isRefreshRejection,
+  children,
+}: AuthProviderProps) {
+  const manager = useMemo(
+    () => new SessionManager(store, refresh, Date.now, isRefreshRejection),
+    [store, refresh, isRefreshRejection],
+  );
   const [status, setStatus] = useState<SessionStatus>("loading");
 
   useEffect(() => {

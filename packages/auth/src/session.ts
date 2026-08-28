@@ -64,6 +64,7 @@ export class SessionManager {
   private readonly store: TokenStore;
   private readonly refreshFn: (refreshToken: string) => Promise<Tokens>;
   private readonly now: () => number;
+  private readonly isRejection: (error: unknown) => boolean;
 
   // Written out rather than as parameter properties: Node's type-stripping runtime (used by
   // `pnpm test`) rejects that syntax.
@@ -71,10 +72,12 @@ export class SessionManager {
     store: TokenStore,
     refreshFn: (refreshToken: string) => Promise<Tokens>,
     now: () => number = Date.now,
+    isRejection: (error: unknown) => boolean = () => true,
   ) {
     this.store = store;
     this.refreshFn = refreshFn;
     this.now = now;
+    this.isRejection = isRejection;
   }
 
   /** Loads persisted tokens once. Safe to call repeatedly. */
@@ -111,6 +114,9 @@ export class SessionManager {
   /**
    * Returns a usable access token, refreshing first when it is due. Returns null when there
    * is no session or the refresh failed — the caller then treats the request as anonymous.
+   *
+   * A failed refresh only ends the session when isRejection says the server rejected the
+   * token; a refresh that could not reach the server leaves the session intact to try again.
    */
   async ensureFresh(): Promise<Tokens | null> {
     await this.load();
@@ -147,10 +153,19 @@ export class SessionManager {
       const fresh = await this.refreshFn(refreshToken);
       await this.set(fresh);
       return fresh;
-    } catch {
-      // A failed refresh means the refresh token is spent or revoked: drop the session
-      // rather than retrying a token the server has already rejected.
-      await this.clear();
+    } catch (error) {
+      // Two very different failures used to end the same way. A server that rejected the
+      // token means the session is over and the tokens are worthless. A refresh that never
+      // reached the server — no signal on a train, a captive portal, the VPS restarting —
+      // says nothing about the token, and dropping the session for it signs the user out of
+      // an app they were using a minute ago and makes them type their password to get back
+      // into something they never left.
+      //
+      // Only a rejection clears. Anything else keeps the tokens and returns null, so this
+      // call is anonymous and the next one tries again.
+      if (this.isRejection(error)) {
+        await this.clear();
+      }
       return null;
     }
   }
