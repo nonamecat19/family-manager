@@ -754,3 +754,39 @@ func TestCreateRecipeLeavesNoRowWhenIngredientsFail(t *testing.T) {
 		t.Fatalf("%d recipe row(s) left behind by a failed create, want 0", n)
 	}
 }
+
+// Create floored the serving count and update did not, so a recipe could be edited into
+// "Serves 0" with per-serving nutrition beside it.
+func TestUpdateRecipeFloorsServingsAtOne(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Borscht", Servings: 4})
+
+	for _, servings := range []int32{0, -3} {
+		res, err := h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
+			RecipeId: r.GetId(), Title: "Borscht", Servings: servings,
+		}))
+		if err != nil {
+			t.Fatalf("UpdateRecipe(%d): %v", servings, err)
+		}
+		if got := res.Msg.GetRecipe().GetServings(); got != 1 {
+			t.Fatalf("servings after updating to %d = %d, want 1", servings, got)
+		}
+	}
+}
+
+func TestPlanMealFloorsServingsAtOne(t *testing.T) {
+	h, _, _ := newTestHandler()
+	ctx := withClaims(context.Background(), testUser, testFamily)
+	r := seedRecipe(t, h, ctx, &recipesv1.CreateRecipeRequest{Title: "Borscht", Servings: 4})
+
+	res, err := h.PlanMeal(ctx, connect.NewRequest(&recipesv1.PlanMealRequest{
+		RecipeId: r.GetId(), Date: "2026-08-29", Servings: 0,
+	}))
+	if err != nil {
+		t.Fatalf("PlanMeal: %v", err)
+	}
+	if got := res.Msg.GetEntry().GetServings(); got != 1 {
+		t.Fatalf("planned servings = %d, want 1", got)
+	}
+}

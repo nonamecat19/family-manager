@@ -246,10 +246,7 @@ func (h *Handler) CreateRecipe(
 		len(req.Msg.GetIngredients()), len(req.Msg.GetSteps())); err != nil {
 		return nil, err
 	}
-	servings := req.Msg.GetServings()
-	if servings <= 0 {
-		servings = 1
-	}
+	servings := atLeastOneServing(req.Msg.GetServings())
 
 	famUUID, err := pgconv.UUID(familyID)
 	if err != nil {
@@ -491,7 +488,7 @@ func (h *Handler) UpdateRecipe(
 			Description:   req.Msg.GetDescription(),
 			CategoryID:    catID,
 			SubcategoryID: subID,
-			Servings:      req.Msg.GetServings(),
+			Servings:      atLeastOneServing(req.Msg.GetServings()),
 			PrepSeconds:   req.Msg.GetPrepSeconds(),
 			CookSeconds:   req.Msg.GetCookSeconds(),
 			Notes:         req.Msg.GetNotes(),
@@ -851,7 +848,7 @@ func (h *Handler) PlanMeal(
 		RecipeID: recipeID,
 		PlanDate: date,
 		Slot:     slotFromProto(req.Msg.GetSlot()),
-		Servings: req.Msg.GetServings(),
+		Servings: atLeastOneServing(req.Msg.GetServings()),
 	})
 	if err != nil {
 		return nil, h.internal(ctx, err, "plan meal")
@@ -1059,6 +1056,23 @@ func checkRecipeSize(title, description, notes string, ingredients, steps int) e
 			fmt.Errorf("a recipe may have at most %d steps", maxSteps))
 	}
 	return nil
+}
+
+// atLeastOneServing floors a serving count at one.
+//
+// CreateRecipe has always done this; UpdateRecipe and PlanMeal did not, so a recipe created
+// with four servings could be edited to zero and stored that way. Nothing crashes — the app
+// multiplies by a batch count rather than dividing — but the recipe then reads "Serves 0" with
+// per-serving nutrition beside it, and a meal planned for zero servings contributes nothing to
+// the shopping basket while still appearing on the plan.
+//
+// Zero is not a serving count anyone means. Rejecting it would fail an edit over a field the
+// user very likely did not touch, so it is floored, the same as on create.
+func atLeastOneServing(n int32) int32 {
+	if n <= 0 {
+		return 1
+	}
+	return n
 }
 
 // taxonomyIDs parses the optional category and subcategory ids.
