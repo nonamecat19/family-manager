@@ -15,7 +15,7 @@ replace (
 require (
 	connectrpc.com/connect v1.18.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0
 	github.com/nnc/family-manager/libs/go/database v0.0.0
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
