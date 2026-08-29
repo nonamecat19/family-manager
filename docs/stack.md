@@ -22,8 +22,14 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | Go config | viper, env-prefixed | `services/*/internal/config` | — |
 | auth | ES256 JWT (15 min) + rotating refresh, JWKS | `services/auth`, `libs/go/auth` | [0005](adr/0005-auth.md) |
 | password hashing | argon2id | `services/auth` only | [0005](adr/0005-auth.md) |
-| Go logging | `log/slog`, JSON in prod, trace-correlated | `libs/go/logger` | [0006](adr/0006-observability.md) |
-| tracing | OpenTelemetry → OTLP collector | `libs/go/logger`, `infra/` | [0006](adr/0006-observability.md) |
+| Go logging | `log/slog`, JSON in prod, request-id correlated | `libs/go/logger` | [0006](adr/0006-observability.md) |
+| RPC interceptors | recover · access log + request id · auth, in that order | `libs/go/rpc` | [0008](adr/0008-rpc-interceptors.md) |
+| correlation | `X-Request-Id`, HTTP and NATS headers | `libs/go/rpc`, `libs/go/events` | [0008](adr/0008-rpc-interceptors.md) |
+| tracing | OpenTelemetry → OTLP collector — **decided, not built** | — | [0006](adr/0006-observability.md) |
+| sign-in rate limiting | in-process, per account | `services/auth/internal/throttle` | — |
+| Go linting | golangci-lint | `.golangci.yml`, `just lint-go` | — |
+| vulnerability scanning | govulncheck, weekly | `.github/workflows/vuln.yml`, `just vuln` | — |
+| dependency updates | Dependabot, monthly | `.github/dependabot.yml` | — |
 | CI | GitHub Actions running the verify node | `.github/workflows/verify.yml` | [0006](adr/0006-observability.md) |
 | Go hot reload | air | `services/*/.air.toml` | — |
 | app framework | Expo (managed) + expo-router | `apps/*/package.json` | — |
@@ -31,7 +37,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | app data layer | TanStack Query over `packages/api` | `packages/api` | — |
 | app secrets | expo-secure-store | `packages/auth` | — |
 | deployment | Docker Compose on a VPS + Caddy | `infra/` | [0004](adr/0004-compose-vps.md) |
-| language versions | Go 1.23 · Node ≥22 · pnpm 11 | `go.work`, `package.json` | — |
+| language versions | Go 1.25 · Node ≥22 · pnpm 11 | `go.work`, `package.json` | — |
 | Go module paths | `github.com/nnc/family-manager/{services,libs/go,sdk/go}/<name>` | each `go.mod` | — |
 | TS package names | `@fm/<name>` | each `package.json` | — |
 
@@ -105,7 +111,7 @@ ids still generated. [ADR 0006](adr/0006-observability.md).
 ## Local stack
 
 ```sh
-just tools     # buf, sqlc, air, golang-migrate into $GOBIN (once)
+just tools     # buf, sqlc, air, golang-migrate, golangci-lint, govulncheck (once)
 just up        # postgres:5432  minio:9000/9001  nats:4222 (monitor :8222)
 just install
 just dev-apps
@@ -114,12 +120,19 @@ cd services/<name> && air
 
 ## Testing
 
-| side | tools |
-|---|---|
-| Go unit | stdlib `testing` + testify assertions |
-| Go integration | testcontainers-go (Postgres, NATS) — never the shared dev DB |
-| TS unit | Jest + React Native Testing Library |
-| contract | `buf lint`, `buf breaking` against the `main` branch |
+This table describes what is actually here, not what a Go and Expo repo usually has. Three rows
+used to name tools this repo has never depended on, which is worse than an empty row: it sends
+someone looking for a harness that does not exist.
+
+| side | tools | notes |
+|---|---|---|
+| Go unit | stdlib `testing`, no assertion library | handlers are tested against an in-memory `db.Querier` fake, not a database |
+| Go race/order | `just check-go` runs `-race -shuffle=on` | the concurrency here is small and load-bearing |
+| Go integration | **none yet** | the fakes cover handler rules; nothing exercises real SQL |
+| TS unit | `node --test` over `*.test.ts` | no Jest, no React Native Testing Library |
+| TS components | **none** | `@fm/ui` is covered only by the apps that render it |
+| mobile end-to-end | Maestro flows (`just test-mobile`) | `.maestro/flows/` |
+| contract | `buf lint`, `buf breaking` against `master` | — |
 
 ## Versions and upgrades
 
@@ -134,6 +147,6 @@ radius is the whole repo (`just impact pkg:@fm/config`).
 |---|---|
 | GraphQL | one contract language is enough; protobuf already generates both sides |
 | an ORM (GORM/ent) | sqlc gives typed queries without hiding SQL, and keeps the graph's `PERSISTS_TO` edges extractable |
-| Redis | JetStream covers queues/streams; Postgres covers everything else at this scale |
+| Redis | JetStream covers queues/streams; Postgres covers everything else at this scale. The sign-in throttle is in-process for the same reason — one container per service on one box means shared state would be a dependency nothing else needs |
 | a monorepo-wide shared Go module | one module per service/lib keeps `go.work` boundaries real |
 | Flutter | the existing `*-android` apps are being retired in favour of Expo (see docs/architecture.md) |
