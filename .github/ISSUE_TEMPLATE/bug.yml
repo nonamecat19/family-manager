@@ -1,0 +1,59 @@
+# Every unexpected failure now reaches the user as "internal error (ref 3f1c8a02b7d5)" and
+# nothing else (ADR 0008). That was the right trade — the alternative was pgx's message, table
+# names included, in the response body — but it moved the only handle on a failure into a string
+# the reporter has to copy. This form exists to ask for it.
+name: Bug report
+description: Something in an app or a service did not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If a screen showed a **Reference** code, that one field is worth more than everything
+        else on this form: it finds the request in every service's logs, across the hop between
+        them and into the event handlers it triggered.
+
+  - type: input
+    id: reference
+    attributes:
+      label: Reference
+      description: The code shown under the error message, e.g. `3f1c8a02b7d5`. Leave blank if there was none.
+      placeholder: 3f1c8a02b7d5
+    validations:
+      required: false
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: input
+    id: when
+    attributes:
+      label: When
+      description: Roughly when, with a timezone. Only needed when there is no reference — it is how the logs get narrowed without one.
+      placeholder: "29 Aug, around 14:30 EEST"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Recipes app
+        - Finance app
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version or build
+      description: From Settings, or the APK filename if it was sideloaded.
+    validations:
+      required: false
