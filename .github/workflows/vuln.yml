@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           # The toolchain is itself a scanned dependency: most of what govulncheck reports for
           # this repo is the standard library, fixed by a patch release. Reading the version
