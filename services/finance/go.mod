@@ -21,7 +21,7 @@ require (
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
 	github.com/nnc/family-manager/sdk/go v0.0.0
 	github.com/spf13/viper v1.19.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
