@@ -139,6 +139,18 @@ services:
       AUTH_HTTP_PORT: "8080"
       AUTH_LOG_JSON: "true"
       AUTH_LOG_LEVEL: ${LOG_LEVEL:-info}
+      # One argon2id hash at a time. The default is GOMAXPROCS, which is 1 on this box anyway —
+      # but it is pinned rather than inferred, because a hash holds ~19 MiB for its duration and
+      # this container is capped at 160m with GOMEMLIMIT at 140MiB. Two concurrent sign-ins on a
+      # box that grew a second vCPU would be 38 MiB of transient heap against that budget, and
+      # the symptom would be an OOM kill during a burst of logins rather than anything readable.
+      AUTH_HASH_CONCURRENCY: "1"
+      # Failed sign-ins per address before the next attempt is refused, and the lockout that
+      # follows. Lower than the package default: this deployment serves one household, so ten
+      # wrong passwords in a row is not somebody mistyping.
+      AUTH_LOGIN_FAILURE_THRESHOLD: ${LOGIN_FAILURE_THRESHOLD:-6}
+      AUTH_LOGIN_LOCKOUT_BASE: ${LOGIN_LOCKOUT_BASE:-15s}
+      AUTH_LOGIN_LOCKOUT_MAX: ${LOGIN_LOCKOUT_MAX:-10m}
       GOMEMLIMIT: 140MiB
       GOGC: "50"
     secrets:
