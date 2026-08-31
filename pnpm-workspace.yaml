@@ -44,7 +44,7 @@ overrides:
   # different @types/react in and — with shamefully-hoist — it wins at the root, so every class
   # or forwardRef component from a library (Tabs, react-native-svg, SafeAreaView) fails to
   # typecheck as a JSX element against the app's own React types.
-  "@types/react": ~19.1.1
+  "@types/react": ~19.2.18
   # …and React itself. Two react-native instances would let NativeWind's `className`
   # augmentation land on only one of them, so @fm/ui fails to typecheck when compiled from an
   # app. Expo SDK 57 pairs with React Native 0.86.2, which peers on React ^19.2.3.
