@@ -1,7 +1,7 @@
 import { toDisplayError, useFamily } from "@fm/api";
 import { Code } from "@connectrpc/connect";
 import { Slot, Tabs, useRouter, useSegments } from "expo-router";
-import { Text, View } from "react-native";
+import { Text, View, type ColorValue } from "react-native";
 
 import { BasketProvider } from "../../components/basket.tsx";
 import { I18nProvider, useI18n } from "../../components/i18n/index.tsx";
@@ -111,8 +111,10 @@ function Gate() {
 }
 
 function tabIcon(name: IconName) {
-  return function TabIcon({ color }: { color: string }) {
-    return <Icon name={name} size={25} color={color} width={2.4} />;
+  // React Navigation hands the tint down as ColorValue. The opaque half of that union only
+  // turns up for PlatformColor, which this bar never sets, so narrowing back to a string is safe.
+  return function TabIcon({ color }: { color: ColorValue }) {
+    return <Icon name={name} size={25} color={color as string} width={2.4} />;
   };
 }
 

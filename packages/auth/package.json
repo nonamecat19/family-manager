@@ -21,9 +21,9 @@
     "react": "*"
   },
   "devDependencies": {
-    "@types/react": "~18.3.12",
+    "@types/react": "~19.1.1",
     "expo-secure-store": "~14.0.1",
-    "react": "18.3.1",
+    "react": "19.2.8",
     "typescript": "^5.7.0",
     "@types/node": "^26.3.0"
   },

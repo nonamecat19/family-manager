@@ -8,43 +8,45 @@ publicHoistPattern:
   - "*"
 
 overrides:
-  metro: 0.81.5
-  metro-cache: 0.81.5
-  metro-cache-key: 0.81.5
-  metro-config: 0.81.5
-  metro-core: 0.81.5
-  metro-file-map: 0.81.5
-  metro-minify-terser: 0.81.5
-  metro-resolver: 0.81.5
-  metro-runtime: 0.81.5
-  metro-source-map: 0.81.5
-  metro-symbolicate: 0.81.5
-  metro-transform-plugins: 0.81.5
-  metro-transform-worker: 0.81.5
-  metro-babel-transformer: 0.81.5
-  expo: ~52.0.0
-  expo-asset: ~11.0.0
-  expo-constants: ~17.0.0
-  expo-linking: ~7.0.0
-  expo-router: ~4.0.0
-  expo-secure-store: ~14.0.1
-  expo-status-bar: ~2.0.0
-  expo-modules-core: ~2.2.0
-  expo-modules-autolinking: ~2.0.0
-  babel-preset-expo: ~12.0.0
-  react-native: ~0.76.5
-  react-native-screens: ~4.4.0
-  react-native-safe-area-context: ~4.12.0
-  react-native-svg: ~15.8.0
+  metro: 0.84.3
+  metro-cache: 0.84.3
+  metro-cache-key: 0.84.3
+  metro-config: 0.84.3
+  metro-core: 0.84.3
+  metro-file-map: 0.84.3
+  metro-minify-terser: 0.84.3
+  metro-resolver: 0.84.3
+  metro-runtime: 0.84.3
+  metro-source-map: 0.84.3
+  metro-symbolicate: 0.84.3
+  metro-transform-plugins: 0.84.3
+  metro-transform-worker: 0.84.3
+  metro-babel-transformer: 0.84.3
+  expo: ~57.0.16
+  expo-asset: ~57.0.14
+  expo-constants: ~57.0.14
+  expo-linking: ~57.0.7
+  expo-router: ~57.0.16
+  expo-secure-store: ~57.0.1
+  expo-status-bar: ~57.0.1
+  expo-modules-core: ~57.0.13
+  expo-modules-autolinking: ~57.0.11
+  babel-preset-expo: ~57.0.8
+  "@expo/metro-runtime": ~57.0.14
+  # expo-modules-core 57 peers on worklets <0.11; @expo/ui otherwise drags 0.11 in.
+  react-native-worklets: 0.10.4
+  react-native: 0.86.2
+  react-native-screens: ~4.26.0
+  react-native-safe-area-context: ~5.7.0
+  react-native-svg: 15.15.4
   semver: ^7.6.0
-  # React 18 is what both apps run on. Without this pin, a transitive dependency drags
-  # @types/react 19 in and — with shamefully-hoist — it wins at the root, so every class or
-  # forwardRef component from a library (Tabs, react-native-svg, SafeAreaView) fails to
-  # typecheck as a JSX element against the app's own React 18 types.
-  "@types/react": ~18.3.12
-  # …and React itself. packages/ui declares 19.0.0, apps/recipes 18.3.1, which gave pnpm two
-  # react-native instances: NativeWind's `className` augmentation landed on one of them, so
-  # @fm/ui failed to typecheck when compiled from the recipes app. Expo SDK 52 pairs with
-  # React 18.3.1, so that is the version to converge on.
-  react: 18.3.1
-  react-dom: 18.3.1
+  # React 19 is what both apps run on. Without this pin, a transitive dependency drags a
+  # different @types/react in and — with shamefully-hoist — it wins at the root, so every class
+  # or forwardRef component from a library (Tabs, react-native-svg, SafeAreaView) fails to
+  # typecheck as a JSX element against the app's own React types.
+  "@types/react": ~19.1.1
+  # …and React itself. Two react-native instances would let NativeWind's `className`
+  # augmentation land on only one of them, so @fm/ui fails to typecheck when compiled from an
+  # app. Expo SDK 57 pairs with React Native 0.86.2, which peers on React ^19.2.3.
+  react: 19.2.8
+  react-dom: 19.2.8
