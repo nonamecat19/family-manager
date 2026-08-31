@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-987014d8-7bfe-4008-8599-21473d96769b/styles.css">
+<script src="_ds/nocturne-987014d8-7bfe-4008-8599-21473d96769b/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+body{margin:0;background:#101120;color:#e9e9ed;font-family:Inter,system-ui,sans-serif}
+i.ph,i.ph-fill{line-height:1}
+</style>
+</helmet>
+
+<section style="padding:44px 48px 20px;max-width:1180px">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:18px">
+    <span style="font:600 10px ui-monospace,Menlo,monospace;padding:4px 8px;background:#2b2741;color:#d2cefd;border-radius:5px;letter-spacing:.06em">HI-FI · v1</span>
+    <span style="font:500 13px/1.2 Inter,system-ui,sans-serif;color:#e9e9ed">Family Money Manager — Android, 11 screens</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 34px;max-width:1080px">
+    <div>
+      <div style="font:500 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9397ab;margin-bottom:6px">Family model</div>
+      <p style="margin:0;font:400 12.5px/1.6 Inter;color:#b2b6ca">One shared household budget. Every member sees shared accounts, budgets and the joint feed. Each member also keeps <b style="color:#d2cefd;font-weight:500">private accounts</b> — marked with an eye-slash, excluded from family totals, visible only to their owner. The Total switcher at the top of Home swaps between <i>Family</i>, a single member, or one account.</p>
+    </div>
+    <div>
+      <div style="font:500 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9397ab;margin-bottom:6px">Groups → categories</div>
+      <p style="margin:0;font:400 12.5px/1.6 Inter;color:#b2b6ca">Two levels. The original app's 40-icon flat grid is the main usability problem — 5 groups (Дім, Їжа, Транспорт, Здоров'я, Розваги) collapse it into a scannable list. Budgets can sit on a group or a category; the donut charts groups by default and drills into categories on tap.</p>
+    </div>
+    <div>
+      <div style="font:500 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9397ab;margin-bottom:6px">Templates &amp; widgets</div>
+      <p style="margin:0;font:400 12.5px/1.6 Inter;color:#b2b6ca">Templates are per-member: <i>Кава ₴50</i> logs on tap, long-press opens the add sheet prefilled. They surface as chips on Home, at the top of the add sheet, and as a 4-slot home-screen widget. Seven widget types in three sizes.</p>
+    </div>
+  </div>
+  <div style="margin-top:20px;padding-top:16px;background:linear-gradient(to right,transparent,rgba(233,233,237,.16) 48px,rgba(233,233,237,.16) calc(100% - 48px),transparent) top/100% 1px no-repeat">
+    <p style="margin:0;font:400 12px/1.6 Inter;color:#75798c">Colour departs from the reference on purpose: the source app assigns a random saturated hue per category, which at 40 categories reads as noise. Here the ramp carries eight tonal steps of one blurple family — the group is legible by value, and the accent stays an accent. One addition is proposed to the system: an overspend value <b style="color:#e5928a;font-weight:500">#e5928a</b>, generated in OKLCH at accent-400’s own lightness and chroma (L 0.734, C 0.125, hue 27) so it sits on the same perceptual step as the rest of the ramps. Nocturne carries no danger role, and a budget breach is the one thing in this app that must read at a glance.</p>
+  </div>
+</section>
+
+<section style="padding:0 48px 60px;display:flex;flex-wrap:wrap;gap:40px 34px;align-items:flex-start">
+
+  <!-- ══ 1 · Onboarding ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s1">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">01</span><span style="font:400 11.5px Inter;color:#9397ab">Onboarding — create household</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none">
+        <span>11:37</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">58</span></span>
+      </div>
+      <div style="flex:1;padding:44px 26px 26px;display:flex;flex-direction:column">
+        <div style="width:44px;height:44px;border-radius:12px;border:1px solid #9184d9;display:flex;align-items:center;justify-content:center;color:#b5abfc;font-size:22px;margin-bottom:28px"><i class="ph ph-users-three"></i></div>
+        <div style="font:500 27px/1.15 Inter;letter-spacing:-.02em;margin-bottom:10px">Створіть сім'ю</div>
+        <p style="margin:0 0 30px;font:400 13.5px/1.6 Inter;color:#9397ab;text-wrap:pretty">Спільний бюджет, спільні категорії. Приватні рахунки залишаються приватними.</p>
+        <div style="font:500 10.5px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-bottom:8px">Назва</div>
+        <div style="border-bottom:1px solid #595d6c;padding-bottom:8px;margin-bottom:26px;font:400 16px Inter;color:#e9e9ed;display:flex;justify-content:space-between"><span>Родина Ковалів</span><i class="ph ph-pencil-simple" style="color:#75798c;font-size:15px"></i></div>
+        <div style="font:500 10.5px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-bottom:12px">Учасники</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:8px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:32px;height:32px;border-radius:50%;background:#5d5294;display:flex;align-items:center;justify-content:center;font:500 12px Inter;color:#e7e5fe">С</div>
+            <div style="flex:1"><div style="font:500 13.5px Inter">Сергій</div><div style="font:400 11px Inter;color:#75798c">s19092003@gmail.com</div></div>
+            <span style="font:500 10px Inter;letter-spacing:.06em;color:#b5abfc;border:1px solid #5d5294;border-radius:4px;padding:2px 6px">ВЛАСНИК</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:8px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:32px;height:32px;border-radius:50%;background:#7972a9;display:flex;align-items:center;justify-content:center;font:500 12px Inter;color:#f5f4ff">О</div>
+            <div style="flex:1"><div style="font:500 13.5px Inter">Олена</div><div style="font:400 11px Inter;color:#75798c">Очікує підтвердження</div></div>
+            <i class="ph ph-clock" style="color:#75798c;font-size:15px"></i>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed #595d6c;border-radius:8px;padding:12px;font:500 13px Inter;color:#b2b6ca;margin-bottom:auto"><i class="ph ph-user-plus"></i>Запросити за посиланням</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #9184d9;border-radius:8px;padding:14px;font:500 14px Inter;color:#d2cefd;margin-top:26px">Далі<i class="ph ph-arrow-right"></i></div>
+        <div style="display:flex;gap:5px;justify-content:center;margin-top:18px">
+          <span style="width:18px;height:3px;border-radius:2px;background:#9184d9"></span><span style="width:6px;height:3px;border-radius:2px;background:#3f424d"></span><span style="width:6px;height:3px;border-radius:2px;background:#3f424d"></span>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 2 · Home ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s2">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">02</span><span style="font:400 11.5px Inter;color:#9397ab">Home — family donut, groups, template chips</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:37</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">58</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 0;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <i class="ph ph-list" style="font-size:22px;color:#e9e9ed"></i>
+          <div style="text-align:center">
+            <div style="display:flex;align-items:center;gap:5px;justify-content:center;font:500 14px Inter;color:#e9e9ed"><i class="ph ph-users-three" style="font-size:15px;color:#b5abfc"></i>Родина<i class="ph ph-caret-down" style="font-size:11px;color:#9397ab"></i></div>
+            <div style="font:500 25px Inter;letter-spacing:-.02em;margin-top:2px">₴17,634</div>
+          </div>
+          <i class="ph ph-receipt" style="font-size:20px;color:#e9e9ed"></i>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:12px;justify-content:center">
+          <span style="font:500 11px Inter;padding:4px 10px;border-radius:99px;background:rgba(181,171,252,.16);color:#e7e5fe;display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#b5abfc"></span>Усі 2</span>
+          <span style="font:400 11px Inter;padding:4px 10px;border-radius:99px;color:#b2b6ca">Сергій</span>
+          <span style="font:400 11px Inter;padding:4px 10px;border-radius:99px;color:#b2b6ca">Олена</span>
+        </div>
+        <div style="display:flex;gap:26px;margin-top:12px;padding:0 6px">
+          <div style="flex:1;text-align:center;padding-bottom:8px;border-bottom:2px solid #e9e9ed;font:500 12.5px Inter;letter-spacing:.06em">ВИТРАТИ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 12.5px Inter;letter-spacing:.06em;color:#9397ab">ДОХОДИ</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:12px 12px 0;display:flex;flex-direction:column;gap:9px">
+        <div style="background:#232532;border-radius:14px;padding:12px 14px 16px;box-shadow:0 0 0 1px #3f424d">
+          <div style="display:flex;justify-content:center;gap:14px;font:400 12px Inter;color:#9397ab">
+            <span>День</span><span>Тиждень</span><span style="color:#b5abfc;font-weight:500;border-bottom:2px solid #9184d9;padding-bottom:3px">Місяць</span><span>Рік</span><span>Період</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 6px;font:400 13px Inter;color:#e9e9ed"><i class="ph ph-caret-left" style="color:#75798c"></i><span style="border-bottom:1px solid #595d6c;padding-bottom:1px">Серпень 2026</span><i class="ph ph-caret-right" style="color:#75798c"></i></div>
+          <div style="position:relative;width:178px;height:178px;margin:6px auto 0">
+            <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(#968ae0 0 20%,#4c5397 20% 39%,#b5abfc 39% 58%,#5d5294 58% 67%,#7972a9 67% 74%,#353b80 74% 82%,#9397ab 82% 90%,#595d6c 90% 100%)"></div>
+            <div style="position:absolute;inset:34px;border-radius:50%;background:#232532;border:1px dashed #595d6c;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="font:500 21px Inter;letter-spacing:-.02em">₴80,798</div>
+              <div style="font:400 10.5px Inter;color:#75798c;margin-top:1px">5 груп</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin:2px 2px 7px">Швидко · шаблони Сергія</div>
+          <div style="display:flex;gap:7px;overflow:hidden">
+            <span style="font:500 12px Inter;padding:7px 11px;border-radius:99px;border:1px solid #5d5294;color:#d2cefd;display:flex;align-items:center;gap:6px;white-space:nowrap"><i class="ph ph-coffee"></i>Кава ₴50</span>
+            <span style="font:500 12px Inter;padding:7px 11px;border-radius:99px;border:1px solid #3f424d;color:#b2b6ca;display:flex;align-items:center;gap:6px;white-space:nowrap"><i class="ph ph-bus"></i>Метро ₴8</span>
+            <span style="font:500 12px Inter;padding:7px 11px;border-radius:99px;border:1px solid #3f424d;color:#b2b6ca;display:flex;align-items:center;gap:6px;white-space:nowrap"><i class="ph ph-bowl-food"></i>Обід ₴250</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:10px 12px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:34px;height:34px;border-radius:50%;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:17px"><i class="ph-fill ph-graduation-cap"></i></div>
+            <div style="flex:1"><div style="font:500 14px Inter">Освіта</div><div style="font:400 10.5px Inter;color:#75798c">1 категорія · Сергій</div></div>
+            <div style="text-align:right"><div style="font:500 14px Inter">₴16,000</div><div style="font:400 10.5px Inter;color:#75798c">20%</div></div>
+            <i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:10px 12px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:34px;height:34px;border-radius:50%;background:#4c5397;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:17px"><i class="ph-fill ph-house-line"></i></div>
+            <div style="flex:1"><div style="font:500 14px Inter">Дім</div>
+              <div style="height:3px;border-radius:2px;background:#3f424d;margin-top:5px;width:120px"><div style="width:98%;height:3px;border-radius:2px;background:#b5abfc"></div></div>
+            </div>
+            <div style="text-align:right"><div style="font:500 14px Inter">₴15,723</div><div style="font:400 10.5px Inter;color:#75798c">з ₴16,000</div></div>
+            <i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:10px 12px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:34px;height:34px;border-radius:50%;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:17px"><i class="ph-fill ph-basket"></i></div>
+            <div style="flex:1"><div style="font:500 14px Inter">Їжа</div>
+              <div style="height:3px;border-radius:2px;background:#3f424d;margin-top:5px;width:120px"><div style="width:100%;height:3px;border-radius:2px;background:#e5928a"></div></div>
+            </div>
+            <div style="text-align:right"><div style="font:500 14px Inter">₴15,377</div><div style="font:400 10.5px Inter;color:#e5928a">з ₴6,000</div></div>
+            <i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:10px 12px;box-shadow:0 0 0 1px #3f424d">
+            <div style="width:34px;height:34px;border-radius:50%;background:#5d5294;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:17px"><i class="ph-fill ph-scroll"></i></div>
+            <div style="flex:1"><div style="font:500 14px Inter">Підписки</div><div style="font:400 10.5px Inter;color:#75798c">4 категорії</div></div>
+            <div style="text-align:right"><div style="font:500 14px Inter">₴6,970</div><div style="font:400 10.5px Inter;color:#75798c">9%</div></div>
+            <i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;right:18px;bottom:74px;width:58px;height:58px;border-radius:50%;border:1px solid #9184d9;background:rgba(145,132,217,.14);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#d2cefd;font-size:25px;box-shadow:0 0 24px rgba(145,132,217,.28)"><i class="ph ph-plus"></i></div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px;background:#161826"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 3 · Add transaction ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s3">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">03</span><span style="font:400 11.5px Inter;color:#9397ab">Add transaction — templates on top</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:38</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 0;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0 2px"><i class="ph ph-arrow-left" style="font-size:19px"></i><span style="font:500 16px Inter">Нова операція</span></div>
+        <div style="display:flex;gap:26px;margin-top:14px;padding:0 6px">
+          <div style="flex:1;text-align:center;padding-bottom:8px;border-bottom:2px solid #e9e9ed;font:500 12.5px Inter;letter-spacing:.06em">ВИТРАТИ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 12.5px Inter;letter-spacing:.06em;color:#9397ab">ДОХОДИ</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:flex-end;justify-content:center;gap:12px">
+          <div style="border-bottom:1px solid #595d6c;width:150px;text-align:right;padding-bottom:5px;font:500 30px Inter;color:#e9e9ed">50</div>
+          <div style="font:500 15px Inter;color:#b5abfc;padding-bottom:8px">UAH</div>
+          <i class="ph ph-calculator" style="font-size:19px;color:#9397ab;padding-bottom:8px"></i>
+        </div>
+        <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin:22px 0 8px">Шаблони</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <span style="font:500 12px Inter;padding:8px 12px;border-radius:99px;border:1px solid #9184d9;background:rgba(145,132,217,.14);color:#e7e5fe;display:flex;align-items:center;gap:6px"><i class="ph ph-coffee"></i>Кава ₴50</span>
+          <span style="font:500 12px Inter;padding:8px 12px;border-radius:99px;border:1px solid #3f424d;color:#b2b6ca;display:flex;align-items:center;gap:6px"><i class="ph ph-bus"></i>Метро ₴8</span>
+          <span style="font:500 12px Inter;padding:8px 12px;border-radius:99px;border:1px solid #3f424d;color:#b2b6ca;display:flex;align-items:center;gap:6px"><i class="ph ph-bowl-food"></i>Обід ₴250</span>
+          <span style="font:500 12px Inter;padding:8px 12px;border-radius:99px;border:1px dashed #595d6c;color:#9397ab;display:flex;align-items:center;gap:5px"><i class="ph ph-plus"></i>Новий</span>
+        </div>
+        <p style="margin:9px 0 0;font:400 10.5px/1.5 Inter;color:#5f6373">Тап — записати одразу · Довгий тап — відкрити з заповненими полями</p>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <div style="flex:1">
+            <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-bottom:6px">Хто</div>
+            <div style="display:flex;align-items:center;gap:8px;background:#232532;border-radius:8px;padding:9px 11px;box-shadow:0 0 0 1px #3f424d"><span style="width:22px;height:22px;border-radius:50%;background:#5d5294;font:500 10px Inter;color:#e7e5fe;display:flex;align-items:center;justify-content:center">С</span><span style="font:500 13px Inter;flex:1">Сергій</span><i class="ph ph-caret-down" style="font-size:11px;color:#75798c"></i></div>
+          </div>
+          <div style="flex:1">
+            <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-bottom:6px">Рахунок</div>
+            <div style="display:flex;align-items:center;gap:8px;background:#232532;border-radius:8px;padding:9px 11px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-credit-card" style="color:#b5abfc"></i><span style="font:500 13px Inter;flex:1">Mono</span><i class="ph ph-caret-down" style="font-size:11px;color:#75798c"></i></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 9px">
+          <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Категорія</div>
+          <div style="font:400 11px Inter;color:#b5abfc">Їжа ▸</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px 4px">
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:24px"><i class="ph-fill ph-basket"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Продукти</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#3a3550;box-shadow:inset 0 0 0 2px #9184d9;display:flex;align-items:center;justify-content:center;color:#d2cefd;font-size:24px"><i class="ph-fill ph-coffee"></i></div><div style="font:500 10.5px Inter;color:#e7e5fe;margin-top:4px">Кав'ярня</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#7972a9;display:flex;align-items:center;justify-content:center;color:#f5f4ff;font-size:24px"><i class="ph-fill ph-fork-knife"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Обід</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#4c5397;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:24px"><i class="ph-fill ph-wine"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Кафе</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#595d6c;display:flex;align-items:center;justify-content:center;color:#e9e9ed;font-size:24px"><i class="ph-fill ph-cookie"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Снеки</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#353b80;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:24px"><i class="ph-fill ph-drop"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Вода</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;background:#9397ab;display:flex;align-items:center;justify-content:center;color:#161826;font-size:24px"><i class="ph-fill ph-pizza"></i></div><div style="font:400 10.5px Inter;color:#b2b6ca;margin-top:4px">Доставка</div></div>
+          <div style="text-align:center"><div style="width:50px;height:50px;margin:0 auto;border-radius:50%;border:1px dashed #595d6c;display:flex;align-items:center;justify-content:center;color:#9397ab;font-size:20px"><i class="ph ph-dots-three"></i></div><div style="font:400 10.5px Inter;color:#75798c;margin-top:4px">Ще</div></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:20px">
+          <span style="font:500 12px Inter;padding:7px 11px;border-radius:8px;background:rgba(181,171,252,.16);color:#e7e5fe;text-align:center;line-height:1.25">8/30<br><span style="font-weight:400;font-size:10px">сьогодні</span></span>
+          <span style="font:400 12px Inter;padding:7px 11px;color:#b2b6ca;text-align:center;line-height:1.25">8/29<br><span style="font-size:10px;color:#75798c">вчора</span></span>
+          <span style="font:400 12px Inter;padding:7px 11px;color:#b2b6ca;text-align:center;line-height:1.25">8/28<br><span style="font-size:10px;color:#75798c">2 дні</span></span>
+          <i class="ph ph-calendar-dots" style="margin-left:auto;font-size:20px;color:#9397ab"></i>
+        </div>
+      </div>
+      <div style="flex:none;padding:12px 16px 6px;background:linear-gradient(180deg,rgba(22,24,38,0),#161826 40%)">
+        <div style="display:flex;align-items:center;justify-content:center;border:1px solid #9184d9;background:rgba(145,132,217,.14);border-radius:8px;padding:14px;font:500 14.5px Inter;color:#d2cefd">Додати ₴50</div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:4px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 4 · Categories & groups ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s4">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">04</span><span style="font:400 11.5px Inter;color:#9397ab">Categories — grouped, one expanded</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:38</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 0;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0 2px"><i class="ph ph-list" style="font-size:21px"></i><span style="font:500 16px Inter;flex:1">Категорії</span><i class="ph ph-arrows-out-line-vertical" style="font-size:18px;color:#b2b6ca"></i></div>
+        <div style="display:flex;gap:26px;margin-top:14px;padding:0 6px">
+          <div style="flex:1;text-align:center;padding-bottom:8px;border-bottom:2px solid #e9e9ed;font:500 12.5px Inter;letter-spacing:.06em">ВИТРАТИ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 12.5px Inter;letter-spacing:.06em;color:#9397ab">ДОХОДИ</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:12px 12px 0;display:flex;flex-direction:column;gap:8px">
+        <div style="background:#232532;border-radius:12px;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:11px;padding:11px 13px">
+            <div style="width:32px;height:32px;border-radius:9px;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:17px"><i class="ph-fill ph-basket"></i></div>
+            <div style="flex:1"><div style="font:500 14px Inter">Їжа</div><div style="font:400 10.5px Inter;color:#75798c">7 категорій · бюджет ₴6,000</div></div>
+            <i class="ph ph-caret-up" style="color:#9397ab;font-size:13px"></i>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px 2px;padding:4px 10px 14px">
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:22px"><i class="ph-fill ph-basket"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Продукти</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:22px"><i class="ph-fill ph-coffee"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Кав'ярня</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#7972a9;display:flex;align-items:center;justify-content:center;color:#f5f4ff;font-size:22px"><i class="ph-fill ph-fork-knife"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Обід</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#4c5397;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:22px"><i class="ph-fill ph-wine"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Кафе</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#595d6c;display:flex;align-items:center;justify-content:center;color:#e9e9ed;font-size:22px"><i class="ph-fill ph-cookie"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Снеки</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#353b80;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:22px"><i class="ph-fill ph-drop"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Вода</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;background:#9397ab;display:flex;align-items:center;justify-content:center;color:#161826;font-size:22px"><i class="ph-fill ph-pizza"></i></div><div style="font:400 10px Inter;color:#b2b6ca;margin-top:4px">Доставка</div></div>
+            <div style="text-align:center"><div style="width:46px;height:46px;margin:0 auto;border-radius:50%;border:1px dashed #595d6c;display:flex;align-items:center;justify-content:center;color:#9397ab;font-size:18px"><i class="ph ph-plus"></i></div><div style="font:400 10px Inter;color:#75798c;margin-top:4px">Додати</div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:12px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+          <div style="width:32px;height:32px;border-radius:9px;background:#4c5397;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:17px"><i class="ph-fill ph-house-line"></i></div>
+          <div style="flex:1"><div style="font:500 14px Inter">Дім</div><div style="font:400 10.5px Inter;color:#75798c">6 категорій · бюджет ₴16,000</div></div>
+          <i class="ph ph-caret-down" style="color:#595d6c;font-size:13px"></i>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:12px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+          <div style="width:32px;height:32px;border-radius:9px;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:17px"><i class="ph-fill ph-car"></i></div>
+          <div style="flex:1"><div style="font:500 14px Inter">Транспорт</div><div style="font:400 10.5px Inter;color:#75798c">5 категорій · без бюджету</div></div>
+          <i class="ph ph-caret-down" style="color:#595d6c;font-size:13px"></i>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:12px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+          <div style="width:32px;height:32px;border-radius:9px;background:#7972a9;display:flex;align-items:center;justify-content:center;color:#f5f4ff;font-size:17px"><i class="ph-fill ph-heartbeat"></i></div>
+          <div style="flex:1"><div style="font:500 14px Inter">Здоров'я</div><div style="font:400 10.5px Inter;color:#75798c">4 категорії · бюджет ₴5,000</div></div>
+          <i class="ph ph-caret-down" style="color:#595d6c;font-size:13px"></i>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:12px;padding:11px 13px;box-shadow:0 0 0 1px #3f424d">
+          <div style="width:32px;height:32px;border-radius:9px;background:#353b80;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:17px"><i class="ph-fill ph-game-controller"></i></div>
+          <div style="flex:1"><div style="font:500 14px Inter">Розваги</div><div style="font:400 10.5px Inter;color:#75798c">8 категорій · бюджет ₴4,000</div></div>
+          <i class="ph ph-caret-down" style="color:#595d6c;font-size:13px"></i>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed #595d6c;border-radius:12px;padding:12px;font:500 13px Inter;color:#9397ab"><i class="ph ph-folder-plus"></i>Нова група</div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 5 · Household ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s5">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">05</span><span style="font:400 11.5px Inter;color:#9397ab">Household — members &amp; permissions</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:38</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 18px;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-list" style="font-size:21px"></i><span style="font:500 16px Inter;flex:1">Родина Ковалів</span><i class="ph ph-gear" style="font-size:18px;color:#b2b6ca"></i></div>
+        <div style="display:flex;gap:18px;margin-top:14px">
+          <div><div style="font:400 10px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9397ab">Спільний баланс</div><div style="font:500 22px Inter;letter-spacing:-.02em;margin-top:2px">₴17,634</div></div>
+          <div style="width:1px;background:rgba(233,233,237,.14)"></div>
+          <div><div style="font:400 10px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9397ab">Витрати · серпень</div><div style="font:500 22px Inter;letter-spacing:-.02em;margin-top:2px">₴80,798</div></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:14px 12px 0;display:flex;flex-direction:column;gap:9px">
+        <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-left:2px">Учасники</div>
+        <div style="background:#232532;border-radius:12px;padding:13px;box-shadow:0 0 0 1px #595d6c">
+          <div style="display:flex;align-items:center;gap:11px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#5d5294;display:flex;align-items:center;justify-content:center;font:500 15px Inter;color:#e7e5fe">С</div>
+            <div style="flex:1"><div style="font:500 14.5px Inter">Сергій <span style="font:500 9.5px Inter;letter-spacing:.06em;color:#b5abfc;border:1px solid #5d5294;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:2px">ВЛАСНИК</span></div><div style="font:400 11px Inter;color:#75798c">Повний доступ · 2 приватні рахунки</div></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid #3f424d">
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Витрати</div><div style="font:500 14px Inter;margin-top:1px">₴52,410</div></div>
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Частка</div><div style="font:500 14px Inter;margin-top:1px">65%</div></div>
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Операцій</div><div style="font:500 14px Inter;margin-top:1px">128</div></div>
+          </div>
+        </div>
+        <div style="background:#232532;border-radius:12px;padding:13px;box-shadow:0 0 0 1px #3f424d">
+          <div style="display:flex;align-items:center;gap:11px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#7972a9;display:flex;align-items:center;justify-content:center;font:500 15px Inter;color:#f5f4ff">О</div>
+            <div style="flex:1"><div style="font:500 14.5px Inter">Олена</div><div style="font:400 11px Inter;color:#75798c">Повний доступ · 1 приватний рахунок</div></div>
+            <i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid #3f424d">
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Витрати</div><div style="font:500 14px Inter;margin-top:1px">₴28,388</div></div>
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Частка</div><div style="font:500 14px Inter;margin-top:1px">35%</div></div>
+            <div style="flex:1"><div style="font:400 10px Inter;color:#75798c">Операцій</div><div style="font:500 14px Inter;margin-top:1px">74</div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #9184d9;border-radius:12px;padding:13px;font:500 13.5px Inter;color:#d2cefd"><i class="ph ph-user-plus"></i>Запросити учасника</div>
+        <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin:8px 0 -2px 2px">Спільне</div>
+        <div style="background:#232532;border-radius:12px;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid #3f424d"><i class="ph ph-wallet" style="font-size:17px;color:#b5abfc"></i><span style="flex:1;font:400 13.5px Inter">Спільні рахунки</span><span style="font:400 12px Inter;color:#75798c">5</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:12px"></i></div>
+          <div style="display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid #3f424d"><i class="ph ph-target" style="font-size:17px;color:#b5abfc"></i><span style="flex:1;font:400 13.5px Inter">Бюджети груп</span><span style="font:400 12px Inter;color:#75798c">4</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:12px"></i></div>
+          <div style="display:flex;align-items:center;gap:11px;padding:12px 13px"><i class="ph ph-bell-ringing" style="font-size:17px;color:#b5abfc"></i><span style="flex:1;font:400 13.5px Inter">Сповіщення про перевитрату</span><span style="width:34px;height:19px;border-radius:99px;background:rgba(145,132,217,.35);position:relative;flex:none"><span style="position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#b5abfc"></span></span></div>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 6 · Per-member ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s6">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">06</span><span style="font:400 11.5px Inter;color:#9397ab">Per-member spending — side by side</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:39</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 16px;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-arrow-left" style="font-size:19px"></i><span style="font:500 16px Inter;flex:1">Хто витрачає</span><span style="font:400 12px Inter;color:#b2b6ca;display:flex;align-items:center;gap:4px">Серпень<i class="ph ph-caret-down" style="font-size:10px"></i></span></div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:14px 12px 0;display:flex;flex-direction:column;gap:12px">
+        <div style="background:#232532;border-radius:14px;padding:14px;box-shadow:0 0 0 1px #3f424d">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px"><span style="font:500 13px Inter">Розподіл</span><span style="font:400 11px Inter;color:#75798c">₴80,798</span></div>
+          <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px">
+            <span style="width:65%;background:#968ae0"></span><span style="width:35%;background:#4c5397"></span>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:12px">
+            <div style="flex:1;display:flex;gap:9px;align-items:center"><span style="width:8px;height:8px;border-radius:50%;background:#968ae0"></span><div><div style="font:500 12.5px Inter">Сергій</div><div style="font:400 15px Inter;letter-spacing:-.01em;margin-top:1px">₴52,410</div></div></div>
+            <div style="flex:1;display:flex;gap:9px;align-items:center"><span style="width:8px;height:8px;border-radius:50%;background:#4c5397"></span><div><div style="font:500 12.5px Inter">Олена</div><div style="font:400 15px Inter;letter-spacing:-.01em;margin-top:1px">₴28,388</div></div></div>
+          </div>
+        </div>
+        <div style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c;margin-left:2px">По групах</div>
+        <div style="background:#232532;border-radius:14px;padding:14px;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font:400 12.5px Inter;margin-bottom:6px"><span style="font-weight:500">Дім</span><span style="color:#9397ab">₴15,723</span></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:#2b2d3a"><span style="width:40%;background:#968ae0"></span><span style="width:60%;background:#4c5397"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font:400 12.5px Inter;margin-bottom:6px"><span style="font-weight:500">Їжа</span><span style="color:#9397ab">₴15,377</span></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:#2b2d3a"><span style="width:58%;background:#968ae0"></span><span style="width:42%;background:#4c5397"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font:400 12.5px Inter;margin-bottom:6px"><span style="font-weight:500">Освіта</span><span style="color:#9397ab">₴16,000</span></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:#2b2d3a"><span style="width:100%;background:#968ae0"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font:400 12.5px Inter;margin-bottom:6px"><span style="font-weight:500">Транспорт</span><span style="color:#9397ab">₴9,240</span></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:#2b2d3a"><span style="width:72%;background:#968ae0"></span><span style="width:28%;background:#4c5397"></span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font:400 12.5px Inter;margin-bottom:6px"><span style="font-weight:500">Розваги</span><span style="color:#9397ab">₴4,372</span></div>
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;background:#2b2d3a"><span style="width:22%;background:#968ae0"></span><span style="width:78%;background:#4c5397"></span></div>
+          </div>
+        </div>
+        <div style="background:#232532;border-radius:14px;padding:13px 14px;box-shadow:0 0 0 1px #3f424d;display:flex;gap:11px;align-items:flex-start">
+          <i class="ph ph-trend-up" style="font-size:18px;color:#b5abfc;margin-top:1px"></i>
+          <div><div style="font:500 12.5px Inter;margin-bottom:2px">Олена подвоїла Розваги</div><div style="font:400 11.5px/1.5 Inter;color:#9397ab">₴3,410 проти ₴1,690 у липні. Бюджет групи вичерпано на 109%.</div></div>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 7 · Transactions ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s7">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">07</span><span style="font:400 11.5px Inter;color:#9397ab">Transactions — who paid, on every row</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:37</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">58</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 0;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:12px;padding:4px 0"><i class="ph ph-arrow-left" style="font-size:19px"></i><div style="flex:1"><div style="font:500 15.5px Inter">Операції</div><div style="font:400 11px Inter;color:#b2b6ca;display:flex;align-items:center;gap:4px"><i class="ph ph-users-three" style="font-size:12px"></i>Родина<i class="ph ph-caret-down" style="font-size:9px"></i></div></div><i class="ph ph-magnifying-glass" style="font-size:19px"></i><i class="ph ph-funnel" style="font-size:19px"></i></div>
+        <div style="display:flex;gap:26px;margin-top:12px;padding:0 6px">
+          <div style="flex:1;text-align:center;padding-bottom:8px;border-bottom:2px solid #e9e9ed;font:500 12.5px Inter;letter-spacing:.06em">ВИТРАТИ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 12.5px Inter;letter-spacing:.06em;color:#9397ab">ДОХОДИ</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:12px 12px 0;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;justify-content:center;gap:14px;font:400 12px Inter;color:#9397ab">
+          <span>День</span><span>Тиждень</span><span style="color:#b5abfc;font-weight:500;border-bottom:2px solid #9184d9;padding-bottom:3px">Місяць</span><span>Рік</span><span>Період</span>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px">
+          <span style="font:400 13px Inter;color:#e9e9ed">Серпень 2026</span><span style="font:500 13px Inter">₴80,798</span>
+        </div>
+        <div style="font:500 10px Inter;letter-spacing:.08em;text-transform:uppercase;color:#75798c;margin:2px 2px -2px">29 серпня, сб · ₴20,268</div>
+        <div style="background:#232532;border-radius:12px;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid #2f3240">
+            <div style="width:32px;height:32px;border-radius:50%;background:#353b80;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:16px"><i class="ph-fill ph-device-mobile"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Мобільний зв'язок</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#5d5294;font:500 8px Inter;color:#e7e5fe;display:inline-flex;align-items:center;justify-content:center">С</span>Mono · Дім</div></div>
+            <div style="font:500 13.5px Inter">₴200</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid #2f3240">
+            <div style="width:32px;height:32px;border-radius:50%;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:16px"><i class="ph-fill ph-coffee"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Кав'ярня</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#7972a9;font:500 8px Inter;color:#f5f4ff;display:inline-flex;align-items:center;justify-content:center">О</span>Mono · Їжа<span style="border:1px solid #3f424d;border-radius:3px;padding:0 4px;font-size:9px">шаблон</span></div></div>
+            <div style="font:500 13.5px Inter">₴650</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid #2f3240">
+            <div style="width:32px;height:32px;border-radius:50%;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:16px"><i class="ph-fill ph-basket"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Продукти</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#7972a9;font:500 8px Inter;color:#f5f4ff;display:inline-flex;align-items:center;justify-content:center">О</span>Mono · Їжа</div></div>
+            <div style="font:500 13.5px Inter">₴1,811</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid #2f3240">
+            <div style="width:32px;height:32px;border-radius:50%;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:16px"><i class="ph-fill ph-graduation-cap"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Освіта</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#5d5294;font:500 8px Inter;color:#e7e5fe;display:inline-flex;align-items:center;justify-content:center">С</span>Mono · Освіта</div></div>
+            <div style="font:500 13.5px Inter">₴16,000</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#5d5294;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:16px"><i class="ph-fill ph-scroll"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Підписки</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#5d5294;font:500 8px Inter;color:#e7e5fe;display:inline-flex;align-items:center;justify-content:center">С</span>Mono · jetbrains</div></div>
+            <div style="font:500 13.5px Inter">₴1,607</div>
+          </div>
+        </div>
+        <div style="font:500 10px Inter;letter-spacing:.08em;text-transform:uppercase;color:#75798c;margin:4px 2px -2px">28 серпня, пт · ₴1,750</div>
+        <div style="background:#232532;border-radius:12px;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-bottom:1px solid #2f3240">
+            <div style="width:32px;height:32px;border-radius:50%;background:#595d6c;display:flex;align-items:center;justify-content:center;color:#e9e9ed;font-size:16px"><i class="ph-fill ph-car-profile"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Парковка</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#5d5294;font:500 8px Inter;color:#e7e5fe;display:inline-flex;align-items:center;justify-content:center">С</span>Готівка · Транспорт</div></div>
+            <div style="font:500 13.5px Inter">₴1,500</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;padding:10px 12px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#7972a9;display:flex;align-items:center;justify-content:center;color:#f5f4ff;font-size:16px"><i class="ph-fill ph-fork-knife"></i></div>
+            <div style="flex:1"><div style="font:400 13.5px Inter">Обід</div><div style="font:400 10.5px Inter;color:#75798c;display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#7972a9;font:500 8px Inter;color:#f5f4ff;display:inline-flex;align-items:center;justify-content:center">О</span>Готівка · Їжа</div></div>
+            <div style="font:500 13.5px Inter">₴250</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:66px;width:58px;height:58px;border-radius:50%;border:1px solid #9184d9;background:rgba(145,132,217,.16);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#d2cefd;font-size:25px;box-shadow:0 0 24px rgba(145,132,217,.28)"><i class="ph ph-plus"></i></div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px;background:#161826"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 8 · Accounts ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s8">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">08</span><span style="font:400 11.5px Inter;color:#9397ab">Accounts — shared vs private</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:37</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 20px;border-radius:0 0 24px 24px;text-align:center">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-list" style="font-size:21px"></i><span style="font:500 16px Inter;flex:1;text-align:center;margin-right:21px">Рахунки</span></div>
+        <div style="font:400 11px Inter;color:#9397ab;margin-top:8px">Спільно доступно</div>
+        <div style="font:500 27px Inter;letter-spacing:-.02em">₴17,634</div>
+        <div style="font:400 11px Inter;color:#9397ab;margin-top:2px">+ ₴145,503 у заощадженнях</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+          <span style="font:500 12px Inter;padding:8px 13px;border-radius:8px;border:1px solid #5d5294;color:#d2cefd;display:flex;align-items:center;gap:6px"><i class="ph ph-clock-counter-clockwise"></i>Історія</span>
+          <span style="font:500 12px Inter;padding:8px 13px;border-radius:8px;border:1px solid #5d5294;color:#d2cefd;display:flex;align-items:center;gap:6px"><i class="ph ph-arrows-left-right"></i>Переказ</span>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:14px 12px 0;display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 1px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Спільні · родина</span><span style="font:400 10.5px Inter;color:#5f6373">видно всім</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #3f424d"><div style="width:32px;height:32px;border-radius:9px;background:#4c5397;display:flex;align-items:center;justify-content:center;color:#e7e5fe;font-size:16px"><i class="ph-fill ph-credit-card"></i></div><span style="flex:1;font:400 13.5px Inter">Mono</span><span style="font:500 13.5px Inter;color:#e5928a">−₴10,835</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #3f424d"><div style="width:32px;height:32px;border-radius:9px;background:#968ae0;display:flex;align-items:center;justify-content:center;color:#161826;font-size:16px"><i class="ph-fill ph-credit-card"></i></div><span style="flex:1;font:400 13.5px Inter">Abank</span><span style="font:500 13.5px Inter">₴1,478</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #3f424d"><div style="width:32px;height:32px;border-radius:9px;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:16px"><i class="ph-fill ph-money"></i></div><span style="flex:1;font:400 13.5px Inter">Готівка</span><span style="font:500 13.5px Inter">₴2,300</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#232532;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #3f424d"><div style="width:32px;height:32px;border-radius:9px;background:#7972a9;display:flex;align-items:center;justify-content:center;color:#f5f4ff;font-size:16px"><i class="ph-fill ph-credit-card"></i></div><span style="flex:1;font:400 13.5px Inter">Приват</span><span style="font:500 13.5px Inter">₴3,048</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin:12px 2px 1px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Приватні · тільки Сергій</span><i class="ph ph-eye-slash" style="font-size:14px;color:#75798c"></i></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#1d1f2b;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #2f3240"><div style="width:32px;height:32px;border-radius:9px;background:#3f424d;display:flex;align-items:center;justify-content:center;color:#b2b6ca;font-size:16px"><i class="ph-fill ph-piggy-bank"></i></div><div style="flex:1"><div style="font:400 13.5px Inter;color:#cfd3e5">ФОП</div><div style="font:400 10px Inter;color:#5f6373">не входить у спільний баланс</div></div><span style="font:500 13.5px Inter;color:#cfd3e5">$1,420</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#1d1f2b;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #2f3240"><div style="width:32px;height:32px;border-radius:9px;background:#3f424d;display:flex;align-items:center;justify-content:center;color:#b2b6ca;font-size:16px"><i class="ph-fill ph-currency-btc"></i></div><div style="flex:1"><div style="font:400 13.5px Inter;color:#cfd3e5">USDT</div><div style="font:400 10px Inter;color:#5f6373">не входить у спільний баланс</div></div><span style="font:500 13.5px Inter;color:#cfd3e5">$380</span></div>
+        <div style="display:flex;align-items:center;gap:11px;background:#1d1f2b;border-radius:10px;padding:11px 12px;box-shadow:0 0 0 1px #2f3240;opacity:.75"><div style="width:32px;height:32px;border-radius:9px;background:#2f3240;display:flex;align-items:center;justify-content:center;color:#75798c;font-size:16px"><i class="ph-fill ph-lock-simple"></i></div><div style="flex:1"><div style="font:400 13.5px Inter;color:#9397ab">Приватні рахунки Олени</div><div style="font:400 10px Inter;color:#5f6373">1 рахунок · приховано</div></div></div>
+      </div>
+      <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:66px;width:58px;height:58px;border-radius:50%;border:1px solid #9184d9;background:rgba(145,132,217,.16);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#d2cefd;font-size:25px;box-shadow:0 0 24px rgba(145,132,217,.28)"><i class="ph ph-plus"></i></div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px;background:#161826"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 9 · Charts ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s9">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">09</span><span style="font:400 11.5px Inter;color:#9397ab">Charts — stacked by member</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:37</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 0;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-list" style="font-size:21px"></i><span style="font:500 16px Inter;flex:1">Графіки</span><i class="ph ph-users-three" style="font-size:19px;color:#b5abfc"></i></div>
+        <div style="display:flex;gap:8px;margin-top:14px;padding:0 2px">
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 11.5px Inter;letter-spacing:.05em;color:#9397ab">ЗАГАЛЬНЕ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;border-bottom:2px solid #e9e9ed;font:500 11.5px Inter;letter-spacing:.05em">ВИТРАТИ</div>
+          <div style="flex:1;text-align:center;padding-bottom:8px;font:400 11.5px Inter;letter-spacing:.05em;color:#9397ab">ДОХОДИ</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:12px 12px 0;display:flex;flex-direction:column;gap:10px">
+        <div style="background:#232532;border-radius:14px;padding:14px;box-shadow:0 0 0 1px #3f424d">
+          <div style="display:flex;justify-content:center;gap:16px;font:400 12px Inter;color:#9397ab;margin-bottom:16px">
+            <span>рік</span><span style="color:#b5abfc;font-weight:500;border-bottom:2px solid #9184d9;padding-bottom:3px">місяць</span><span>тиждень</span><span>день</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:190px;padding:0 4px;border-bottom:1px solid #3f424d">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:34%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:52%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:22%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:31%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:9%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:11%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:16%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:19%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:24%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:28%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><span style="height:13%;background:#968ae0;border-radius:3px 3px 0 0"></span><span style="height:15%;background:#4c5397"></span></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px;box-shadow:0 0 0 1px #5d5294;border-radius:4px;padding:1px"><span style="height:20%;background:#b5abfc;border-radius:3px 3px 0 0"></span><span style="height:11%;background:#4c5397"></span></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:7px;padding:0 4px;font:400 10.5px Inter;color:#9397ab;text-align:center">
+            <span style="flex:1">Лют</span><span style="flex:1">Бер</span><span style="flex:1">Кві</span><span style="flex:1">Тра</span><span style="flex:1">Чер</span><span style="flex:1">Лип</span><span style="flex:1;color:#e9e9ed">Сер</span>
+          </div>
+          <div style="display:flex;gap:14px;justify-content:center;margin-top:12px;font:400 11px Inter;color:#b2b6ca">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:#968ae0"></span>Сергій</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:#4c5397"></span>Олена</span>
+          </div>
+        </div>
+        <div style="background:#232532;border-radius:14px;padding:14px;box-shadow:0 0 0 1px #3f424d">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px"><span style="font:500 13px Inter">Бюджети груп · серпень</span><span style="font:400 11px Inter;color:#75798c">4 з 5</span></div>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <div><div style="display:flex;justify-content:space-between;font:400 11.5px Inter;color:#b2b6ca;margin-bottom:5px"><span>Дім</span><span>98%</span></div><div style="height:6px;border-radius:3px;background:#2f3240"><div style="width:98%;height:6px;border-radius:3px;background:#b5abfc"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:400 11.5px Inter;color:#b2b6ca;margin-bottom:5px"><span>Їжа</span><span style="color:#e5928a">256%</span></div><div style="height:6px;border-radius:3px;background:#2f3240"><div style="width:100%;height:6px;border-radius:3px;background:#e5928a"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:400 11.5px Inter;color:#b2b6ca;margin-bottom:5px"><span>Здоров'я</span><span>62%</span></div><div style="height:6px;border-radius:3px;background:#2f3240"><div style="width:62%;height:6px;border-radius:3px;background:#968ae0"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font:400 11.5px Inter;color:#b2b6ca;margin-bottom:5px"><span>Розваги</span><span style="color:#e5928a">109%</span></div><div style="height:6px;border-radius:3px;background:#2f3240"><div style="width:100%;height:6px;border-radius:3px;background:#e5928a"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 10 · Widgets ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s10">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">10</span><span style="font:400 11.5px Inter;color:#9397ab">Widget gallery — 7 types, resizable</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:40</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 16px;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-arrow-left" style="font-size:19px"></i><span style="font:500 16px Inter;flex:1">Віджети</span></div>
+        <p style="margin:8px 0 0;font:400 11px/1.5 Inter;color:#9397ab">Утримайте, щоб додати на робочий стіл. Кожен віджет прив'язується до учасника або до всієї родини.</p>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:14px 12px 0;display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Швидке додавання</span><span style="font:400 10px Inter;color:#5f6373">4×2</span></div>
+          <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:12px;box-shadow:0 0 0 1px #3f424d">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font:500 11px Inter;color:#b2b6ca">Шаблони · Сергій</span><i class="ph ph-arrow-clockwise" style="font-size:12px;color:#75798c"></i></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              <div style="border:1px solid #5d5294;border-radius:10px;padding:9px 4px;text-align:center;color:#d2cefd"><i class="ph ph-coffee" style="font-size:19px"></i><div style="font:500 9.5px Inter;margin-top:3px">Кава</div><div style="font:400 9.5px Inter;color:#9397ab">₴50</div></div>
+              <div style="border:1px solid #3f424d;border-radius:10px;padding:9px 4px;text-align:center;color:#b2b6ca"><i class="ph ph-bus" style="font-size:19px"></i><div style="font:500 9.5px Inter;margin-top:3px">Метро</div><div style="font:400 9.5px Inter;color:#75798c">₴8</div></div>
+              <div style="border:1px solid #3f424d;border-radius:10px;padding:9px 4px;text-align:center;color:#b2b6ca"><i class="ph ph-bowl-food" style="font-size:19px"></i><div style="font:500 9.5px Inter;margin-top:3px">Обід</div><div style="font:400 9.5px Inter;color:#75798c">₴250</div></div>
+              <div style="border:1px solid #3f424d;border-radius:10px;padding:9px 4px;text-align:center;color:#b2b6ca"><i class="ph ph-plus" style="font-size:19px"></i><div style="font:500 9.5px Inter;margin-top:3px">Інше</div><div style="font:400 9.5px Inter;color:#75798c">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Місяць</span><span style="font:400 10px Inter;color:#5f6373">2×2</span></div>
+            <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:12px;box-shadow:0 0 0 1px #3f424d;display:flex;align-items:center;gap:10px">
+              <div style="position:relative;width:52px;height:52px;flex:none">
+                <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(#968ae0 0 20%,#4c5397 20% 39%,#b5abfc 39% 58%,#5d5294 58% 74%,#595d6c 74% 100%)"></div>
+                <div style="position:absolute;inset:11px;border-radius:50%;background:#232532"></div>
+              </div>
+              <div><div style="font:400 9.5px Inter;color:#75798c">Серпень</div><div style="font:500 15px Inter;letter-spacing:-.01em">₴80,798</div><div style="font:400 9.5px Inter;color:#e5928a">2 бюджети</div></div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Категорія</span><span style="font:400 10px Inter;color:#5f6373">2×1</span></div>
+            <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:12px;box-shadow:0 0 0 1px #3f424d;display:flex;align-items:center;gap:9px">
+              <div style="width:28px;height:28px;border-radius:50%;background:#b5abfc;display:flex;align-items:center;justify-content:center;color:#161826;font-size:15px;flex:none"><i class="ph-fill ph-basket"></i></div>
+              <div style="min-width:0"><div style="font:400 9.5px Inter;color:#75798c">Їжа</div><div style="font:500 13.5px Inter">₴15,377</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Бюджети + родина</span><span style="font:400 10px Inter;color:#5f6373">4×3</span></div>
+          <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:13px;box-shadow:0 0 0 1px #3f424d">
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div><div style="display:flex;justify-content:space-between;font:400 10.5px Inter;color:#b2b6ca;margin-bottom:4px"><span>Дім</span><span>₴15.7K / 16K</span></div><div style="height:5px;border-radius:3px;background:#2f3240"><div style="width:98%;height:5px;border-radius:3px;background:#b5abfc"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font:400 10.5px Inter;color:#b2b6ca;margin-bottom:4px"><span>Їжа</span><span style="color:#e5928a">₴15.4K / 6K</span></div><div style="height:5px;border-radius:3px;background:#2f3240"><div style="width:100%;height:5px;border-radius:3px;background:#e5928a"></div></div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid #3f424d">
+              <div style="flex:1;display:flex;align-items:center;gap:7px"><span style="width:20px;height:20px;border-radius:50%;background:#5d5294;font:500 9px Inter;color:#e7e5fe;display:flex;align-items:center;justify-content:center">С</span><span style="font:400 11px Inter;color:#b2b6ca;flex:1">Сергій</span><span style="font:500 11px Inter">₴52.4K</span></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:7px">
+              <div style="flex:1;display:flex;align-items:center;gap:7px"><span style="width:20px;height:20px;border-radius:50%;background:#7972a9;font:500 9px Inter;color:#f5f4ff;display:flex;align-items:center;justify-content:center">О</span><span style="font:400 11px Inter;color:#b2b6ca;flex:1">Олена</span><span style="font:500 11px Inter">₴28.4K</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Останні операції</span><span style="font:400 10px Inter;color:#5f6373">4×2</span></div>
+          <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:12px;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#968ae0"></span><span style="flex:1;font:400 11.5px Inter;color:#cfd3e5">Кав'ярня · Олена</span><span style="font:500 11.5px Inter">₴650</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#4c5397"></span><span style="flex:1;font:400 11.5px Inter;color:#cfd3e5">Продукти · Олена</span><span style="font:500 11.5px Inter">₴1,811</span></div>
+            <div style="display:flex;align-items:center;gap:9px"><span style="width:8px;height:8px;border-radius:50%;background:#b5abfc"></span><span style="flex:1;font:400 11.5px Inter;color:#cfd3e5">Парковка · Сергій</span><span style="font:500 11.5px Inter">₴1,500</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 7px"><span style="font:500 10px Inter;letter-spacing:.1em;text-transform:uppercase;color:#75798c">Рахунки</span><span style="font:400 10px Inter;color:#5f6373">4×1</span></div>
+          <div style="background:rgba(35,37,50,.92);border-radius:16px;padding:11px 12px;box-shadow:0 0 0 1px #3f424d;display:flex;gap:14px">
+            <div style="flex:1"><div style="font:400 9.5px Inter;color:#75798c">Mono</div><div style="font:500 12.5px Inter;color:#e5928a">−₴10.8K</div></div>
+            <div style="flex:1"><div style="font:400 9.5px Inter;color:#75798c">Abank</div><div style="font:500 12.5px Inter">₴1,478</div></div>
+            <div style="flex:1"><div style="font:400 9.5px Inter;color:#75798c">Готівка</div><div style="font:500 12.5px Inter">₴2,300</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:none;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+  <!-- ══ 11 · Settings ══ -->
+  <div style="display:flex;flex-direction:column;gap:10px" id="s11">
+    <div style="display:flex;align-items:baseline;gap:9px"><span style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(233,233,237,.08);color:#e9e9ed;border-radius:5px">11</span><span style="font:400 11.5px Inter;color:#9397ab">Settings + drawer (overlay)</span></div>
+    <div style="width:380px;height:800px;border-radius:30px;overflow:hidden;background:#161826;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 1px #595d6c,0 16px 40px rgba(0,0,0,.65)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 18px 2px;font:500 11px Inter;color:#b2b6ca;flex:none;background:#2b2741">
+        <span>11:38</span><span style="display:flex;gap:6px;align-items:center;font-size:12px"><i class="ph ph-bell-slash"></i><i class="ph ph-wifi-high"></i><i class="ph ph-cell-signal-medium"></i><span style="font-size:9.5px;padding:1px 5px;border:1px solid #595d6c;border-radius:5px">57</span></span>
+      </div>
+      <div style="flex:none;background:linear-gradient(180deg,#2b2741,#242137);padding:6px 16px 18px;border-radius:0 0 24px 24px">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0"><i class="ph ph-list" style="font-size:21px"></i><span style="font:500 16px Inter;flex:1">Налаштування</span></div>
+      </div>
+      <div style="flex:1;overflow:hidden;padding:14px 12px 0;display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-users-three" style="font-size:18px;color:#b5abfc"></i><div style="flex:1"><div style="font:400 13.5px Inter">Родина</div><div style="font:400 10.5px Inter;color:#75798c">2 учасники · спільний бюджет</div></div><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-lightning" style="font-size:18px;color:#b5abfc"></i><div style="flex:1"><div style="font:400 13.5px Inter">Мої шаблони</div><div style="font:400 10.5px Inter;color:#75798c">3 · тільки для Сергія</div></div><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-squares-four" style="font-size:18px;color:#b5abfc"></i><div style="flex:1"><div style="font:400 13.5px Inter">Віджети</div><div style="font:400 10.5px Inter;color:#75798c">2 активні</div></div><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-eye-slash" style="font-size:18px;color:#b5abfc"></i><div style="flex:1"><div style="font:400 13.5px Inter">Приватність</div><div style="font:400 10.5px Inter;color:#75798c">2 приховані рахунки</div></div><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="height:8px"></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-lock-key" style="font-size:18px;color:#9397ab"></i><span style="flex:1;font:400 13.5px Inter">PIN</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-palette" style="font-size:18px;color:#9397ab"></i><span style="flex:1;font:400 13.5px Inter">Вигляд</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-database" style="font-size:18px;color:#9397ab"></i><span style="flex:1;font:400 13.5px Inter">Дані та синхронізація</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#232532;border-radius:10px;padding:12px 13px;box-shadow:0 0 0 1px #3f424d"><i class="ph ph-sliders-horizontal" style="font-size:18px;color:#9397ab"></i><span style="flex:1;font:400 13.5px Inter">Додатково</span><i class="ph ph-caret-right" style="color:#595d6c;font-size:13px"></i></div>
+        <div style="margin-top:auto;padding:0 4px 12px;font:400 10.5px Inter;color:#4f5361">Версія 2.0.0 · родинна синхронізація</div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(16,17,32,.55);backdrop-filter:blur(1px)"></div>
+      <div style="position:absolute;left:0;top:0;bottom:0;width:294px;background:#1c1e2c;box-shadow:8px 0 40px rgba(0,0,0,.6);display:flex;flex-direction:column;border-radius:0 20px 20px 0">
+        <div style="padding:26px 18px 16px;background:linear-gradient(180deg,#2b2741,#221f34)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:#5d5294;display:flex;align-items:center;justify-content:center;font:500 16px Inter;color:#e7e5fe">С</div>
+            <div style="min-width:0"><div style="font:500 13.5px Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">s19092003@gmail.com</div><div style="font:400 11px Inter;color:#9397ab">Родина Ковалів · ₴17,634</div></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:14px">
+            <span style="font:500 11px Inter;padding:5px 10px;border-radius:99px;background:rgba(181,171,252,.18);color:#e7e5fe">Родина</span>
+            <span style="font:400 11px Inter;padding:5px 10px;border-radius:99px;color:#b2b6ca">Сергій</span>
+            <span style="font:400 11px Inter;padding:5px 10px;border-radius:99px;color:#b2b6ca">Олена</span>
+          </div>
+        </div>
+        <div style="flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:1px">
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-chart-donut" style="font-size:19px;color:#9397ab"></i>Головна</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-wallet" style="font-size:19px;color:#9397ab"></i>Рахунки</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-chart-bar" style="font-size:19px;color:#9397ab"></i>Графіки</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-squares-four" style="font-size:19px;color:#9397ab"></i>Категорії</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#e7e5fe;background:rgba(145,132,217,.14);box-shadow:inset 0 0 0 1px #5d5294"><i class="ph ph-users-three" style="font-size:19px;color:#b5abfc"></i>Родина</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-lightning" style="font-size:19px;color:#9397ab"></i>Шаблони</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-arrows-clockwise" style="font-size:19px;color:#9397ab"></i>Регулярні платежі</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-bell" style="font-size:19px;color:#9397ab"></i>Нагадування</div>
+          <div style="display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:9px;font:400 14px Inter;color:#cfd3e5"><i class="ph ph-gear" style="font-size:19px;color:#9397ab"></i>Налаштування</div>
+        </div>
+        <div style="padding:12px 20px 18px;display:flex;align-items:center;gap:9px;font:400 11px Inter;color:#5f6373"><i class="ph ph-arrows-clockwise" style="font-size:14px"></i>Синхронізовано 11:38</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:8px 0 9px"><span style="width:110px;height:4px;border-radius:2px;background:#3f424d"></span></div>
+    </div>
+  </div>
+
+</section>
+
+<section style="padding:0 48px 64px;max-width:900px">
+  <p style="margin:0;font:400 12.5px/1.7 Inter;color:#75798c;text-wrap:pretty">Next: an interactive add-transaction flow (tap chip → logged, long-press → prefilled sheet), the group drill-down state on Home, a kid/allowance role if you want children as members, or a light theme pass. Reference screens by number — "make 04 a two-column grid", "add a savings goal widget to 10".</p>
+</section>
+</x-dc>
+</body>
+</html>
