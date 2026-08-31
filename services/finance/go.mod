@@ -15,7 +15,7 @@ replace (
 
 require (
 	connectrpc.com/connect v1.18.1
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0
 	github.com/nnc/family-manager/libs/go/database v0.0.0
 	github.com/nnc/family-manager/libs/go/events v0.0.0
