@@ -3,7 +3,7 @@
  * `Family Recipes App.dc.html`, DS bundle `organic-0a9cdade`).
  *
  * These values are recipes-only on purpose: @fm/theme and @fm/config are shared with
- * apps/finance, so retuning them there would repaint the finance app too. The Tailwind
+ * another app, so retuning them there would repaint that app too. The Tailwind
  * mirror lives in `apps/recipes/tailwind.config.js` — that file must stay CommonJS, which
  * is why the palette exists twice. Change one, change the other.
  */

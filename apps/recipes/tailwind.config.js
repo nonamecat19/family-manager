@@ -1,6 +1,6 @@
 // Organic — the recipes app's own palette. It deliberately overrides the shared
 // @fm/config preset's brand/surface roles instead of editing the preset, because the preset
-// is also apps/finance's palette (see `just impact pkg:@fm/config`). Values mirror
+// is shared by every app that consumes it (see `just impact pkg:@fm/config`). Values mirror
 // `components/organic/tokens.ts`; this file must stay CommonJS, so they exist twice.
 const neutral = {
   100: "#f9f4ed",
@@ -52,7 +52,7 @@ module.exports = {
         accent2,
         // The shared roles @fm/ui renders against, repainted in Organic. Doing it here
         // (rather than in the preset) is what keeps Button/Card/Field on-brand in this app
-        // without touching apps/finance.
+        // without touching the shared preset.
         primary: { DEFAULT: accent.DEFAULT, fg: "#ffffff", muted: accent[200] },
         bg: "#f5ead8",
         surface: neutral[100],
@@ -62,7 +62,7 @@ module.exports = {
         muted: neutral[600],
         // Organic is a light, warm system with no dark counterpart in the design. The dark
         // roles stay defined so shared @fm/ui `dark:` classes resolve to something warm
-        // instead of the finance app's blue-greys.
+        // instead of the shared preset's blue-greys.
         "bg-dark": accent[900],
         "surface-dark": "#2e2b25",
         "border-dark": neutral[800],

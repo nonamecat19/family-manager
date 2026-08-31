@@ -20,7 +20,7 @@ export type StaticTranslationKey = {
 const DICTS: Record<Locale, Record<TranslationKey, Leaf>> = { en, uk };
 
 /** App-local, like the rest of i18n — `secureTokenStore` in @fm/auth owns `fm.session`, this
- * key is namespaced under the app so a future finance-app language choice never collides. */
+ * key is namespaced under the app so another app's language choice never collides. */
 const STORAGE_KEY = "fm.recipes.locale";
 
 interface I18nContextValue {
