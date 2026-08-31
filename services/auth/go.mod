@@ -13,9 +13,9 @@ replace (
 )
 
 require (
-	connectrpc.com/connect v1.18.1
+	connectrpc.com/connect v1.20.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0
 	github.com/nnc/family-manager/libs/go/database v0.0.0
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
@@ -48,7 +48,7 @@ require (
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

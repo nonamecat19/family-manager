@@ -14,7 +14,7 @@ replace (
 )
 
 require (
-	connectrpc.com/connect v1.18.1
+	connectrpc.com/connect v1.20.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0
 	github.com/nnc/family-manager/libs/go/database v0.0.0
@@ -23,12 +23,12 @@ require (
 	github.com/nnc/family-manager/libs/go/rpc v0.0.0
 	github.com/nnc/family-manager/sdk/go v0.0.0
 	github.com/spf13/viper v1.19.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
