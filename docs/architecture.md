@@ -6,6 +6,7 @@
 apps/                Expo apps — screens + navigation only
   family-manager/
   shopping/
+  recipes/
   finance/
 packages/            shared TS, consumed via workspace:*
   ui/                design-system components
@@ -55,8 +56,7 @@ managed mode derives it (`libs/proto/buf.gen.yaml`).
 | `services/auth/` | — | **done** — moved, module renamed to `github.com/nnc/family-manager/services/auth`, contract moved to `libs/proto/auth/v1` |
 | `postgres/init/` | `infra/postgres/` | pending |
 | `docker-compose.yml` | root, plus `infra/` overrides | keep at root |
-| `finance-android/`, `notes-android/`, `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired |
-| `finance-legacy/` | archive | frozen, excluded from the graph |
+| `notes-android/`, `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired |
 
 Nothing in the table is moved automatically. Each move is its own change, and it must end with
 `just graph` showing the same edges under the new paths — the graph is how you prove a move did

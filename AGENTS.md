@@ -25,7 +25,7 @@ library that displaces a row in that table without an ADR.
 ## Layout
 
 ```
-apps/        Expo apps (family-manager, shopping, finance)
+apps/        Expo apps (family-manager, shopping, recipes)
 packages/    shared TS: ui, auth, api, theme, config
 services/    Go microservices, app-specific: auth, family, notifications, shopping
 libs/go/     shared Go: auth, logger, rpc, database, events, storage
@@ -38,8 +38,8 @@ tools/       repo tooling (repo-graph extractor)
 
 Naming, fixed: Go modules are `github.com/nnc/family-manager/<path>` (no `-service` suffix), TS
 packages are `@fm/<name>`, proto packages are `<domain>.v1`, event subjects are
-`<domain>.<entity>.<verb>`. Remaining Flutter dirs (`finance-android`, `notes-android`,
-`notifications-android`) and `finance-legacy` are being retired — see docs/architecture.md.
+`<domain>.<entity>.<verb>`. Remaining Flutter dirs (`notes-android`, `notifications-android`)
+are being retired — see docs/architecture.md.
 
 ## The knowledge graph
 

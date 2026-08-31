@@ -36,10 +36,14 @@ graph LR
     table_accounts["table:accounts"]
     table_budgets["table:budgets"]
     table_categories["table:categories"]
+    table_category_groups["table:category_groups"]
     table_families["table:families"]
     table_family_invitations["table:family_invitations"]
     table_family_members["table:family_members"]
+    table_finance_members["table:finance_members"]
+    table_finance_settings["table:finance_settings"]
     table_meal_plan_entries["table:meal_plan_entries"]
+    table_quick_templates["table:quick_templates"]
     table_recipe_categories["table:recipe_categories"]
     table_recipe_comments["table:recipe_comments"]
     table_recipe_favorites["table:recipe_favorites"]
@@ -47,9 +51,12 @@ graph LR
     table_recipe_steps["table:recipe_steps"]
     table_recipe_subcategories["table:recipe_subcategories"]
     table_recipes["table:recipes"]
+    table_recurring_payments["table:recurring_payments"]
     table_refresh_tokens["table:refresh_tokens"]
+    table_reminders["table:reminders"]
     table_transactions["table:transactions"]
     table_users["table:users"]
+    table_widget_instances["table:widget_instances"]
   end
   subgraph infras
     infra_auth["infra:auth"]
@@ -118,7 +125,14 @@ graph LR
   service_finance -->|PERSISTS_TO| table_accounts
   service_finance -->|PERSISTS_TO| table_budgets
   service_finance -->|PERSISTS_TO| table_categories
+  service_finance -->|PERSISTS_TO| table_category_groups
+  service_finance -->|PERSISTS_TO| table_finance_members
+  service_finance -->|PERSISTS_TO| table_finance_settings
+  service_finance -->|PERSISTS_TO| table_quick_templates
+  service_finance -->|PERSISTS_TO| table_recurring_payments
+  service_finance -->|PERSISTS_TO| table_reminders
   service_finance -->|PERSISTS_TO| table_transactions
+  service_finance -->|PERSISTS_TO| table_widget_instances
   service_finance -->|RUNS_ON| infra_finance
   service_finance -->|RUNS_ON| infra_nats
   service_finance -->|RUNS_ON| infra_postgres
@@ -144,10 +158,14 @@ graph LR
   table_accounts -->|OWNED_BY| service_finance
   table_budgets -->|OWNED_BY| service_finance
   table_categories -->|OWNED_BY| service_finance
+  table_category_groups -->|OWNED_BY| service_finance
   table_families -->|OWNED_BY| service_family
   table_family_invitations -->|OWNED_BY| service_family
   table_family_members -->|OWNED_BY| service_family
+  table_finance_members -->|OWNED_BY| service_finance
+  table_finance_settings -->|OWNED_BY| service_finance
   table_meal_plan_entries -->|OWNED_BY| service_recipes
+  table_quick_templates -->|OWNED_BY| service_finance
   table_recipe_categories -->|OWNED_BY| service_recipes
   table_recipe_comments -->|OWNED_BY| service_recipes
   table_recipe_favorites -->|OWNED_BY| service_recipes
@@ -155,6 +173,9 @@ graph LR
   table_recipe_steps -->|OWNED_BY| service_recipes
   table_recipe_subcategories -->|OWNED_BY| service_recipes
   table_recipes -->|OWNED_BY| service_recipes
+  table_recurring_payments -->|OWNED_BY| service_finance
   table_refresh_tokens -->|OWNED_BY| service_auth
+  table_reminders -->|OWNED_BY| service_finance
   table_transactions -->|OWNED_BY| service_finance
   table_users -->|OWNED_BY| service_auth
+  table_widget_instances -->|OWNED_BY| service_finance
