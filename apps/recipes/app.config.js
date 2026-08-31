@@ -53,6 +53,7 @@ module.exports = {
     scheme: "fmrecipes",
     version: "0.1.0",
     orientation: "portrait",
+    icon: "./assets/icon.png",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     plugins: [
@@ -87,7 +88,10 @@ module.exports = {
     android: {
       package: "dev.familymanager.recipes",
       adaptiveIcon: {
-        backgroundColor: "#C05621",
+        // Foreground art only: Android draws it over backgroundColor and then masks the
+        // result, so the plate and its ring live in the colour below, not in the PNG.
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#C4643C",
       },
       // Production is HTTPS and does not need this. It stays for EXPO_PUBLIC_API_ENV=local and
       // LAN testing, which are plain HTTP: without it, release builds (and any build without
@@ -97,6 +101,7 @@ module.exports = {
     web: {
       bundler: "metro",
       output: "static",
+      favicon: "./assets/favicon.png",
     },
   },
 };

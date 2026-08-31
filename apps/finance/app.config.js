@@ -49,6 +49,7 @@ module.exports = {
     scheme: "fmfinance",
     version: "0.1.0",
     orientation: "portrait",
+    icon: "./assets/icon.png",
     // Nocturne is a dark-only design system — there is no light pass of these 11 screens, so
     // the app pins the dark scheme rather than following the device and half-rendering.
     userInterfaceStyle: "dark",
@@ -80,7 +81,10 @@ module.exports = {
     android: {
       package: "dev.familymanager.finance",
       adaptiveIcon: {
-        backgroundColor: "#161826",
+        // Foreground art only: Android draws it over backgroundColor and then masks the
+        // result, so the plate and its ring live in the colour below, not in the PNG.
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#C4643C",
       },
       // Production is HTTPS and does not need this. It stays for EXPO_PUBLIC_API_ENV=local and
       // LAN testing, which are plain HTTP.
@@ -89,6 +93,7 @@ module.exports = {
     web: {
       bundler: "metro",
       output: "static",
+      favicon: "./assets/favicon.png",
     },
   },
 };
