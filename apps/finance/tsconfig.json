@@ -1,6 +1,14 @@
 {
   "extends": "@fm/config/tsconfig.expo.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    // Screens import the shared kit as "@/components/nocturne" and "@/components/i18n".
+    // Expo SDK 52's Metro resolves tsconfig `paths` natively, so this is the only place the
+    // alias is declared — no babel module-resolver plugin.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
   "include": [
     "app/**/*.ts",
     "app/**/*.tsx",

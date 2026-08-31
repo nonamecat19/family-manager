@@ -90,7 +90,6 @@ services:
       ACME_EMAIL: ${ACME_EMAIL}
       AUTH_HOST: ${AUTH_HOST}
       FAMILY_HOST: ${FAMILY_HOST}
-      FINANCE_HOST: ${FINANCE_HOST}
       RECIPES_HOST: ${RECIPES_HOST}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -218,7 +217,11 @@ services:
       FINANCE_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
       FINANCE_NATS_URL: nats://nats:4222
       FINANCE_HTTP_PORT: "8080"
-      FINANCE_BASE_CURRENCY: ${BASE_CURRENCY:-EUR}
+      FINANCE_GRPC_PORT: "9090"
+      # Only the fallbacks BootstrapHousehold uses when the app sends none; once a household
+      # exists its finance_settings row is the authority and these are never read again.
+      FINANCE_BASE_CURRENCY: ${FINANCE_BASE_CURRENCY:-UAH}
+      FINANCE_TIMEZONE: ${FINANCE_TIMEZONE:-Europe/Kyiv}
       FINANCE_LOG_JSON: "true"
       FINANCE_LOG_LEVEL: ${LOG_LEVEL:-info}
       GOMEMLIMIT: 140MiB
@@ -234,8 +237,7 @@ services:
         condition: service_healthy
     # The service binary is its own healthcheck: the distroless image ships no shell and no
     # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
-    # start_period covers migrations, which run at boot and are the slow part of a cold start
-    # on a 1 vCPU box.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
     healthcheck:
       test: ["CMD", "/server", "-healthcheck"]
       interval: 15s

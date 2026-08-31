@@ -112,3 +112,27 @@ test("format renders the currency and respects the minor unit", () => {
   );
   assert.equal(format(money(123456, "EUR"), { locale: "en-US", hideSymbol: true }), "1,234.56");
 });
+
+test("UAH is a two-decimal currency and formats with the hryvnia sign", () => {
+  assert.equal(minorUnits("UAH"), 2);
+  const formatted = format(money(1_763_400, "UAH"), { locale: "uk-UA" });
+  assert.match(formatted, /₴/, `expected a ₴ in ${JSON.stringify(formatted)}`);
+  assert.match(formatted, /17\D?634/, `expected 17 634 in ${JSON.stringify(formatted)}`);
+});
+
+test("a negative UAH balance keeps its sign — Mono is −₴10,835 on screen 08", () => {
+  const formatted = format(money(-1_083_500, "UAH"), { locale: "uk-UA" });
+  assert.match(formatted, /^[-\u2212]/, `expected a leading minus in ${JSON.stringify(formatted)}`);
+});
+
+test("income rows can force a leading plus, and dense tables can drop the symbol", () => {
+  assert.match(format(money(5000, "UAH"), { locale: "uk-UA", signDisplay: "always" }), /^\+/);
+  assert.doesNotMatch(format(money(5000, "UAH"), { locale: "uk-UA", hideSymbol: true }), /₴/);
+});
+
+test("Ukrainian amount entry survives the separators the keyboard produces", () => {
+  assert.deepEqual(parseAmount("1 234,56", "UAH"), { amountMinor: 123_456, currencyCode: "UAH" });
+  assert.deepEqual(parseAmount("50", "UAH"), { amountMinor: 5000, currencyCode: "UAH" });
+  assert.equal(toInput(money(123_456, "UAH")), "1234.56");
+  assert.equal(parseAmount("", "UAH"), null);
+});

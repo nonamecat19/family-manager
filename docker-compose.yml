@@ -99,7 +99,7 @@ services:
       nats:
         condition: service_healthy
       auth:
-        # service_healthy, not service_started: family, finance and recipes all fetch auth's
+        # service_healthy, not service_started: family and recipes both fetch auth's
         # JWKS at boot, and a container that exists is not one that has migrated and can serve
         # it. This is the wait that had nothing to wait on.
         condition: service_healthy
@@ -122,7 +122,11 @@ services:
       FINANCE_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
       FINANCE_NATS_URL: nats://nats:4222
       FINANCE_HTTP_PORT: "8080"
-      FINANCE_BASE_CURRENCY: ${BASE_CURRENCY:-EUR}
+      FINANCE_GRPC_PORT: "9090"
+      # Only the defaults BootstrapHousehold falls back to when the app sends none. Once a
+      # household exists, finance_settings is the authority and these are never read again.
+      FINANCE_BASE_CURRENCY: UAH
+      FINANCE_TIMEZONE: Europe/Kyiv
       FINANCE_LOG_JSON: "true"
     ports:
       - "${FINANCE_PORT:-8083}:8080"
@@ -132,9 +136,8 @@ services:
       nats:
         condition: service_healthy
       auth:
-        # service_healthy, not service_started: family, finance and recipes all fetch auth's
-        # JWKS at boot, and a container that exists is not one that has migrated and can serve
-        # it. This is the wait that had nothing to wait on.
+        # service_healthy, not service_started: finance fetches auth's JWKS at boot, and a
+        # container that exists is not one that has migrated and can serve it.
         condition: service_healthy
     # The service binary is its own healthcheck: the distroless image has no shell and no
     # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
@@ -176,7 +179,7 @@ services:
       minio:
         condition: service_started
       auth:
-        # service_healthy, not service_started: family, finance and recipes all fetch auth's
+        # service_healthy, not service_started: family and recipes both fetch auth's
         # JWKS at boot, and a container that exists is not one that has migrated and can serve
         # it. This is the wait that had nothing to wait on.
         condition: service_healthy

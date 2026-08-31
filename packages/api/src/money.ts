@@ -1,6 +1,6 @@
 /**
- * Money helpers. The wire type is `finance.v1.Money` — a minor-unit integer plus an ISO 4217
- * code — and it stays that way end to end. No float ever holds an amount: 0.1 + 0.2 is not
+ * Money helpers. An amount is a minor-unit integer plus an ISO 4217 code, and it stays that
+ * way end to end — including on the wire. No float ever holds an amount: 0.1 + 0.2 is not
  * 0.3, and a ledger that drifts by a cent is a ledger nobody trusts.
  *
  * `bigint` is deliberately avoided: JS numbers are exact integers below 2^53, which is

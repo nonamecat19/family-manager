@@ -7,134 +7,199 @@ package finance.v1;
 
 import "google/protobuf/timestamp.proto";
 
-// FinanceService is the household ledger: accounts hold money, transactions move it,
-// categories classify it, reports summarise it.
+// FinanceService is the household ledger, rebuilt around the 11-screen design: accounts hold
+// money (shared or private), a two-level category taxonomy classifies it, transactions are
+// attributed to the member who spent rather than only to the user who typed, budgets attach to
+// a group or a category, and every aggregate is asked for through the same Scope + Period pair
+// so Home, Transactions, Charts and the home-screen widgets can never disagree.
 //
-// Every row is scoped to a family_id taken from the caller's access token — the service
-// never accepts a family_id from the request body for a write, and never joins against
-// another service's tables (family membership is resolved over family.v1.FamilyService).
+// Identity is not duplicated here. families and members live in services/family (family.v1);
+// this service takes family_id and user_id from the access token's claims and keeps a member
+// read-model fed by `family.member.*` events. It never accepts a family_id in a request body
+// and never joins across a service boundary.
+//
+// Privacy is enforced server-side, not by the client: a private account belongs to exactly one
+// member, its balance never reaches another member's device, and other members' private
+// accounts are collapsed to a count (HiddenPrivateSummary) before the response is written.
 service FinanceService {
-  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  // --- household & settings ------------------------------------------------
+  // BootstrapHousehold seeds finance for a family that services/family has just created:
+  // settings plus the default group/category taxonomy, in one transaction. Idempotent per
+  // family — calling it twice returns the existing rows rather than a second taxonomy.
+  rpc BootstrapHousehold(BootstrapHouseholdRequest) returns (BootstrapHouseholdResponse);
+  // GetHouseholdOverview is the household screen in one round trip: balances, period spend,
+  // the per-member cards, and the shared-resource counters.
+  rpc GetHouseholdOverview(GetHouseholdOverviewRequest) returns (GetHouseholdOverviewResponse);
+  rpc GetFinanceSettings(GetFinanceSettingsRequest) returns (GetFinanceSettingsResponse);
+  rpc UpdateFinanceSettings(UpdateFinanceSettingsRequest) returns (UpdateFinanceSettingsResponse);
+  // SetOverspendNotifications is its own RPC because it is a single switch on the household
+  // screen; routing it through UpdateFinanceSettings would make an accidental currency change
+  // one mistyped field away from a toggle.
+  rpc SetOverspendNotifications(SetOverspendNotificationsRequest) returns (SetOverspendNotificationsResponse);
+  // ListMembers reads the member projection maintained from family.v1 events, so the "who
+  // spent" picker and the avatar chips render without a synchronous call to services/family.
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+
+  // --- accounts ------------------------------------------------------------
   rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
   rpc GetAccount(GetAccountRequest) returns (GetAccountResponse);
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
   rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse);
+  // ArchiveAccount hides an account that still has history. DeleteAccount is refused while
+  // transactions reference it — a balance that silently loses its rows is a corrupt ledger.
+  rpc ArchiveAccount(ArchiveAccountRequest) returns (ArchiveAccountResponse);
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  rpc ReorderAccounts(ReorderAccountsRequest) returns (ReorderAccountsResponse);
+  // TransferBetweenAccounts writes both legs in one transaction so a transfer can never
+  // half-commit, and is excluded from expense and income totals.
+  rpc TransferBetweenAccounts(TransferBetweenAccountsRequest) returns (TransferBetweenAccountsResponse);
 
+  // --- categories ----------------------------------------------------------
+  // ListCategoryTree is the whole categories screen and the add-sheet picker: groups, their
+  // categories, and each group's budget status.
+  rpc ListCategoryTree(ListCategoryTreeRequest) returns (ListCategoryTreeResponse);
+  rpc CreateCategoryGroup(CreateCategoryGroupRequest) returns (CreateCategoryGroupResponse);
+  rpc UpdateCategoryGroup(UpdateCategoryGroupRequest) returns (UpdateCategoryGroupResponse);
+  rpc DeleteCategoryGroup(DeleteCategoryGroupRequest) returns (DeleteCategoryGroupResponse);
+  rpc ReorderCategoryGroups(ReorderCategoryGroupsRequest) returns (ReorderCategoryGroupsResponse);
   rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
-  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
   rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+  rpc MoveCategory(MoveCategoryRequest) returns (MoveCategoryResponse);
   rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+  rpc ReorderCategories(ReorderCategoriesRequest) returns (ReorderCategoriesResponse);
 
+  // --- transactions --------------------------------------------------------
+  // CreateTransaction returns the budgets it moved, so the app can repaint the Home bars and
+  // raise an overspend toast without a refetch.
   rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
-  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
   rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
   rpc UpdateTransaction(UpdateTransactionRequest) returns (UpdateTransactionResponse);
   rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse);
+  // ListTransactions is grouped into day sections server-side: the per-day subtotal and the
+  // period total have to agree with the page boundary, and only the server knows both.
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
 
-  rpc CreateBudget(CreateBudgetRequest) returns (CreateBudgetResponse);
-  // ListBudgets returns each budget with its progress for the window in force today, which
-  // is the only form the UI ever renders.
+  // --- quick templates -----------------------------------------------------
+  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
+  rpc CreateTemplate(CreateTemplateRequest) returns (CreateTemplateResponse);
+  rpc UpdateTemplate(UpdateTemplateRequest) returns (UpdateTemplateResponse);
+  rpc DeleteTemplate(DeleteTemplateRequest) returns (DeleteTemplateResponse);
+  rpc ReorderTemplates(ReorderTemplatesRequest) returns (ReorderTemplatesResponse);
+  // LogTemplate is one round trip from a home-screen widget that may have no app process
+  // alive: it writes the transaction and returns the budgets it moved.
+  rpc LogTemplate(LogTemplateRequest) returns (LogTemplateResponse);
+
+  // --- budgets -------------------------------------------------------------
   rpc ListBudgets(ListBudgetsRequest) returns (ListBudgetsResponse);
-  rpc GetBudget(GetBudgetRequest) returns (GetBudgetResponse);
+  rpc CreateBudget(CreateBudgetRequest) returns (CreateBudgetResponse);
   rpc UpdateBudget(UpdateBudgetRequest) returns (UpdateBudgetResponse);
   rpc DeleteBudget(DeleteBudgetRequest) returns (DeleteBudgetResponse);
 
-  // GetSummary is the home screen: totals and balance for one period.
-  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
-  // GetCategoryBreakdown is the pie chart: one slice per category for one period.
-  rpc GetCategoryBreakdown(GetCategoryBreakdownRequest) returns (GetCategoryBreakdownResponse);
+  // --- analytics -----------------------------------------------------------
+  // GetHomeSummary is the home screen in a single call — headline, donut, group rows with
+  // their budget bars, member chips and template chips all move together when the scope or
+  // the period changes, so they are fetched together.
+  rpc GetHomeSummary(GetHomeSummaryRequest) returns (GetHomeSummaryResponse);
+  rpc GetGroupBreakdown(GetGroupBreakdownRequest) returns (GetGroupBreakdownResponse);
+  rpc GetMemberBreakdown(GetMemberBreakdownRequest) returns (GetMemberBreakdownResponse);
+  // GetSpendingSeries backs the stacked bar chart. Stacking is a parameter rather than a
+  // second RPC so flipping the total/expense/income tab is one request.
+  rpc GetSpendingSeries(GetSpendingSeriesRequest) returns (GetSpendingSeriesResponse);
+  // ListInsights is computed server-side so the same wording reaches app, widget and
+  // notification instead of three nearly identical sentences.
+  rpc ListInsights(ListInsightsRequest) returns (ListInsightsResponse);
+
+  // --- recurring payments --------------------------------------------------
+  rpc ListRecurringPayments(ListRecurringPaymentsRequest) returns (ListRecurringPaymentsResponse);
+  rpc CreateRecurringPayment(CreateRecurringPaymentRequest) returns (CreateRecurringPaymentResponse);
+  rpc UpdateRecurringPayment(UpdateRecurringPaymentRequest) returns (UpdateRecurringPaymentResponse);
+  rpc DeleteRecurringPayment(DeleteRecurringPaymentRequest) returns (DeleteRecurringPaymentResponse);
+  // Confirm-or-skip is the default for a payment that may not have actually happened; a
+  // payment with auto_post set writes its occurrence without this step.
+  rpc PostRecurringOccurrence(PostRecurringOccurrenceRequest) returns (PostRecurringOccurrenceResponse);
+  rpc SkipRecurringOccurrence(SkipRecurringOccurrenceRequest) returns (SkipRecurringOccurrenceResponse);
+
+  // --- reminders -----------------------------------------------------------
+  // finance stores the subscription; delivery is services/notifications' job, driven by the
+  // events below.
+  rpc ListReminders(ListRemindersRequest) returns (ListRemindersResponse);
+  rpc UpsertReminder(UpsertReminderRequest) returns (UpsertReminderResponse);
+  rpc DeleteReminder(DeleteReminderRequest) returns (DeleteReminderResponse);
+
+  // --- widgets -------------------------------------------------------------
+  rpc ListWidgets(ListWidgetsRequest) returns (ListWidgetsResponse);
+  rpc AddWidget(AddWidgetRequest) returns (AddWidgetResponse);
+  rpc UpdateWidget(UpdateWidgetRequest) returns (UpdateWidgetResponse);
+  rpc RemoveWidget(RemoveWidgetRequest) returns (RemoveWidgetResponse);
+  // GetWidgetData refreshes every placed widget in one request: one call per widget would
+  // make the Android update pass N round trips on a cold process.
+  rpc GetWidgetData(GetWidgetDataRequest) returns (GetWidgetDataResponse);
 }
 
-enum AccountType {
-  ACCOUNT_TYPE_UNSPECIFIED = 0;
-  ACCOUNT_TYPE_CASH = 1;
-  ACCOUNT_TYPE_CARD = 2;
-  ACCOUNT_TYPE_BANK = 3;
-  ACCOUNT_TYPE_SAVINGS = 4;
-  // ACCOUNT_TYPE_DEBT carries a negative balance (loans, credit owed).
-  ACCOUNT_TYPE_DEBT = 5;
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+// AccountKind drives the icon, and which accounts feed the shared headline: SAVINGS is
+// reported on its own savings line, DEBT counts toward the headline because money owed is
+// money you do not have.
+enum AccountKind {
+  ACCOUNT_KIND_UNSPECIFIED = 0;
+  ACCOUNT_KIND_CASH = 1;
+  ACCOUNT_KIND_CARD = 2;
+  ACCOUNT_KIND_BANK = 3;
+  ACCOUNT_KIND_SAVINGS = 4;
+  ACCOUNT_KIND_CRYPTO = 5;
+  ACCOUNT_KIND_DEBT = 6;
+}
+
+// AccountVisibility is the privacy boundary. PRIVATE means owned by exactly one member: the
+// balance is excluded from the family headline and never serialised to anyone else.
+enum AccountVisibility {
+  ACCOUNT_VISIBILITY_UNSPECIFIED = 0;
+  ACCOUNT_VISIBILITY_SHARED = 1;
+  ACCOUNT_VISIBILITY_PRIVATE = 2;
 }
 
 enum TransactionType {
   TRANSACTION_TYPE_UNSPECIFIED = 0;
   TRANSACTION_TYPE_EXPENSE = 1;
   TRANSACTION_TYPE_INCOME = 2;
-  // TRANSACTION_TYPE_TRANSFER moves money between two accounts of the same family and is
-  // excluded from income/expense totals.
+  // TRANSFER moves money between two accounts of the same household and is excluded from
+  // both income and expense totals.
   TRANSACTION_TYPE_TRANSFER = 3;
 }
 
-// Money is a minor-unit integer plus its ISO 4217 code. Floating point never touches money
-// in this repo: 10.10 is {amount_minor: 1010, currency_code: "EUR"}.
-message Money {
-  int64 amount_minor = 1;
-  string currency_code = 2;
+// TransactionKind is the expense/income tab as a filter. UNSPECIFIED means "both", which is
+// the chart screen's ЗАГАЛЬНЕ tab — there is no separate TOTAL member, because "no filter" and
+// "total" are the same request.
+enum TransactionKind {
+  TRANSACTION_KIND_UNSPECIFIED = 0;
+  TRANSACTION_KIND_EXPENSE = 1;
+  TRANSACTION_KIND_INCOME = 2;
 }
 
-// DateRange is inclusive on both ends. Dates are calendar dates in the family's timezone,
-// formatted YYYY-MM-DD — a spending report is a calendar question, not an instant one.
-message DateRange {
-  string from = 1;
-  string to = 2;
+// ScopeKind is the total switcher: the whole family, one member, or one account. Every
+// aggregate RPC takes it, which is what keeps the screens consistent with each other.
+enum ScopeKind {
+  SCOPE_KIND_UNSPECIFIED = 0;
+  SCOPE_KIND_FAMILY = 1;
+  SCOPE_KIND_MEMBER = 2;
+  SCOPE_KIND_ACCOUNT = 3;
 }
 
-message Account {
-  string id = 1;
-  string family_id = 2;
-  string name = 3;
-  AccountType type = 4;
-  string currency_code = 5;
-  // balance is derived from transactions plus the opening balance; it is never written
-  // directly by a client.
-  Money balance = 6;
-  Money opening_balance = 7;
-  // color is a hex string like "#4C9F70"; icon is a client-side icon key.
-  string color = 8;
-  string icon = 9;
-  bool archived = 10;
-  int32 sort_order = 11;
-  google.protobuf.Timestamp created_at = 12;
-  google.protobuf.Timestamp updated_at = 13;
+// PeriodGranularity is the день/тиждень/місяць/рік/період selector. The server resolves the
+// window edges so the app and a home-screen widget can never disagree about where a month ends.
+enum PeriodGranularity {
+  PERIOD_GRANULARITY_UNSPECIFIED = 0;
+  PERIOD_GRANULARITY_DAY = 1;
+  PERIOD_GRANULARITY_WEEK = 2;
+  PERIOD_GRANULARITY_MONTH = 3;
+  PERIOD_GRANULARITY_YEAR = 4;
+  // CUSTOM takes the explicit range on Period.range and ignores the anchor.
+  PERIOD_GRANULARITY_CUSTOM = 5;
 }
 
-message Category {
-  string id = 1;
-  string family_id = 2;
-  string name = 3;
-  // kind restricts where the category may be used: an expense category cannot classify
-  // income. TRANSACTION_TYPE_TRANSFER is not a valid kind.
-  TransactionType kind = 4;
-  string color = 5;
-  string icon = 6;
-  // parent_id groups categories into the two-level tree the UI renders; "" is a root.
-  string parent_id = 7;
-  bool archived = 8;
-  int32 sort_order = 9;
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp updated_at = 11;
-}
-
-message Transaction {
-  string id = 1;
-  string family_id = 2;
-  string account_id = 3;
-  // counter_account_id is set only for TRANSACTION_TYPE_TRANSFER: the destination account.
-  string counter_account_id = 4;
-  string category_id = 5;
-  TransactionType type = 6;
-  // amount is always positive; type decides the direction.
-  Money amount = 7;
-  string note = 8;
-  // occurred_on is the calendar date the money moved, YYYY-MM-DD.
-  string occurred_on = 9;
-  // created_by_user_id attributes the entry inside a shared family ledger.
-  string created_by_user_id = 10;
-  google.protobuf.Timestamp created_at = 11;
-  google.protobuf.Timestamp updated_at = 12;
-}
-
-// BudgetPeriod is the window a budget's limit applies to, recurring. A budget is "500 a
-// month", not "500 between two dates" — the window rolls forward on its own.
 enum BudgetPeriod {
   BUDGET_PERIOD_UNSPECIFIED = 0;
   BUDGET_PERIOD_WEEK = 1;
@@ -142,319 +207,1375 @@ enum BudgetPeriod {
   BUDGET_PERIOD_YEAR = 3;
 }
 
-message Budget {
+// BudgetTargetKind says which of a budget's two possible attach points is set. Exactly one of
+// group_id / category_id is populated; this enum saves every caller from re-deriving that.
+enum BudgetTargetKind {
+  BUDGET_TARGET_KIND_UNSPECIFIED = 0;
+  BUDGET_TARGET_KIND_GROUP = 1;
+  BUDGET_TARGET_KIND_CATEGORY = 2;
+}
+
+// BudgetTargetFilter narrows ListBudgets. UNSPECIFIED is every budget, which is what the
+// household counter needs.
+enum BudgetTargetFilter {
+  BUDGET_TARGET_FILTER_UNSPECIFIED = 0;
+  BUDGET_TARGET_FILTER_GROUP = 1;
+  BUDGET_TARGET_FILTER_CATEGORY = 2;
+}
+
+// SeriesStacking chooses the segments inside each bar of the chart screen's series.
+enum SeriesStacking {
+  SERIES_STACKING_UNSPECIFIED = 0;
+  SERIES_STACKING_NONE = 1;
+  SERIES_STACKING_MEMBER = 2;
+  SERIES_STACKING_GROUP = 3;
+}
+
+enum MemberRole {
+  MEMBER_ROLE_UNSPECIFIED = 0;
+  MEMBER_ROLE_OWNER = 1;
+  MEMBER_ROLE_MEMBER = 2;
+}
+
+// MemberStatus mirrors the family.v1 projection: PENDING is an invited member who has not
+// accepted yet, and who therefore has no transactions.
+enum MemberStatus {
+  MEMBER_STATUS_UNSPECIFIED = 0;
+  MEMBER_STATUS_ACTIVE = 1;
+  MEMBER_STATUS_PENDING = 2;
+}
+
+// Weekday anchors the household's budget weeks. The design's week does not necessarily start
+// where the device locale thinks it does, so it is stored, not inferred.
+enum Weekday {
+  WEEKDAY_UNSPECIFIED = 0;
+  WEEKDAY_MONDAY = 1;
+  WEEKDAY_TUESDAY = 2;
+  WEEKDAY_WEDNESDAY = 3;
+  WEEKDAY_THURSDAY = 4;
+  WEEKDAY_FRIDAY = 5;
+  WEEKDAY_SATURDAY = 6;
+  WEEKDAY_SUNDAY = 7;
+}
+
+enum RecurrenceUnit {
+  RECURRENCE_UNIT_UNSPECIFIED = 0;
+  RECURRENCE_UNIT_DAY = 1;
+  RECURRENCE_UNIT_WEEK = 2;
+  RECURRENCE_UNIT_MONTH = 3;
+  RECURRENCE_UNIT_YEAR = 4;
+}
+
+enum ReminderKind {
+  REMINDER_KIND_UNSPECIFIED = 0;
+  REMINDER_KIND_BUDGET_EXCEEDED = 1;
+  REMINDER_KIND_RECURRING_DUE = 2;
+  REMINDER_KIND_CUSTOM = 3;
+}
+
+enum WidgetType {
+  WIDGET_TYPE_UNSPECIFIED = 0;
+  WIDGET_TYPE_QUICK_ADD = 1;
+  WIDGET_TYPE_MONTH = 2;
+  WIDGET_TYPE_CATEGORY = 3;
+  WIDGET_TYPE_BUDGETS_AND_FAMILY = 4;
+  WIDGET_TYPE_RECENT_TRANSACTIONS = 5;
+  WIDGET_TYPE_ACCOUNTS = 6;
+}
+
+// WidgetSize is the Android home-screen cell footprint, named rather than a pair of ints so
+// the gallery badge and the layout code cannot drift apart.
+enum WidgetSize {
+  WIDGET_SIZE_UNSPECIFIED = 0;
+  WIDGET_SIZE_4X2 = 1;
+  WIDGET_SIZE_2X2 = 2;
+  WIDGET_SIZE_2X1 = 3;
+  WIDGET_SIZE_4X3 = 4;
+  WIDGET_SIZE_4X1 = 5;
+}
+
+// InsightKind lets the app pick an icon and an accent without parsing the sentence.
+enum InsightKind {
+  INSIGHT_KIND_UNSPECIFIED = 0;
+  INSIGHT_KIND_SPEND_SPIKE = 1;
+  INSIGHT_KIND_SPEND_DROP = 2;
+  INSIGHT_KIND_BUDGET_EXCEEDED = 3;
+  INSIGHT_KIND_NEW_MERCHANT = 4;
+}
+
+// ---------------------------------------------------------------------------
+// Value objects
+// ---------------------------------------------------------------------------
+
+// Money is a minor-unit integer plus its ISO 4217 code. Floating point never touches money in
+// this repo: 10.10 is {amount_minor: 1010, currency_code: "EUR"}. packages/api converts the
+// int64 to a plain JS number exactly once, at its wire boundary.
+message Money {
+  int64 amount_minor = 1;
+  string currency_code = 2;
+}
+
+// DateRange is inclusive on both ends, as calendar dates (YYYY-MM-DD) in the household's
+// timezone — a spending report is a calendar question, not an instant one.
+message DateRange {
+  string from = 1;
+  string to = 2;
+}
+
+// Period is the shared window request. anchor is any date inside the wanted window
+// (YYYY-MM-DD); range is read only when granularity is CUSTOM.
+message Period {
+  PeriodGranularity granularity = 1;
+  string anchor = 2;
+  DateRange range = 3;
+}
+
+// Scope is the "Родина ▾" switcher. member_id is read only for MEMBER, account_id only for
+// ACCOUNT; an empty Scope means the whole family.
+message Scope {
+  ScopeKind kind = 1;
+  string member_id = 2;
+  string account_id = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Entities
+// ---------------------------------------------------------------------------
+
+// HouseholdFinanceSettings is everything finance owns about a household. The name, the
+// members and the invitations belong to family.v1 and are deliberately absent here.
+message HouseholdFinanceSettings {
+  string family_id = 1;
+  string base_currency_code = 2;
+  // timezone is an IANA name ("Europe/Kyiv"); it decides where a day, and therefore a day
+  // section and a budget window, ends.
+  string timezone = 3;
+  Weekday week_starts_on = 4;
+  bool overspend_notifications_enabled = 5;
+  // pin_lock_enabled is synced rather than device-local because the household agrees that
+  // private balances are covered by a lock, and a second device must honour that.
+  bool pin_lock_enabled = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Member is the read-model projected from family.v1's member events, kept so the pickers,
+// avatars and per-member aggregates render without a synchronous cross-service call.
+message Member {
+  string user_id = 1;
+  string family_id = 2;
+  string display_name = 3;
+  // initial is the single grapheme drawn in the avatar chip; the server derives it so every
+  // surface (app, widget) shows the same letter.
+  string initial = 4;
+  // avatar_color_step indexes the shared accent ramp (0..7) rather than carrying a hex — the
+  // design rejects per-entity random hues.
+  int32 avatar_color_step = 5;
+  MemberRole role = 6;
+  MemberStatus status = 7;
+  string email = 8;
+  google.protobuf.Timestamp joined_at = 9;
+}
+
+message Account {
   string id = 1;
   string family_id = 2;
   string name = 3;
-  // category_id empty means the budget covers every expense in the household. A per-category
-  // budget and a total one are the same row, which keeps the progress query single-shaped.
-  string category_id = 4;
-  Money limit = 5;
-  BudgetPeriod period = 6;
-  // start_on anchors the recurring window, YYYY-MM-DD. A monthly budget anchored on the 15th
-  // runs the 15th to the 14th, which is what someone paid mid-month actually wants.
-  string start_on = 7;
+  AccountKind kind = 4;
+  AccountVisibility visibility = 5;
+  // owner_member_id is required for PRIVATE and empty for SHARED. A private account may only
+  // ever be created for the caller.
+  string owner_member_id = 6;
+  string currency_code = 7;
+  Money opening_balance = 8;
+  // balance is derived from opening_balance plus every transaction leg; a client never
+  // writes it, and a stored total would drift.
+  Money balance = 9;
+  string icon = 10;
+  int32 color_step = 11;
+  // excluded_from_family_total is true for private accounts and for anything the household
+  // has deliberately taken out of the headline (a savings pot being held for someone else).
+  bool excluded_from_family_total = 12;
+  bool archived = 13;
+  int32 sort_order = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+// HiddenPrivateSummary is all another member's private accounts ever become on the wire: a
+// count. The row is inert in the UI and carries no balance to leak.
+message HiddenPrivateSummary {
+  string member_id = 1;
+  string member_display_name = 2;
+  int32 account_count = 3;
+}
+
+// CategoryGroup is the top level of the two-level taxonomy that replaced the flat icon grid.
+message CategoryGroup {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  TransactionKind kind = 4;
+  string icon = 5;
+  // color_step indexes the accent ramp (0..7). Not a hex string: the design explicitly
+  // rejects per-category random hues, and a ramp index survives a theme change.
+  int32 color_step = 6;
+  int32 sort_order = 7;
   bool archived = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// Category always belongs to exactly one group — there are no orphan roots, which is what
+// replaced the old self-referencing parent tree. Colour is inherited from the group; only the
+// icon varies per category.
+message Category {
+  string id = 1;
+  string family_id = 2;
+  string group_id = 3;
+  string name = 4;
+  TransactionKind kind = 5;
+  string icon = 6;
+  int32 sort_order = 7;
+  bool archived = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// Budget attaches to either a group or a category, never both. The window rolls from
+// start_on, so a household that budgets from the 5th is not forced onto calendar months.
+message Budget {
+  string id = 1;
+  string family_id = 2;
+  BudgetTargetKind target_kind = 3;
+  string group_id = 4;
+  string category_id = 5;
+  Money limit = 6;
+  BudgetPeriod period = 7;
+  string start_on = 8;
+  // member_id narrows a budget to one member; empty means the whole household, which is the
+  // only form the current screens draw.
+  string member_id = 9;
+  bool notify_on_exceed = 10;
+  bool archived = 11;
+  int32 sort_order = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// BudgetStatus is derived, never stored — a persisted total drifts the moment a transaction
+// is edited. share is spent/limit as a ratio, and may exceed 1.0: the design draws 256% by
+// clamping the bar and switching the colour, which it cannot do if the server clamps first.
+message BudgetStatus {
+  Budget budget = 1;
+  DateRange window = 2;
+  Money spent = 3;
+  // remaining goes negative once the limit is passed.
+  Money remaining = 4;
+  double share = 5;
+  bool exceeded = 6;
+  int32 days_remaining = 7;
+}
+
+message Transaction {
+  string id = 1;
+  string family_id = 2;
+  TransactionType type = 3;
+  string account_id = 4;
+  // counter_account_id is set only on a TRANSFER: the account the money landed in.
+  string counter_account_id = 5;
+  string category_id = 6;
+  string group_id = 7;
+  // amount is always positive; the sign is the type's job, so a report never has to guess
+  // whether a negative expense is a refund or a data-entry slip.
+  Money amount = 8;
+  // received_amount is set only on a cross-currency transfer: what arrived, in the
+  // destination currency.
+  Money received_amount = 9;
+  string note = 10;
+  // merchant is a free label ("jetbrains"), not a foreign key — a merchant registry is a
+  // different product.
+  string merchant = 11;
+  string occurred_on = 12;
+  // member_id is who spent. It is deliberately distinct from created_by_user_id (who typed
+  // it) and from the account's owner: collapsing the three loses the per-member split.
+  string member_id = 13;
+  string created_by_user_id = 14;
+  // template_id is provenance, and drives the "шаблон" badge on the feed row.
+  string template_id = 15;
+  string recurring_id = 16;
+  google.protobuf.Timestamp created_at = 17;
+  google.protobuf.Timestamp updated_at = 18;
+}
+
+// QuickTemplate is a per-member quick-log button: tap to write it immediately, long-press to
+// open the add sheet prefilled. Templates are private to their owner.
+message QuickTemplate {
+  string id = 1;
+  string family_id = 2;
+  string owner_user_id = 3;
+  string label = 4;
+  string icon = 5;
+  Money amount = 6;
+  TransactionType type = 7;
+  string category_id = 8;
+  string account_id = 9;
+  // member_id defaults to the owner, so a template can still log on someone else's behalf.
+  string member_id = 10;
+  int32 sort_order = 11;
+  int32 usage_count = 12;
+  google.protobuf.Timestamp last_used_at = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+// Cadence is a deliberately small recurrence model — every N days/weeks/months/years, with an
+// optional day anchor. Full rrule expressiveness is not needed for a rent payment and would
+// have to be reimplemented in the widget.
+message Cadence {
+  int32 interval = 1;
+  RecurrenceUnit unit = 2;
+  // day_of_month is 1..31 for MONTH/YEAR cadences; 0 means "same day as next_due_on". A 31
+  // in a 30-day month clamps to the last day.
+  int32 day_of_month = 3;
+  Weekday day_of_week = 4;
+}
+
+message RecurringPayment {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  Money amount = 4;
+  TransactionType type = 5;
+  string category_id = 6;
+  string account_id = 7;
+  string member_id = 8;
+  Cadence cadence = 9;
+  string next_due_on = 10;
+  string end_on = 11;
+  // auto_post writes the transaction on the due date instead of asking. Off by default: a
+  // payment that may not have happened must not invent a row.
+  bool auto_post = 12;
+  bool active = 13;
+  string last_posted_on = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+message RecurringPaymentStatus {
+  RecurringPayment payment = 1;
+  string next_due_on = 2;
+  bool overdue = 3;
+  Transaction last_posted = 4;
+}
+
+// Reminder is the subscription, not the push. services/notifications consumes the events
+// below and delivers; finance only records what someone asked to be told about.
+message Reminder {
+  string id = 1;
+  string family_id = 2;
+  string user_id = 3;
+  ReminderKind kind = 4;
+  string title = 5;
+  google.protobuf.Timestamp due_at = 6;
+  Cadence repeat = 7;
+  bool enabled = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// WidgetInstance is one placed home-screen widget. Each binds to a member or to the whole
+// family, so two people can place the same type and see their own numbers.
+message WidgetInstance {
+  string id = 1;
+  string family_id = 2;
+  string user_id = 3;
+  WidgetType type = 4;
+  WidgetSize size = 5;
+  Scope scope = 6;
+  // target_ref is the type's subject: a category id, a group id, or empty. Account widgets
+  // use target_account_ids instead.
+  string target_ref = 7;
+  repeated string target_account_ids = 8;
   int32 sort_order = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
 }
 
-// BudgetStatus is a budget plus where it stands in the window in force. Progress is derived
-// from transactions on every read, never stored — a stored total is a total that drifts.
-message BudgetStatus {
-  Budget budget = 1;
-  // period is the concrete window the numbers below cover.
-  DateRange period = 2;
-  Money spent = 3;
-  // remaining goes negative once the limit is passed; clients render the overspend rather
-  // than clamping it to zero and hiding it.
-  Money remaining = 4;
-  // share is spent/limit, 0..n — above 1 when overspent. Precomputed so every client draws
-  // the same bar.
-  double share = 5;
-  bool exceeded = 6;
-  // days_remaining counts today as remaining, so the last day of a window reads 1, not 0.
-  int32 days_remaining = 7;
+// ---------------------------------------------------------------------------
+// Aggregate fragments — shared shapes used by the analytics responses
+// ---------------------------------------------------------------------------
+
+message MemberSpending {
+  Member member = 1;
+  Money spent = 2;
+  double share = 3;
+  int32 transaction_count = 4;
+  // private_account_count is the only fact about another member's private accounts that
+  // crosses the wire.
+  int32 private_account_count = 5;
 }
 
-message CreateBudgetRequest {
-  string name = 1;
-  string category_id = 2;
-  Money limit = 3;
-  BudgetPeriod period = 4;
-  string start_on = 5;
+message MemberAmount {
+  string member_id = 1;
+  Money amount = 2;
 }
 
-message CreateBudgetResponse {
-  Budget budget = 1;
+message MemberChip {
+  string member_id = 1;
+  string display_name = 2;
+  string initial = 3;
+  int32 avatar_color_step = 4;
 }
 
-message ListBudgetsRequest {
-  bool include_archived = 1;
-  // as_of picks which window to report, YYYY-MM-DD. Empty means today.
-  string as_of = 2;
-}
-
-message ListBudgetsResponse {
-  repeated BudgetStatus budgets = 1;
-}
-
-message GetBudgetRequest {
-  string id = 1;
-  string as_of = 2;
-}
-
-message GetBudgetResponse {
-  BudgetStatus budget = 1;
-}
-
-message UpdateBudgetRequest {
-  string id = 1;
+message DonutSlice {
+  string group_id = 1;
   string name = 2;
-  string category_id = 3;
-  Money limit = 4;
-  BudgetPeriod period = 5;
-  string start_on = 6;
-  bool archived = 7;
-  int32 sort_order = 8;
+  string icon = 3;
+  int32 color_step = 4;
+  Money amount = 5;
+  double share = 6;
 }
 
-message UpdateBudgetResponse {
-  Budget budget = 1;
+message CategorySlice {
+  string category_id = 1;
+  string name = 2;
+  string icon = 3;
+  Money amount = 4;
+  double share = 5;
 }
 
-message DeleteBudgetRequest {
+// GroupRow is a Home group row: either a budget bar or the "N категорій · share%" caption,
+// which is why budget is optional rather than a zeroed BudgetStatus.
+message GroupRow {
+  string group_id = 1;
+  string name = 2;
+  string icon = 3;
+  int32 color_step = 4;
+  Money amount = 5;
+  double share = 6;
+  int32 category_count = 7;
+  BudgetStatus budget = 8;
+  // contributor_member_ids is who spent in this group this period, which is what the
+  // "· Сергій" caption reports — not an ownership claim on the group.
+  repeated string contributor_member_ids = 9;
+}
+
+message GroupMemberSplit {
+  string group_id = 1;
+  string name = 2;
+  string icon = 3;
+  int32 color_step = 4;
+  Money total = 5;
+  repeated MemberAmount members = 6;
+}
+
+// Insight is a sentence the server composed, so app, widget and notification say the same
+// thing. current/previous/ratio are carried alongside so the app can render the numbers in
+// its own typography instead of parsing the body.
+message Insight {
   string id = 1;
+  InsightKind kind = 2;
+  string icon = 3;
+  string title = 4;
+  string body = 5;
+  string subject_member_id = 6;
+  string subject_group_id = 7;
+  Money current = 8;
+  Money previous = 9;
+  double ratio = 10;
 }
 
-message DeleteBudgetResponse {}
-
-message CreateAccountRequest {
-  string name = 1;
-  AccountType type = 2;
-  string currency_code = 3;
-  Money opening_balance = 4;
-  string color = 5;
-  string icon = 6;
+// DaySection groups the transaction feed. The subtotal is computed server-side with the same
+// window as the page, so scrolling can never produce a total that disagrees with the header.
+message DaySection {
+  string date = 1;
+  // weekday_label is localized by the server for the "29 серпня, сб" header.
+  string weekday_label = 2;
+  Money day_total = 3;
+  repeated Transaction transactions = 4;
 }
 
-message CreateAccountResponse {
-  Account account = 1;
+// GroupNode is one row of the categories screen: a group, its categories, and its budget.
+message GroupNode {
+  CategoryGroup group = 1;
+  repeated Category categories = 2;
+  BudgetStatus budget = 3;
+  int32 category_count = 4;
 }
+
+// ---------------------------------------------------------------------------
+// Household & settings
+// ---------------------------------------------------------------------------
+
+message BootstrapHouseholdRequest {
+  string base_currency_code = 1;
+  string timezone = 2;
+  bool seed_default_taxonomy = 3;
+  Weekday week_starts_on = 4;
+}
+message BootstrapHouseholdResponse {
+  HouseholdFinanceSettings settings = 1;
+  repeated CategoryGroup groups = 2;
+  repeated Category categories = 3;
+}
+
+message GetHouseholdOverviewRequest {
+  Period period = 1;
+}
+message GetHouseholdOverviewResponse {
+  Money shared_balance = 1;
+  Money savings_total = 2;
+  Money period_expense = 3;
+  repeated MemberSpending members = 4;
+  int32 shared_account_count = 5;
+  int32 group_budget_count = 6;
+  bool overspend_notifications_enabled = 7;
+}
+
+message GetFinanceSettingsRequest {}
+message GetFinanceSettingsResponse {
+  HouseholdFinanceSettings settings = 1;
+}
+
+message UpdateFinanceSettingsRequest {
+  optional string base_currency_code = 1;
+  optional Weekday week_starts_on = 2;
+  optional bool overspend_notifications_enabled = 3;
+  optional bool pin_lock_enabled = 4;
+  optional string timezone = 5;
+}
+message UpdateFinanceSettingsResponse {
+  HouseholdFinanceSettings settings = 1;
+}
+
+message SetOverspendNotificationsRequest {
+  bool enabled = 1;
+}
+message SetOverspendNotificationsResponse {
+  bool enabled = 1;
+}
+
+message ListMembersRequest {
+  bool include_pending = 1;
+}
+message ListMembersResponse {
+  repeated Member members = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
 
 message ListAccountsRequest {
   bool include_archived = 1;
 }
-
+// The response is split by what the caller may see, rather than one list plus a client-side
+// filter: the server decides, so the app can never leak a balance it was accidentally sent.
 message ListAccountsResponse {
-  repeated Account accounts = 1;
-  // total is every account balance converted to the family's base currency.
-  Money total = 2;
+  repeated Account shared = 1;
+  repeated Account private_own = 2;
+  repeated HiddenPrivateSummary hidden = 3;
+  Money shared_balance = 4;
+  Money savings_total = 5;
 }
 
 message GetAccountRequest {
-  string id = 1;
+  string account_id = 1;
 }
-
 message GetAccountResponse {
   Account account = 1;
 }
 
-message UpdateAccountRequest {
-  string id = 1;
-  string name = 2;
-  AccountType type = 3;
-  string color = 4;
-  string icon = 5;
-  bool archived = 6;
-  int32 sort_order = 7;
+message CreateAccountRequest {
+  string name = 1;
+  AccountKind kind = 2;
+  AccountVisibility visibility = 3;
+  string currency_code = 4;
+  Money opening_balance = 5;
+  string icon = 6;
+  int32 color_step = 7;
+  bool excluded_from_family_total = 8;
+}
+message CreateAccountResponse {
+  Account account = 1;
 }
 
+message UpdateAccountRequest {
+  string account_id = 1;
+  optional string name = 2;
+  optional AccountKind kind = 3;
+  optional AccountVisibility visibility = 4;
+  optional string icon = 5;
+  optional int32 color_step = 6;
+  optional bool excluded_from_family_total = 7;
+  // opening_balance is editable because the first balance a user types is usually wrong;
+  // the derived balance moves with it.
+  Money opening_balance = 8;
+}
 message UpdateAccountResponse {
   Account account = 1;
 }
 
-message DeleteAccountRequest {
-  string id = 1;
+message ArchiveAccountRequest {
+  string account_id = 1;
+  bool archived = 2;
+}
+message ArchiveAccountResponse {
+  Account account = 1;
 }
 
+message DeleteAccountRequest {
+  string account_id = 1;
+}
 message DeleteAccountResponse {}
 
-message CreateCategoryRequest {
-  string name = 1;
-  TransactionType kind = 2;
-  string color = 3;
-  string icon = 4;
-  string parent_id = 5;
+message ReorderAccountsRequest {
+  repeated string account_ids_in_order = 1;
+}
+message ReorderAccountsResponse {}
+
+message TransferBetweenAccountsRequest {
+  string from_account_id = 1;
+  string to_account_id = 2;
+  Money amount = 3;
+  // received_amount is required only when the two accounts hold different currencies; the
+  // rate is the user's, because the server has no rate source it can defend.
+  Money received_amount = 4;
+  string occurred_on = 5;
+  string note = 6;
+  string member_id = 7;
+}
+message TransferBetweenAccountsResponse {
+  Transaction transaction = 1;
 }
 
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+message ListCategoryTreeRequest {
+  TransactionKind kind = 1;
+  bool include_archived = 2;
+  // as_of picks the budget window whose status is attached to each group; empty means today.
+  string as_of = 3;
+}
+message ListCategoryTreeResponse {
+  repeated GroupNode groups = 1;
+}
+
+message CreateCategoryGroupRequest {
+  string name = 1;
+  TransactionKind kind = 2;
+  string icon = 3;
+  int32 color_step = 4;
+}
+message CreateCategoryGroupResponse {
+  CategoryGroup group = 1;
+}
+
+message UpdateCategoryGroupRequest {
+  string group_id = 1;
+  optional string name = 2;
+  optional string icon = 3;
+  optional int32 color_step = 4;
+  optional bool archived = 5;
+}
+message UpdateCategoryGroupResponse {
+  CategoryGroup group = 1;
+}
+
+message DeleteCategoryGroupRequest {
+  string group_id = 1;
+  // reassign_to_group_id is required when the group still holds categories: a group holding
+  // categories that hold transactions cannot silently vanish.
+  string reassign_to_group_id = 2;
+}
+message DeleteCategoryGroupResponse {
+  int32 moved_categories = 1;
+}
+
+message ReorderCategoryGroupsRequest {
+  repeated string group_ids_in_order = 1;
+}
+message ReorderCategoryGroupsResponse {}
+
+message CreateCategoryRequest {
+  string group_id = 1;
+  string name = 2;
+  string icon = 3;
+  TransactionKind kind = 4;
+}
 message CreateCategoryResponse {
   Category category = 1;
 }
 
-message ListCategoriesRequest {
-  // kind filters to expense or income categories; unspecified returns both.
-  TransactionType kind = 1;
-  bool include_archived = 2;
-}
-
-message ListCategoriesResponse {
-  repeated Category categories = 1;
-}
-
 message UpdateCategoryRequest {
-  string id = 1;
-  string name = 2;
-  string color = 3;
-  string icon = 4;
-  string parent_id = 5;
-  bool archived = 6;
-  int32 sort_order = 7;
+  string category_id = 1;
+  optional string name = 2;
+  optional string icon = 3;
+  optional bool archived = 4;
 }
-
 message UpdateCategoryResponse {
   Category category = 1;
 }
 
-message DeleteCategoryRequest {
-  string id = 1;
+message MoveCategoryRequest {
+  string category_id = 1;
+  string target_group_id = 2;
+}
+message MoveCategoryResponse {
+  Category category = 1;
 }
 
-message DeleteCategoryResponse {}
+message DeleteCategoryRequest {
+  string category_id = 1;
+  // reassign_to_category_id is required when the category still has transactions.
+  string reassign_to_category_id = 2;
+}
+message DeleteCategoryResponse {
+  int32 moved_transactions = 1;
+}
+
+message ReorderCategoriesRequest {
+  string group_id = 1;
+  repeated string category_ids_in_order = 2;
+}
+message ReorderCategoriesResponse {}
+
+// ---------------------------------------------------------------------------
+// Transactions
+// ---------------------------------------------------------------------------
 
 message CreateTransactionRequest {
-  string account_id = 1;
-  string counter_account_id = 2;
+  TransactionType type = 1;
+  string account_id = 2;
   string category_id = 3;
-  TransactionType type = 4;
-  Money amount = 5;
+  Money amount = 4;
+  string occurred_on = 5;
   string note = 6;
-  string occurred_on = 7;
+  string merchant = 7;
+  // member_id defaults to the caller when empty — the "Хто" picker starts on the caller.
+  string member_id = 8;
+  string template_id = 9;
 }
-
 message CreateTransactionResponse {
   Transaction transaction = 1;
-}
-
-message ListTransactionsRequest {
-  DateRange range = 1;
-  // Empty filters mean "everything".
-  repeated string account_ids = 2;
-  repeated string category_ids = 3;
-  TransactionType type = 4;
-  // search matches the note, case-insensitively.
-  string search = 5;
-  // page_size defaults to 50 and is capped at 200. page_token is the opaque cursor from
-  // the previous response.
-  int32 page_size = 6;
-  string page_token = 7;
-}
-
-message ListTransactionsResponse {
-  repeated Transaction transactions = 1;
-  string next_page_token = 2;
+  // affected_budgets is every budget whose window contains this transaction, so the app can
+  // repaint the bars and raise an overspend toast without a refetch.
+  repeated BudgetStatus affected_budgets = 2;
 }
 
 message GetTransactionRequest {
-  string id = 1;
+  string transaction_id = 1;
 }
-
 message GetTransactionResponse {
   Transaction transaction = 1;
 }
 
 message UpdateTransactionRequest {
-  string id = 1;
-  string account_id = 2;
-  string counter_account_id = 3;
-  string category_id = 4;
-  TransactionType type = 5;
-  Money amount = 6;
-  string note = 7;
-  string occurred_on = 8;
+  string transaction_id = 1;
+  optional TransactionType type = 2;
+  optional string account_id = 3;
+  optional string category_id = 4;
+  optional string occurred_on = 5;
+  optional string note = 6;
+  optional string merchant = 7;
+  optional string member_id = 8;
+  Money amount = 9;
 }
-
 message UpdateTransactionResponse {
   Transaction transaction = 1;
+  repeated BudgetStatus affected_budgets = 2;
 }
 
 message DeleteTransactionRequest {
-  string id = 1;
+  string transaction_id = 1;
+}
+message DeleteTransactionResponse {
+  // affected_budgets is returned on delete too: removing a transaction can pull a budget back
+  // under its limit, and the app has to repaint that.
+  repeated BudgetStatus affected_budgets = 1;
 }
 
-message DeleteTransactionResponse {}
-
-message GetSummaryRequest {
-  DateRange range = 1;
-  repeated string account_ids = 2;
+message ListTransactionsRequest {
+  Scope scope = 1;
+  Period period = 2;
+  TransactionKind kind = 3;
+  repeated string member_ids = 4;
+  repeated string account_ids = 5;
+  repeated string group_ids = 6;
+  repeated string category_ids = 7;
+  // query matches note and merchant, case-insensitively.
+  string query = 8;
+  string cursor = 9;
+  int32 page_size = 10;
+}
+message ListTransactionsResponse {
+  repeated DaySection days = 1;
+  // period_total covers the WHOLE period under the same filters, not the page: it never counts
+  // transfers (moving money is not spending it), and it counts only rows held in the household
+  // base currency, because minor units of two currencies do not add. With kind unspecified it
+  // is a net figure — expenses minus income — so the ЗАГАЛЬНЕ tab shows what the period cost
+  // rather than the two sides summed as magnitudes.
+  Money period_total = 2;
+  string next_cursor = 3;
 }
 
-message GetSummaryResponse {
-  Money income = 1;
-  Money expense = 2;
-  // net is income - expense for the period; balance is the current total across accounts.
-  Money net = 3;
-  Money balance = 4;
+// ---------------------------------------------------------------------------
+// Quick templates
+// ---------------------------------------------------------------------------
+
+message ListTemplatesRequest {
+  // owner_user_id defaults to the caller. Asking for another member's templates returns an
+  // empty list rather than an error: they are private, not secret.
+  string owner_user_id = 1;
+}
+message ListTemplatesResponse {
+  repeated QuickTemplate templates = 1;
 }
 
-message CategorySlice {
-  string category_id = 1;
-  string category_name = 2;
-  string color = 3;
-  Money total = 4;
-  // share is the fraction of the period total, 0..1 — precomputed so every client draws
-  // the same pie.
-  double share = 5;
-  int32 transaction_count = 6;
+message CreateTemplateRequest {
+  string label = 1;
+  string icon = 2;
+  Money amount = 3;
+  TransactionType type = 4;
+  string category_id = 5;
+  string account_id = 6;
+  string member_id = 7;
+}
+message CreateTemplateResponse {
+  QuickTemplate template = 1;
 }
 
-message GetCategoryBreakdownRequest {
-  DateRange range = 1;
-  TransactionType type = 2;
-  repeated string account_ids = 3;
+message UpdateTemplateRequest {
+  string template_id = 1;
+  optional string label = 2;
+  optional string icon = 3;
+  optional string category_id = 4;
+  optional string account_id = 5;
+  optional string member_id = 6;
+  Money amount = 7;
+}
+message UpdateTemplateResponse {
+  QuickTemplate template = 1;
 }
 
-message GetCategoryBreakdownResponse {
-  repeated CategorySlice slices = 1;
+message DeleteTemplateRequest {
+  string template_id = 1;
+}
+message DeleteTemplateResponse {}
+
+message ReorderTemplatesRequest {
+  repeated string template_ids_in_order = 1;
+}
+message ReorderTemplatesResponse {}
+
+message LogTemplateRequest {
+  string template_id = 1;
+  // occurred_on defaults to today in the household timezone.
+  string occurred_on = 2;
+  // amount_override handles "the usual coffee, but it cost more today" without editing the
+  // template.
+  Money amount_override = 3;
+}
+message LogTemplateResponse {
+  Transaction transaction = 1;
+  repeated BudgetStatus affected_budgets = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Budgets
+// ---------------------------------------------------------------------------
+
+message ListBudgetsRequest {
+  // as_of picks which rolling window each budget is evaluated in; empty means today.
+  string as_of = 1;
+  BudgetTargetFilter target = 2;
+  bool include_archived = 3;
+}
+message ListBudgetsResponse {
+  repeated BudgetStatus budgets = 1;
+  // within_limit_count and total_count are the "4 з 5" caption: budgets currently under their
+  // limit out of the budgets evaluated.
+  int32 within_limit_count = 2;
+  int32 total_count = 3;
+}
+
+message CreateBudgetRequest {
+  // Exactly one target may be set.
+  oneof target {
+    string group_id = 1;
+    string category_id = 2;
+  }
+  Money limit = 3;
+  BudgetPeriod period = 4;
+  string start_on = 5;
+  string member_id = 6;
+  bool notify_on_exceed = 7;
+}
+message CreateBudgetResponse {
+  BudgetStatus budget = 1;
+}
+
+message UpdateBudgetRequest {
+  string budget_id = 1;
+  Money limit = 2;
+  optional BudgetPeriod period = 3;
+  optional string start_on = 4;
+  optional bool notify_on_exceed = 5;
+  optional bool archived = 6;
+}
+message UpdateBudgetResponse {
+  BudgetStatus budget = 1;
+}
+
+message DeleteBudgetRequest {
+  string budget_id = 1;
+}
+message DeleteBudgetResponse {}
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+message GetHomeSummaryRequest {
+  Scope scope = 1;
+  Period period = 2;
+  TransactionKind kind = 3;
+}
+message GetHomeSummaryResponse {
+  Money headline_balance = 1;
+  Money period_total = 2;
+  int32 group_count = 3;
+  repeated DonutSlice slices = 4;
+  repeated GroupRow groups = 5;
+  repeated QuickTemplate templates = 6;
+  repeated MemberChip members = 7;
+  DateRange window = 8;
+}
+
+message GetGroupBreakdownRequest {
+  string group_id = 1;
+  Scope scope = 2;
+  Period period = 3;
+  TransactionKind kind = 4;
+}
+message GetGroupBreakdownResponse {
+  CategoryGroup group = 1;
   Money total = 2;
+  repeated CategorySlice categories = 3;
+  BudgetStatus budget = 4;
+  repeated MemberSpending members = 5;
 }
 
-// Events published on `finance.transaction.*` (libs/go/events).
+message GetMemberBreakdownRequest {
+  Period period = 1;
+  TransactionKind kind = 2;
+}
+message GetMemberBreakdownResponse {
+  Money total = 1;
+  repeated MemberSpending members = 2;
+  repeated GroupMemberSplit groups = 3;
+  repeated Insight insights = 4;
+}
+
+message GetSpendingSeriesRequest {
+  // granularity is the bucket width; CUSTOM is not meaningful for a series and is rejected.
+  PeriodGranularity granularity = 1;
+  // bucket_count is how many buckets back from today, inclusive (the chart draws 7).
+  int32 bucket_count = 2;
+  TransactionKind kind = 3;
+  SeriesStacking stacked_by = 4;
+  Scope scope = 5;
+}
+message GetSpendingSeriesResponse {
+  repeated SeriesBucket buckets = 1;
+  // current_bucket_index is the bucket containing today, which the chart outlines.
+  int32 current_bucket_index = 2;
+}
+message SeriesBucket {
+  string label = 1;
+  string start = 2;
+  string end = 3;
+  Money total = 4;
+  repeated SeriesSegment segments = 5;
+}
+message SeriesSegment {
+  // key is a member id or a group id depending on the request's stacked_by.
+  string key = 1;
+  string label = 2;
+  int32 color_step = 3;
+  Money amount = 4;
+}
+
+message ListInsightsRequest {
+  Period period = 1;
+  int32 limit = 2;
+}
+message ListInsightsResponse {
+  repeated Insight insights = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Recurring payments
+// ---------------------------------------------------------------------------
+
+message ListRecurringPaymentsRequest {
+  bool include_inactive = 1;
+  string as_of = 2;
+}
+message ListRecurringPaymentsResponse {
+  repeated RecurringPaymentStatus payments = 1;
+}
+
+message CreateRecurringPaymentRequest {
+  string name = 1;
+  Money amount = 2;
+  TransactionType type = 3;
+  string category_id = 4;
+  string account_id = 5;
+  string member_id = 6;
+  Cadence cadence = 7;
+  string next_due_on = 8;
+  string end_on = 9;
+  bool auto_post = 10;
+}
+message CreateRecurringPaymentResponse {
+  RecurringPayment payment = 1;
+}
+
+message UpdateRecurringPaymentRequest {
+  string recurring_id = 1;
+  optional string name = 2;
+  optional string category_id = 3;
+  optional string account_id = 4;
+  optional string member_id = 5;
+  optional string next_due_on = 6;
+  optional string end_on = 7;
+  optional bool auto_post = 8;
+  optional bool active = 9;
+  Money amount = 10;
+  Cadence cadence = 11;
+}
+message UpdateRecurringPaymentResponse {
+  RecurringPayment payment = 1;
+}
+
+message DeleteRecurringPaymentRequest {
+  string recurring_id = 1;
+}
+message DeleteRecurringPaymentResponse {}
+
+message PostRecurringOccurrenceRequest {
+  string recurring_id = 1;
+  // due_on identifies the occurrence being confirmed, so posting the same one twice is a
+  // no-op rather than a duplicate row.
+  string due_on = 2;
+  Money amount_override = 3;
+}
+message PostRecurringOccurrenceResponse {
+  Transaction transaction = 1;
+  string next_due_on = 2;
+}
+
+message SkipRecurringOccurrenceRequest {
+  string recurring_id = 1;
+  string due_on = 2;
+}
+message SkipRecurringOccurrenceResponse {
+  string next_due_on = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Reminders
+// ---------------------------------------------------------------------------
+
+message ListRemindersRequest {
+  bool include_disabled = 1;
+}
+message ListRemindersResponse {
+  repeated Reminder reminders = 1;
+}
+
+// Upsert rather than create+update: a reminder is edited far more often than it is created,
+// and the app's editor has no meaningful distinction between the two.
+message UpsertReminderRequest {
+  string reminder_id = 1;
+  ReminderKind kind = 2;
+  string title = 3;
+  google.protobuf.Timestamp due_at = 4;
+  Cadence repeat = 5;
+  bool enabled = 6;
+}
+message UpsertReminderResponse {
+  Reminder reminder = 1;
+}
+
+message DeleteReminderRequest {
+  string reminder_id = 1;
+}
+message DeleteReminderResponse {}
+
+// ---------------------------------------------------------------------------
+// Widgets
+// ---------------------------------------------------------------------------
+
+message ListWidgetsRequest {}
+message ListWidgetsResponse {
+  repeated WidgetInstance widgets = 1;
+}
+
+message AddWidgetRequest {
+  WidgetType type = 1;
+  WidgetSize size = 2;
+  Scope scope = 3;
+  string target_ref = 4;
+  repeated string target_account_ids = 5;
+}
+message AddWidgetResponse {
+  WidgetInstance widget = 1;
+}
+
+message UpdateWidgetRequest {
+  string widget_id = 1;
+  optional WidgetSize size = 2;
+  Scope scope = 3;
+  optional string target_ref = 4;
+  repeated string target_account_ids = 5;
+}
+message UpdateWidgetResponse {
+  WidgetInstance widget = 1;
+}
+
+message RemoveWidgetRequest {
+  string widget_id = 1;
+}
+message RemoveWidgetResponse {}
+
+message GetWidgetDataRequest {
+  // Empty means every widget the caller has placed — a cold widget process may not know its
+  // own ids yet.
+  repeated string widget_ids = 1;
+}
+message GetWidgetDataResponse {
+  repeated WidgetPayload payloads = 1;
+}
+
+message WidgetPayload {
+  string widget_id = 1;
+  WidgetType type = 2;
+  google.protobuf.Timestamp refreshed_at = 3;
+  oneof data {
+    QuickAddWidgetData quick_add = 4;
+    MonthWidgetData month = 5;
+    CategoryWidgetData category = 6;
+    BudgetsAndFamilyWidgetData budgets_and_family = 7;
+    RecentTransactionsWidgetData recent_transactions = 8;
+    AccountsWidgetData accounts = 9;
+  }
+}
+
+message QuickAddWidgetData {
+  repeated QuickTemplate templates = 1;
+}
+message MonthWidgetData {
+  string label = 1;
+  Money period_total = 2;
+  int32 budget_count = 3;
+  int32 budgets_within_limit = 4;
+}
+message CategoryWidgetData {
+  string category_id = 1;
+  string name = 2;
+  string icon = 3;
+  Money amount = 4;
+  BudgetStatus budget = 5;
+}
+message BudgetsAndFamilyWidgetData {
+  repeated BudgetStatus budgets = 1;
+  repeated MemberSpending members = 2;
+  Money period_total = 3;
+}
+message RecentTransactionsWidgetData {
+  repeated Transaction transactions = 1;
+}
+message AccountsWidgetData {
+  repeated Account accounts = 1;
+  Money shared_balance = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Events published on `finance.<entity>.<verb>` (libs/go/events). Domain events are contracts
+// too: every consumer reads these messages, not the service's tables.
+// ---------------------------------------------------------------------------
+
+// finance.transaction.created
 message TransactionCreatedEvent {
+  string family_id = 1;
+  string transaction_id = 2;
+  string member_id = 3;
+  string account_id = 4;
+  string category_id = 5;
+  string group_id = 6;
+  TransactionType type = 7;
+  Money amount = 8;
+  string occurred_on = 9;
+  string template_id = 10;
+  string actor_user_id = 11;
+  google.protobuf.Timestamp occurred_at = 12;
+}
+
+// finance.transaction.updated. Both sides are carried because a consumer maintaining its own
+// totals has to subtract the old values before adding the new ones.
+message TransactionUpdatedEvent {
+  string family_id = 1;
+  string transaction_id = 2;
+  Money previous_amount = 3;
+  string previous_category_id = 4;
+  string previous_member_id = 5;
+  string previous_occurred_on = 6;
+  Money amount = 7;
+  string category_id = 8;
+  string member_id = 9;
+  string occurred_on = 10;
+  string actor_user_id = 11;
+  google.protobuf.Timestamp occurred_at = 12;
+}
+
+// finance.transaction.deleted
+message TransactionDeletedEvent {
   string family_id = 1;
   string transaction_id = 2;
   string account_id = 3;
   string category_id = 4;
-  TransactionType type = 5;
-  Money amount = 6;
-  string created_by_user_id = 7;
+  Money amount = 5;
+  string occurred_on = 6;
+  string actor_user_id = 7;
   google.protobuf.Timestamp occurred_at = 8;
 }
 
-// BudgetExceededEvent is published on `finance.budget.exceeded` the moment a transaction
-// takes a budget past its limit — once per crossing, not on every subsequent overspend, so a
-// consumer can notify without a storm.
-message BudgetExceededEvent {
+// finance.transfer.created — kept separate from transaction.created so a consumer computing
+// spend never has to special-case a subject it already subscribed to.
+message TransferCreatedEvent {
   string family_id = 1;
-  string budget_id = 2;
-  string budget_name = 3;
-  string category_id = 4;
-  Money limit = 5;
-  Money spent = 6;
-  DateRange period = 7;
-  string triggered_by_user_id = 8;
+  string transaction_id = 2;
+  string from_account_id = 3;
+  string to_account_id = 4;
+  Money amount = 5;
+  Money received_amount = 6;
+  string occurred_on = 7;
+  string actor_user_id = 8;
   google.protobuf.Timestamp occurred_at = 9;
 }
 
-message TransactionUpdatedEvent {
+// finance.account.created
+message AccountCreatedEvent {
   string family_id = 1;
-  string transaction_id = 2;
-  google.protobuf.Timestamp occurred_at = 3;
+  string account_id = 2;
+  AccountVisibility visibility = 3;
+  string owner_member_id = 4;
+  AccountKind kind = 5;
+  google.protobuf.Timestamp occurred_at = 6;
 }
 
-message TransactionDeletedEvent {
+// finance.account.updated
+message AccountUpdatedEvent {
   string family_id = 1;
-  string transaction_id = 2;
-  google.protobuf.Timestamp occurred_at = 3;
+  string account_id = 2;
+  AccountVisibility visibility = 3;
+  bool archived = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+// finance.budget.created
+message BudgetCreatedEvent {
+  string family_id = 1;
+  string budget_id = 2;
+  BudgetTargetKind target_kind = 3;
+  string group_id = 4;
+  string category_id = 5;
+  Money limit = 6;
+  BudgetPeriod period = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// finance.budget.updated
+message BudgetUpdatedEvent {
+  string family_id = 1;
+  string budget_id = 2;
+  Money limit = 3;
+  BudgetPeriod period = 4;
+  bool archived = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// finance.budget.exceeded — the notifications service is the consumer behind the household
+// screen's overspend toggle.
+message BudgetExceededEvent {
+  string family_id = 1;
+  string budget_id = 2;
+  BudgetTargetKind target_kind = 3;
+  string group_id = 4;
+  string category_id = 5;
+  Money limit = 6;
+  Money spent = 7;
+  double share = 8;
+  DateRange window = 9;
+  string triggering_transaction_id = 10;
+  string member_id = 11;
+  google.protobuf.Timestamp occurred_at = 12;
+}
+
+// finance.budget.recovered — an edit or a delete can pull a budget back under its limit.
+// Without this, a sent overspend alert could never be retracted and the same window would
+// alert again on the next breach.
+message BudgetRecoveredEvent {
+  string family_id = 1;
+  string budget_id = 2;
+  DateRange window = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+}
+
+// finance.template.used — drives usage_count, chip ordering and widget refresh without a
+// write path through the transaction consumer.
+message TemplateUsedEvent {
+  string family_id = 1;
+  string template_id = 2;
+  string owner_user_id = 3;
+  string transaction_id = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+// finance.recurring.due
+message RecurringDueEvent {
+  string family_id = 1;
+  string recurring_id = 2;
+  string name = 3;
+  Money amount = 4;
+  string due_on = 5;
+  string member_id = 6;
+  bool auto_post = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// finance.recurring.posted
+message RecurringPostedEvent {
+  string family_id = 1;
+  string recurring_id = 2;
+  string transaction_id = 3;
+  string due_on = 4;
+  string next_due_on = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// finance.reminder.due
+message ReminderDueEvent {
+  string family_id = 1;
+  string reminder_id = 2;
+  string user_id = 3;
+  ReminderKind kind = 4;
+  string title = 5;
+  google.protobuf.Timestamp due_at = 6;
+  google.protobuf.Timestamp occurred_at = 7;
 }

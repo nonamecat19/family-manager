@@ -7,9 +7,9 @@ WORKDIR /src
 
 # Every module go.work lists must exist before `go mod download all`: it resolves the whole
 # `use` set and hard-errors on a missing directory rather than skipping it. Enumerating the
-# service manifests by hand rotted exactly that way once — adding recipes left the other three
+# service manifests by hand rotted exactly that way once — adding recipes left the other
 # images failing here with "cannot load module services/recipes listed in go.work file" — so a
-# glob does it instead, and a new service needs no edit in any of these four files. The
+# glob does it instead, and a new service needs no edit in any of these Dockerfiles. The
 # `# syntax` pin above is what makes `COPY --parents` available; it preserves the
 # services/<name>/ prefix that a plain wildcard would flatten into a single collided path.
 # Still manifests only, never `COPY services/`: keeping sources out of this layer is what lets

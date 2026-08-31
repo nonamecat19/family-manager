@@ -12,45 +12,52 @@ import (
 )
 
 const createBudget = `-- name: CreateBudget :one
-INSERT INTO budgets (
-    family_id, name, category_id, limit_minor, currency_code, period, start_on, sort_order
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, family_id, name, category_id, limit_minor, currency_code, period, start_on, archived, sort_order, created_at, updated_at
+INSERT INTO budgets (family_id, target_kind, group_id, category_id, limit_minor,
+    currency_code, period, start_on, member_id, notify_on_exceed, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM budgets WHERE family_id = $1), 0))
+RETURNING id, family_id, target_kind, group_id, category_id, limit_minor, currency_code, period, start_on, member_id, notify_on_exceed, archived, sort_order, created_at, updated_at
 `
 
 type CreateBudgetParams struct {
-	FamilyID     pgtype.UUID
-	Name         string
-	CategoryID   pgtype.UUID
-	LimitMinor   int64
-	CurrencyCode string
-	Period       string
-	StartOn      pgtype.Date
-	SortOrder    int32
+	FamilyID       pgtype.UUID
+	TargetKind     string
+	GroupID        pgtype.UUID
+	CategoryID     pgtype.UUID
+	LimitMinor     int64
+	CurrencyCode   string
+	Period         string
+	StartOn        pgtype.Date
+	MemberID       pgtype.UUID
+	NotifyOnExceed bool
 }
 
 func (q *Queries) CreateBudget(ctx context.Context, arg CreateBudgetParams) (Budget, error) {
 	row := q.db.QueryRow(ctx, createBudget,
 		arg.FamilyID,
-		arg.Name,
+		arg.TargetKind,
+		arg.GroupID,
 		arg.CategoryID,
 		arg.LimitMinor,
 		arg.CurrencyCode,
 		arg.Period,
 		arg.StartOn,
-		arg.SortOrder,
+		arg.MemberID,
+		arg.NotifyOnExceed,
 	)
 	var i Budget
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
-		&i.Name,
+		&i.TargetKind,
+		&i.GroupID,
 		&i.CategoryID,
 		&i.LimitMinor,
 		&i.CurrencyCode,
 		&i.Period,
 		&i.StartOn,
+		&i.MemberID,
+		&i.NotifyOnExceed,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,
@@ -78,7 +85,7 @@ func (q *Queries) DeleteBudget(ctx context.Context, arg DeleteBudgetParams) (int
 }
 
 const getBudget = `-- name: GetBudget :one
-SELECT id, family_id, name, category_id, limit_minor, currency_code, period, start_on, archived, sort_order, created_at, updated_at FROM budgets
+SELECT id, family_id, target_kind, group_id, category_id, limit_minor, currency_code, period, start_on, member_id, notify_on_exceed, archived, sort_order, created_at, updated_at FROM budgets
 WHERE id = $1 AND family_id = $2
 `
 
@@ -93,12 +100,15 @@ func (q *Queries) GetBudget(ctx context.Context, arg GetBudgetParams) (Budget, e
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
-		&i.Name,
+		&i.TargetKind,
+		&i.GroupID,
 		&i.CategoryID,
 		&i.LimitMinor,
 		&i.CurrencyCode,
 		&i.Period,
 		&i.StartOn,
+		&i.MemberID,
+		&i.NotifyOnExceed,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,
@@ -108,19 +118,21 @@ func (q *Queries) GetBudget(ctx context.Context, arg GetBudgetParams) (Budget, e
 }
 
 const listBudgets = `-- name: ListBudgets :many
-SELECT id, family_id, name, category_id, limit_minor, currency_code, period, start_on, archived, sort_order, created_at, updated_at FROM budgets
+SELECT id, family_id, target_kind, group_id, category_id, limit_minor, currency_code, period, start_on, member_id, notify_on_exceed, archived, sort_order, created_at, updated_at FROM budgets
 WHERE family_id = $1
-  AND ($2::bool OR archived = FALSE)
+  AND ($2::text IS NULL OR target_kind = $2)
+  AND ($3::bool OR NOT archived)
 ORDER BY sort_order, created_at
 `
 
 type ListBudgetsParams struct {
 	FamilyID        pgtype.UUID
+	TargetKind      *string
 	IncludeArchived bool
 }
 
 func (q *Queries) ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Budget, error) {
-	rows, err := q.db.Query(ctx, listBudgets, arg.FamilyID, arg.IncludeArchived)
+	rows, err := q.db.Query(ctx, listBudgets, arg.FamilyID, arg.TargetKind, arg.IncludeArchived)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +143,15 @@ func (q *Queries) ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Bud
 		if err := rows.Scan(
 			&i.ID,
 			&i.FamilyID,
-			&i.Name,
+			&i.TargetKind,
+			&i.GroupID,
 			&i.CategoryID,
 			&i.LimitMinor,
 			&i.CurrencyCode,
 			&i.Period,
 			&i.StartOn,
+			&i.MemberID,
+			&i.NotifyOnExceed,
 			&i.Archived,
 			&i.SortOrder,
 			&i.CreatedAt,
@@ -153,10 +168,13 @@ func (q *Queries) ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Bud
 }
 
 const listBudgetsForCategory = `-- name: ListBudgetsForCategory :many
-SELECT id, family_id, name, category_id, limit_minor, currency_code, period, start_on, archived, sort_order, created_at, updated_at FROM budgets
-WHERE family_id = $1
-  AND archived = FALSE
-  AND (category_id IS NULL OR category_id = $2::uuid)
+SELECT b.id, b.family_id, b.target_kind, b.group_id, b.category_id, b.limit_minor, b.currency_code, b.period, b.start_on, b.member_id, b.notify_on_exceed, b.archived, b.sort_order, b.created_at, b.updated_at FROM budgets b
+LEFT JOIN categories c ON c.id = $2::uuid
+WHERE b.family_id = $1
+  AND NOT b.archived
+  AND ((b.target_kind = 'category' AND b.category_id = $2::uuid)
+       OR (b.target_kind = 'group' AND b.group_id = c.group_id))
+ORDER BY b.sort_order
 `
 
 type ListBudgetsForCategoryParams struct {
@@ -164,8 +182,9 @@ type ListBudgetsForCategoryParams struct {
 	CategoryID pgtype.UUID
 }
 
-// Budgets a given category's spending counts against: its own, plus the household total.
-// Used after a write to decide whether a limit was just crossed.
+// ListBudgetsForCategory is what CreateTransaction/UpdateTransaction/DeleteTransaction use to
+// answer affected_budgets: both the category's own budget and its group's, because spend in a
+// category counts toward both.
 func (q *Queries) ListBudgetsForCategory(ctx context.Context, arg ListBudgetsForCategoryParams) ([]Budget, error) {
 	rows, err := q.db.Query(ctx, listBudgetsForCategory, arg.FamilyID, arg.CategoryID)
 	if err != nil {
@@ -178,12 +197,15 @@ func (q *Queries) ListBudgetsForCategory(ctx context.Context, arg ListBudgetsFor
 		if err := rows.Scan(
 			&i.ID,
 			&i.FamilyID,
-			&i.Name,
+			&i.TargetKind,
+			&i.GroupID,
 			&i.CategoryID,
 			&i.LimitMinor,
 			&i.CurrencyCode,
 			&i.Period,
 			&i.StartOn,
+			&i.MemberID,
+			&i.NotifyOnExceed,
 			&i.Archived,
 			&i.SortOrder,
 			&i.CreatedAt,
@@ -199,88 +221,51 @@ func (q *Queries) ListBudgetsForCategory(ctx context.Context, arg ListBudgetsFor
 	return items, nil
 }
 
-const sumBudgetSpend = `-- name: SumBudgetSpend :one
-SELECT COALESCE(SUM(amount_minor), 0)::bigint AS spent_minor
-FROM transactions
-WHERE family_id = $1
-  AND type = 'expense'
-  AND occurred_on >= $2
-  AND occurred_on <= $3
-  AND ($4::uuid IS NULL OR category_id = $4::uuid)
-`
-
-type SumBudgetSpendParams struct {
-	FamilyID   pgtype.UUID
-	FromDate   pgtype.Date
-	ToDate     pgtype.Date
-	CategoryID pgtype.UUID
-}
-
-// Budgets are consumed by spending only: a transfer moves your own money between pockets and
-// income is not expenditure, so neither touches a limit.
-//
-// A NULL category_id on the budget means "everything", which is why the category filter is
-// written as a nullable comparison rather than an equality.
-func (q *Queries) SumBudgetSpend(ctx context.Context, arg SumBudgetSpendParams) (int64, error) {
-	row := q.db.QueryRow(ctx, sumBudgetSpend,
-		arg.FamilyID,
-		arg.FromDate,
-		arg.ToDate,
-		arg.CategoryID,
-	)
-	var spent_minor int64
-	err := row.Scan(&spent_minor)
-	return spent_minor, err
-}
-
 const updateBudget = `-- name: UpdateBudget :one
 UPDATE budgets
-SET name          = $1,
-    category_id   = $2,
-    limit_minor   = $3,
-    period        = $4,
-    start_on      = $5,
-    archived      = $6,
-    sort_order    = $7,
-    updated_at    = NOW()
-WHERE id = $8 AND family_id = $9
-RETURNING id, family_id, name, category_id, limit_minor, currency_code, period, start_on, archived, sort_order, created_at, updated_at
+SET limit_minor      = COALESCE($3::bigint, limit_minor),
+    period           = COALESCE($4::text, period),
+    start_on         = COALESCE($5::date, start_on),
+    notify_on_exceed = COALESCE($6::bool, notify_on_exceed),
+    archived         = COALESCE($7::bool, archived),
+    updated_at       = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, target_kind, group_id, category_id, limit_minor, currency_code, period, start_on, member_id, notify_on_exceed, archived, sort_order, created_at, updated_at
 `
 
 type UpdateBudgetParams struct {
-	Name       string
-	CategoryID pgtype.UUID
-	LimitMinor int64
-	Period     string
-	StartOn    pgtype.Date
-	Archived   bool
-	SortOrder  int32
-	ID         pgtype.UUID
-	FamilyID   pgtype.UUID
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	LimitMinor     *int64
+	Period         *string
+	StartOn        pgtype.Date
+	NotifyOnExceed *bool
+	Archived       *bool
 }
 
 func (q *Queries) UpdateBudget(ctx context.Context, arg UpdateBudgetParams) (Budget, error) {
 	row := q.db.QueryRow(ctx, updateBudget,
-		arg.Name,
-		arg.CategoryID,
+		arg.ID,
+		arg.FamilyID,
 		arg.LimitMinor,
 		arg.Period,
 		arg.StartOn,
+		arg.NotifyOnExceed,
 		arg.Archived,
-		arg.SortOrder,
-		arg.ID,
-		arg.FamilyID,
 	)
 	var i Budget
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
-		&i.Name,
+		&i.TargetKind,
+		&i.GroupID,
 		&i.CategoryID,
 		&i.LimitMinor,
 		&i.CurrencyCode,
 		&i.Period,
 		&i.StartOn,
+		&i.MemberID,
+		&i.NotifyOnExceed,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,

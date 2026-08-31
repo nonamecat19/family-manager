@@ -9,6 +9,7 @@ replace (
 	github.com/nnc/family-manager/libs/go/database => ../../libs/go/database
 	github.com/nnc/family-manager/libs/go/events => ../../libs/go/events
 	github.com/nnc/family-manager/libs/go/logger => ../../libs/go/logger
+	github.com/nnc/family-manager/libs/go/rpc => ../../libs/go/rpc
 	github.com/nnc/family-manager/sdk/go => ../../sdk/go
 )
 
@@ -19,6 +20,7 @@ require (
 	github.com/nnc/family-manager/libs/go/database v0.0.0
 	github.com/nnc/family-manager/libs/go/events v0.0.0
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
+	github.com/nnc/family-manager/libs/go/rpc v0.0.0
 	github.com/nnc/family-manager/sdk/go v0.0.0
 	github.com/spf13/viper v1.19.0
 	google.golang.org/protobuf v1.36.4
@@ -38,7 +40,6 @@ require (
 	github.com/nats-io/nats.go v1.38.0 // indirect
 	github.com/nats-io/nkeys v0.4.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/nnc/family-manager/libs/go/rpc v0.0.0
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -57,5 +58,3 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/nnc/family-manager/libs/go/rpc => ../../libs/go/rpc

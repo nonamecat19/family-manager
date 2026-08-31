@@ -6,413 +6,386 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
-	"github.com/nnc/family-manager/libs/go/events"
 	financev1 "github.com/nnc/family-manager/sdk/go/finance/v1"
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// Stored period values; the CHECK constraint in 000002_budgets.up.sql is the other half.
-const (
-	periodWeek  = "week"
-	periodMonth = "month"
-	periodYear  = "year"
-)
+// budgetStatus derives a budget's state in the window containing asOf. Nothing here is
+// stored: a persisted total drifts the moment a transaction is edited, and the drift is
+// invisible until someone reconciles by hand.
+func (h *Handler) budgetStatus(
+	ctx context.Context, c caller, hh household, b db.Budget, asOf time.Time,
+) (*financev1.BudgetStatus, error) {
+	window := budgetWindow(b.Period, b.StartOn.Time, asOf)
 
-func (h *Handler) CreateBudget(
-	ctx context.Context, req *connect.Request[financev1.CreateBudgetRequest],
-) (*connect.Response[financev1.CreateBudgetResponse], error) {
-	familyID, err := h.familyID(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	name, err := requiredName(req.Msg.GetName())
-	if err != nil {
-		return nil, err
-	}
-	period, ok := periodToStored(req.Msg.GetPeriod())
-	if !ok {
-		return nil, invalid("period must be week, month or year")
-	}
-	if req.Msg.GetLimit().GetAmountMinor() <= 0 {
-		return nil, invalid("limit must be above zero")
-	}
-
-	startOn, err := pgconv.Date(req.Msg.GetStartOn())
-	if err != nil || !startOn.Valid {
-		return nil, invalid("start_on must be YYYY-MM-DD")
-	}
-
-	categoryID, err := h.budgetCategory(ctx, familyID, req.Msg.GetCategoryId(), req.Msg.GetPeriod())
-	if err != nil {
-		return nil, err
-	}
-
-	currency := req.Msg.GetLimit().GetCurrencyCode()
-	if currency == "" {
-		currency = h.baseCurrency
-	}
-	if !isCurrencyCode(currency) {
-		return nil, invalid("limit currency must be a three-letter ISO 4217 code")
-	}
-
-	budget, err := h.q.CreateBudget(ctx, db.CreateBudgetParams{
-		FamilyID:     familyID,
-		Name:         name,
-		CategoryID:   categoryID,
-		LimitMinor:   req.Msg.GetLimit().GetAmountMinor(),
-		CurrencyCode: currency,
-		Period:       period,
-		StartOn:      startOn,
+	spent, err := h.q.SumBudgetSpend(ctx, db.SumBudgetSpendParams{
+		FamilyID: c.familyID, ViewerMemberID: c.memberID(),
+		FromDate: pgDate(window.from), ToDate: pgDate(window.to),
+		CurrencyCode: b.CurrencyCode,
+		GroupID:      b.GroupID, CategoryID: b.CategoryID, MemberID: b.MemberID,
 	})
 	if err != nil {
-		if isUniqueViolation(err) {
-			return nil, connect.NewError(connect.CodeAlreadyExists,
-				errors.New("a budget already covers that category for that period"))
-		}
-		return nil, h.internal(ctx, err, "create budget")
+		return nil, h.internal(ctx, err, "sum budget spend")
 	}
+	return budgetStatusFrom(b, window, spent, h.today(hh)), nil
+}
 
-	return connect.NewResponse(&financev1.CreateBudgetResponse{
-		Budget: toProtoBudget(budget),
-	}), nil
+// budgetStatusFrom is the arithmetic half, kept separate from the query so the ratio and the
+// day count are testable without a store.
+//
+// share is deliberately unclamped: the design draws 256% by clamping the bar and switching
+// the colour, which it cannot do if the server has already clamped the number.
+func budgetStatusFrom(b db.Budget, window dayRange, spent int64, today time.Time) *financev1.BudgetStatus {
+	share := 0.0
+	if b.LimitMinor > 0 {
+		share = float64(spent) / float64(b.LimitMinor)
+	}
+	days := int32(0)
+	if !today.After(window.to) {
+		days = int32(window.to.Sub(startOfDay(today)).Hours()/24) + 1
+	}
+	return &financev1.BudgetStatus{
+		Budget:        toProtoBudget(b),
+		Window:        window.proto(),
+		Spent:         money(spent, b.CurrencyCode),
+		Remaining:     money(b.LimitMinor-spent, b.CurrencyCode),
+		Share:         share,
+		Exceeded:      spent > b.LimitMinor,
+		DaysRemaining: days,
+	}
 }
 
 func (h *Handler) ListBudgets(
 	ctx context.Context, req *connect.Request[financev1.ListBudgetsRequest],
 ) (*connect.Response[financev1.ListBudgetsResponse], error) {
-	familyID, err := h.familyID(ctx)
+	c, err := h.caller(ctx)
 	if err != nil {
 		return nil, err
 	}
-	asOf, err := h.asOf(req.Msg.GetAsOf())
+	hh, err := h.household(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	asOf, err := requireDay("as_of", req.Msg.GetAsOf(), h.today(hh), hh.loc)
 	if err != nil {
 		return nil, err
 	}
 
 	rows, err := h.q.ListBudgets(ctx, db.ListBudgetsParams{
-		FamilyID:        familyID,
+		FamilyID: c.familyID, TargetKind: budgetTargetFilter(req.Msg.GetTarget()),
 		IncludeArchived: req.Msg.GetIncludeArchived(),
 	})
 	if err != nil {
 		return nil, h.internal(ctx, err, "list budgets")
 	}
 
-	out := make([]*financev1.BudgetStatus, 0, len(rows))
-	for _, budget := range rows {
-		status, err := h.statusOf(ctx, familyID, budget, asOf)
+	out := &financev1.ListBudgetsResponse{TotalCount: int32(len(rows))}
+	for _, b := range rows {
+		status, err := h.budgetStatus(ctx, c, hh, b, asOf)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, status)
+		if !status.GetExceeded() {
+			out.WithinLimitCount++
+		}
+		out.Budgets = append(out.Budgets, status)
 	}
-
-	return connect.NewResponse(&financev1.ListBudgetsResponse{Budgets: out}), nil
+	return connect.NewResponse(out), nil
 }
 
-func (h *Handler) GetBudget(
-	ctx context.Context, req *connect.Request[financev1.GetBudgetRequest],
-) (*connect.Response[financev1.GetBudgetResponse], error) {
-	familyID, err := h.familyID(ctx)
+func (h *Handler) CreateBudget(
+	ctx context.Context, req *connect.Request[financev1.CreateBudgetRequest],
+) (*connect.Response[financev1.CreateBudgetResponse], error) {
+	c, err := h.caller(ctx)
 	if err != nil {
 		return nil, err
 	}
-	id, err := requiredUUID(req.Msg.GetId(), "id")
+	hh, err := h.household(ctx, c)
 	if err != nil {
 		return nil, err
 	}
-	asOf, err := h.asOf(req.Msg.GetAsOf())
+	msg := req.Msg
+
+	limit, err := checkAmount(msg.GetLimit())
 	if err != nil {
+		return nil, err
+	}
+	if limit <= 0 {
+		return nil, invalid("limit must be greater than zero")
+	}
+	// The budget is spent against by SumBudgetSpend, which filters transactions by the budget's
+	// own currency. One in a currency the household does not use would therefore report zero
+	// spent forever, never exceed and never notify — so it is refused rather than accepted and
+	// left inert. UpdateBudget has no currency field, which would make it uncorrectable too.
+	currency := hh.currency()
+	if code := trimmed(msg.GetLimit().GetCurrencyCode()); code != "" {
+		given, err := checkCurrency(code)
+		if err != nil {
+			return nil, err
+		}
+		if given != currency {
+			return nil, invalid("a budget is kept in the household currency, %s", currency)
+		}
+	}
+
+	params := db.CreateBudgetParams{
+		FamilyID: c.familyID, LimitMinor: limit, CurrencyCode: currency,
+		Period: budgetPeriodFromProto(msg.GetPeriod()), NotifyOnExceed: msg.GetNotifyOnExceed(),
+	}
+
+	// Exactly one attach point. The oneof makes "both" unrepresentable; "neither" is still a
+	// request a client can send, and it has no meaning.
+	switch target := msg.GetTarget().(type) {
+	case *financev1.CreateBudgetRequest_GroupId:
+		groupID, err := requireUUID("group_id", target.GroupId)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := h.q.GetCategoryGroup(ctx, db.GetCategoryGroupParams{
+			ID: groupID, FamilyID: c.familyID,
+		}); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, notFound("category group")
+			}
+			return nil, h.internal(ctx, err, "get category group")
+		}
+		params.TargetKind = targetGroup
+		params.GroupID = groupID
+	case *financev1.CreateBudgetRequest_CategoryId:
+		categoryID, err := requireUUID("category_id", target.CategoryId)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := h.q.GetCategory(ctx, db.GetCategoryParams{
+			ID: categoryID, FamilyID: c.familyID,
+		}); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, notFound("category")
+			}
+			return nil, h.internal(ctx, err, "get category")
+		}
+		params.TargetKind = targetCategory
+		params.CategoryID = categoryID
+	default:
+		return nil, invalid("a budget needs either group_id or category_id")
+	}
+
+	startOn, err := requireDay("start_on", msg.GetStartOn(), h.today(hh), hh.loc)
+	if err != nil {
+		return nil, err
+	}
+	params.StartOn = pgDate(startOn)
+	if params.MemberID, err = optionalUUID("member_id", msg.GetMemberId()); err != nil {
 		return nil, err
 	}
 
-	budget, err := h.q.GetBudget(ctx, db.GetBudgetParams{ID: id, FamilyID: familyID})
+	row, err := h.q.CreateBudget(ctx, params)
 	if err != nil {
-		return nil, h.notFoundOr(ctx, err, "budget")
+		return nil, h.internal(ctx, err, "create budget")
 	}
+	h.publish(ctx, subjectBudgetCreated, &financev1.BudgetCreatedEvent{
+		FamilyId:   c.family,
+		BudgetId:   pgconv.UUIDString(row.ID),
+		TargetKind: budgetTargetToProto(row.TargetKind),
+		GroupId:    pgconv.UUIDString(row.GroupID),
+		CategoryId: pgconv.UUIDString(row.CategoryID),
+		Limit:      money(row.LimitMinor, row.CurrencyCode),
+		Period:     budgetPeriodToProto(row.Period),
+		OccurredAt: h.timestamp(),
+	})
 
-	status, err := h.statusOf(ctx, familyID, budget, asOf)
+	status, err := h.budgetStatus(ctx, c, hh, row, h.today(hh))
 	if err != nil {
 		return nil, err
 	}
-	return connect.NewResponse(&financev1.GetBudgetResponse{Budget: status}), nil
+	return connect.NewResponse(&financev1.CreateBudgetResponse{Budget: status}), nil
 }
 
 func (h *Handler) UpdateBudget(
 	ctx context.Context, req *connect.Request[financev1.UpdateBudgetRequest],
 ) (*connect.Response[financev1.UpdateBudgetResponse], error) {
-	familyID, err := h.familyID(ctx)
+	c, err := h.caller(ctx)
 	if err != nil {
 		return nil, err
 	}
-	id, err := requiredUUID(req.Msg.GetId(), "id")
+	hh, err := h.household(ctx, c)
 	if err != nil {
 		return nil, err
 	}
-	name, err := requiredName(req.Msg.GetName())
-	if err != nil {
-		return nil, err
-	}
-	period, ok := periodToStored(req.Msg.GetPeriod())
-	if !ok {
-		return nil, invalid("period must be week, month or year")
-	}
-	if req.Msg.GetLimit().GetAmountMinor() <= 0 {
-		return nil, invalid("limit must be above zero")
-	}
-	startOn, err := pgconv.Date(req.Msg.GetStartOn())
-	if err != nil || !startOn.Valid {
-		return nil, invalid("start_on must be YYYY-MM-DD")
-	}
-	categoryID, err := h.budgetCategory(ctx, familyID, req.Msg.GetCategoryId(), req.Msg.GetPeriod())
+	msg := req.Msg
+	id, err := requireUUID("budget_id", msg.GetBudgetId())
 	if err != nil {
 		return nil, err
 	}
 
-	budget, err := h.q.UpdateBudget(ctx, db.UpdateBudgetParams{
-		ID:         id,
-		FamilyID:   familyID,
-		Name:       name,
-		CategoryID: categoryID,
-		LimitMinor: req.Msg.GetLimit().GetAmountMinor(),
-		Period:     period,
-		StartOn:    startOn,
-		Archived:   req.Msg.GetArchived(),
-		SortOrder:  req.Msg.GetSortOrder(),
-	})
+	before, err := h.q.GetBudget(ctx, db.GetBudgetParams{ID: id, FamilyID: c.familyID})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, notFound("budget")
+	}
 	if err != nil {
-		if isUniqueViolation(err) {
-			return nil, connect.NewError(connect.CodeAlreadyExists,
-				errors.New("a budget already covers that category for that period"))
+		return nil, h.internal(ctx, err, "get budget")
+	}
+	wasExceeded, err := h.budgetStatus(ctx, c, hh, before, h.today(hh))
+	if err != nil {
+		return nil, err
+	}
+
+	params := db.UpdateBudgetParams{ID: id, FamilyID: c.familyID}
+	if msg.Limit != nil {
+		limit, err := checkAmount(msg.GetLimit())
+		if err != nil {
+			return nil, err
 		}
-		return nil, h.notFoundOr(ctx, err, "budget")
+		if limit <= 0 {
+			return nil, invalid("limit must be greater than zero")
+		}
+		params.LimitMinor = &limit
+	}
+	if msg.Period != nil {
+		period := budgetPeriodFromProto(msg.GetPeriod())
+		params.Period = &period
+	}
+	if msg.StartOn != nil {
+		day, ok := parseDay(trimmed(msg.GetStartOn()), hh.loc)
+		if !ok {
+			return nil, invalid("start_on must be a date as YYYY-MM-DD")
+		}
+		params.StartOn = pgDate(day)
+	}
+	if msg.NotifyOnExceed != nil {
+		notify := msg.GetNotifyOnExceed()
+		params.NotifyOnExceed = &notify
+	}
+	if msg.Archived != nil {
+		archived := msg.GetArchived()
+		params.Archived = &archived
 	}
 
-	return connect.NewResponse(&financev1.UpdateBudgetResponse{
-		Budget: toProtoBudget(budget),
-	}), nil
+	row, err := h.q.UpdateBudget(ctx, params)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, notFound("budget")
+	}
+	if err != nil {
+		return nil, h.internal(ctx, err, "update budget")
+	}
+	h.publish(ctx, subjectBudgetUpdated, &financev1.BudgetUpdatedEvent{
+		FamilyId:   c.family,
+		BudgetId:   pgconv.UUIDString(row.ID),
+		Limit:      money(row.LimitMinor, row.CurrencyCode),
+		Period:     budgetPeriodToProto(row.Period),
+		Archived:   row.Archived,
+		OccurredAt: h.timestamp(),
+	})
+
+	status, err := h.budgetStatus(ctx, c, hh, row, h.today(hh))
+	if err != nil {
+		return nil, err
+	}
+	// Raising a limit can pull a budget back under it. Without the recovery event a sent
+	// overspend alert could never be retracted, and the same window would alert again on the
+	// next breach.
+	if wasExceeded.GetExceeded() && !status.GetExceeded() {
+		h.publish(ctx, subjectBudgetRecovered, &financev1.BudgetRecoveredEvent{
+			FamilyId: c.family, BudgetId: pgconv.UUIDString(row.ID),
+			Window: status.GetWindow(), OccurredAt: h.timestamp(),
+		})
+	}
+	return connect.NewResponse(&financev1.UpdateBudgetResponse{Budget: status}), nil
 }
 
 func (h *Handler) DeleteBudget(
 	ctx context.Context, req *connect.Request[financev1.DeleteBudgetRequest],
 ) (*connect.Response[financev1.DeleteBudgetResponse], error) {
-	familyID, err := h.familyID(ctx)
+	c, err := h.caller(ctx)
 	if err != nil {
 		return nil, err
 	}
-	id, err := requiredUUID(req.Msg.GetId(), "id")
+	id, err := requireUUID("budget_id", req.Msg.GetBudgetId())
 	if err != nil {
 		return nil, err
 	}
-
-	// Unlike accounts and categories, a budget owns no history — deleting one rewrites no
-	// past report, so there is nothing to protect here.
-	rows, err := h.q.DeleteBudget(ctx, db.DeleteBudgetParams{ID: id, FamilyID: familyID})
+	rows, err := h.q.DeleteBudget(ctx, db.DeleteBudgetParams{ID: id, FamilyID: c.familyID})
 	if err != nil {
 		return nil, h.internal(ctx, err, "delete budget")
 	}
 	if rows == 0 {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("budget not found"))
+		return nil, notFound("budget")
 	}
 	return connect.NewResponse(&financev1.DeleteBudgetResponse{}), nil
 }
 
-/* ----------------------------------------------------------------- internals */
-
-// statusOf derives a budget's progress for the window containing asOf.
-func (h *Handler) statusOf(
-	ctx context.Context, familyID pgtype.UUID, budget db.Budget, asOf time.Time,
-) (*financev1.BudgetStatus, error) {
-	window, err := windowFor(budget.Period, budget.StartOn.Time, asOf)
-	if err != nil {
-		// A period outside the CHECK constraint means the row was written by something other
-		// than this service; report it rather than guessing a window.
-		return nil, h.internal(ctx, err, "budget window")
+// affectedBudgets is what every transaction write returns: the budgets whose window contains
+// the transaction, so the app repaints its bars and can raise an overspend toast without a
+// refetch. Both the category's own budget and its group's are included, because spend in a
+// category counts toward both.
+//
+// A transaction with no category (a transfer) moves no budget, and asks nothing.
+func (h *Handler) affectedBudgets(
+	ctx context.Context, c caller, hh household, categoryID pgtype.UUID, occurredOn time.Time,
+) ([]*financev1.BudgetStatus, error) {
+	if !categoryID.Valid {
+		return nil, nil
 	}
-
-	spent, err := h.q.SumBudgetSpend(ctx, db.SumBudgetSpendParams{
-		FamilyID:   familyID,
-		FromDate:   pgtype.Date{Time: window.from, Valid: true},
-		ToDate:     pgtype.Date{Time: window.to, Valid: true},
-		CategoryID: budget.CategoryID,
+	rows, err := h.q.ListBudgetsForCategory(ctx, db.ListBudgetsForCategoryParams{
+		FamilyID: c.familyID, CategoryID: categoryID,
 	})
 	if err != nil {
-		return nil, h.internal(ctx, err, "sum budget spend")
+		return nil, h.internal(ctx, err, "list budgets for category")
 	}
-
-	// share is computed here so every client draws the same bar; limit_minor is CHECKed above
-	// zero, so there is no division by zero to guard.
-	share := float64(spent) / float64(budget.LimitMinor)
-
-	return &financev1.BudgetStatus{
-		Budget: toProtoBudget(budget),
-		Period: &financev1.DateRange{
-			From: window.from.Format(time.DateOnly),
-			To:   window.to.Format(time.DateOnly),
-		},
-		Spent:         money(spent, budget.CurrencyCode),
-		Remaining:     money(budget.LimitMinor-spent, budget.CurrencyCode),
-		Share:         share,
-		Exceeded:      spent > budget.LimitMinor,
-		DaysRemaining: window.daysRemaining(asOf),
-	}, nil
+	out := make([]*financev1.BudgetStatus, 0, len(rows))
+	for _, b := range rows {
+		// The window the transaction landed in, not today's: editing last month's grocery bill
+		// has to report last month's bar.
+		status, err := h.budgetStatus(ctx, c, hh, b, occurredOn)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, status)
+	}
+	return out, nil
 }
 
-// budgetCategory validates the category a budget is scoped to. An empty id means the whole
-// household, which is a legitimate budget and not a missing field.
-func (h *Handler) budgetCategory(
-	ctx context.Context, familyID pgtype.UUID, raw string, period financev1.BudgetPeriod,
-) (pgtype.UUID, error) {
-	_ = period
-	if raw == "" {
-		return pgtype.UUID{}, nil
-	}
-
-	categoryID, err := requiredUUID(raw, "category_id")
-	if err != nil {
-		return pgtype.UUID{}, err
-	}
-
-	category, err := h.q.GetCategory(ctx, db.GetCategoryParams{ID: categoryID, FamilyID: familyID})
-	if err != nil {
-		return pgtype.UUID{}, h.notFoundOr(ctx, err, "category")
-	}
-	// Budgeting income makes no sense: a limit exists to cap what leaves.
-	if category.Kind != typeExpense {
-		return pgtype.UUID{}, invalid("only expense categories can be budgeted")
-	}
-	return categoryID, nil
-}
-
-// asOf resolves the requested day, defaulting to today.
-func (h *Handler) asOf(raw string) (time.Time, error) {
-	if raw == "" {
-		return h.now(), nil
-	}
-	parsed, err := time.Parse(time.DateOnly, raw)
-	if err != nil {
-		return time.Time{}, invalid("as_of must be YYYY-MM-DD")
-	}
-	return parsed, nil
-}
-
-func periodToStored(p financev1.BudgetPeriod) (string, bool) {
-	switch p {
-	case financev1.BudgetPeriod_BUDGET_PERIOD_WEEK:
-		return periodWeek, true
-	case financev1.BudgetPeriod_BUDGET_PERIOD_MONTH:
-		return periodMonth, true
-	case financev1.BudgetPeriod_BUDGET_PERIOD_YEAR:
-		return periodYear, true
-	default:
-		return "", false
-	}
-}
-
-func periodToProto(s string) financev1.BudgetPeriod {
-	switch s {
-	case periodWeek:
-		return financev1.BudgetPeriod_BUDGET_PERIOD_WEEK
-	case periodMonth:
-		return financev1.BudgetPeriod_BUDGET_PERIOD_MONTH
-	case periodYear:
-		return financev1.BudgetPeriod_BUDGET_PERIOD_YEAR
-	default:
-		return financev1.BudgetPeriod_BUDGET_PERIOD_UNSPECIFIED
-	}
-}
-
-func toProtoBudget(b db.Budget) *financev1.Budget {
-	return &financev1.Budget{
-		Id:         pgconv.UUIDString(b.ID),
-		FamilyId:   pgconv.UUIDString(b.FamilyID),
-		Name:       b.Name,
-		CategoryId: pgconv.UUIDString(b.CategoryID),
-		Limit:      money(b.LimitMinor, b.CurrencyCode),
-		Period:     periodToProto(b.Period),
-		StartOn:    pgconv.DateString(b.StartOn),
-		Archived:   b.Archived,
-		SortOrder:  b.SortOrder,
-		CreatedAt:  pgconv.Timestamp(b.CreatedAt),
-		UpdatedAt:  pgconv.Timestamp(b.UpdatedAt),
-	}
-}
-
-// announceBudgetCrossings publishes finance.budget.exceeded for every budget this expense
-// pushed past its limit.
-//
-// "Pushed past" is the crossing, not the state: the spend before this transaction was within
-// the limit and after it is not. Publishing on state instead would fire on every subsequent
-// purchase in an overspent month, which is a notification storm rather than a signal.
-//
-// Best-effort by design — the transaction is already committed, and a failure to notify must
-// not fail the write. Errors are logged inside publish.
-func (h *Handler) announceBudgetCrossings(
-	ctx context.Context, familyID pgtype.UUID, tx db.Transaction, userID string,
+// announceBudgetChanges compares a write's before and after state and publishes the
+// exceeded/recovered edges. Only edges: republishing "exceeded" on every subsequent
+// transaction in an already-blown budget would make the notification service the one deciding
+// what is new, which is exactly the state that produces duplicate pushes.
+func (h *Handler) announceBudgetChanges(
+	ctx context.Context, c caller, before, after []*financev1.BudgetStatus, triggeringTxID string,
 ) {
-	if tx.Type != typeExpense {
-		return // only spending consumes a budget
+	was := make(map[string]bool, len(before))
+	for _, s := range before {
+		was[s.GetBudget().GetId()] = s.GetExceeded()
 	}
-
-	budgets, err := h.q.ListBudgetsForCategory(ctx, db.ListBudgetsForCategoryParams{
-		FamilyID:   familyID,
-		CategoryID: tx.CategoryID,
-	})
-	if err != nil {
-		h.log.WarnContext(ctx, "budget check skipped", slogError(err))
-		return
+	for _, s := range after {
+		id := s.GetBudget().GetId()
+		switch {
+		case s.GetExceeded() && !was[id]:
+			if !s.GetBudget().GetNotifyOnExceed() {
+				continue
+			}
+			h.publish(ctx, subjectBudgetExceeded, &financev1.BudgetExceededEvent{
+				FamilyId:                c.family,
+				BudgetId:                id,
+				TargetKind:              s.GetBudget().GetTargetKind(),
+				GroupId:                 s.GetBudget().GetGroupId(),
+				CategoryId:              s.GetBudget().GetCategoryId(),
+				Limit:                   s.GetBudget().GetLimit(),
+				Spent:                   s.GetSpent(),
+				Share:                   s.GetShare(),
+				Window:                  s.GetWindow(),
+				TriggeringTransactionId: triggeringTxID,
+				MemberId:                s.GetBudget().GetMemberId(),
+				OccurredAt:              h.timestamp(),
+			})
+		case !s.GetExceeded() && was[id]:
+			h.publish(ctx, subjectBudgetRecovered, &financev1.BudgetRecoveredEvent{
+				FamilyId: c.family, BudgetId: id,
+				Window: s.GetWindow(), OccurredAt: h.timestamp(),
+			})
+		}
 	}
-
-	for _, budget := range budgets {
-		window, err := windowFor(budget.Period, budget.StartOn.Time, tx.OccurredOn.Time)
-		if err != nil {
-			continue
-		}
-		// The transaction must fall inside the window it would consume — backdating an
-		// expense into a closed month must not alarm about this one.
-		if tx.OccurredOn.Time.Before(window.from) || tx.OccurredOn.Time.After(window.to) {
-			continue
-		}
-
-		spent, err := h.q.SumBudgetSpend(ctx, db.SumBudgetSpendParams{
-			FamilyID:   familyID,
-			FromDate:   pgtype.Date{Time: window.from, Valid: true},
-			ToDate:     pgtype.Date{Time: window.to, Valid: true},
-			CategoryID: budget.CategoryID,
-		})
-		if err != nil {
-			h.log.WarnContext(ctx, "budget spend query failed", slogError(err))
-			continue
-		}
-
-		crossed := spent > budget.LimitMinor && spent-tx.AmountMinor <= budget.LimitMinor
-		if !crossed {
-			continue
-		}
-
-		h.publish(ctx, events.SubjectFinanceBudgetExceeded, &financev1.BudgetExceededEvent{
-			FamilyId:   pgconv.UUIDString(familyID),
-			BudgetId:   pgconv.UUIDString(budget.ID),
-			BudgetName: budget.Name,
-			CategoryId: pgconv.UUIDString(budget.CategoryID),
-			Limit:      money(budget.LimitMinor, budget.CurrencyCode),
-			Spent:      money(spent, budget.CurrencyCode),
-			Period: &financev1.DateRange{
-				From: window.from.Format(time.DateOnly),
-				To:   window.to.Format(time.DateOnly),
-			},
-			TriggeredByUserId: userID,
-			OccurredAt:        h.timestamp(),
-		})
-	}
-}
-
-// isUniqueViolation reports whether err is Postgres SQLSTATE 23505.
-func isUniqueViolation(err error) bool {
-	var pgErr interface{ SQLState() string }
-	return errors.As(err, &pgErr) && pgErr.SQLState() == "23505"
 }

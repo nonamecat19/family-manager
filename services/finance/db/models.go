@@ -9,61 +9,180 @@ import (
 )
 
 type Account struct {
-	ID                  pgtype.UUID
-	FamilyID            pgtype.UUID
-	Name                string
-	Type                string
-	CurrencyCode        string
-	OpeningBalanceMinor int64
-	Color               string
-	Icon                string
-	Archived            bool
-	SortOrder           int32
-	CreatedAt           pgtype.Timestamptz
-	UpdatedAt           pgtype.Timestamptz
+	ID                      pgtype.UUID
+	FamilyID                pgtype.UUID
+	Name                    string
+	Kind                    string
+	Visibility              string
+	OwnerMemberID           pgtype.UUID
+	CurrencyCode            string
+	OpeningBalanceMinor     int64
+	Icon                    string
+	ColorStep               int32
+	ExcludedFromFamilyTotal bool
+	Archived                bool
+	SortOrder               int32
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
 }
 
 type Budget struct {
-	ID           pgtype.UUID
-	FamilyID     pgtype.UUID
-	Name         string
-	CategoryID   pgtype.UUID
-	LimitMinor   int64
-	CurrencyCode string
-	Period       string
-	StartOn      pgtype.Date
-	Archived     bool
-	SortOrder    int32
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	TargetKind     string
+	GroupID        pgtype.UUID
+	CategoryID     pgtype.UUID
+	LimitMinor     int64
+	CurrencyCode   string
+	Period         string
+	StartOn        pgtype.Date
+	MemberID       pgtype.UUID
+	NotifyOnExceed bool
+	Archived       bool
+	SortOrder      int32
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type Category struct {
 	ID        pgtype.UUID
 	FamilyID  pgtype.UUID
+	GroupID   pgtype.UUID
 	Name      string
 	Kind      string
-	Color     string
 	Icon      string
-	ParentID  pgtype.UUID
-	Archived  bool
 	SortOrder int32
+	Archived  bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
 }
 
+type CategoryGroup struct {
+	ID        pgtype.UUID
+	FamilyID  pgtype.UUID
+	Name      string
+	Kind      string
+	Icon      string
+	ColorStep int32
+	SortOrder int32
+	Archived  bool
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type FinanceMember struct {
+	FamilyID        pgtype.UUID
+	UserID          pgtype.UUID
+	DisplayName     string
+	Initial         string
+	AvatarColorStep int32
+	Role            string
+	Status          string
+	Email           string
+	JoinedAt        pgtype.Timestamptz
+}
+
+type FinanceSetting struct {
+	FamilyID                      pgtype.UUID
+	BaseCurrencyCode              string
+	Timezone                      string
+	WeekStartsOn                  string
+	OverspendNotificationsEnabled bool
+	PinLockEnabled                bool
+	CreatedAt                     pgtype.Timestamptz
+	UpdatedAt                     pgtype.Timestamptz
+}
+
+type QuickTemplate struct {
+	ID           pgtype.UUID
+	FamilyID     pgtype.UUID
+	OwnerUserID  pgtype.UUID
+	Label        string
+	Icon         string
+	AmountMinor  int64
+	CurrencyCode string
+	Type         string
+	CategoryID   pgtype.UUID
+	AccountID    pgtype.UUID
+	MemberID     pgtype.UUID
+	SortOrder    int32
+	UsageCount   int32
+	LastUsedAt   pgtype.Timestamptz
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type RecurringPayment struct {
+	ID            pgtype.UUID
+	FamilyID      pgtype.UUID
+	Name          string
+	AmountMinor   int64
+	CurrencyCode  string
+	Type          string
+	CategoryID    pgtype.UUID
+	AccountID     pgtype.UUID
+	MemberID      pgtype.UUID
+	IntervalCount int32
+	IntervalUnit  string
+	DayOfMonth    int32
+	DayOfWeek     string
+	NextDueOn     pgtype.Date
+	EndOn         pgtype.Date
+	AutoPost      bool
+	Active        bool
+	LastPostedOn  pgtype.Date
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+type Reminder struct {
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	UserID         pgtype.UUID
+	Kind           string
+	Title          string
+	DueAt          pgtype.Timestamptz
+	RepeatInterval int32
+	RepeatUnit     string
+	Enabled        bool
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type Transaction struct {
+	ID                   pgtype.UUID
+	FamilyID             pgtype.UUID
+	Type                 string
+	AccountID            pgtype.UUID
+	CounterAccountID     pgtype.UUID
+	CategoryID           pgtype.UUID
+	AmountMinor          int64
+	CurrencyCode         string
+	ReceivedAmountMinor  *int64
+	ReceivedCurrencyCode string
+	Note                 string
+	Merchant             string
+	OccurredOn           pgtype.Date
+	MemberID             pgtype.UUID
+	CreatedByUserID      pgtype.UUID
+	TemplateID           pgtype.UUID
+	RecurringID          pgtype.UUID
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+}
+
+type WidgetInstance struct {
 	ID               pgtype.UUID
 	FamilyID         pgtype.UUID
-	AccountID        pgtype.UUID
-	CounterAccountID pgtype.UUID
-	CategoryID       pgtype.UUID
+	UserID           pgtype.UUID
 	Type             string
-	AmountMinor      int64
-	CurrencyCode     string
-	Note             string
-	OccurredOn       pgtype.Date
-	CreatedByUserID  pgtype.UUID
+	Size             string
+	ScopeKind        string
+	ScopeMemberID    pgtype.UUID
+	ScopeAccountID   pgtype.UUID
+	TargetRef        pgtype.UUID
+	TargetAccountIds []pgtype.UUID
+	SortOrder        int32
 	CreatedAt        pgtype.Timestamptz
 	UpdatedAt        pgtype.Timestamptz
 }

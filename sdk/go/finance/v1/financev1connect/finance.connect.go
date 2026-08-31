@@ -33,39 +33,81 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// FinanceServiceCreateAccountProcedure is the fully-qualified name of the FinanceService's
-	// CreateAccount RPC.
-	FinanceServiceCreateAccountProcedure = "/finance.v1.FinanceService/CreateAccount"
+	// FinanceServiceBootstrapHouseholdProcedure is the fully-qualified name of the FinanceService's
+	// BootstrapHousehold RPC.
+	FinanceServiceBootstrapHouseholdProcedure = "/finance.v1.FinanceService/BootstrapHousehold"
+	// FinanceServiceGetHouseholdOverviewProcedure is the fully-qualified name of the FinanceService's
+	// GetHouseholdOverview RPC.
+	FinanceServiceGetHouseholdOverviewProcedure = "/finance.v1.FinanceService/GetHouseholdOverview"
+	// FinanceServiceGetFinanceSettingsProcedure is the fully-qualified name of the FinanceService's
+	// GetFinanceSettings RPC.
+	FinanceServiceGetFinanceSettingsProcedure = "/finance.v1.FinanceService/GetFinanceSettings"
+	// FinanceServiceUpdateFinanceSettingsProcedure is the fully-qualified name of the FinanceService's
+	// UpdateFinanceSettings RPC.
+	FinanceServiceUpdateFinanceSettingsProcedure = "/finance.v1.FinanceService/UpdateFinanceSettings"
+	// FinanceServiceSetOverspendNotificationsProcedure is the fully-qualified name of the
+	// FinanceService's SetOverspendNotifications RPC.
+	FinanceServiceSetOverspendNotificationsProcedure = "/finance.v1.FinanceService/SetOverspendNotifications"
+	// FinanceServiceListMembersProcedure is the fully-qualified name of the FinanceService's
+	// ListMembers RPC.
+	FinanceServiceListMembersProcedure = "/finance.v1.FinanceService/ListMembers"
 	// FinanceServiceListAccountsProcedure is the fully-qualified name of the FinanceService's
 	// ListAccounts RPC.
 	FinanceServiceListAccountsProcedure = "/finance.v1.FinanceService/ListAccounts"
 	// FinanceServiceGetAccountProcedure is the fully-qualified name of the FinanceService's GetAccount
 	// RPC.
 	FinanceServiceGetAccountProcedure = "/finance.v1.FinanceService/GetAccount"
+	// FinanceServiceCreateAccountProcedure is the fully-qualified name of the FinanceService's
+	// CreateAccount RPC.
+	FinanceServiceCreateAccountProcedure = "/finance.v1.FinanceService/CreateAccount"
 	// FinanceServiceUpdateAccountProcedure is the fully-qualified name of the FinanceService's
 	// UpdateAccount RPC.
 	FinanceServiceUpdateAccountProcedure = "/finance.v1.FinanceService/UpdateAccount"
+	// FinanceServiceArchiveAccountProcedure is the fully-qualified name of the FinanceService's
+	// ArchiveAccount RPC.
+	FinanceServiceArchiveAccountProcedure = "/finance.v1.FinanceService/ArchiveAccount"
 	// FinanceServiceDeleteAccountProcedure is the fully-qualified name of the FinanceService's
 	// DeleteAccount RPC.
 	FinanceServiceDeleteAccountProcedure = "/finance.v1.FinanceService/DeleteAccount"
+	// FinanceServiceReorderAccountsProcedure is the fully-qualified name of the FinanceService's
+	// ReorderAccounts RPC.
+	FinanceServiceReorderAccountsProcedure = "/finance.v1.FinanceService/ReorderAccounts"
+	// FinanceServiceTransferBetweenAccountsProcedure is the fully-qualified name of the
+	// FinanceService's TransferBetweenAccounts RPC.
+	FinanceServiceTransferBetweenAccountsProcedure = "/finance.v1.FinanceService/TransferBetweenAccounts"
+	// FinanceServiceListCategoryTreeProcedure is the fully-qualified name of the FinanceService's
+	// ListCategoryTree RPC.
+	FinanceServiceListCategoryTreeProcedure = "/finance.v1.FinanceService/ListCategoryTree"
+	// FinanceServiceCreateCategoryGroupProcedure is the fully-qualified name of the FinanceService's
+	// CreateCategoryGroup RPC.
+	FinanceServiceCreateCategoryGroupProcedure = "/finance.v1.FinanceService/CreateCategoryGroup"
+	// FinanceServiceUpdateCategoryGroupProcedure is the fully-qualified name of the FinanceService's
+	// UpdateCategoryGroup RPC.
+	FinanceServiceUpdateCategoryGroupProcedure = "/finance.v1.FinanceService/UpdateCategoryGroup"
+	// FinanceServiceDeleteCategoryGroupProcedure is the fully-qualified name of the FinanceService's
+	// DeleteCategoryGroup RPC.
+	FinanceServiceDeleteCategoryGroupProcedure = "/finance.v1.FinanceService/DeleteCategoryGroup"
+	// FinanceServiceReorderCategoryGroupsProcedure is the fully-qualified name of the FinanceService's
+	// ReorderCategoryGroups RPC.
+	FinanceServiceReorderCategoryGroupsProcedure = "/finance.v1.FinanceService/ReorderCategoryGroups"
 	// FinanceServiceCreateCategoryProcedure is the fully-qualified name of the FinanceService's
 	// CreateCategory RPC.
 	FinanceServiceCreateCategoryProcedure = "/finance.v1.FinanceService/CreateCategory"
-	// FinanceServiceListCategoriesProcedure is the fully-qualified name of the FinanceService's
-	// ListCategories RPC.
-	FinanceServiceListCategoriesProcedure = "/finance.v1.FinanceService/ListCategories"
 	// FinanceServiceUpdateCategoryProcedure is the fully-qualified name of the FinanceService's
 	// UpdateCategory RPC.
 	FinanceServiceUpdateCategoryProcedure = "/finance.v1.FinanceService/UpdateCategory"
+	// FinanceServiceMoveCategoryProcedure is the fully-qualified name of the FinanceService's
+	// MoveCategory RPC.
+	FinanceServiceMoveCategoryProcedure = "/finance.v1.FinanceService/MoveCategory"
 	// FinanceServiceDeleteCategoryProcedure is the fully-qualified name of the FinanceService's
 	// DeleteCategory RPC.
 	FinanceServiceDeleteCategoryProcedure = "/finance.v1.FinanceService/DeleteCategory"
+	// FinanceServiceReorderCategoriesProcedure is the fully-qualified name of the FinanceService's
+	// ReorderCategories RPC.
+	FinanceServiceReorderCategoriesProcedure = "/finance.v1.FinanceService/ReorderCategories"
 	// FinanceServiceCreateTransactionProcedure is the fully-qualified name of the FinanceService's
 	// CreateTransaction RPC.
 	FinanceServiceCreateTransactionProcedure = "/finance.v1.FinanceService/CreateTransaction"
-	// FinanceServiceListTransactionsProcedure is the fully-qualified name of the FinanceService's
-	// ListTransactions RPC.
-	FinanceServiceListTransactionsProcedure = "/finance.v1.FinanceService/ListTransactions"
 	// FinanceServiceGetTransactionProcedure is the fully-qualified name of the FinanceService's
 	// GetTransaction RPC.
 	FinanceServiceGetTransactionProcedure = "/finance.v1.FinanceService/GetTransaction"
@@ -75,56 +117,203 @@ const (
 	// FinanceServiceDeleteTransactionProcedure is the fully-qualified name of the FinanceService's
 	// DeleteTransaction RPC.
 	FinanceServiceDeleteTransactionProcedure = "/finance.v1.FinanceService/DeleteTransaction"
-	// FinanceServiceCreateBudgetProcedure is the fully-qualified name of the FinanceService's
-	// CreateBudget RPC.
-	FinanceServiceCreateBudgetProcedure = "/finance.v1.FinanceService/CreateBudget"
+	// FinanceServiceListTransactionsProcedure is the fully-qualified name of the FinanceService's
+	// ListTransactions RPC.
+	FinanceServiceListTransactionsProcedure = "/finance.v1.FinanceService/ListTransactions"
+	// FinanceServiceListTemplatesProcedure is the fully-qualified name of the FinanceService's
+	// ListTemplates RPC.
+	FinanceServiceListTemplatesProcedure = "/finance.v1.FinanceService/ListTemplates"
+	// FinanceServiceCreateTemplateProcedure is the fully-qualified name of the FinanceService's
+	// CreateTemplate RPC.
+	FinanceServiceCreateTemplateProcedure = "/finance.v1.FinanceService/CreateTemplate"
+	// FinanceServiceUpdateTemplateProcedure is the fully-qualified name of the FinanceService's
+	// UpdateTemplate RPC.
+	FinanceServiceUpdateTemplateProcedure = "/finance.v1.FinanceService/UpdateTemplate"
+	// FinanceServiceDeleteTemplateProcedure is the fully-qualified name of the FinanceService's
+	// DeleteTemplate RPC.
+	FinanceServiceDeleteTemplateProcedure = "/finance.v1.FinanceService/DeleteTemplate"
+	// FinanceServiceReorderTemplatesProcedure is the fully-qualified name of the FinanceService's
+	// ReorderTemplates RPC.
+	FinanceServiceReorderTemplatesProcedure = "/finance.v1.FinanceService/ReorderTemplates"
+	// FinanceServiceLogTemplateProcedure is the fully-qualified name of the FinanceService's
+	// LogTemplate RPC.
+	FinanceServiceLogTemplateProcedure = "/finance.v1.FinanceService/LogTemplate"
 	// FinanceServiceListBudgetsProcedure is the fully-qualified name of the FinanceService's
 	// ListBudgets RPC.
 	FinanceServiceListBudgetsProcedure = "/finance.v1.FinanceService/ListBudgets"
-	// FinanceServiceGetBudgetProcedure is the fully-qualified name of the FinanceService's GetBudget
-	// RPC.
-	FinanceServiceGetBudgetProcedure = "/finance.v1.FinanceService/GetBudget"
+	// FinanceServiceCreateBudgetProcedure is the fully-qualified name of the FinanceService's
+	// CreateBudget RPC.
+	FinanceServiceCreateBudgetProcedure = "/finance.v1.FinanceService/CreateBudget"
 	// FinanceServiceUpdateBudgetProcedure is the fully-qualified name of the FinanceService's
 	// UpdateBudget RPC.
 	FinanceServiceUpdateBudgetProcedure = "/finance.v1.FinanceService/UpdateBudget"
 	// FinanceServiceDeleteBudgetProcedure is the fully-qualified name of the FinanceService's
 	// DeleteBudget RPC.
 	FinanceServiceDeleteBudgetProcedure = "/finance.v1.FinanceService/DeleteBudget"
-	// FinanceServiceGetSummaryProcedure is the fully-qualified name of the FinanceService's GetSummary
+	// FinanceServiceGetHomeSummaryProcedure is the fully-qualified name of the FinanceService's
+	// GetHomeSummary RPC.
+	FinanceServiceGetHomeSummaryProcedure = "/finance.v1.FinanceService/GetHomeSummary"
+	// FinanceServiceGetGroupBreakdownProcedure is the fully-qualified name of the FinanceService's
+	// GetGroupBreakdown RPC.
+	FinanceServiceGetGroupBreakdownProcedure = "/finance.v1.FinanceService/GetGroupBreakdown"
+	// FinanceServiceGetMemberBreakdownProcedure is the fully-qualified name of the FinanceService's
+	// GetMemberBreakdown RPC.
+	FinanceServiceGetMemberBreakdownProcedure = "/finance.v1.FinanceService/GetMemberBreakdown"
+	// FinanceServiceGetSpendingSeriesProcedure is the fully-qualified name of the FinanceService's
+	// GetSpendingSeries RPC.
+	FinanceServiceGetSpendingSeriesProcedure = "/finance.v1.FinanceService/GetSpendingSeries"
+	// FinanceServiceListInsightsProcedure is the fully-qualified name of the FinanceService's
+	// ListInsights RPC.
+	FinanceServiceListInsightsProcedure = "/finance.v1.FinanceService/ListInsights"
+	// FinanceServiceListRecurringPaymentsProcedure is the fully-qualified name of the FinanceService's
+	// ListRecurringPayments RPC.
+	FinanceServiceListRecurringPaymentsProcedure = "/finance.v1.FinanceService/ListRecurringPayments"
+	// FinanceServiceCreateRecurringPaymentProcedure is the fully-qualified name of the FinanceService's
+	// CreateRecurringPayment RPC.
+	FinanceServiceCreateRecurringPaymentProcedure = "/finance.v1.FinanceService/CreateRecurringPayment"
+	// FinanceServiceUpdateRecurringPaymentProcedure is the fully-qualified name of the FinanceService's
+	// UpdateRecurringPayment RPC.
+	FinanceServiceUpdateRecurringPaymentProcedure = "/finance.v1.FinanceService/UpdateRecurringPayment"
+	// FinanceServiceDeleteRecurringPaymentProcedure is the fully-qualified name of the FinanceService's
+	// DeleteRecurringPayment RPC.
+	FinanceServiceDeleteRecurringPaymentProcedure = "/finance.v1.FinanceService/DeleteRecurringPayment"
+	// FinanceServicePostRecurringOccurrenceProcedure is the fully-qualified name of the
+	// FinanceService's PostRecurringOccurrence RPC.
+	FinanceServicePostRecurringOccurrenceProcedure = "/finance.v1.FinanceService/PostRecurringOccurrence"
+	// FinanceServiceSkipRecurringOccurrenceProcedure is the fully-qualified name of the
+	// FinanceService's SkipRecurringOccurrence RPC.
+	FinanceServiceSkipRecurringOccurrenceProcedure = "/finance.v1.FinanceService/SkipRecurringOccurrence"
+	// FinanceServiceListRemindersProcedure is the fully-qualified name of the FinanceService's
+	// ListReminders RPC.
+	FinanceServiceListRemindersProcedure = "/finance.v1.FinanceService/ListReminders"
+	// FinanceServiceUpsertReminderProcedure is the fully-qualified name of the FinanceService's
+	// UpsertReminder RPC.
+	FinanceServiceUpsertReminderProcedure = "/finance.v1.FinanceService/UpsertReminder"
+	// FinanceServiceDeleteReminderProcedure is the fully-qualified name of the FinanceService's
+	// DeleteReminder RPC.
+	FinanceServiceDeleteReminderProcedure = "/finance.v1.FinanceService/DeleteReminder"
+	// FinanceServiceListWidgetsProcedure is the fully-qualified name of the FinanceService's
+	// ListWidgets RPC.
+	FinanceServiceListWidgetsProcedure = "/finance.v1.FinanceService/ListWidgets"
+	// FinanceServiceAddWidgetProcedure is the fully-qualified name of the FinanceService's AddWidget
 	// RPC.
-	FinanceServiceGetSummaryProcedure = "/finance.v1.FinanceService/GetSummary"
-	// FinanceServiceGetCategoryBreakdownProcedure is the fully-qualified name of the FinanceService's
-	// GetCategoryBreakdown RPC.
-	FinanceServiceGetCategoryBreakdownProcedure = "/finance.v1.FinanceService/GetCategoryBreakdown"
+	FinanceServiceAddWidgetProcedure = "/finance.v1.FinanceService/AddWidget"
+	// FinanceServiceUpdateWidgetProcedure is the fully-qualified name of the FinanceService's
+	// UpdateWidget RPC.
+	FinanceServiceUpdateWidgetProcedure = "/finance.v1.FinanceService/UpdateWidget"
+	// FinanceServiceRemoveWidgetProcedure is the fully-qualified name of the FinanceService's
+	// RemoveWidget RPC.
+	FinanceServiceRemoveWidgetProcedure = "/finance.v1.FinanceService/RemoveWidget"
+	// FinanceServiceGetWidgetDataProcedure is the fully-qualified name of the FinanceService's
+	// GetWidgetData RPC.
+	FinanceServiceGetWidgetDataProcedure = "/finance.v1.FinanceService/GetWidgetData"
 )
 
 // FinanceServiceClient is a client for the finance.v1.FinanceService service.
 type FinanceServiceClient interface {
-	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
+	// --- household & settings ------------------------------------------------
+	// BootstrapHousehold seeds finance for a family that services/family has just created:
+	// settings plus the default group/category taxonomy, in one transaction. Idempotent per
+	// family — calling it twice returns the existing rows rather than a second taxonomy.
+	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
+	// GetHouseholdOverview is the household screen in one round trip: balances, period spend,
+	// the per-member cards, and the shared-resource counters.
+	GetHouseholdOverview(context.Context, *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error)
+	GetFinanceSettings(context.Context, *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error)
+	UpdateFinanceSettings(context.Context, *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error)
+	// SetOverspendNotifications is its own RPC because it is a single switch on the household
+	// screen; routing it through UpdateFinanceSettings would make an accidental currency change
+	// one mistyped field away from a toggle.
+	SetOverspendNotifications(context.Context, *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error)
+	// ListMembers reads the member projection maintained from family.v1 events, so the "who
+	// spent" picker and the avatar chips render without a synchronous call to services/family.
+	ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error)
+	// --- accounts ------------------------------------------------------------
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
 	GetAccount(context.Context, *connect.Request[v1.GetAccountRequest]) (*connect.Response[v1.GetAccountResponse], error)
+	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	UpdateAccount(context.Context, *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error)
+	// ArchiveAccount hides an account that still has history. DeleteAccount is refused while
+	// transactions reference it — a balance that silently loses its rows is a corrupt ledger.
+	ArchiveAccount(context.Context, *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	ReorderAccounts(context.Context, *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error)
+	// TransferBetweenAccounts writes both legs in one transaction so a transfer can never
+	// half-commit, and is excluded from expense and income totals.
+	TransferBetweenAccounts(context.Context, *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error)
+	// --- categories ----------------------------------------------------------
+	// ListCategoryTree is the whole categories screen and the add-sheet picker: groups, their
+	// categories, and each group's budget status.
+	ListCategoryTree(context.Context, *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error)
+	CreateCategoryGroup(context.Context, *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error)
+	UpdateCategoryGroup(context.Context, *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error)
+	DeleteCategoryGroup(context.Context, *connect.Request[v1.DeleteCategoryGroupRequest]) (*connect.Response[v1.DeleteCategoryGroupResponse], error)
+	ReorderCategoryGroups(context.Context, *connect.Request[v1.ReorderCategoryGroupsRequest]) (*connect.Response[v1.ReorderCategoryGroupsResponse], error)
 	CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error)
-	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	UpdateCategory(context.Context, *connect.Request[v1.UpdateCategoryRequest]) (*connect.Response[v1.UpdateCategoryResponse], error)
+	MoveCategory(context.Context, *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error)
 	DeleteCategory(context.Context, *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error)
+	ReorderCategories(context.Context, *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error)
+	// --- transactions --------------------------------------------------------
+	// CreateTransaction returns the budgets it moved, so the app can repaint the Home bars and
+	// raise an overspend toast without a refetch.
 	CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error)
-	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
-	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
-	// ListBudgets returns each budget with its progress for the window in force today, which
-	// is the only form the UI ever renders.
+	// ListTransactions is grouped into day sections server-side: the per-day subtotal and the
+	// period total have to agree with the page boundary, and only the server knows both.
+	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
+	// --- quick templates -----------------------------------------------------
+	ListTemplates(context.Context, *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error)
+	CreateTemplate(context.Context, *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error)
+	UpdateTemplate(context.Context, *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error)
+	DeleteTemplate(context.Context, *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error)
+	ReorderTemplates(context.Context, *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error)
+	// LogTemplate is one round trip from a home-screen widget that may have no app process
+	// alive: it writes the transaction and returns the budgets it moved.
+	LogTemplate(context.Context, *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error)
+	// --- budgets -------------------------------------------------------------
 	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
-	GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error)
+	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
 	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
 	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
-	// GetSummary is the home screen: totals and balance for one period.
-	GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error)
-	// GetCategoryBreakdown is the pie chart: one slice per category for one period.
-	GetCategoryBreakdown(context.Context, *connect.Request[v1.GetCategoryBreakdownRequest]) (*connect.Response[v1.GetCategoryBreakdownResponse], error)
+	// --- analytics -----------------------------------------------------------
+	// GetHomeSummary is the home screen in a single call — headline, donut, group rows with
+	// their budget bars, member chips and template chips all move together when the scope or
+	// the period changes, so they are fetched together.
+	GetHomeSummary(context.Context, *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error)
+	GetGroupBreakdown(context.Context, *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error)
+	GetMemberBreakdown(context.Context, *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error)
+	// GetSpendingSeries backs the stacked bar chart. Stacking is a parameter rather than a
+	// second RPC so flipping the total/expense/income tab is one request.
+	GetSpendingSeries(context.Context, *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error)
+	// ListInsights is computed server-side so the same wording reaches app, widget and
+	// notification instead of three nearly identical sentences.
+	ListInsights(context.Context, *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error)
+	// --- recurring payments --------------------------------------------------
+	ListRecurringPayments(context.Context, *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error)
+	CreateRecurringPayment(context.Context, *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error)
+	UpdateRecurringPayment(context.Context, *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error)
+	DeleteRecurringPayment(context.Context, *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error)
+	// Confirm-or-skip is the default for a payment that may not have actually happened; a
+	// payment with auto_post set writes its occurrence without this step.
+	PostRecurringOccurrence(context.Context, *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error)
+	SkipRecurringOccurrence(context.Context, *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error)
+	// --- reminders -----------------------------------------------------------
+	// finance stores the subscription; delivery is services/notifications' job, driven by the
+	// events below.
+	ListReminders(context.Context, *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error)
+	UpsertReminder(context.Context, *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error)
+	DeleteReminder(context.Context, *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error)
+	// --- widgets -------------------------------------------------------------
+	ListWidgets(context.Context, *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error)
+	AddWidget(context.Context, *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error)
+	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
+	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
+	// GetWidgetData refreshes every placed widget in one request: one call per widget would
+	// make the Android update pass N round trips on a cold process.
+	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
 }
 
 // NewFinanceServiceClient constructs a client for the finance.v1.FinanceService service. By
@@ -138,10 +327,40 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	financeServiceMethods := v1.File_finance_v1_finance_proto.Services().ByName("FinanceService").Methods()
 	return &financeServiceClient{
-		createAccount: connect.NewClient[v1.CreateAccountRequest, v1.CreateAccountResponse](
+		bootstrapHousehold: connect.NewClient[v1.BootstrapHouseholdRequest, v1.BootstrapHouseholdResponse](
 			httpClient,
-			baseURL+FinanceServiceCreateAccountProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("CreateAccount")),
+			baseURL+FinanceServiceBootstrapHouseholdProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("BootstrapHousehold")),
+			connect.WithClientOptions(opts...),
+		),
+		getHouseholdOverview: connect.NewClient[v1.GetHouseholdOverviewRequest, v1.GetHouseholdOverviewResponse](
+			httpClient,
+			baseURL+FinanceServiceGetHouseholdOverviewProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetHouseholdOverview")),
+			connect.WithClientOptions(opts...),
+		),
+		getFinanceSettings: connect.NewClient[v1.GetFinanceSettingsRequest, v1.GetFinanceSettingsResponse](
+			httpClient,
+			baseURL+FinanceServiceGetFinanceSettingsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetFinanceSettings")),
+			connect.WithClientOptions(opts...),
+		),
+		updateFinanceSettings: connect.NewClient[v1.UpdateFinanceSettingsRequest, v1.UpdateFinanceSettingsResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateFinanceSettingsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateFinanceSettings")),
+			connect.WithClientOptions(opts...),
+		),
+		setOverspendNotifications: connect.NewClient[v1.SetOverspendNotificationsRequest, v1.SetOverspendNotificationsResponse](
+			httpClient,
+			baseURL+FinanceServiceSetOverspendNotificationsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("SetOverspendNotifications")),
+			connect.WithClientOptions(opts...),
+		),
+		listMembers: connect.NewClient[v1.ListMembersRequest, v1.ListMembersResponse](
+			httpClient,
+			baseURL+FinanceServiceListMembersProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListMembers")),
 			connect.WithClientOptions(opts...),
 		),
 		listAccounts: connect.NewClient[v1.ListAccountsRequest, v1.ListAccountsResponse](
@@ -156,10 +375,22 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("GetAccount")),
 			connect.WithClientOptions(opts...),
 		),
+		createAccount: connect.NewClient[v1.CreateAccountRequest, v1.CreateAccountResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateAccountProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateAccount")),
+			connect.WithClientOptions(opts...),
+		),
 		updateAccount: connect.NewClient[v1.UpdateAccountRequest, v1.UpdateAccountResponse](
 			httpClient,
 			baseURL+FinanceServiceUpdateAccountProcedure,
 			connect.WithSchema(financeServiceMethods.ByName("UpdateAccount")),
+			connect.WithClientOptions(opts...),
+		),
+		archiveAccount: connect.NewClient[v1.ArchiveAccountRequest, v1.ArchiveAccountResponse](
+			httpClient,
+			baseURL+FinanceServiceArchiveAccountProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ArchiveAccount")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteAccount: connect.NewClient[v1.DeleteAccountRequest, v1.DeleteAccountResponse](
@@ -168,16 +399,52 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("DeleteAccount")),
 			connect.WithClientOptions(opts...),
 		),
+		reorderAccounts: connect.NewClient[v1.ReorderAccountsRequest, v1.ReorderAccountsResponse](
+			httpClient,
+			baseURL+FinanceServiceReorderAccountsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ReorderAccounts")),
+			connect.WithClientOptions(opts...),
+		),
+		transferBetweenAccounts: connect.NewClient[v1.TransferBetweenAccountsRequest, v1.TransferBetweenAccountsResponse](
+			httpClient,
+			baseURL+FinanceServiceTransferBetweenAccountsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("TransferBetweenAccounts")),
+			connect.WithClientOptions(opts...),
+		),
+		listCategoryTree: connect.NewClient[v1.ListCategoryTreeRequest, v1.ListCategoryTreeResponse](
+			httpClient,
+			baseURL+FinanceServiceListCategoryTreeProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListCategoryTree")),
+			connect.WithClientOptions(opts...),
+		),
+		createCategoryGroup: connect.NewClient[v1.CreateCategoryGroupRequest, v1.CreateCategoryGroupResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateCategoryGroupProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateCategoryGroup")),
+			connect.WithClientOptions(opts...),
+		),
+		updateCategoryGroup: connect.NewClient[v1.UpdateCategoryGroupRequest, v1.UpdateCategoryGroupResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateCategoryGroupProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateCategoryGroup")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteCategoryGroup: connect.NewClient[v1.DeleteCategoryGroupRequest, v1.DeleteCategoryGroupResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteCategoryGroupProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteCategoryGroup")),
+			connect.WithClientOptions(opts...),
+		),
+		reorderCategoryGroups: connect.NewClient[v1.ReorderCategoryGroupsRequest, v1.ReorderCategoryGroupsResponse](
+			httpClient,
+			baseURL+FinanceServiceReorderCategoryGroupsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ReorderCategoryGroups")),
+			connect.WithClientOptions(opts...),
+		),
 		createCategory: connect.NewClient[v1.CreateCategoryRequest, v1.CreateCategoryResponse](
 			httpClient,
 			baseURL+FinanceServiceCreateCategoryProcedure,
 			connect.WithSchema(financeServiceMethods.ByName("CreateCategory")),
-			connect.WithClientOptions(opts...),
-		),
-		listCategories: connect.NewClient[v1.ListCategoriesRequest, v1.ListCategoriesResponse](
-			httpClient,
-			baseURL+FinanceServiceListCategoriesProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("ListCategories")),
 			connect.WithClientOptions(opts...),
 		),
 		updateCategory: connect.NewClient[v1.UpdateCategoryRequest, v1.UpdateCategoryResponse](
@@ -186,22 +453,28 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("UpdateCategory")),
 			connect.WithClientOptions(opts...),
 		),
+		moveCategory: connect.NewClient[v1.MoveCategoryRequest, v1.MoveCategoryResponse](
+			httpClient,
+			baseURL+FinanceServiceMoveCategoryProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("MoveCategory")),
+			connect.WithClientOptions(opts...),
+		),
 		deleteCategory: connect.NewClient[v1.DeleteCategoryRequest, v1.DeleteCategoryResponse](
 			httpClient,
 			baseURL+FinanceServiceDeleteCategoryProcedure,
 			connect.WithSchema(financeServiceMethods.ByName("DeleteCategory")),
 			connect.WithClientOptions(opts...),
 		),
+		reorderCategories: connect.NewClient[v1.ReorderCategoriesRequest, v1.ReorderCategoriesResponse](
+			httpClient,
+			baseURL+FinanceServiceReorderCategoriesProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ReorderCategories")),
+			connect.WithClientOptions(opts...),
+		),
 		createTransaction: connect.NewClient[v1.CreateTransactionRequest, v1.CreateTransactionResponse](
 			httpClient,
 			baseURL+FinanceServiceCreateTransactionProcedure,
 			connect.WithSchema(financeServiceMethods.ByName("CreateTransaction")),
-			connect.WithClientOptions(opts...),
-		),
-		listTransactions: connect.NewClient[v1.ListTransactionsRequest, v1.ListTransactionsResponse](
-			httpClient,
-			baseURL+FinanceServiceListTransactionsProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("ListTransactions")),
 			connect.WithClientOptions(opts...),
 		),
 		getTransaction: connect.NewClient[v1.GetTransactionRequest, v1.GetTransactionResponse](
@@ -222,10 +495,46 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("DeleteTransaction")),
 			connect.WithClientOptions(opts...),
 		),
-		createBudget: connect.NewClient[v1.CreateBudgetRequest, v1.CreateBudgetResponse](
+		listTransactions: connect.NewClient[v1.ListTransactionsRequest, v1.ListTransactionsResponse](
 			httpClient,
-			baseURL+FinanceServiceCreateBudgetProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
+			baseURL+FinanceServiceListTransactionsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListTransactions")),
+			connect.WithClientOptions(opts...),
+		),
+		listTemplates: connect.NewClient[v1.ListTemplatesRequest, v1.ListTemplatesResponse](
+			httpClient,
+			baseURL+FinanceServiceListTemplatesProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListTemplates")),
+			connect.WithClientOptions(opts...),
+		),
+		createTemplate: connect.NewClient[v1.CreateTemplateRequest, v1.CreateTemplateResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateTemplateProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateTemplate")),
+			connect.WithClientOptions(opts...),
+		),
+		updateTemplate: connect.NewClient[v1.UpdateTemplateRequest, v1.UpdateTemplateResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateTemplateProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateTemplate")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteTemplate: connect.NewClient[v1.DeleteTemplateRequest, v1.DeleteTemplateResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteTemplateProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteTemplate")),
+			connect.WithClientOptions(opts...),
+		),
+		reorderTemplates: connect.NewClient[v1.ReorderTemplatesRequest, v1.ReorderTemplatesResponse](
+			httpClient,
+			baseURL+FinanceServiceReorderTemplatesProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ReorderTemplates")),
+			connect.WithClientOptions(opts...),
+		),
+		logTemplate: connect.NewClient[v1.LogTemplateRequest, v1.LogTemplateResponse](
+			httpClient,
+			baseURL+FinanceServiceLogTemplateProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("LogTemplate")),
 			connect.WithClientOptions(opts...),
 		),
 		listBudgets: connect.NewClient[v1.ListBudgetsRequest, v1.ListBudgetsResponse](
@@ -234,10 +543,10 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("ListBudgets")),
 			connect.WithClientOptions(opts...),
 		),
-		getBudget: connect.NewClient[v1.GetBudgetRequest, v1.GetBudgetResponse](
+		createBudget: connect.NewClient[v1.CreateBudgetRequest, v1.CreateBudgetResponse](
 			httpClient,
-			baseURL+FinanceServiceGetBudgetProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("GetBudget")),
+			baseURL+FinanceServiceCreateBudgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
 			connect.WithClientOptions(opts...),
 		),
 		updateBudget: connect.NewClient[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse](
@@ -252,16 +561,118 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("DeleteBudget")),
 			connect.WithClientOptions(opts...),
 		),
-		getSummary: connect.NewClient[v1.GetSummaryRequest, v1.GetSummaryResponse](
+		getHomeSummary: connect.NewClient[v1.GetHomeSummaryRequest, v1.GetHomeSummaryResponse](
 			httpClient,
-			baseURL+FinanceServiceGetSummaryProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("GetSummary")),
+			baseURL+FinanceServiceGetHomeSummaryProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetHomeSummary")),
 			connect.WithClientOptions(opts...),
 		),
-		getCategoryBreakdown: connect.NewClient[v1.GetCategoryBreakdownRequest, v1.GetCategoryBreakdownResponse](
+		getGroupBreakdown: connect.NewClient[v1.GetGroupBreakdownRequest, v1.GetGroupBreakdownResponse](
 			httpClient,
-			baseURL+FinanceServiceGetCategoryBreakdownProcedure,
-			connect.WithSchema(financeServiceMethods.ByName("GetCategoryBreakdown")),
+			baseURL+FinanceServiceGetGroupBreakdownProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetGroupBreakdown")),
+			connect.WithClientOptions(opts...),
+		),
+		getMemberBreakdown: connect.NewClient[v1.GetMemberBreakdownRequest, v1.GetMemberBreakdownResponse](
+			httpClient,
+			baseURL+FinanceServiceGetMemberBreakdownProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetMemberBreakdown")),
+			connect.WithClientOptions(opts...),
+		),
+		getSpendingSeries: connect.NewClient[v1.GetSpendingSeriesRequest, v1.GetSpendingSeriesResponse](
+			httpClient,
+			baseURL+FinanceServiceGetSpendingSeriesProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetSpendingSeries")),
+			connect.WithClientOptions(opts...),
+		),
+		listInsights: connect.NewClient[v1.ListInsightsRequest, v1.ListInsightsResponse](
+			httpClient,
+			baseURL+FinanceServiceListInsightsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListInsights")),
+			connect.WithClientOptions(opts...),
+		),
+		listRecurringPayments: connect.NewClient[v1.ListRecurringPaymentsRequest, v1.ListRecurringPaymentsResponse](
+			httpClient,
+			baseURL+FinanceServiceListRecurringPaymentsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListRecurringPayments")),
+			connect.WithClientOptions(opts...),
+		),
+		createRecurringPayment: connect.NewClient[v1.CreateRecurringPaymentRequest, v1.CreateRecurringPaymentResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateRecurringPaymentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateRecurringPayment")),
+			connect.WithClientOptions(opts...),
+		),
+		updateRecurringPayment: connect.NewClient[v1.UpdateRecurringPaymentRequest, v1.UpdateRecurringPaymentResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateRecurringPaymentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateRecurringPayment")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteRecurringPayment: connect.NewClient[v1.DeleteRecurringPaymentRequest, v1.DeleteRecurringPaymentResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteRecurringPaymentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteRecurringPayment")),
+			connect.WithClientOptions(opts...),
+		),
+		postRecurringOccurrence: connect.NewClient[v1.PostRecurringOccurrenceRequest, v1.PostRecurringOccurrenceResponse](
+			httpClient,
+			baseURL+FinanceServicePostRecurringOccurrenceProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("PostRecurringOccurrence")),
+			connect.WithClientOptions(opts...),
+		),
+		skipRecurringOccurrence: connect.NewClient[v1.SkipRecurringOccurrenceRequest, v1.SkipRecurringOccurrenceResponse](
+			httpClient,
+			baseURL+FinanceServiceSkipRecurringOccurrenceProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("SkipRecurringOccurrence")),
+			connect.WithClientOptions(opts...),
+		),
+		listReminders: connect.NewClient[v1.ListRemindersRequest, v1.ListRemindersResponse](
+			httpClient,
+			baseURL+FinanceServiceListRemindersProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListReminders")),
+			connect.WithClientOptions(opts...),
+		),
+		upsertReminder: connect.NewClient[v1.UpsertReminderRequest, v1.UpsertReminderResponse](
+			httpClient,
+			baseURL+FinanceServiceUpsertReminderProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpsertReminder")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteReminder: connect.NewClient[v1.DeleteReminderRequest, v1.DeleteReminderResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteReminderProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteReminder")),
+			connect.WithClientOptions(opts...),
+		),
+		listWidgets: connect.NewClient[v1.ListWidgetsRequest, v1.ListWidgetsResponse](
+			httpClient,
+			baseURL+FinanceServiceListWidgetsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListWidgets")),
+			connect.WithClientOptions(opts...),
+		),
+		addWidget: connect.NewClient[v1.AddWidgetRequest, v1.AddWidgetResponse](
+			httpClient,
+			baseURL+FinanceServiceAddWidgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("AddWidget")),
+			connect.WithClientOptions(opts...),
+		),
+		updateWidget: connect.NewClient[v1.UpdateWidgetRequest, v1.UpdateWidgetResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateWidgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateWidget")),
+			connect.WithClientOptions(opts...),
+		),
+		removeWidget: connect.NewClient[v1.RemoveWidgetRequest, v1.RemoveWidgetResponse](
+			httpClient,
+			baseURL+FinanceServiceRemoveWidgetProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("RemoveWidget")),
+			connect.WithClientOptions(opts...),
+		),
+		getWidgetData: connect.NewClient[v1.GetWidgetDataRequest, v1.GetWidgetDataResponse](
+			httpClient,
+			baseURL+FinanceServiceGetWidgetDataProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("GetWidgetData")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -269,32 +680,94 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // financeServiceClient implements FinanceServiceClient.
 type financeServiceClient struct {
-	createAccount        *connect.Client[v1.CreateAccountRequest, v1.CreateAccountResponse]
-	listAccounts         *connect.Client[v1.ListAccountsRequest, v1.ListAccountsResponse]
-	getAccount           *connect.Client[v1.GetAccountRequest, v1.GetAccountResponse]
-	updateAccount        *connect.Client[v1.UpdateAccountRequest, v1.UpdateAccountResponse]
-	deleteAccount        *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
-	createCategory       *connect.Client[v1.CreateCategoryRequest, v1.CreateCategoryResponse]
-	listCategories       *connect.Client[v1.ListCategoriesRequest, v1.ListCategoriesResponse]
-	updateCategory       *connect.Client[v1.UpdateCategoryRequest, v1.UpdateCategoryResponse]
-	deleteCategory       *connect.Client[v1.DeleteCategoryRequest, v1.DeleteCategoryResponse]
-	createTransaction    *connect.Client[v1.CreateTransactionRequest, v1.CreateTransactionResponse]
-	listTransactions     *connect.Client[v1.ListTransactionsRequest, v1.ListTransactionsResponse]
-	getTransaction       *connect.Client[v1.GetTransactionRequest, v1.GetTransactionResponse]
-	updateTransaction    *connect.Client[v1.UpdateTransactionRequest, v1.UpdateTransactionResponse]
-	deleteTransaction    *connect.Client[v1.DeleteTransactionRequest, v1.DeleteTransactionResponse]
-	createBudget         *connect.Client[v1.CreateBudgetRequest, v1.CreateBudgetResponse]
-	listBudgets          *connect.Client[v1.ListBudgetsRequest, v1.ListBudgetsResponse]
-	getBudget            *connect.Client[v1.GetBudgetRequest, v1.GetBudgetResponse]
-	updateBudget         *connect.Client[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse]
-	deleteBudget         *connect.Client[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse]
-	getSummary           *connect.Client[v1.GetSummaryRequest, v1.GetSummaryResponse]
-	getCategoryBreakdown *connect.Client[v1.GetCategoryBreakdownRequest, v1.GetCategoryBreakdownResponse]
+	bootstrapHousehold        *connect.Client[v1.BootstrapHouseholdRequest, v1.BootstrapHouseholdResponse]
+	getHouseholdOverview      *connect.Client[v1.GetHouseholdOverviewRequest, v1.GetHouseholdOverviewResponse]
+	getFinanceSettings        *connect.Client[v1.GetFinanceSettingsRequest, v1.GetFinanceSettingsResponse]
+	updateFinanceSettings     *connect.Client[v1.UpdateFinanceSettingsRequest, v1.UpdateFinanceSettingsResponse]
+	setOverspendNotifications *connect.Client[v1.SetOverspendNotificationsRequest, v1.SetOverspendNotificationsResponse]
+	listMembers               *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
+	listAccounts              *connect.Client[v1.ListAccountsRequest, v1.ListAccountsResponse]
+	getAccount                *connect.Client[v1.GetAccountRequest, v1.GetAccountResponse]
+	createAccount             *connect.Client[v1.CreateAccountRequest, v1.CreateAccountResponse]
+	updateAccount             *connect.Client[v1.UpdateAccountRequest, v1.UpdateAccountResponse]
+	archiveAccount            *connect.Client[v1.ArchiveAccountRequest, v1.ArchiveAccountResponse]
+	deleteAccount             *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
+	reorderAccounts           *connect.Client[v1.ReorderAccountsRequest, v1.ReorderAccountsResponse]
+	transferBetweenAccounts   *connect.Client[v1.TransferBetweenAccountsRequest, v1.TransferBetweenAccountsResponse]
+	listCategoryTree          *connect.Client[v1.ListCategoryTreeRequest, v1.ListCategoryTreeResponse]
+	createCategoryGroup       *connect.Client[v1.CreateCategoryGroupRequest, v1.CreateCategoryGroupResponse]
+	updateCategoryGroup       *connect.Client[v1.UpdateCategoryGroupRequest, v1.UpdateCategoryGroupResponse]
+	deleteCategoryGroup       *connect.Client[v1.DeleteCategoryGroupRequest, v1.DeleteCategoryGroupResponse]
+	reorderCategoryGroups     *connect.Client[v1.ReorderCategoryGroupsRequest, v1.ReorderCategoryGroupsResponse]
+	createCategory            *connect.Client[v1.CreateCategoryRequest, v1.CreateCategoryResponse]
+	updateCategory            *connect.Client[v1.UpdateCategoryRequest, v1.UpdateCategoryResponse]
+	moveCategory              *connect.Client[v1.MoveCategoryRequest, v1.MoveCategoryResponse]
+	deleteCategory            *connect.Client[v1.DeleteCategoryRequest, v1.DeleteCategoryResponse]
+	reorderCategories         *connect.Client[v1.ReorderCategoriesRequest, v1.ReorderCategoriesResponse]
+	createTransaction         *connect.Client[v1.CreateTransactionRequest, v1.CreateTransactionResponse]
+	getTransaction            *connect.Client[v1.GetTransactionRequest, v1.GetTransactionResponse]
+	updateTransaction         *connect.Client[v1.UpdateTransactionRequest, v1.UpdateTransactionResponse]
+	deleteTransaction         *connect.Client[v1.DeleteTransactionRequest, v1.DeleteTransactionResponse]
+	listTransactions          *connect.Client[v1.ListTransactionsRequest, v1.ListTransactionsResponse]
+	listTemplates             *connect.Client[v1.ListTemplatesRequest, v1.ListTemplatesResponse]
+	createTemplate            *connect.Client[v1.CreateTemplateRequest, v1.CreateTemplateResponse]
+	updateTemplate            *connect.Client[v1.UpdateTemplateRequest, v1.UpdateTemplateResponse]
+	deleteTemplate            *connect.Client[v1.DeleteTemplateRequest, v1.DeleteTemplateResponse]
+	reorderTemplates          *connect.Client[v1.ReorderTemplatesRequest, v1.ReorderTemplatesResponse]
+	logTemplate               *connect.Client[v1.LogTemplateRequest, v1.LogTemplateResponse]
+	listBudgets               *connect.Client[v1.ListBudgetsRequest, v1.ListBudgetsResponse]
+	createBudget              *connect.Client[v1.CreateBudgetRequest, v1.CreateBudgetResponse]
+	updateBudget              *connect.Client[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse]
+	deleteBudget              *connect.Client[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse]
+	getHomeSummary            *connect.Client[v1.GetHomeSummaryRequest, v1.GetHomeSummaryResponse]
+	getGroupBreakdown         *connect.Client[v1.GetGroupBreakdownRequest, v1.GetGroupBreakdownResponse]
+	getMemberBreakdown        *connect.Client[v1.GetMemberBreakdownRequest, v1.GetMemberBreakdownResponse]
+	getSpendingSeries         *connect.Client[v1.GetSpendingSeriesRequest, v1.GetSpendingSeriesResponse]
+	listInsights              *connect.Client[v1.ListInsightsRequest, v1.ListInsightsResponse]
+	listRecurringPayments     *connect.Client[v1.ListRecurringPaymentsRequest, v1.ListRecurringPaymentsResponse]
+	createRecurringPayment    *connect.Client[v1.CreateRecurringPaymentRequest, v1.CreateRecurringPaymentResponse]
+	updateRecurringPayment    *connect.Client[v1.UpdateRecurringPaymentRequest, v1.UpdateRecurringPaymentResponse]
+	deleteRecurringPayment    *connect.Client[v1.DeleteRecurringPaymentRequest, v1.DeleteRecurringPaymentResponse]
+	postRecurringOccurrence   *connect.Client[v1.PostRecurringOccurrenceRequest, v1.PostRecurringOccurrenceResponse]
+	skipRecurringOccurrence   *connect.Client[v1.SkipRecurringOccurrenceRequest, v1.SkipRecurringOccurrenceResponse]
+	listReminders             *connect.Client[v1.ListRemindersRequest, v1.ListRemindersResponse]
+	upsertReminder            *connect.Client[v1.UpsertReminderRequest, v1.UpsertReminderResponse]
+	deleteReminder            *connect.Client[v1.DeleteReminderRequest, v1.DeleteReminderResponse]
+	listWidgets               *connect.Client[v1.ListWidgetsRequest, v1.ListWidgetsResponse]
+	addWidget                 *connect.Client[v1.AddWidgetRequest, v1.AddWidgetResponse]
+	updateWidget              *connect.Client[v1.UpdateWidgetRequest, v1.UpdateWidgetResponse]
+	removeWidget              *connect.Client[v1.RemoveWidgetRequest, v1.RemoveWidgetResponse]
+	getWidgetData             *connect.Client[v1.GetWidgetDataRequest, v1.GetWidgetDataResponse]
 }
 
-// CreateAccount calls finance.v1.FinanceService.CreateAccount.
-func (c *financeServiceClient) CreateAccount(ctx context.Context, req *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
-	return c.createAccount.CallUnary(ctx, req)
+// BootstrapHousehold calls finance.v1.FinanceService.BootstrapHousehold.
+func (c *financeServiceClient) BootstrapHousehold(ctx context.Context, req *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error) {
+	return c.bootstrapHousehold.CallUnary(ctx, req)
+}
+
+// GetHouseholdOverview calls finance.v1.FinanceService.GetHouseholdOverview.
+func (c *financeServiceClient) GetHouseholdOverview(ctx context.Context, req *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error) {
+	return c.getHouseholdOverview.CallUnary(ctx, req)
+}
+
+// GetFinanceSettings calls finance.v1.FinanceService.GetFinanceSettings.
+func (c *financeServiceClient) GetFinanceSettings(ctx context.Context, req *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error) {
+	return c.getFinanceSettings.CallUnary(ctx, req)
+}
+
+// UpdateFinanceSettings calls finance.v1.FinanceService.UpdateFinanceSettings.
+func (c *financeServiceClient) UpdateFinanceSettings(ctx context.Context, req *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error) {
+	return c.updateFinanceSettings.CallUnary(ctx, req)
+}
+
+// SetOverspendNotifications calls finance.v1.FinanceService.SetOverspendNotifications.
+func (c *financeServiceClient) SetOverspendNotifications(ctx context.Context, req *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error) {
+	return c.setOverspendNotifications.CallUnary(ctx, req)
+}
+
+// ListMembers calls finance.v1.FinanceService.ListMembers.
+func (c *financeServiceClient) ListMembers(ctx context.Context, req *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error) {
+	return c.listMembers.CallUnary(ctx, req)
 }
 
 // ListAccounts calls finance.v1.FinanceService.ListAccounts.
@@ -307,9 +780,19 @@ func (c *financeServiceClient) GetAccount(ctx context.Context, req *connect.Requ
 	return c.getAccount.CallUnary(ctx, req)
 }
 
+// CreateAccount calls finance.v1.FinanceService.CreateAccount.
+func (c *financeServiceClient) CreateAccount(ctx context.Context, req *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
+	return c.createAccount.CallUnary(ctx, req)
+}
+
 // UpdateAccount calls finance.v1.FinanceService.UpdateAccount.
 func (c *financeServiceClient) UpdateAccount(ctx context.Context, req *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error) {
 	return c.updateAccount.CallUnary(ctx, req)
+}
+
+// ArchiveAccount calls finance.v1.FinanceService.ArchiveAccount.
+func (c *financeServiceClient) ArchiveAccount(ctx context.Context, req *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error) {
+	return c.archiveAccount.CallUnary(ctx, req)
 }
 
 // DeleteAccount calls finance.v1.FinanceService.DeleteAccount.
@@ -317,14 +800,44 @@ func (c *financeServiceClient) DeleteAccount(ctx context.Context, req *connect.R
 	return c.deleteAccount.CallUnary(ctx, req)
 }
 
+// ReorderAccounts calls finance.v1.FinanceService.ReorderAccounts.
+func (c *financeServiceClient) ReorderAccounts(ctx context.Context, req *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error) {
+	return c.reorderAccounts.CallUnary(ctx, req)
+}
+
+// TransferBetweenAccounts calls finance.v1.FinanceService.TransferBetweenAccounts.
+func (c *financeServiceClient) TransferBetweenAccounts(ctx context.Context, req *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error) {
+	return c.transferBetweenAccounts.CallUnary(ctx, req)
+}
+
+// ListCategoryTree calls finance.v1.FinanceService.ListCategoryTree.
+func (c *financeServiceClient) ListCategoryTree(ctx context.Context, req *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error) {
+	return c.listCategoryTree.CallUnary(ctx, req)
+}
+
+// CreateCategoryGroup calls finance.v1.FinanceService.CreateCategoryGroup.
+func (c *financeServiceClient) CreateCategoryGroup(ctx context.Context, req *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error) {
+	return c.createCategoryGroup.CallUnary(ctx, req)
+}
+
+// UpdateCategoryGroup calls finance.v1.FinanceService.UpdateCategoryGroup.
+func (c *financeServiceClient) UpdateCategoryGroup(ctx context.Context, req *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error) {
+	return c.updateCategoryGroup.CallUnary(ctx, req)
+}
+
+// DeleteCategoryGroup calls finance.v1.FinanceService.DeleteCategoryGroup.
+func (c *financeServiceClient) DeleteCategoryGroup(ctx context.Context, req *connect.Request[v1.DeleteCategoryGroupRequest]) (*connect.Response[v1.DeleteCategoryGroupResponse], error) {
+	return c.deleteCategoryGroup.CallUnary(ctx, req)
+}
+
+// ReorderCategoryGroups calls finance.v1.FinanceService.ReorderCategoryGroups.
+func (c *financeServiceClient) ReorderCategoryGroups(ctx context.Context, req *connect.Request[v1.ReorderCategoryGroupsRequest]) (*connect.Response[v1.ReorderCategoryGroupsResponse], error) {
+	return c.reorderCategoryGroups.CallUnary(ctx, req)
+}
+
 // CreateCategory calls finance.v1.FinanceService.CreateCategory.
 func (c *financeServiceClient) CreateCategory(ctx context.Context, req *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error) {
 	return c.createCategory.CallUnary(ctx, req)
-}
-
-// ListCategories calls finance.v1.FinanceService.ListCategories.
-func (c *financeServiceClient) ListCategories(ctx context.Context, req *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error) {
-	return c.listCategories.CallUnary(ctx, req)
 }
 
 // UpdateCategory calls finance.v1.FinanceService.UpdateCategory.
@@ -332,19 +845,24 @@ func (c *financeServiceClient) UpdateCategory(ctx context.Context, req *connect.
 	return c.updateCategory.CallUnary(ctx, req)
 }
 
+// MoveCategory calls finance.v1.FinanceService.MoveCategory.
+func (c *financeServiceClient) MoveCategory(ctx context.Context, req *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error) {
+	return c.moveCategory.CallUnary(ctx, req)
+}
+
 // DeleteCategory calls finance.v1.FinanceService.DeleteCategory.
 func (c *financeServiceClient) DeleteCategory(ctx context.Context, req *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error) {
 	return c.deleteCategory.CallUnary(ctx, req)
 }
 
+// ReorderCategories calls finance.v1.FinanceService.ReorderCategories.
+func (c *financeServiceClient) ReorderCategories(ctx context.Context, req *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error) {
+	return c.reorderCategories.CallUnary(ctx, req)
+}
+
 // CreateTransaction calls finance.v1.FinanceService.CreateTransaction.
 func (c *financeServiceClient) CreateTransaction(ctx context.Context, req *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error) {
 	return c.createTransaction.CallUnary(ctx, req)
-}
-
-// ListTransactions calls finance.v1.FinanceService.ListTransactions.
-func (c *financeServiceClient) ListTransactions(ctx context.Context, req *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error) {
-	return c.listTransactions.CallUnary(ctx, req)
 }
 
 // GetTransaction calls finance.v1.FinanceService.GetTransaction.
@@ -362,9 +880,39 @@ func (c *financeServiceClient) DeleteTransaction(ctx context.Context, req *conne
 	return c.deleteTransaction.CallUnary(ctx, req)
 }
 
-// CreateBudget calls finance.v1.FinanceService.CreateBudget.
-func (c *financeServiceClient) CreateBudget(ctx context.Context, req *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
-	return c.createBudget.CallUnary(ctx, req)
+// ListTransactions calls finance.v1.FinanceService.ListTransactions.
+func (c *financeServiceClient) ListTransactions(ctx context.Context, req *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error) {
+	return c.listTransactions.CallUnary(ctx, req)
+}
+
+// ListTemplates calls finance.v1.FinanceService.ListTemplates.
+func (c *financeServiceClient) ListTemplates(ctx context.Context, req *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error) {
+	return c.listTemplates.CallUnary(ctx, req)
+}
+
+// CreateTemplate calls finance.v1.FinanceService.CreateTemplate.
+func (c *financeServiceClient) CreateTemplate(ctx context.Context, req *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error) {
+	return c.createTemplate.CallUnary(ctx, req)
+}
+
+// UpdateTemplate calls finance.v1.FinanceService.UpdateTemplate.
+func (c *financeServiceClient) UpdateTemplate(ctx context.Context, req *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error) {
+	return c.updateTemplate.CallUnary(ctx, req)
+}
+
+// DeleteTemplate calls finance.v1.FinanceService.DeleteTemplate.
+func (c *financeServiceClient) DeleteTemplate(ctx context.Context, req *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error) {
+	return c.deleteTemplate.CallUnary(ctx, req)
+}
+
+// ReorderTemplates calls finance.v1.FinanceService.ReorderTemplates.
+func (c *financeServiceClient) ReorderTemplates(ctx context.Context, req *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error) {
+	return c.reorderTemplates.CallUnary(ctx, req)
+}
+
+// LogTemplate calls finance.v1.FinanceService.LogTemplate.
+func (c *financeServiceClient) LogTemplate(ctx context.Context, req *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error) {
+	return c.logTemplate.CallUnary(ctx, req)
 }
 
 // ListBudgets calls finance.v1.FinanceService.ListBudgets.
@@ -372,9 +920,9 @@ func (c *financeServiceClient) ListBudgets(ctx context.Context, req *connect.Req
 	return c.listBudgets.CallUnary(ctx, req)
 }
 
-// GetBudget calls finance.v1.FinanceService.GetBudget.
-func (c *financeServiceClient) GetBudget(ctx context.Context, req *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error) {
-	return c.getBudget.CallUnary(ctx, req)
+// CreateBudget calls finance.v1.FinanceService.CreateBudget.
+func (c *financeServiceClient) CreateBudget(ctx context.Context, req *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
+	return c.createBudget.CallUnary(ctx, req)
 }
 
 // UpdateBudget calls finance.v1.FinanceService.UpdateBudget.
@@ -387,43 +935,206 @@ func (c *financeServiceClient) DeleteBudget(ctx context.Context, req *connect.Re
 	return c.deleteBudget.CallUnary(ctx, req)
 }
 
-// GetSummary calls finance.v1.FinanceService.GetSummary.
-func (c *financeServiceClient) GetSummary(ctx context.Context, req *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error) {
-	return c.getSummary.CallUnary(ctx, req)
+// GetHomeSummary calls finance.v1.FinanceService.GetHomeSummary.
+func (c *financeServiceClient) GetHomeSummary(ctx context.Context, req *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error) {
+	return c.getHomeSummary.CallUnary(ctx, req)
 }
 
-// GetCategoryBreakdown calls finance.v1.FinanceService.GetCategoryBreakdown.
-func (c *financeServiceClient) GetCategoryBreakdown(ctx context.Context, req *connect.Request[v1.GetCategoryBreakdownRequest]) (*connect.Response[v1.GetCategoryBreakdownResponse], error) {
-	return c.getCategoryBreakdown.CallUnary(ctx, req)
+// GetGroupBreakdown calls finance.v1.FinanceService.GetGroupBreakdown.
+func (c *financeServiceClient) GetGroupBreakdown(ctx context.Context, req *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error) {
+	return c.getGroupBreakdown.CallUnary(ctx, req)
+}
+
+// GetMemberBreakdown calls finance.v1.FinanceService.GetMemberBreakdown.
+func (c *financeServiceClient) GetMemberBreakdown(ctx context.Context, req *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error) {
+	return c.getMemberBreakdown.CallUnary(ctx, req)
+}
+
+// GetSpendingSeries calls finance.v1.FinanceService.GetSpendingSeries.
+func (c *financeServiceClient) GetSpendingSeries(ctx context.Context, req *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error) {
+	return c.getSpendingSeries.CallUnary(ctx, req)
+}
+
+// ListInsights calls finance.v1.FinanceService.ListInsights.
+func (c *financeServiceClient) ListInsights(ctx context.Context, req *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error) {
+	return c.listInsights.CallUnary(ctx, req)
+}
+
+// ListRecurringPayments calls finance.v1.FinanceService.ListRecurringPayments.
+func (c *financeServiceClient) ListRecurringPayments(ctx context.Context, req *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error) {
+	return c.listRecurringPayments.CallUnary(ctx, req)
+}
+
+// CreateRecurringPayment calls finance.v1.FinanceService.CreateRecurringPayment.
+func (c *financeServiceClient) CreateRecurringPayment(ctx context.Context, req *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error) {
+	return c.createRecurringPayment.CallUnary(ctx, req)
+}
+
+// UpdateRecurringPayment calls finance.v1.FinanceService.UpdateRecurringPayment.
+func (c *financeServiceClient) UpdateRecurringPayment(ctx context.Context, req *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error) {
+	return c.updateRecurringPayment.CallUnary(ctx, req)
+}
+
+// DeleteRecurringPayment calls finance.v1.FinanceService.DeleteRecurringPayment.
+func (c *financeServiceClient) DeleteRecurringPayment(ctx context.Context, req *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error) {
+	return c.deleteRecurringPayment.CallUnary(ctx, req)
+}
+
+// PostRecurringOccurrence calls finance.v1.FinanceService.PostRecurringOccurrence.
+func (c *financeServiceClient) PostRecurringOccurrence(ctx context.Context, req *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error) {
+	return c.postRecurringOccurrence.CallUnary(ctx, req)
+}
+
+// SkipRecurringOccurrence calls finance.v1.FinanceService.SkipRecurringOccurrence.
+func (c *financeServiceClient) SkipRecurringOccurrence(ctx context.Context, req *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error) {
+	return c.skipRecurringOccurrence.CallUnary(ctx, req)
+}
+
+// ListReminders calls finance.v1.FinanceService.ListReminders.
+func (c *financeServiceClient) ListReminders(ctx context.Context, req *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error) {
+	return c.listReminders.CallUnary(ctx, req)
+}
+
+// UpsertReminder calls finance.v1.FinanceService.UpsertReminder.
+func (c *financeServiceClient) UpsertReminder(ctx context.Context, req *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error) {
+	return c.upsertReminder.CallUnary(ctx, req)
+}
+
+// DeleteReminder calls finance.v1.FinanceService.DeleteReminder.
+func (c *financeServiceClient) DeleteReminder(ctx context.Context, req *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error) {
+	return c.deleteReminder.CallUnary(ctx, req)
+}
+
+// ListWidgets calls finance.v1.FinanceService.ListWidgets.
+func (c *financeServiceClient) ListWidgets(ctx context.Context, req *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error) {
+	return c.listWidgets.CallUnary(ctx, req)
+}
+
+// AddWidget calls finance.v1.FinanceService.AddWidget.
+func (c *financeServiceClient) AddWidget(ctx context.Context, req *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error) {
+	return c.addWidget.CallUnary(ctx, req)
+}
+
+// UpdateWidget calls finance.v1.FinanceService.UpdateWidget.
+func (c *financeServiceClient) UpdateWidget(ctx context.Context, req *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error) {
+	return c.updateWidget.CallUnary(ctx, req)
+}
+
+// RemoveWidget calls finance.v1.FinanceService.RemoveWidget.
+func (c *financeServiceClient) RemoveWidget(ctx context.Context, req *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error) {
+	return c.removeWidget.CallUnary(ctx, req)
+}
+
+// GetWidgetData calls finance.v1.FinanceService.GetWidgetData.
+func (c *financeServiceClient) GetWidgetData(ctx context.Context, req *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error) {
+	return c.getWidgetData.CallUnary(ctx, req)
 }
 
 // FinanceServiceHandler is an implementation of the finance.v1.FinanceService service.
 type FinanceServiceHandler interface {
-	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
+	// --- household & settings ------------------------------------------------
+	// BootstrapHousehold seeds finance for a family that services/family has just created:
+	// settings plus the default group/category taxonomy, in one transaction. Idempotent per
+	// family — calling it twice returns the existing rows rather than a second taxonomy.
+	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
+	// GetHouseholdOverview is the household screen in one round trip: balances, period spend,
+	// the per-member cards, and the shared-resource counters.
+	GetHouseholdOverview(context.Context, *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error)
+	GetFinanceSettings(context.Context, *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error)
+	UpdateFinanceSettings(context.Context, *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error)
+	// SetOverspendNotifications is its own RPC because it is a single switch on the household
+	// screen; routing it through UpdateFinanceSettings would make an accidental currency change
+	// one mistyped field away from a toggle.
+	SetOverspendNotifications(context.Context, *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error)
+	// ListMembers reads the member projection maintained from family.v1 events, so the "who
+	// spent" picker and the avatar chips render without a synchronous call to services/family.
+	ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error)
+	// --- accounts ------------------------------------------------------------
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
 	GetAccount(context.Context, *connect.Request[v1.GetAccountRequest]) (*connect.Response[v1.GetAccountResponse], error)
+	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	UpdateAccount(context.Context, *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error)
+	// ArchiveAccount hides an account that still has history. DeleteAccount is refused while
+	// transactions reference it — a balance that silently loses its rows is a corrupt ledger.
+	ArchiveAccount(context.Context, *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
+	ReorderAccounts(context.Context, *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error)
+	// TransferBetweenAccounts writes both legs in one transaction so a transfer can never
+	// half-commit, and is excluded from expense and income totals.
+	TransferBetweenAccounts(context.Context, *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error)
+	// --- categories ----------------------------------------------------------
+	// ListCategoryTree is the whole categories screen and the add-sheet picker: groups, their
+	// categories, and each group's budget status.
+	ListCategoryTree(context.Context, *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error)
+	CreateCategoryGroup(context.Context, *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error)
+	UpdateCategoryGroup(context.Context, *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error)
+	DeleteCategoryGroup(context.Context, *connect.Request[v1.DeleteCategoryGroupRequest]) (*connect.Response[v1.DeleteCategoryGroupResponse], error)
+	ReorderCategoryGroups(context.Context, *connect.Request[v1.ReorderCategoryGroupsRequest]) (*connect.Response[v1.ReorderCategoryGroupsResponse], error)
 	CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error)
-	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	UpdateCategory(context.Context, *connect.Request[v1.UpdateCategoryRequest]) (*connect.Response[v1.UpdateCategoryResponse], error)
+	MoveCategory(context.Context, *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error)
 	DeleteCategory(context.Context, *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error)
+	ReorderCategories(context.Context, *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error)
+	// --- transactions --------------------------------------------------------
+	// CreateTransaction returns the budgets it moved, so the app can repaint the Home bars and
+	// raise an overspend toast without a refetch.
 	CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error)
-	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
-	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
-	// ListBudgets returns each budget with its progress for the window in force today, which
-	// is the only form the UI ever renders.
+	// ListTransactions is grouped into day sections server-side: the per-day subtotal and the
+	// period total have to agree with the page boundary, and only the server knows both.
+	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
+	// --- quick templates -----------------------------------------------------
+	ListTemplates(context.Context, *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error)
+	CreateTemplate(context.Context, *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error)
+	UpdateTemplate(context.Context, *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error)
+	DeleteTemplate(context.Context, *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error)
+	ReorderTemplates(context.Context, *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error)
+	// LogTemplate is one round trip from a home-screen widget that may have no app process
+	// alive: it writes the transaction and returns the budgets it moved.
+	LogTemplate(context.Context, *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error)
+	// --- budgets -------------------------------------------------------------
 	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
-	GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error)
+	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
 	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
 	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
-	// GetSummary is the home screen: totals and balance for one period.
-	GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error)
-	// GetCategoryBreakdown is the pie chart: one slice per category for one period.
-	GetCategoryBreakdown(context.Context, *connect.Request[v1.GetCategoryBreakdownRequest]) (*connect.Response[v1.GetCategoryBreakdownResponse], error)
+	// --- analytics -----------------------------------------------------------
+	// GetHomeSummary is the home screen in a single call — headline, donut, group rows with
+	// their budget bars, member chips and template chips all move together when the scope or
+	// the period changes, so they are fetched together.
+	GetHomeSummary(context.Context, *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error)
+	GetGroupBreakdown(context.Context, *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error)
+	GetMemberBreakdown(context.Context, *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error)
+	// GetSpendingSeries backs the stacked bar chart. Stacking is a parameter rather than a
+	// second RPC so flipping the total/expense/income tab is one request.
+	GetSpendingSeries(context.Context, *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error)
+	// ListInsights is computed server-side so the same wording reaches app, widget and
+	// notification instead of three nearly identical sentences.
+	ListInsights(context.Context, *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error)
+	// --- recurring payments --------------------------------------------------
+	ListRecurringPayments(context.Context, *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error)
+	CreateRecurringPayment(context.Context, *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error)
+	UpdateRecurringPayment(context.Context, *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error)
+	DeleteRecurringPayment(context.Context, *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error)
+	// Confirm-or-skip is the default for a payment that may not have actually happened; a
+	// payment with auto_post set writes its occurrence without this step.
+	PostRecurringOccurrence(context.Context, *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error)
+	SkipRecurringOccurrence(context.Context, *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error)
+	// --- reminders -----------------------------------------------------------
+	// finance stores the subscription; delivery is services/notifications' job, driven by the
+	// events below.
+	ListReminders(context.Context, *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error)
+	UpsertReminder(context.Context, *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error)
+	DeleteReminder(context.Context, *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error)
+	// --- widgets -------------------------------------------------------------
+	ListWidgets(context.Context, *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error)
+	AddWidget(context.Context, *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error)
+	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
+	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
+	// GetWidgetData refreshes every placed widget in one request: one call per widget would
+	// make the Android update pass N round trips on a cold process.
+	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
 }
 
 // NewFinanceServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -433,10 +1144,40 @@ type FinanceServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	financeServiceMethods := v1.File_finance_v1_finance_proto.Services().ByName("FinanceService").Methods()
-	financeServiceCreateAccountHandler := connect.NewUnaryHandler(
-		FinanceServiceCreateAccountProcedure,
-		svc.CreateAccount,
-		connect.WithSchema(financeServiceMethods.ByName("CreateAccount")),
+	financeServiceBootstrapHouseholdHandler := connect.NewUnaryHandler(
+		FinanceServiceBootstrapHouseholdProcedure,
+		svc.BootstrapHousehold,
+		connect.WithSchema(financeServiceMethods.ByName("BootstrapHousehold")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetHouseholdOverviewHandler := connect.NewUnaryHandler(
+		FinanceServiceGetHouseholdOverviewProcedure,
+		svc.GetHouseholdOverview,
+		connect.WithSchema(financeServiceMethods.ByName("GetHouseholdOverview")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetFinanceSettingsHandler := connect.NewUnaryHandler(
+		FinanceServiceGetFinanceSettingsProcedure,
+		svc.GetFinanceSettings,
+		connect.WithSchema(financeServiceMethods.ByName("GetFinanceSettings")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateFinanceSettingsHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateFinanceSettingsProcedure,
+		svc.UpdateFinanceSettings,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateFinanceSettings")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceSetOverspendNotificationsHandler := connect.NewUnaryHandler(
+		FinanceServiceSetOverspendNotificationsProcedure,
+		svc.SetOverspendNotifications,
+		connect.WithSchema(financeServiceMethods.ByName("SetOverspendNotifications")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListMembersHandler := connect.NewUnaryHandler(
+		FinanceServiceListMembersProcedure,
+		svc.ListMembers,
+		connect.WithSchema(financeServiceMethods.ByName("ListMembers")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceListAccountsHandler := connect.NewUnaryHandler(
@@ -451,10 +1192,22 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("GetAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceCreateAccountHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateAccountProcedure,
+		svc.CreateAccount,
+		connect.WithSchema(financeServiceMethods.ByName("CreateAccount")),
+		connect.WithHandlerOptions(opts...),
+	)
 	financeServiceUpdateAccountHandler := connect.NewUnaryHandler(
 		FinanceServiceUpdateAccountProcedure,
 		svc.UpdateAccount,
 		connect.WithSchema(financeServiceMethods.ByName("UpdateAccount")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceArchiveAccountHandler := connect.NewUnaryHandler(
+		FinanceServiceArchiveAccountProcedure,
+		svc.ArchiveAccount,
+		connect.WithSchema(financeServiceMethods.ByName("ArchiveAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceDeleteAccountHandler := connect.NewUnaryHandler(
@@ -463,16 +1216,52 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("DeleteAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceReorderAccountsHandler := connect.NewUnaryHandler(
+		FinanceServiceReorderAccountsProcedure,
+		svc.ReorderAccounts,
+		connect.WithSchema(financeServiceMethods.ByName("ReorderAccounts")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceTransferBetweenAccountsHandler := connect.NewUnaryHandler(
+		FinanceServiceTransferBetweenAccountsProcedure,
+		svc.TransferBetweenAccounts,
+		connect.WithSchema(financeServiceMethods.ByName("TransferBetweenAccounts")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListCategoryTreeHandler := connect.NewUnaryHandler(
+		FinanceServiceListCategoryTreeProcedure,
+		svc.ListCategoryTree,
+		connect.WithSchema(financeServiceMethods.ByName("ListCategoryTree")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateCategoryGroupHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateCategoryGroupProcedure,
+		svc.CreateCategoryGroup,
+		connect.WithSchema(financeServiceMethods.ByName("CreateCategoryGroup")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateCategoryGroupHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateCategoryGroupProcedure,
+		svc.UpdateCategoryGroup,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateCategoryGroup")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteCategoryGroupHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteCategoryGroupProcedure,
+		svc.DeleteCategoryGroup,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteCategoryGroup")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceReorderCategoryGroupsHandler := connect.NewUnaryHandler(
+		FinanceServiceReorderCategoryGroupsProcedure,
+		svc.ReorderCategoryGroups,
+		connect.WithSchema(financeServiceMethods.ByName("ReorderCategoryGroups")),
+		connect.WithHandlerOptions(opts...),
+	)
 	financeServiceCreateCategoryHandler := connect.NewUnaryHandler(
 		FinanceServiceCreateCategoryProcedure,
 		svc.CreateCategory,
 		connect.WithSchema(financeServiceMethods.ByName("CreateCategory")),
-		connect.WithHandlerOptions(opts...),
-	)
-	financeServiceListCategoriesHandler := connect.NewUnaryHandler(
-		FinanceServiceListCategoriesProcedure,
-		svc.ListCategories,
-		connect.WithSchema(financeServiceMethods.ByName("ListCategories")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceUpdateCategoryHandler := connect.NewUnaryHandler(
@@ -481,22 +1270,28 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("UpdateCategory")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceMoveCategoryHandler := connect.NewUnaryHandler(
+		FinanceServiceMoveCategoryProcedure,
+		svc.MoveCategory,
+		connect.WithSchema(financeServiceMethods.ByName("MoveCategory")),
+		connect.WithHandlerOptions(opts...),
+	)
 	financeServiceDeleteCategoryHandler := connect.NewUnaryHandler(
 		FinanceServiceDeleteCategoryProcedure,
 		svc.DeleteCategory,
 		connect.WithSchema(financeServiceMethods.ByName("DeleteCategory")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceReorderCategoriesHandler := connect.NewUnaryHandler(
+		FinanceServiceReorderCategoriesProcedure,
+		svc.ReorderCategories,
+		connect.WithSchema(financeServiceMethods.ByName("ReorderCategories")),
+		connect.WithHandlerOptions(opts...),
+	)
 	financeServiceCreateTransactionHandler := connect.NewUnaryHandler(
 		FinanceServiceCreateTransactionProcedure,
 		svc.CreateTransaction,
 		connect.WithSchema(financeServiceMethods.ByName("CreateTransaction")),
-		connect.WithHandlerOptions(opts...),
-	)
-	financeServiceListTransactionsHandler := connect.NewUnaryHandler(
-		FinanceServiceListTransactionsProcedure,
-		svc.ListTransactions,
-		connect.WithSchema(financeServiceMethods.ByName("ListTransactions")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceGetTransactionHandler := connect.NewUnaryHandler(
@@ -517,10 +1312,46 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("DeleteTransaction")),
 		connect.WithHandlerOptions(opts...),
 	)
-	financeServiceCreateBudgetHandler := connect.NewUnaryHandler(
-		FinanceServiceCreateBudgetProcedure,
-		svc.CreateBudget,
-		connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
+	financeServiceListTransactionsHandler := connect.NewUnaryHandler(
+		FinanceServiceListTransactionsProcedure,
+		svc.ListTransactions,
+		connect.WithSchema(financeServiceMethods.ByName("ListTransactions")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListTemplatesHandler := connect.NewUnaryHandler(
+		FinanceServiceListTemplatesProcedure,
+		svc.ListTemplates,
+		connect.WithSchema(financeServiceMethods.ByName("ListTemplates")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateTemplateHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateTemplateProcedure,
+		svc.CreateTemplate,
+		connect.WithSchema(financeServiceMethods.ByName("CreateTemplate")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateTemplateHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateTemplateProcedure,
+		svc.UpdateTemplate,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateTemplate")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteTemplateHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteTemplateProcedure,
+		svc.DeleteTemplate,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteTemplate")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceReorderTemplatesHandler := connect.NewUnaryHandler(
+		FinanceServiceReorderTemplatesProcedure,
+		svc.ReorderTemplates,
+		connect.WithSchema(financeServiceMethods.ByName("ReorderTemplates")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceLogTemplateHandler := connect.NewUnaryHandler(
+		FinanceServiceLogTemplateProcedure,
+		svc.LogTemplate,
+		connect.WithSchema(financeServiceMethods.ByName("LogTemplate")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceListBudgetsHandler := connect.NewUnaryHandler(
@@ -529,10 +1360,10 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("ListBudgets")),
 		connect.WithHandlerOptions(opts...),
 	)
-	financeServiceGetBudgetHandler := connect.NewUnaryHandler(
-		FinanceServiceGetBudgetProcedure,
-		svc.GetBudget,
-		connect.WithSchema(financeServiceMethods.ByName("GetBudget")),
+	financeServiceCreateBudgetHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateBudgetProcedure,
+		svc.CreateBudget,
+		connect.WithSchema(financeServiceMethods.ByName("CreateBudget")),
 		connect.WithHandlerOptions(opts...),
 	)
 	financeServiceUpdateBudgetHandler := connect.NewUnaryHandler(
@@ -547,62 +1378,238 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("DeleteBudget")),
 		connect.WithHandlerOptions(opts...),
 	)
-	financeServiceGetSummaryHandler := connect.NewUnaryHandler(
-		FinanceServiceGetSummaryProcedure,
-		svc.GetSummary,
-		connect.WithSchema(financeServiceMethods.ByName("GetSummary")),
+	financeServiceGetHomeSummaryHandler := connect.NewUnaryHandler(
+		FinanceServiceGetHomeSummaryProcedure,
+		svc.GetHomeSummary,
+		connect.WithSchema(financeServiceMethods.ByName("GetHomeSummary")),
 		connect.WithHandlerOptions(opts...),
 	)
-	financeServiceGetCategoryBreakdownHandler := connect.NewUnaryHandler(
-		FinanceServiceGetCategoryBreakdownProcedure,
-		svc.GetCategoryBreakdown,
-		connect.WithSchema(financeServiceMethods.ByName("GetCategoryBreakdown")),
+	financeServiceGetGroupBreakdownHandler := connect.NewUnaryHandler(
+		FinanceServiceGetGroupBreakdownProcedure,
+		svc.GetGroupBreakdown,
+		connect.WithSchema(financeServiceMethods.ByName("GetGroupBreakdown")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetMemberBreakdownHandler := connect.NewUnaryHandler(
+		FinanceServiceGetMemberBreakdownProcedure,
+		svc.GetMemberBreakdown,
+		connect.WithSchema(financeServiceMethods.ByName("GetMemberBreakdown")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetSpendingSeriesHandler := connect.NewUnaryHandler(
+		FinanceServiceGetSpendingSeriesProcedure,
+		svc.GetSpendingSeries,
+		connect.WithSchema(financeServiceMethods.ByName("GetSpendingSeries")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListInsightsHandler := connect.NewUnaryHandler(
+		FinanceServiceListInsightsProcedure,
+		svc.ListInsights,
+		connect.WithSchema(financeServiceMethods.ByName("ListInsights")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListRecurringPaymentsHandler := connect.NewUnaryHandler(
+		FinanceServiceListRecurringPaymentsProcedure,
+		svc.ListRecurringPayments,
+		connect.WithSchema(financeServiceMethods.ByName("ListRecurringPayments")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateRecurringPaymentHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateRecurringPaymentProcedure,
+		svc.CreateRecurringPayment,
+		connect.WithSchema(financeServiceMethods.ByName("CreateRecurringPayment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateRecurringPaymentHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateRecurringPaymentProcedure,
+		svc.UpdateRecurringPayment,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateRecurringPayment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteRecurringPaymentHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteRecurringPaymentProcedure,
+		svc.DeleteRecurringPayment,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteRecurringPayment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServicePostRecurringOccurrenceHandler := connect.NewUnaryHandler(
+		FinanceServicePostRecurringOccurrenceProcedure,
+		svc.PostRecurringOccurrence,
+		connect.WithSchema(financeServiceMethods.ByName("PostRecurringOccurrence")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceSkipRecurringOccurrenceHandler := connect.NewUnaryHandler(
+		FinanceServiceSkipRecurringOccurrenceProcedure,
+		svc.SkipRecurringOccurrence,
+		connect.WithSchema(financeServiceMethods.ByName("SkipRecurringOccurrence")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListRemindersHandler := connect.NewUnaryHandler(
+		FinanceServiceListRemindersProcedure,
+		svc.ListReminders,
+		connect.WithSchema(financeServiceMethods.ByName("ListReminders")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpsertReminderHandler := connect.NewUnaryHandler(
+		FinanceServiceUpsertReminderProcedure,
+		svc.UpsertReminder,
+		connect.WithSchema(financeServiceMethods.ByName("UpsertReminder")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteReminderHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteReminderProcedure,
+		svc.DeleteReminder,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteReminder")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListWidgetsHandler := connect.NewUnaryHandler(
+		FinanceServiceListWidgetsProcedure,
+		svc.ListWidgets,
+		connect.WithSchema(financeServiceMethods.ByName("ListWidgets")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceAddWidgetHandler := connect.NewUnaryHandler(
+		FinanceServiceAddWidgetProcedure,
+		svc.AddWidget,
+		connect.WithSchema(financeServiceMethods.ByName("AddWidget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateWidgetHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateWidgetProcedure,
+		svc.UpdateWidget,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateWidget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceRemoveWidgetHandler := connect.NewUnaryHandler(
+		FinanceServiceRemoveWidgetProcedure,
+		svc.RemoveWidget,
+		connect.WithSchema(financeServiceMethods.ByName("RemoveWidget")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceGetWidgetDataHandler := connect.NewUnaryHandler(
+		FinanceServiceGetWidgetDataProcedure,
+		svc.GetWidgetData,
+		connect.WithSchema(financeServiceMethods.ByName("GetWidgetData")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/finance.v1.FinanceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case FinanceServiceCreateAccountProcedure:
-			financeServiceCreateAccountHandler.ServeHTTP(w, r)
+		case FinanceServiceBootstrapHouseholdProcedure:
+			financeServiceBootstrapHouseholdHandler.ServeHTTP(w, r)
+		case FinanceServiceGetHouseholdOverviewProcedure:
+			financeServiceGetHouseholdOverviewHandler.ServeHTTP(w, r)
+		case FinanceServiceGetFinanceSettingsProcedure:
+			financeServiceGetFinanceSettingsHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateFinanceSettingsProcedure:
+			financeServiceUpdateFinanceSettingsHandler.ServeHTTP(w, r)
+		case FinanceServiceSetOverspendNotificationsProcedure:
+			financeServiceSetOverspendNotificationsHandler.ServeHTTP(w, r)
+		case FinanceServiceListMembersProcedure:
+			financeServiceListMembersHandler.ServeHTTP(w, r)
 		case FinanceServiceListAccountsProcedure:
 			financeServiceListAccountsHandler.ServeHTTP(w, r)
 		case FinanceServiceGetAccountProcedure:
 			financeServiceGetAccountHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateAccountProcedure:
+			financeServiceCreateAccountHandler.ServeHTTP(w, r)
 		case FinanceServiceUpdateAccountProcedure:
 			financeServiceUpdateAccountHandler.ServeHTTP(w, r)
+		case FinanceServiceArchiveAccountProcedure:
+			financeServiceArchiveAccountHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteAccountProcedure:
 			financeServiceDeleteAccountHandler.ServeHTTP(w, r)
+		case FinanceServiceReorderAccountsProcedure:
+			financeServiceReorderAccountsHandler.ServeHTTP(w, r)
+		case FinanceServiceTransferBetweenAccountsProcedure:
+			financeServiceTransferBetweenAccountsHandler.ServeHTTP(w, r)
+		case FinanceServiceListCategoryTreeProcedure:
+			financeServiceListCategoryTreeHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateCategoryGroupProcedure:
+			financeServiceCreateCategoryGroupHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateCategoryGroupProcedure:
+			financeServiceUpdateCategoryGroupHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteCategoryGroupProcedure:
+			financeServiceDeleteCategoryGroupHandler.ServeHTTP(w, r)
+		case FinanceServiceReorderCategoryGroupsProcedure:
+			financeServiceReorderCategoryGroupsHandler.ServeHTTP(w, r)
 		case FinanceServiceCreateCategoryProcedure:
 			financeServiceCreateCategoryHandler.ServeHTTP(w, r)
-		case FinanceServiceListCategoriesProcedure:
-			financeServiceListCategoriesHandler.ServeHTTP(w, r)
 		case FinanceServiceUpdateCategoryProcedure:
 			financeServiceUpdateCategoryHandler.ServeHTTP(w, r)
+		case FinanceServiceMoveCategoryProcedure:
+			financeServiceMoveCategoryHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteCategoryProcedure:
 			financeServiceDeleteCategoryHandler.ServeHTTP(w, r)
+		case FinanceServiceReorderCategoriesProcedure:
+			financeServiceReorderCategoriesHandler.ServeHTTP(w, r)
 		case FinanceServiceCreateTransactionProcedure:
 			financeServiceCreateTransactionHandler.ServeHTTP(w, r)
-		case FinanceServiceListTransactionsProcedure:
-			financeServiceListTransactionsHandler.ServeHTTP(w, r)
 		case FinanceServiceGetTransactionProcedure:
 			financeServiceGetTransactionHandler.ServeHTTP(w, r)
 		case FinanceServiceUpdateTransactionProcedure:
 			financeServiceUpdateTransactionHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteTransactionProcedure:
 			financeServiceDeleteTransactionHandler.ServeHTTP(w, r)
-		case FinanceServiceCreateBudgetProcedure:
-			financeServiceCreateBudgetHandler.ServeHTTP(w, r)
+		case FinanceServiceListTransactionsProcedure:
+			financeServiceListTransactionsHandler.ServeHTTP(w, r)
+		case FinanceServiceListTemplatesProcedure:
+			financeServiceListTemplatesHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateTemplateProcedure:
+			financeServiceCreateTemplateHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateTemplateProcedure:
+			financeServiceUpdateTemplateHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteTemplateProcedure:
+			financeServiceDeleteTemplateHandler.ServeHTTP(w, r)
+		case FinanceServiceReorderTemplatesProcedure:
+			financeServiceReorderTemplatesHandler.ServeHTTP(w, r)
+		case FinanceServiceLogTemplateProcedure:
+			financeServiceLogTemplateHandler.ServeHTTP(w, r)
 		case FinanceServiceListBudgetsProcedure:
 			financeServiceListBudgetsHandler.ServeHTTP(w, r)
-		case FinanceServiceGetBudgetProcedure:
-			financeServiceGetBudgetHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateBudgetProcedure:
+			financeServiceCreateBudgetHandler.ServeHTTP(w, r)
 		case FinanceServiceUpdateBudgetProcedure:
 			financeServiceUpdateBudgetHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteBudgetProcedure:
 			financeServiceDeleteBudgetHandler.ServeHTTP(w, r)
-		case FinanceServiceGetSummaryProcedure:
-			financeServiceGetSummaryHandler.ServeHTTP(w, r)
-		case FinanceServiceGetCategoryBreakdownProcedure:
-			financeServiceGetCategoryBreakdownHandler.ServeHTTP(w, r)
+		case FinanceServiceGetHomeSummaryProcedure:
+			financeServiceGetHomeSummaryHandler.ServeHTTP(w, r)
+		case FinanceServiceGetGroupBreakdownProcedure:
+			financeServiceGetGroupBreakdownHandler.ServeHTTP(w, r)
+		case FinanceServiceGetMemberBreakdownProcedure:
+			financeServiceGetMemberBreakdownHandler.ServeHTTP(w, r)
+		case FinanceServiceGetSpendingSeriesProcedure:
+			financeServiceGetSpendingSeriesHandler.ServeHTTP(w, r)
+		case FinanceServiceListInsightsProcedure:
+			financeServiceListInsightsHandler.ServeHTTP(w, r)
+		case FinanceServiceListRecurringPaymentsProcedure:
+			financeServiceListRecurringPaymentsHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateRecurringPaymentProcedure:
+			financeServiceCreateRecurringPaymentHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateRecurringPaymentProcedure:
+			financeServiceUpdateRecurringPaymentHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteRecurringPaymentProcedure:
+			financeServiceDeleteRecurringPaymentHandler.ServeHTTP(w, r)
+		case FinanceServicePostRecurringOccurrenceProcedure:
+			financeServicePostRecurringOccurrenceHandler.ServeHTTP(w, r)
+		case FinanceServiceSkipRecurringOccurrenceProcedure:
+			financeServiceSkipRecurringOccurrenceHandler.ServeHTTP(w, r)
+		case FinanceServiceListRemindersProcedure:
+			financeServiceListRemindersHandler.ServeHTTP(w, r)
+		case FinanceServiceUpsertReminderProcedure:
+			financeServiceUpsertReminderHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteReminderProcedure:
+			financeServiceDeleteReminderHandler.ServeHTTP(w, r)
+		case FinanceServiceListWidgetsProcedure:
+			financeServiceListWidgetsHandler.ServeHTTP(w, r)
+		case FinanceServiceAddWidgetProcedure:
+			financeServiceAddWidgetHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateWidgetProcedure:
+			financeServiceUpdateWidgetHandler.ServeHTTP(w, r)
+		case FinanceServiceRemoveWidgetProcedure:
+			financeServiceRemoveWidgetHandler.ServeHTTP(w, r)
+		case FinanceServiceGetWidgetDataProcedure:
+			financeServiceGetWidgetDataHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -612,8 +1619,28 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 // UnimplementedFinanceServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedFinanceServiceHandler struct{}
 
-func (UnimplementedFinanceServiceHandler) CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateAccount is not implemented"))
+func (UnimplementedFinanceServiceHandler) BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.BootstrapHousehold is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetHouseholdOverview(context.Context, *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetHouseholdOverview is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetFinanceSettings(context.Context, *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetFinanceSettings is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateFinanceSettings(context.Context, *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateFinanceSettings is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) SetOverspendNotifications(context.Context, *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.SetOverspendNotifications is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListMembers is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error) {
@@ -624,36 +1651,72 @@ func (UnimplementedFinanceServiceHandler) GetAccount(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetAccount is not implemented"))
 }
 
+func (UnimplementedFinanceServiceHandler) CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateAccount is not implemented"))
+}
+
 func (UnimplementedFinanceServiceHandler) UpdateAccount(context.Context, *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateAccount is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ArchiveAccount(context.Context, *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ArchiveAccount is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteAccount is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateCategory is not implemented"))
+func (UnimplementedFinanceServiceHandler) ReorderAccounts(context.Context, *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ReorderAccounts is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListCategories is not implemented"))
+func (UnimplementedFinanceServiceHandler) TransferBetweenAccounts(context.Context, *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.TransferBetweenAccounts is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListCategoryTree(context.Context, *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListCategoryTree is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateCategoryGroup(context.Context, *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateCategoryGroup is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateCategoryGroup(context.Context, *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateCategoryGroup is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteCategoryGroup(context.Context, *connect.Request[v1.DeleteCategoryGroupRequest]) (*connect.Response[v1.DeleteCategoryGroupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteCategoryGroup is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ReorderCategoryGroups(context.Context, *connect.Request[v1.ReorderCategoryGroupsRequest]) (*connect.Response[v1.ReorderCategoryGroupsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ReorderCategoryGroups is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateCategory is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) UpdateCategory(context.Context, *connect.Request[v1.UpdateCategoryRequest]) (*connect.Response[v1.UpdateCategoryResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateCategory is not implemented"))
 }
 
+func (UnimplementedFinanceServiceHandler) MoveCategory(context.Context, *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.MoveCategory is not implemented"))
+}
+
 func (UnimplementedFinanceServiceHandler) DeleteCategory(context.Context, *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteCategory is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateTransaction is not implemented"))
+func (UnimplementedFinanceServiceHandler) ReorderCategories(context.Context, *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ReorderCategories is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListTransactions is not implemented"))
+func (UnimplementedFinanceServiceHandler) CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateTransaction is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error) {
@@ -668,16 +1731,40 @@ func (UnimplementedFinanceServiceHandler) DeleteTransaction(context.Context, *co
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteTransaction is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateBudget is not implemented"))
+func (UnimplementedFinanceServiceHandler) ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListTransactions is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListTemplates(context.Context, *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListTemplates is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateTemplate(context.Context, *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateTemplate is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateTemplate(context.Context, *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateTemplate is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteTemplate(context.Context, *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteTemplate is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ReorderTemplates(context.Context, *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ReorderTemplates is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) LogTemplate(context.Context, *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.LogTemplate is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListBudgets is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) GetBudget(context.Context, *connect.Request[v1.GetBudgetRequest]) (*connect.Response[v1.GetBudgetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetBudget is not implemented"))
+func (UnimplementedFinanceServiceHandler) CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateBudget is not implemented"))
 }
 
 func (UnimplementedFinanceServiceHandler) UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error) {
@@ -688,10 +1775,78 @@ func (UnimplementedFinanceServiceHandler) DeleteBudget(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteBudget is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) GetSummary(context.Context, *connect.Request[v1.GetSummaryRequest]) (*connect.Response[v1.GetSummaryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetSummary is not implemented"))
+func (UnimplementedFinanceServiceHandler) GetHomeSummary(context.Context, *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetHomeSummary is not implemented"))
 }
 
-func (UnimplementedFinanceServiceHandler) GetCategoryBreakdown(context.Context, *connect.Request[v1.GetCategoryBreakdownRequest]) (*connect.Response[v1.GetCategoryBreakdownResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetCategoryBreakdown is not implemented"))
+func (UnimplementedFinanceServiceHandler) GetGroupBreakdown(context.Context, *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetGroupBreakdown is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetMemberBreakdown(context.Context, *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetMemberBreakdown is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetSpendingSeries(context.Context, *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetSpendingSeries is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListInsights(context.Context, *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListInsights is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListRecurringPayments(context.Context, *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListRecurringPayments is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateRecurringPayment(context.Context, *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateRecurringPayment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateRecurringPayment(context.Context, *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateRecurringPayment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteRecurringPayment(context.Context, *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteRecurringPayment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) PostRecurringOccurrence(context.Context, *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.PostRecurringOccurrence is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) SkipRecurringOccurrence(context.Context, *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.SkipRecurringOccurrence is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListReminders(context.Context, *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListReminders is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpsertReminder(context.Context, *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpsertReminder is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteReminder(context.Context, *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteReminder is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListWidgets(context.Context, *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListWidgets is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) AddWidget(context.Context, *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.AddWidget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateWidget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.RemoveWidget is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetWidgetData is not implemented"))
 }

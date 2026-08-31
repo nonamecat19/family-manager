@@ -11,51 +11,182 @@ import (
 )
 
 type Querier interface {
-	CountAccountTransactions(ctx context.Context, accountID pgtype.UUID) (int64, error)
-	CountCategoryTransactions(ctx context.Context, categoryID pgtype.UUID) (int64, error)
+	AdvanceRecurringPayment(ctx context.Context, arg AdvanceRecurringPaymentParams) (RecurringPayment, error)
+	// BootstrapFinanceSettings is idempotent per family: a second call returns the existing row
+	// rather than a second household. The no-op UPDATE is what makes RETURNING * give a row on
+	// conflict — DO NOTHING returns none, which would make the caller unable to tell "already
+	// bootstrapped" from "insert failed".
+	BootstrapFinanceSettings(ctx context.Context, arg BootstrapFinanceSettingsParams) (FinanceSetting, error)
+	CountAccountTransactions(ctx context.Context, arg CountAccountTransactionsParams) (int64, error)
+	CountCategoriesInGroup(ctx context.Context, arg CountCategoriesInGroupParams) (int64, error)
+	CountCategoryTransactions(ctx context.Context, arg CountCategoryTransactionsParams) (int64, error)
+	// CountHiddenPrivateAccounts is the whole of what another member's private accounts become on
+	// the wire: an owner and a count. No balance, no name, no currency.
+	CountHiddenPrivateAccounts(ctx context.Context, arg CountHiddenPrivateAccountsParams) ([]CountHiddenPrivateAccountsRow, error)
+	CountMembers(ctx context.Context, familyID pgtype.UUID) (int64, error)
+	CountTransactionsForRecurringOccurrence(ctx context.Context, arg CountTransactionsForRecurringOccurrenceParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateBudget(ctx context.Context, arg CreateBudgetParams) (Budget, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
+	CreateCategoryGroup(ctx context.Context, arg CreateCategoryGroupParams) (CategoryGroup, error)
+	CreateRecurringPayment(ctx context.Context, arg CreateRecurringPaymentParams) (RecurringPayment, error)
+	CreateReminder(ctx context.Context, arg CreateReminderParams) (Reminder, error)
+	CreateTemplate(ctx context.Context, arg CreateTemplateParams) (QuickTemplate, error)
+	// The visibility boundary again, this time on the ledger: a transaction is readable when the
+	// account it was paid from is readable. Every read in this file joins accounts and carries
+	// @viewer_member_id, so "shared accounts plus my own private ones" is one predicate written
+	// once rather than a filter each handler could forget.
+	//
+	// Aggregates therefore include the caller's own private spend and no one else's — the design
+	// excludes private BALANCES from the family headline (SumFamilyBalances does that), not the
+	// caller's own spending from their own donut.
+	//
+	// Transfers are excluded from every income/expense total: moving money between two of your
+	// own accounts is not spending, and a report that counted it would double the month.
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
+	CreateWidget(ctx context.Context, arg CreateWidgetParams) (WidgetInstance, error)
 	DeleteAccount(ctx context.Context, arg DeleteAccountParams) (int64, error)
 	DeleteBudget(ctx context.Context, arg DeleteBudgetParams) (int64, error)
 	DeleteCategory(ctx context.Context, arg DeleteCategoryParams) (int64, error)
+	DeleteCategoryGroup(ctx context.Context, arg DeleteCategoryGroupParams) (int64, error)
+	DeleteMember(ctx context.Context, arg DeleteMemberParams) (int64, error)
+	DeleteRecurringPayment(ctx context.Context, arg DeleteRecurringPaymentParams) (int64, error)
+	DeleteReminder(ctx context.Context, arg DeleteReminderParams) (int64, error)
+	DeleteTemplate(ctx context.Context, arg DeleteTemplateParams) (int64, error)
 	DeleteTransaction(ctx context.Context, arg DeleteTransactionParams) (int64, error)
-	GetAccount(ctx context.Context, arg GetAccountParams) (Account, error)
-	GetAccountWithBalance(ctx context.Context, arg GetAccountWithBalanceParams) (GetAccountWithBalanceRow, error)
+	DeleteWidget(ctx context.Context, arg DeleteWidgetParams) (int64, error)
 	GetBudget(ctx context.Context, arg GetBudgetParams) (Budget, error)
 	GetCategory(ctx context.Context, arg GetCategoryParams) (Category, error)
-	GetCategoryBreakdown(ctx context.Context, arg GetCategoryBreakdownParams) ([]GetCategoryBreakdownRow, error)
-	// Transfers are excluded from both totals: moving money between your own accounts is not
-	// income and not spending.
-	//
-	GetSummary(ctx context.Context, arg GetSummaryParams) (GetSummaryRow, error)
-	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
-	// A balance is never stored: it is the opening balance plus everything that moved. Storing it
-	// would mean two sources of truth, and the stored one is always the stale one.
-	//
-	ListAccountsWithBalance(ctx context.Context, arg ListAccountsWithBalanceParams) ([]ListAccountsWithBalanceRow, error)
+	GetCategoryGroup(ctx context.Context, arg GetCategoryGroupParams) (CategoryGroup, error)
+	GetFinanceSettings(ctx context.Context, familyID pgtype.UUID) (FinanceSetting, error)
+	GetMember(ctx context.Context, arg GetMemberParams) (FinanceMember, error)
+	GetReminder(ctx context.Context, arg GetReminderParams) (Reminder, error)
+	GetTemplate(ctx context.Context, arg GetTemplateParams) (QuickTemplate, error)
+	// GetVisibleAccount is GetAccount with the boundary applied. A row that exists but belongs to
+	// another member's private set returns no rows, so the handler answers NotFound — the same
+	// answer as an id that never existed, because "this id exists but is not yours" is itself a
+	// leak.
+	GetVisibleAccount(ctx context.Context, arg GetVisibleAccountParams) (GetVisibleAccountRow, error)
+	// GetVisibleRecurringPayment answers NotFound for a schedule on another member's private
+	// account, the same answer as an id that never existed: "this id exists but is not yours" is
+	// itself a leak, and a write RPC that skipped this read would be a read of exactly what the
+	// boundary hides.
+	GetVisibleRecurringPayment(ctx context.Context, arg GetVisibleRecurringPaymentParams) (RecurringPayment, error)
+	GetVisibleTransaction(ctx context.Context, arg GetVisibleTransactionParams) (GetVisibleTransactionRow, error)
+	GetWidget(ctx context.Context, arg GetWidgetParams) (WidgetInstance, error)
 	ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Budget, error)
-	// Budgets a given category's spending counts against: its own, plus the household total.
-	// Used after a write to decide whether a limit was just crossed.
-	//
+	// ListBudgetsForCategory is what CreateTransaction/UpdateTransaction/DeleteTransaction use to
+	// answer affected_budgets: both the category's own budget and its group's, because spend in a
+	// category counts toward both.
 	ListBudgetsForCategory(ctx context.Context, arg ListBudgetsForCategoryParams) ([]Budget, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
-	// Keyset pagination on (occurred_on, id): OFFSET drifts when a row is inserted mid-scroll,
-	// and the ledger is written to while it is being read.
+	ListCategoryGroups(ctx context.Context, arg ListCategoryGroupsParams) ([]CategoryGroup, error)
+	// The member projection, maintained from family.member.* events. finance never writes it from
+	// a client request: a member row appears because services/family said so.
+	ListMembers(ctx context.Context, arg ListMembersParams) ([]FinanceMember, error)
+	ListReminders(ctx context.Context, arg ListRemindersParams) ([]Reminder, error)
+	// Templates are private to their owner: every read is keyed by owner_user_id, so asking for
+	// another member's templates returns an empty list rather than an error. They are private,
+	// not secret.
+	ListTemplates(ctx context.Context, arg ListTemplatesParams) ([]QuickTemplate, error)
+	// PRIVATE ACCOUNT VISIBILITY IS A SECURITY BOUNDARY, and it is enforced here rather than in
+	// Go: every read that can return an account, a balance or a total carries the viewer's member
+	// id and the same predicate
 	//
-	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
-	// Budgets are consumed by spending only: a transfer moves your own money between pockets and
-	// income is not expenditure, so neither touches a limit.
+	//     (a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
 	//
-	// A NULL category_id on the budget means "everything", which is why the category filter is
-	// written as a nullable comparison rather than an equality.
+	// so a handler cannot forget it by forgetting a filter. The only fact about someone else's
+	// private accounts that leaves this file is CountHiddenPrivateAccounts' count.
 	//
+	// balance_minor is derived on every read and never stored: a persisted total drifts the
+	// moment a transaction is edited. It is the opening balance, plus income, minus expense,
+	// minus every transfer leaving the account, plus what arrived on every transfer into it
+	// (received_amount_minor when the transfer crossed currencies, the sent amount otherwise).
+	ListVisibleAccounts(ctx context.Context, arg ListVisibleAccountsParams) ([]ListVisibleAccountsRow, error)
+	// A recurring payment is attached to an account, so it inherits that account's visibility:
+	// the schedule's name, amount and cadence say as much about a private account as a
+	// transaction does. Every read therefore joins accounts and carries the same predicate the
+	// rest of this directory carries
+	//
+	//     (a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
+	//
+	// and is named Visible* so a handler reaching for an unscoped read has to notice there isn't
+	// one. Writes are gated by reading the row through GetVisibleRecurringPayment first — the
+	// same "the read is the guard" rule accounts.sql states.
+	ListVisibleRecurringPayments(ctx context.Context, arg ListVisibleRecurringPaymentsParams) ([]RecurringPayment, error)
+	// ListVisibleTransactions is the feed. Every filter is a no-op sentinel when unset — NULL for
+	// the text and uuid ones, an empty array for the repeated ones — so the app sends one shape of
+	// request whether it is browsing a month or searching one merchant across a member's cards.
+	// The cursor is (occurred_on, id), matching idx_transactions_feed, because an OFFSET moves
+	// under a feed that is being written to.
+	ListVisibleTransactions(ctx context.Context, arg ListVisibleTransactionsParams) ([]ListVisibleTransactionsRow, error)
+	// Widgets are per-user placements, not household state: two members place the same type and
+	// each sees their own scope, so every read is keyed by user_id as well as family_id.
+	ListWidgets(ctx context.Context, arg ListWidgetsParams) ([]WidgetInstance, error)
+	ListWidgetsByIDs(ctx context.Context, arg ListWidgetsByIDsParams) ([]WidgetInstance, error)
+	// MoveCategoriesToGroup is the reassignment DeleteCategoryGroup requires: a group holding
+	// categories that hold transactions cannot silently vanish, so its categories are re-parented
+	// first and the delete is refused if that did not happen.
+	MoveCategoriesToGroup(ctx context.Context, arg MoveCategoriesToGroupParams) (int64, error)
+	MoveCategory(ctx context.Context, arg MoveCategoryParams) (Category, error)
+	MoveTransactionsToCategory(ctx context.Context, arg MoveTransactionsToCategoryParams) (int64, error)
+	RecordTemplateUse(ctx context.Context, arg RecordTemplateUseParams) (QuickTemplate, error)
+	// The boundary is a write rule too: a member may not push another member's private account
+	// around in a list they cannot see. An id that is not visible simply does not move, which is
+	// what an id that does not exist already did.
+	ReorderAccount(ctx context.Context, arg ReorderAccountParams) error
+	// ReorderCategory renumbers one category inside the group the client named. The group is part
+	// of the predicate rather than a thing the handler trusts the list to agree with: a batch that
+	// mixed in an id from another group would otherwise renumber a grid nobody was looking at.
+	ReorderCategory(ctx context.Context, arg ReorderCategoryParams) (int64, error)
+	ReorderCategoryGroup(ctx context.Context, arg ReorderCategoryGroupParams) error
+	ReorderTemplate(ctx context.Context, arg ReorderTemplateParams) error
+	SetAccountArchived(ctx context.Context, arg SetAccountArchivedParams) (Account, error)
+	// Visibility moves with its owner in one statement: turning an account private without
+	// stamping the owner, or shared without clearing it, violates accounts_private_has_owner.
+	SetAccountVisibility(ctx context.Context, arg SetAccountVisibilityParams) (Account, error)
+	SetOverspendNotifications(ctx context.Context, arg SetOverspendNotificationsParams) (FinanceSetting, error)
+	// SumBudgetSpend is one budget's window, evaluated against either its group or its single
+	// category and optionally narrowed to one member. It is deliberately its own query rather
+	// than a filter on SumByGroup: a budget's window is not the screen's period.
 	SumBudgetSpend(ctx context.Context, arg SumBudgetSpendParams) (int64, error)
+	SumByCategory(ctx context.Context, arg SumByCategoryParams) ([]SumByCategoryRow, error)
+	// SumByGroup backs the donut and the Home group rows in one pass. The join to categories is a
+	// LEFT one: a transaction with no category still spent money, and dropping it here would make
+	// the sum of the group rows smaller than the period total the same period reports.
+	SumByGroup(ctx context.Context, arg SumByGroupParams) ([]SumByGroupRow, error)
+	// SumByMember is the split bar on the member screen and the stacked series on the charts
+	// screen; group_id is carried so one pass fills both the per-member totals and the per-group
+	// member segments.
+	SumByMember(ctx context.Context, arg SumByMemberParams) ([]SumByMemberRow, error)
+	// SumDailyTotals feeds the bucketed series: one row per calendar day, bucketed in Go so the
+	// week/month/year switch does not need three queries.
+	SumDailyTotals(ctx context.Context, arg SumDailyTotalsParams) ([]SumDailyTotalsRow, error)
+	// SumFamilyBalances is the "Спільно доступно" headline and the savings line beside it.
+	// Private accounts are excluded outright, as is anything the household took out of the
+	// headline deliberately; SAVINGS is reported on its own line, and DEBT counts toward the
+	// headline because money owed is money you do not have.
+	SumFamilyBalances(ctx context.Context, arg SumFamilyBalancesParams) (SumFamilyBalancesRow, error)
+	// SumVisibleTransactions is the period total behind the feed header and the Home headline. It
+	// covers the whole period, not the page the feed happens to be showing.
+	//
+	// With a kind filter every row is on the same side of the ledger and the sum is a magnitude.
+	// Without one the two sides are netted — expenses minus income — because adding "spent 5,000"
+	// to "earned 20,000" produces a number that describes nothing.
+	SumVisibleTransactions(ctx context.Context, arg SumVisibleTransactionsParams) (SumVisibleTransactionsRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateBudget(ctx context.Context, arg UpdateBudgetParams) (Budget, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
+	UpdateCategoryGroup(ctx context.Context, arg UpdateCategoryGroupParams) (CategoryGroup, error)
+	// Every column COALESCEs against the stored value: the app's settings screen sends only the
+	// row the user touched, so an absent field means "leave it", not "clear it".
+	UpdateFinanceSettings(ctx context.Context, arg UpdateFinanceSettingsParams) (FinanceSetting, error)
+	UpdateRecurringPayment(ctx context.Context, arg UpdateRecurringPaymentParams) (RecurringPayment, error)
+	UpdateReminder(ctx context.Context, arg UpdateReminderParams) (Reminder, error)
+	UpdateTemplate(ctx context.Context, arg UpdateTemplateParams) (QuickTemplate, error)
 	UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (Transaction, error)
+	UpdateWidget(ctx context.Context, arg UpdateWidgetParams) (WidgetInstance, error)
+	UpsertMember(ctx context.Context, arg UpsertMemberParams) (FinanceMember, error)
 }
 
 var _ Querier = (*Queries)(nil)
