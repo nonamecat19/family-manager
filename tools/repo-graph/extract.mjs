@@ -71,7 +71,7 @@ function walk(dir, filter, acc = []) {
   let entries;
   try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return acc; }
   for (const e of entries) {
-    if (["node_modules", ".git", "build", "dist", ".expo", ".dart_tool", "finance-legacy"].includes(e.name)) continue;
+    if (["node_modules", ".git", "build", "dist", ".expo", ".dart_tool"].includes(e.name)) continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, filter, acc);
     else if (filter(p)) acc.push(p);
