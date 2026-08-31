@@ -70,6 +70,8 @@
 }
 
 {$FINANCE_HOST} {
+	# finance:9090 is deliberately absent, same rule as family: the internal listener runs
+	# without the auth interceptor because its callers are siblings on a private network.
 	import api finance:8080
 }
 

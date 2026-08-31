@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Generated protobuf messages and service descriptors. Sources under src/ are produced by `just proto` and are never hand-edited.",
-  "//exports": "No barrel file: buf writes one module per proto file, so consumers import the exact path, e.g. @fm/sdk/finance/v1/finance_pb.",
+  "//exports": "No barrel file: buf writes one module per proto file, so consumers import the exact path, e.g. @fm/sdk/recipes/v1/recipes_pb.",
   "exports": {
     "./*": "./src/*.ts"
   },

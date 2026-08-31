@@ -1,161 +1,213 @@
-import { parseAmount, toDisplayError, useAccounts, useCreateAccount } from "@fm/api";
-import { AccountType } from "@fm/sdk/finance/v1/finance_pb";
-import { Button, Card, EmptyState, ErrorState, Field, Loading } from "@fm/ui";
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  fromWire,
+  toDisplayError,
+  useAccounts,
+  useFamily,
+  useFinanceMembers,
+  type Account,
+} from "@fm/api";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
 
-import { Amount } from "../../components/Amount";
+import { useI18n } from "@/components/i18n";
+import {
+  Button,
+  Drawer,
+  EmptyState,
+  Fab,
+  Icon,
+  Kicker,
+  MoneyText,
+  Screen,
+  ScreenHeader,
+  formatMoney,
+  nocturne,
+  useDrawerItems,
+} from "@/components/nocturne";
+import { AccountRow, HiddenPrivateRow } from "@/components/screens/accounts/AccountRow.tsx";
+import { NewAccountSheet } from "@/components/screens/accounts/NewAccountSheet.tsx";
+import { TransferSheet } from "@/components/screens/accounts/TransferSheet.tsx";
 
-const TYPES: readonly { label: string; value: AccountType }[] = [
-  { label: "Cash", value: AccountType.CASH },
-  { label: "Card", value: AccountType.CARD },
-  { label: "Bank", value: AccountType.BANK },
-  { label: "Savings", value: AccountType.SAVINGS },
-  { label: "Debt", value: AccountType.DEBT },
-];
-
+/**
+ * Screen 08 — Accounts.
+ *
+ * The screen's one idea: shared money and private money are drawn as two different things.
+ * The headline counts the shared accounts only, private accounts are captioned with why they
+ * are missing from it, and another member's private accounts appear as a count with no
+ * balance at all.
+ *
+ * No filtering happens here. `ListAccounts` returns the split already made — shared,
+ * private_own, hidden — because the server decides what the caller may see, so a bug in this
+ * file cannot leak a balance the API never sent.
+ */
 export default function AccountsScreen() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   const accounts = useAccounts();
-  const [creating, setCreating] = useState(false);
+  const members = useFinanceMembers();
+  const family = useFamily();
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [newAccountOpen, setNewAccountOpen] = useState(false);
+
+  const drawerItems = useDrawerItems();
+
+  const data = accounts.data;
+  const shared = data?.shared ?? [];
+  const privateOwn = data?.privateOwn ?? [];
+  const hidden = data?.hidden ?? [];
+
+  const sharedBalance = fromWire(data?.sharedBalance);
+  const savings = fromWire(data?.savingsTotal, sharedBalance.currencyCode);
+
+  // Whose private accounts these are. The contract lets a member create a private account only
+  // for themselves, so the owner of `privateOwn` IS the signed-in member — which is also the
+  // only way this app can name the caller: no RPC marks a member as "me".
+  const selfId = privateOwn[0]?.ownerMemberId ?? "";
+  const self = members.data?.find((m) => m.userId === selfId);
+  const selfName = self?.displayName ?? "";
+
+  // What a transfer may move between: shared plus the caller's own private accounts, never a
+  // hidden one — those are only ever a count.
+  const transferable: Account[] = useMemo(() => [...shared, ...privateOwn], [shared, privateOwn]);
+
+  const isEmpty = shared.length === 0 && privateOwn.length === 0 && hidden.length === 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-      <ScrollView contentContainerClassName="gap-md p-lg pb-2xl">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-title font-semibold text-fg dark:text-fg-dark">Accounts</Text>
-          <Amount value={accounts.data?.total} size="title" />
+    <Screen>
+      <ScreenHeader
+        gradient
+        title={t("accounts.title")}
+        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
+      >
+        <View className="items-center pt-n3">
+          <Text className="text-[11px] text-neutral-500">{t("accounts.available")}</Text>
+          <MoneyText value={sharedBalance} size={27} weight="medium" className="mt-[2px]" />
+          {savings.amountMinor !== 0 ? (
+            <Text className="mt-[2px] text-[11px] text-neutral-500">
+              {t("accounts.inSavings", { amount: formatMoney(savings) })}
+            </Text>
+          ) : null}
+
+          <View className="mt-n4 flex-row justify-center gap-n3">
+            <Button
+              title={t("accounts.history")}
+              variant="ghost"
+              icon="clock-counter-clockwise"
+              onPress={() => router.push("/(app)/transactions")}
+            />
+            <Button
+              title={t("accounts.transfer")}
+              variant="ghost"
+              icon="arrows-left-right"
+              onPress={() => setTransferOpen(true)}
+            />
+          </View>
         </View>
+      </ScreenHeader>
 
-        {accounts.isPending ? (
-          <Loading />
-        ) : accounts.isError ? (
-          <ErrorState
-            {...toDisplayError(accounts.error, "Could not load your accounts.")}
-            onRetry={() => void accounts.refetch()}
-          />
-        ) : accounts.data.accounts.length === 0 ? (
+      {accounts.isPending ? (
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+        </View>
+      ) : accounts.isError ? (
+        <LoadError error={accounts.error} onRetry={() => void accounts.refetch()} />
+      ) : isEmpty ? (
+        <View className="flex-1 justify-center">
           <EmptyState
-            title="No accounts yet"
-            hint="Add the wallet or card you spend from."
-            action={<Button title="Add account" onPress={() => setCreating(true)} />}
+            icon="wallet"
+            title={t("accounts.emptyTitle")}
+            body={t("accounts.emptyBody")}
+            action={{ label: t("accounts.addAccount"), onPress: () => setNewAccountOpen(true) }}
           />
-        ) : (
-          accounts.data.accounts.map((a) => (
-            <Card key={a.id} className="flex-row items-center justify-between p-lg">
-              <View>
-                <Text className="text-body text-fg dark:text-fg-dark">{a.name}</Text>
-                <Text className="text-caption text-muted dark:text-muted-dark">
-                  {a.currencyCode}
-                </Text>
-              </View>
-              <Amount value={a.balance} />
-            </Card>
-          ))
-        )}
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: nocturne.space.n4,
+            paddingTop: nocturne.space.n5,
+            // Clears the Fab, which floats over the list rather than reserving space.
+            paddingBottom: 96,
+            gap: nocturne.space.n3,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {shared.length > 0 ? (
+            <View className="mb-n1 flex-row items-baseline justify-between px-n1">
+              <Kicker>{t("accounts.sharedSection")}</Kicker>
+              <Text className="text-[10.5px] text-neutral-600">{t("accounts.visibleToAll")}</Text>
+            </View>
+          ) : null}
+          {shared.map((account) => (
+            <AccountRow key={account.id} account={account} />
+          ))}
 
-        {accounts.data && accounts.data.accounts.length > 0 ? (
-          <Button title="Add account" variant="secondary" onPress={() => setCreating(true)} />
-        ) : null}
-      </ScrollView>
+          {privateOwn.length > 0 ? (
+            <View className="mb-n1 mt-n4 flex-row items-center justify-between px-n1">
+              <Kicker>{t("accounts.privateSection", { name: selfName }).trim()}</Kicker>
+              <Icon name="eye-slash" size={14} color={nocturne.neutral[600]} />
+            </View>
+          ) : null}
+          {privateOwn.map((account) => (
+            <AccountRow key={account.id} account={account} tone="private" />
+          ))}
 
-      <NewAccountModal visible={creating} onClose={() => setCreating(false)} />
-    </SafeAreaView>
+          {hidden.map((summary) => (
+            <HiddenPrivateRow key={summary.memberId} summary={summary} />
+          ))}
+        </ScrollView>
+      )}
+
+      <Fab label={t("accounts.addAccount")} onPress={() => setNewAccountOpen(true)} />
+
+      <TransferSheet
+        visible={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        accounts={transferable}
+      />
+      <NewAccountSheet
+        visible={newAccountOpen}
+        onClose={() => setNewAccountOpen(false)}
+        currencyCode={sharedBalance.currencyCode}
+      />
+
+      <Drawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        account={{ name: selfName || (family.data?.family?.name ?? ""), email: self?.email ?? "" }}
+        household={
+          family.data?.family
+            ? { name: family.data.family.name, balance: sharedBalance }
+            : undefined
+        }
+        items={drawerItems}
+        activeId="accounts"
+        onSelect={(item) => {
+          setDrawerOpen(false);
+          if (item.href && item.id !== "accounts") router.push(item.href);
+        }}
+      />
+    </Screen>
   );
 }
 
-function NewAccountModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const createAccount = useCreateAccount();
-
-  const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("EUR");
-  const [opening, setOpening] = useState("0");
-  const [type, setType] = useState<AccountType>(AccountType.CASH);
-
-  const parsed = parseAmount(opening, currency);
-  const canSubmit = name.trim() !== "" && currency.length === 3 && parsed !== null;
-
-  const submit = () => {
-    if (!parsed) return;
-    createAccount.mutate(
-      {
-        name: name.trim(),
-        type,
-        currencyCode: currency.toUpperCase(),
-        openingBalance: parsed,
-        color: "",
-        icon: "",
-      },
-      {
-        onSuccess: () => {
-          setName("");
-          setOpening("0");
-          onClose();
-        },
-      },
-    );
-  };
-
+/** The list's own failure, drawn like the gate's: what happened, its reference, and a retry. */
+function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const { t } = useI18n();
+  const shown = toDisplayError(error, t("common.loadFailed"));
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} transparent={false}>
-      <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-        <ScrollView contentContainerClassName="gap-lg p-xl">
-          <Text className="text-title font-semibold text-fg dark:text-fg-dark">New account</Text>
-
-          <Field label="Name" value={name} onChangeText={setName} placeholder="Wallet" />
-          <Field
-            label="Currency"
-            value={currency}
-            onChangeText={(t) => setCurrency(t.toUpperCase().slice(0, 3))}
-            autoCapitalize="characters"
-            maxLength={3}
-          />
-          <Field
-            label="Opening balance"
-            value={opening}
-            onChangeText={setOpening}
-            keyboardType="decimal-pad"
-            error={parsed === null ? "Enter a number" : undefined}
-          />
-
-          <View className="gap-xs">
-            <Text className="text-caption text-muted dark:text-muted-dark">Type</Text>
-            <View className="flex-row flex-wrap gap-xs">
-              {TYPES.map((t) => (
-                <Pressable
-                  key={t.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: t.value === type }}
-                  onPress={() => setType(t.value)}
-                  className={`rounded-md px-md py-xs ${
-                    t.value === type ? "bg-primary" : "border border-border dark:border-border-dark"
-                  }`}
-                >
-                  <Text
-                    className={`text-caption ${
-                      t.value === type ? "text-primary-fg" : "text-muted dark:text-muted-dark"
-                    }`}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {createAccount.isError ? (
-            <Text className="text-caption text-expense">{createAccount.error.message}</Text>
-          ) : null}
-
-          <Button
-            title="Create"
-            loading={createAccount.isPending}
-            disabled={!canSubmit}
-            onPress={submit}
-          />
-          <Button title="Cancel" variant="secondary" onPress={onClose} />
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+    <View className="flex-1 justify-center gap-n4 px-n6">
+      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
+      {shown.reference ? (
+        <Text className="text-[12px] text-neutral-600">
+          {t("common.errorReference", { ref: shown.reference })}
+        </Text>
+      ) : null}
+      <Button title={t("common.tryAgain")} onPress={onRetry} />
+    </View>
   );
 }

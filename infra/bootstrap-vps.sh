@@ -399,16 +399,13 @@ Nothing is deployed yet. From your workstation, in the repo:
      Then exactly ONE init file — not the whole directory:
          scp postgres/init/init-services.sql root@79.108.160.103:${DEPLOY_DIR}/postgres-init/
 
-     Copy only init-services.sql. It creates the auth, family, finance and recipes databases.
-     The other two files in that directory are dev-only and must not reach this box:
-       - init-postgres.sql creates schemas inside the default database, left over from the
-         pre-split layout, and does not match how the services address their databases now.
-       - init-finance.sql creates a 'finance' role with the hardcoded password 'finance_dev'
-         for the finance-legacy service that is being retired. Copying it puts a role with a
-         publicly-known password into the production cluster.
-     If you are tempted to widen this back to a glob: that is the bug this line exists to
-     prevent. Postgres runs everything in /docker-entrypoint-initdb.d on first init, once,
-     and only on an empty volume — so the damage is silent and only visible much later.
+     Copy only init-services.sql. It creates the auth, family, finance and recipes databases. It is
+     the only file in that directory today, and the copy stays a single named file rather than
+     a glob: the pre-split leftovers that used to sit beside it (one creating schemas in the
+     default database, one creating a role with a hardcoded password) were exactly the kind of
+     thing a glob drags onto the box unnoticed. Postgres runs everything in
+     /docker-entrypoint-initdb.d on first init, once, and only on an empty volume — so the
+     damage is silent and only visible much later.
 
   3. Install the auth signing key (generate it once, keep the only other copy somewhere safe —
      losing it invalidates every issued token):

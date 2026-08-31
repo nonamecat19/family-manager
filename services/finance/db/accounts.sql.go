@@ -12,57 +12,112 @@ import (
 )
 
 const countAccountTransactions = `-- name: CountAccountTransactions :one
-SELECT count(*) FROM transactions
-WHERE account_id = $1 OR counter_account_id = $1
+SELECT COUNT(*) FROM transactions
+WHERE family_id = $2 AND (account_id = $1 OR counter_account_id = $1)
 `
 
-func (q *Queries) CountAccountTransactions(ctx context.Context, accountID pgtype.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, countAccountTransactions, accountID)
+type CountAccountTransactionsParams struct {
+	AccountID pgtype.UUID
+	FamilyID  pgtype.UUID
+}
+
+func (q *Queries) CountAccountTransactions(ctx context.Context, arg CountAccountTransactionsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countAccountTransactions, arg.AccountID, arg.FamilyID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
+const countHiddenPrivateAccounts = `-- name: CountHiddenPrivateAccounts :many
+SELECT a.owner_member_id, COUNT(*)::int AS account_count
+FROM accounts a
+WHERE a.family_id = $1
+  AND a.visibility = 'private'
+  AND a.owner_member_id IS DISTINCT FROM $2::uuid
+  AND NOT a.archived
+GROUP BY a.owner_member_id
+ORDER BY a.owner_member_id
+`
+
+type CountHiddenPrivateAccountsParams struct {
+	FamilyID       pgtype.UUID
+	ViewerMemberID pgtype.UUID
+}
+
+type CountHiddenPrivateAccountsRow struct {
+	OwnerMemberID pgtype.UUID
+	AccountCount  int32
+}
+
+// CountHiddenPrivateAccounts is the whole of what another member's private accounts become on
+// the wire: an owner and a count. No balance, no name, no currency.
+func (q *Queries) CountHiddenPrivateAccounts(ctx context.Context, arg CountHiddenPrivateAccountsParams) ([]CountHiddenPrivateAccountsRow, error) {
+	rows, err := q.db.Query(ctx, countHiddenPrivateAccounts, arg.FamilyID, arg.ViewerMemberID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountHiddenPrivateAccountsRow
+	for rows.Next() {
+		var i CountHiddenPrivateAccountsRow
+		if err := rows.Scan(&i.OwnerMemberID, &i.AccountCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (
-    family_id, name, type, currency_code, opening_balance_minor, color, icon, sort_order
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, family_id, name, type, currency_code, opening_balance_minor, color, icon, archived, sort_order, created_at, updated_at
+INSERT INTO accounts (family_id, name, kind, visibility, owner_member_id, currency_code,
+    opening_balance_minor, icon, color_step, excluded_from_family_total, sort_order)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM accounts WHERE family_id = $1), 0))
+RETURNING id, family_id, name, kind, visibility, owner_member_id, currency_code, opening_balance_minor, icon, color_step, excluded_from_family_total, archived, sort_order, created_at, updated_at
 `
 
 type CreateAccountParams struct {
-	FamilyID            pgtype.UUID
-	Name                string
-	Type                string
-	CurrencyCode        string
-	OpeningBalanceMinor int64
-	Color               string
-	Icon                string
-	SortOrder           int32
+	FamilyID                pgtype.UUID
+	Name                    string
+	Kind                    string
+	Visibility              string
+	OwnerMemberID           pgtype.UUID
+	CurrencyCode            string
+	OpeningBalanceMinor     int64
+	Icon                    string
+	ColorStep               int32
+	ExcludedFromFamilyTotal bool
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
 	row := q.db.QueryRow(ctx, createAccount,
 		arg.FamilyID,
 		arg.Name,
-		arg.Type,
+		arg.Kind,
+		arg.Visibility,
+		arg.OwnerMemberID,
 		arg.CurrencyCode,
 		arg.OpeningBalanceMinor,
-		arg.Color,
 		arg.Icon,
-		arg.SortOrder,
+		arg.ColorStep,
+		arg.ExcludedFromFamilyTotal,
 	)
 	var i Account
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
 		&i.Name,
-		&i.Type,
+		&i.Kind,
+		&i.Visibility,
+		&i.OwnerMemberID,
 		&i.CurrencyCode,
 		&i.OpeningBalanceMinor,
-		&i.Color,
 		&i.Icon,
+		&i.ColorStep,
+		&i.ExcludedFromFamilyTotal,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,
@@ -89,89 +144,64 @@ func (q *Queries) DeleteAccount(ctx context.Context, arg DeleteAccountParams) (i
 	return result.RowsAffected(), nil
 }
 
-const getAccount = `-- name: GetAccount :one
-SELECT id, family_id, name, type, currency_code, opening_balance_minor, color, icon, archived, sort_order, created_at, updated_at FROM accounts
-WHERE id = $1 AND family_id = $2
-`
-
-type GetAccountParams struct {
-	ID       pgtype.UUID
-	FamilyID pgtype.UUID
-}
-
-func (q *Queries) GetAccount(ctx context.Context, arg GetAccountParams) (Account, error) {
-	row := q.db.QueryRow(ctx, getAccount, arg.ID, arg.FamilyID)
-	var i Account
-	err := row.Scan(
-		&i.ID,
-		&i.FamilyID,
-		&i.Name,
-		&i.Type,
-		&i.CurrencyCode,
-		&i.OpeningBalanceMinor,
-		&i.Color,
-		&i.Icon,
-		&i.Archived,
-		&i.SortOrder,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getAccountWithBalance = `-- name: GetAccountWithBalance :one
-SELECT
-    a.id, a.family_id, a.name, a.type, a.currency_code, a.opening_balance_minor, a.color, a.icon, a.archived, a.sort_order, a.created_at, a.updated_at,
-    (
-        a.opening_balance_minor
-        + COALESCE((
-            SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_minor ELSE -t.amount_minor END)
-            FROM transactions t
-            WHERE t.account_id = a.id
-        ), 0)
-        + COALESCE((
-            SELECT SUM(t.amount_minor)
-            FROM transactions t
-            WHERE t.counter_account_id = a.id
-        ), 0)
+const getVisibleAccount = `-- name: GetVisibleAccount :one
+SELECT a.id, a.family_id, a.name, a.kind, a.visibility, a.owner_member_id, a.currency_code, a.opening_balance_minor, a.icon, a.color_step, a.excluded_from_family_total, a.archived, a.sort_order, a.created_at, a.updated_at,
+    (a.opening_balance_minor
+    + COALESCE((SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_minor ELSE -t.amount_minor END)
+                FROM transactions t WHERE t.account_id = a.id), 0)
+    + COALESCE((SELECT SUM(COALESCE(t.received_amount_minor, t.amount_minor))
+                FROM transactions t WHERE t.counter_account_id = a.id), 0)
     )::bigint AS balance_minor
 FROM accounts a
-WHERE a.id = $1 AND a.family_id = $2
+WHERE a.id = $1
+  AND a.family_id = $2
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
 `
 
-type GetAccountWithBalanceParams struct {
-	ID       pgtype.UUID
-	FamilyID pgtype.UUID
+type GetVisibleAccountParams struct {
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	ViewerMemberID pgtype.UUID
 }
 
-type GetAccountWithBalanceRow struct {
-	ID                  pgtype.UUID
-	FamilyID            pgtype.UUID
-	Name                string
-	Type                string
-	CurrencyCode        string
-	OpeningBalanceMinor int64
-	Color               string
-	Icon                string
-	Archived            bool
-	SortOrder           int32
-	CreatedAt           pgtype.Timestamptz
-	UpdatedAt           pgtype.Timestamptz
-	BalanceMinor        int64
+type GetVisibleAccountRow struct {
+	ID                      pgtype.UUID
+	FamilyID                pgtype.UUID
+	Name                    string
+	Kind                    string
+	Visibility              string
+	OwnerMemberID           pgtype.UUID
+	CurrencyCode            string
+	OpeningBalanceMinor     int64
+	Icon                    string
+	ColorStep               int32
+	ExcludedFromFamilyTotal bool
+	Archived                bool
+	SortOrder               int32
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
+	BalanceMinor            int64
 }
 
-func (q *Queries) GetAccountWithBalance(ctx context.Context, arg GetAccountWithBalanceParams) (GetAccountWithBalanceRow, error) {
-	row := q.db.QueryRow(ctx, getAccountWithBalance, arg.ID, arg.FamilyID)
-	var i GetAccountWithBalanceRow
+// GetVisibleAccount is GetAccount with the boundary applied. A row that exists but belongs to
+// another member's private set returns no rows, so the handler answers NotFound — the same
+// answer as an id that never existed, because "this id exists but is not yours" is itself a
+// leak.
+func (q *Queries) GetVisibleAccount(ctx context.Context, arg GetVisibleAccountParams) (GetVisibleAccountRow, error) {
+	row := q.db.QueryRow(ctx, getVisibleAccount, arg.ID, arg.FamilyID, arg.ViewerMemberID)
+	var i GetVisibleAccountRow
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
 		&i.Name,
-		&i.Type,
+		&i.Kind,
+		&i.Visibility,
+		&i.OwnerMemberID,
 		&i.CurrencyCode,
 		&i.OpeningBalanceMinor,
-		&i.Color,
 		&i.Icon,
+		&i.ColorStep,
+		&i.ExcludedFromFamilyTotal,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,
@@ -181,74 +211,81 @@ func (q *Queries) GetAccountWithBalance(ctx context.Context, arg GetAccountWithB
 	return i, err
 }
 
-const listAccountsWithBalance = `-- name: ListAccountsWithBalance :many
-SELECT
-    a.id, a.family_id, a.name, a.type, a.currency_code, a.opening_balance_minor, a.color, a.icon, a.archived, a.sort_order, a.created_at, a.updated_at,
-    (
-        a.opening_balance_minor
-        + COALESCE((
-            SELECT SUM(
-                CASE t.type
-                    WHEN 'income' THEN t.amount_minor
-                    ELSE -t.amount_minor          -- expense and outgoing transfer both leave
-                END
-            )
-            FROM transactions t
-            WHERE t.account_id = a.id
-        ), 0)
-        + COALESCE((
-            SELECT SUM(t.amount_minor)            -- incoming side of a transfer
-            FROM transactions t
-            WHERE t.counter_account_id = a.id
-        ), 0)
+const listVisibleAccounts = `-- name: ListVisibleAccounts :many
+
+SELECT a.id, a.family_id, a.name, a.kind, a.visibility, a.owner_member_id, a.currency_code, a.opening_balance_minor, a.icon, a.color_step, a.excluded_from_family_total, a.archived, a.sort_order, a.created_at, a.updated_at,
+    (a.opening_balance_minor
+    + COALESCE((SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_minor ELSE -t.amount_minor END)
+                FROM transactions t WHERE t.account_id = a.id), 0)
+    + COALESCE((SELECT SUM(COALESCE(t.received_amount_minor, t.amount_minor))
+                FROM transactions t WHERE t.counter_account_id = a.id), 0)
     )::bigint AS balance_minor
 FROM accounts a
 WHERE a.family_id = $1
-  AND ($2::bool OR a.archived = FALSE)
+  AND (a.visibility = 'shared' OR a.owner_member_id = $2::uuid)
+  AND ($3::bool OR NOT a.archived)
 ORDER BY a.sort_order, a.created_at
 `
 
-type ListAccountsWithBalanceParams struct {
+type ListVisibleAccountsParams struct {
 	FamilyID        pgtype.UUID
+	ViewerMemberID  pgtype.UUID
 	IncludeArchived bool
 }
 
-type ListAccountsWithBalanceRow struct {
-	ID                  pgtype.UUID
-	FamilyID            pgtype.UUID
-	Name                string
-	Type                string
-	CurrencyCode        string
-	OpeningBalanceMinor int64
-	Color               string
-	Icon                string
-	Archived            bool
-	SortOrder           int32
-	CreatedAt           pgtype.Timestamptz
-	UpdatedAt           pgtype.Timestamptz
-	BalanceMinor        int64
+type ListVisibleAccountsRow struct {
+	ID                      pgtype.UUID
+	FamilyID                pgtype.UUID
+	Name                    string
+	Kind                    string
+	Visibility              string
+	OwnerMemberID           pgtype.UUID
+	CurrencyCode            string
+	OpeningBalanceMinor     int64
+	Icon                    string
+	ColorStep               int32
+	ExcludedFromFamilyTotal bool
+	Archived                bool
+	SortOrder               int32
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
+	BalanceMinor            int64
 }
 
-// A balance is never stored: it is the opening balance plus everything that moved. Storing it
-// would mean two sources of truth, and the stored one is always the stale one.
-func (q *Queries) ListAccountsWithBalance(ctx context.Context, arg ListAccountsWithBalanceParams) ([]ListAccountsWithBalanceRow, error) {
-	rows, err := q.db.Query(ctx, listAccountsWithBalance, arg.FamilyID, arg.IncludeArchived)
+// PRIVATE ACCOUNT VISIBILITY IS A SECURITY BOUNDARY, and it is enforced here rather than in
+// Go: every read that can return an account, a balance or a total carries the viewer's member
+// id and the same predicate
+//
+//	(a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
+//
+// so a handler cannot forget it by forgetting a filter. The only fact about someone else's
+// private accounts that leaves this file is CountHiddenPrivateAccounts' count.
+//
+// balance_minor is derived on every read and never stored: a persisted total drifts the
+// moment a transaction is edited. It is the opening balance, plus income, minus expense,
+// minus every transfer leaving the account, plus what arrived on every transfer into it
+// (received_amount_minor when the transfer crossed currencies, the sent amount otherwise).
+func (q *Queries) ListVisibleAccounts(ctx context.Context, arg ListVisibleAccountsParams) ([]ListVisibleAccountsRow, error) {
+	rows, err := q.db.Query(ctx, listVisibleAccounts, arg.FamilyID, arg.ViewerMemberID, arg.IncludeArchived)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListAccountsWithBalanceRow
+	var items []ListVisibleAccountsRow
 	for rows.Next() {
-		var i ListAccountsWithBalanceRow
+		var i ListVisibleAccountsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.FamilyID,
 			&i.Name,
-			&i.Type,
+			&i.Kind,
+			&i.Visibility,
+			&i.OwnerMemberID,
 			&i.CurrencyCode,
 			&i.OpeningBalanceMinor,
-			&i.Color,
 			&i.Icon,
+			&i.ColorStep,
+			&i.ExcludedFromFamilyTotal,
 			&i.Archived,
 			&i.SortOrder,
 			&i.CreatedAt,
@@ -265,51 +302,210 @@ func (q *Queries) ListAccountsWithBalance(ctx context.Context, arg ListAccountsW
 	return items, nil
 }
 
-const updateAccount = `-- name: UpdateAccount :one
+const reorderAccount = `-- name: ReorderAccount :exec
 UPDATE accounts
-SET name       = $1,
-    type       = $2,
-    color      = $3,
-    icon       = $4,
-    archived   = $5,
-    sort_order = $6,
-    updated_at = NOW()
-WHERE id = $7 AND family_id = $8
-RETURNING id, family_id, name, type, currency_code, opening_balance_minor, color, icon, archived, sort_order, created_at, updated_at
+SET sort_order = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+  AND (visibility = 'shared' OR owner_member_id = $4::uuid)
 `
 
-type UpdateAccountParams struct {
-	Name      string
-	Type      string
-	Color     string
-	Icon      string
-	Archived  bool
-	SortOrder int32
-	ID        pgtype.UUID
-	FamilyID  pgtype.UUID
+type ReorderAccountParams struct {
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	SortOrder      int32
+	ViewerMemberID pgtype.UUID
 }
 
-func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
-	row := q.db.QueryRow(ctx, updateAccount,
-		arg.Name,
-		arg.Type,
-		arg.Color,
-		arg.Icon,
-		arg.Archived,
-		arg.SortOrder,
+// The boundary is a write rule too: a member may not push another member's private account
+// around in a list they cannot see. An id that is not visible simply does not move, which is
+// what an id that does not exist already did.
+func (q *Queries) ReorderAccount(ctx context.Context, arg ReorderAccountParams) error {
+	_, err := q.db.Exec(ctx, reorderAccount,
 		arg.ID,
 		arg.FamilyID,
+		arg.SortOrder,
+		arg.ViewerMemberID,
+	)
+	return err
+}
+
+const setAccountArchived = `-- name: SetAccountArchived :one
+UPDATE accounts
+SET archived = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, name, kind, visibility, owner_member_id, currency_code, opening_balance_minor, icon, color_step, excluded_from_family_total, archived, sort_order, created_at, updated_at
+`
+
+type SetAccountArchivedParams struct {
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+	Archived bool
+}
+
+func (q *Queries) SetAccountArchived(ctx context.Context, arg SetAccountArchivedParams) (Account, error) {
+	row := q.db.QueryRow(ctx, setAccountArchived, arg.ID, arg.FamilyID, arg.Archived)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Visibility,
+		&i.OwnerMemberID,
+		&i.CurrencyCode,
+		&i.OpeningBalanceMinor,
+		&i.Icon,
+		&i.ColorStep,
+		&i.ExcludedFromFamilyTotal,
+		&i.Archived,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const setAccountVisibility = `-- name: SetAccountVisibility :one
+UPDATE accounts
+SET visibility = $3,
+    owner_member_id = $4::uuid,
+    excluded_from_family_total = ($3 = 'private') OR excluded_from_family_total,
+    updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, name, kind, visibility, owner_member_id, currency_code, opening_balance_minor, icon, color_step, excluded_from_family_total, archived, sort_order, created_at, updated_at
+`
+
+type SetAccountVisibilityParams struct {
+	ID            pgtype.UUID
+	FamilyID      pgtype.UUID
+	Visibility    string
+	OwnerMemberID pgtype.UUID
+}
+
+// Visibility moves with its owner in one statement: turning an account private without
+// stamping the owner, or shared without clearing it, violates accounts_private_has_owner.
+func (q *Queries) SetAccountVisibility(ctx context.Context, arg SetAccountVisibilityParams) (Account, error) {
+	row := q.db.QueryRow(ctx, setAccountVisibility,
+		arg.ID,
+		arg.FamilyID,
+		arg.Visibility,
+		arg.OwnerMemberID,
 	)
 	var i Account
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
 		&i.Name,
-		&i.Type,
+		&i.Kind,
+		&i.Visibility,
+		&i.OwnerMemberID,
 		&i.CurrencyCode,
 		&i.OpeningBalanceMinor,
-		&i.Color,
 		&i.Icon,
+		&i.ColorStep,
+		&i.ExcludedFromFamilyTotal,
+		&i.Archived,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const sumFamilyBalances = `-- name: SumFamilyBalances :one
+SELECT
+    COALESCE(SUM(b.balance_minor) FILTER (
+        WHERE b.kind <> 'savings' AND NOT b.excluded_from_family_total), 0)::bigint AS shared_balance_minor,
+    COALESCE(SUM(b.balance_minor) FILTER (
+        WHERE b.kind = 'savings' AND NOT b.excluded_from_family_total), 0)::bigint AS savings_minor,
+    COUNT(*)::int AS shared_account_count
+FROM (
+    SELECT a.kind, a.excluded_from_family_total,
+        (a.opening_balance_minor
+        + COALESCE((SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_minor ELSE -t.amount_minor END)
+                    FROM transactions t WHERE t.account_id = a.id), 0)
+        + COALESCE((SELECT SUM(COALESCE(t.received_amount_minor, t.amount_minor))
+                    FROM transactions t WHERE t.counter_account_id = a.id), 0)
+        )::bigint AS balance_minor
+    FROM accounts a
+    WHERE a.family_id = $1
+      AND a.visibility = 'shared'
+      AND NOT a.archived
+      AND a.currency_code = $2::text
+) b
+`
+
+type SumFamilyBalancesParams struct {
+	FamilyID     pgtype.UUID
+	CurrencyCode string
+}
+
+type SumFamilyBalancesRow struct {
+	SharedBalanceMinor int64
+	SavingsMinor       int64
+	SharedAccountCount int32
+}
+
+// SumFamilyBalances is the "Спільно доступно" headline and the savings line beside it.
+// Private accounts are excluded outright, as is anything the household took out of the
+// headline deliberately; SAVINGS is reported on its own line, and DEBT counts toward the
+// headline because money owed is money you do not have.
+func (q *Queries) SumFamilyBalances(ctx context.Context, arg SumFamilyBalancesParams) (SumFamilyBalancesRow, error) {
+	row := q.db.QueryRow(ctx, sumFamilyBalances, arg.FamilyID, arg.CurrencyCode)
+	var i SumFamilyBalancesRow
+	err := row.Scan(&i.SharedBalanceMinor, &i.SavingsMinor, &i.SharedAccountCount)
+	return i, err
+}
+
+const updateAccount = `-- name: UpdateAccount :one
+UPDATE accounts
+SET name       = COALESCE($3::text, name),
+    kind       = COALESCE($4::text, kind),
+    icon       = COALESCE($5::text, icon),
+    color_step = COALESCE($6::int, color_step),
+    excluded_from_family_total =
+        COALESCE($7::bool, excluded_from_family_total),
+    opening_balance_minor = COALESCE($8::bigint, opening_balance_minor),
+    updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, name, kind, visibility, owner_member_id, currency_code, opening_balance_minor, icon, color_step, excluded_from_family_total, archived, sort_order, created_at, updated_at
+`
+
+type UpdateAccountParams struct {
+	ID                      pgtype.UUID
+	FamilyID                pgtype.UUID
+	Name                    *string
+	Kind                    *string
+	Icon                    *string
+	ColorStep               *int32
+	ExcludedFromFamilyTotal *bool
+	OpeningBalanceMinor     *int64
+}
+
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
+	row := q.db.QueryRow(ctx, updateAccount,
+		arg.ID,
+		arg.FamilyID,
+		arg.Name,
+		arg.Kind,
+		arg.Icon,
+		arg.ColorStep,
+		arg.ExcludedFromFamilyTotal,
+		arg.OpeningBalanceMinor,
+	)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Visibility,
+		&i.OwnerMemberID,
+		&i.CurrencyCode,
+		&i.OpeningBalanceMinor,
+		&i.Icon,
+		&i.ColorStep,
+		&i.ExcludedFromFamilyTotal,
 		&i.Archived,
 		&i.SortOrder,
 		&i.CreatedAt,

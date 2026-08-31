@@ -33,11 +33,10 @@ laptop and production except the hostnames.
 
 ```
                     :443
-  auth.nonamecat.pp.ua    ─┐
-  family.nonamecat.pp.ua  ─┤                      ┌─ auth     :8080
-  finance.nonamecat.pp.ua ─┼─→ caddy (TLS) ──────→┼─ family   :8080  (+ :9090 internal gRPC)
-  recipes.nonamecat.pp.ua ─┘                      ├─ finance  :8080
-                                                  └─ recipes  :8080
+  auth.nonamecat.pp.ua    ─┐                      ┌─ auth     :8080
+  family.nonamecat.pp.ua  ─┤                      ├─ family   :8080  (+ :9090 internal gRPC)
+  finance.nonamecat.pp.ua ─┼─→ caddy (TLS) ──────→┼─ finance  :8080  (+ :9090 internal gRPC)
+  recipes.nonamecat.pp.ua ─┘                      └─ recipes  :8080
                                                        │
                                     postgres ──────────┤
                                     nats ──────────────┘
@@ -57,7 +56,7 @@ Steps 1 and 2 are yours; the rest is mechanical.
 
 ### 1. Point DNS at the box
 
-All four A records must resolve **before** the first start. Caddy issues certificates over the
+All three A records must resolve **before** the first start. Caddy issues certificates over the
 ACME HTTP-01 challenge, so a hostname that does not yet resolve to this box cannot get one, and
 repeated failed issuance counts against Let's Encrypt rate limits.
 
@@ -108,8 +107,9 @@ scp infra/docker-compose.prod.yml infra/Caddyfile infra/nats.conf \
     root@79.108.160.103:/opt/family-manager/
 ssh root@79.108.160.103 'chmod 0755 /opt/family-manager/{deploy,backup,restore}.sh'
 
-# Only this one file. init-postgres.sql and init-finance.sql are leftovers from the
-# pre-split layout; init-finance.sql would create a role with a publicly-known password.
+# Only this one file, by name and never a glob: it is what creates the per-service
+# databases, and a glob is how a dev-only init script ends up running on the production
+# cluster (Postgres runs everything in that directory once, silently, on an empty volume).
 scp postgres/init/init-services.sql root@79.108.160.103:/opt/family-manager/postgres-init/
 ```
 
@@ -206,7 +206,9 @@ The whole point of the tuning. Total 1.6 GiB, plus the 2 GiB swapfile bootstrap 
 | caddy | 96m | |
 | auth, family, finance, recipes | 160m each | `GOMEMLIMIT=140MiB`, `GOGC=50` |
 
-≈1.18 GiB committed, leaving ~400 MiB for the OS.
+≈1.34 GiB committed, leaving ~240 MiB for the OS. finance was the fourth service onto a box
+sized for three; the next one needs either a bigger box or a smaller limit somewhere, and the
+honest number belongs here rather than in a surprise OOM kill.
 
 Two settings that look redundant and are not. `mem_limit` rather than
 `deploy.resources.limits`: the latter is a swarm key that `docker compose up` ignores outside
@@ -275,5 +277,15 @@ is exactly the state the box is in mid-deploy.
 - **No rolling deploys.** A service restart is a brief outage; mobile clients retry. Not
   acceptable during a migration, which is why migrations get a human gate.
 - **Observability** is `docker compose logs` and nothing else. See ADR 0006 for the intent.
-- **`init-postgres.sql` and `init-finance.sql`** are pre-split leftovers still in the repo, kept
-  because `finance-legacy` has not been retired yet. Neither belongs on the production box.
+- **The live `finance` database still holds the OLD finance schema, and that blocks the
+  rebuilt service from starting correctly.** finance was deleted from the repo and has now
+  been rebuilt against a new contract; its migrations start again at `000001_init`. The
+  database on the box already has `schema_migrations` rows for the deleted stack's versions 1
+  and 2, so `database.Migrate` will treat the new `000001_init` as already applied, create
+  none of the new tables, and the service will come up answering every query with "relation
+  does not exist". This is not something the deploy can fix on its own: before the first
+  finance deploy someone has to drop and recreate the database (`DROP DATABASE finance;` then
+  the `CREATE DATABASE finance OWNER admin;` line from `postgres/init/init-services.sql`),
+  which is a human gate — take a backup first, and note that any data in it belongs to a
+  contract that no longer exists. The `finance.nonamecat.pp.ua` A record and its issued
+  certificate survived the deletion and are reused as-is.

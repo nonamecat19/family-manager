@@ -35,7 +35,7 @@ compose() { docker compose -p "$PROJECT" -f "$COMPOSE_FILE" "$@"; }
 [[ -f .env ]] || fail "$DEPLOY_DIR/.env is missing — copy infra/.env.example and fill it in"
 [[ -f Caddyfile ]] || fail "$DEPLOY_DIR/Caddyfile is missing"
 # nats.conf carries the JetStream store limits, which have no command-line equivalent. Without
-# it nats exits immediately, and family/finance/recipes all wait on nats being healthy — so a
+# it nats exits immediately, and family, finance and recipes all wait on nats being healthy — so a
 # missing file here is three services down, which is worth catching before anything is replaced.
 [[ -f nats.conf ]] || fail "$DEPLOY_DIR/nats.conf is missing — nats will not start without it"
 

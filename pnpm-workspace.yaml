@@ -42,9 +42,9 @@ overrides:
   # forwardRef component from a library (Tabs, react-native-svg, SafeAreaView) fails to
   # typecheck as a JSX element against the app's own React 18 types.
   "@types/react": ~18.3.12
-  # …and React itself. apps/finance and packages/ui declare 19.0.0, apps/recipes 18.3.1,
-  # which gave pnpm two react-native instances: NativeWind's `className` augmentation landed
-  # on one of them, so @fm/ui failed to typecheck when compiled from the recipes app. Expo
-  # SDK 52 pairs with React 18.3.1, so that is the version to converge on.
+  # …and React itself. packages/ui declares 19.0.0, apps/recipes 18.3.1, which gave pnpm two
+  # react-native instances: NativeWind's `className` augmentation landed on one of them, so
+  # @fm/ui failed to typecheck when compiled from the recipes app. Expo SDK 52 pairs with
+  # React 18.3.1, so that is the version to converge on.
   react: 18.3.1
   react-dom: 18.3.1

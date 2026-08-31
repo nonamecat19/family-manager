@@ -1,190 +1,256 @@
-import { toDisplayError, useCategories, useCreateCategory, useFamily, useInviteMember, useMembers } from "@fm/api";
+import {
+  fromWire,
+  toDisplayError,
+  useAccounts,
+  useFamily,
+  useFinanceMembers,
+  useFinanceSettings,
+  useTemplates,
+  useUpdateFinanceSettings,
+  useWidgets,
+} from "@fm/api";
 import { useAuth } from "@fm/auth";
-import { TransactionType } from "@fm/sdk/finance/v1/finance_pb";
-import { categoryColor, categoryPalette } from "@fm/theme";
-import { Button, Card, Dot, ErrorState, Field, Loading } from "@fm/ui";
+import Constants from "expo-constants";
+import { useRouter, type Href } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, View } from "react-native";
 
+import { useI18n } from "@/components/i18n";
+import {
+  Drawer,
+  EmptyState,
+  Screen,
+  ScreenHeader,
+  useDrawerItems,
+  type DrawerItem,
+} from "@/components/nocturne";
+import { SettingsRow } from "@/components/screens/settings/SettingsRow.tsx";
+import { clockTime, currentMember } from "@/components/screens/settings/currentMember.ts";
+import {
+  AdvancedSheet,
+  AppearanceSheet,
+  DataSheet,
+  PinSheet,
+  PrivacySheet,
+} from "@/components/screens/settings/sheets.tsx";
+
+type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced";
+
+/**
+ * Screen 11 — Settings, with the navigation drawer overlaid on top of it.
+ *
+ * The drawer is a `Modal` over this screen (the kit's `Drawer`), not an expo-router drawer
+ * navigator: the design shows it over a stack, and a navigator would put a second edge
+ * gesture on every screen in the app.
+ */
 export default function SettingsScreen() {
+  const { t } = useI18n();
+  const router = useRouter();
   const { signOut } = useAuth();
-  const family = useFamily();
-  const familyId = family.data?.family?.id ?? "";
-  const members = useMembers(familyId);
 
-  if (family.isPending) return <Loading />;
-  if (family.isError) {
-    return <ErrorState
-            {...toDisplayError(family.error, "Could not load your household.")}
-            onRetry={() => void family.refetch()}
-          />;
+  const members = useFinanceMembers();
+  const templates = useTemplates();
+  const widgets = useWidgets();
+  const accounts = useAccounts();
+  const settings = useFinanceSettings();
+  const family = useFamily();
+  const updateSettings = useUpdateFinanceSettings();
+
+  const drawerItems = useDrawerItems();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sheet, setSheet] = useState<SheetName | null>(null);
+
+  const queries = [members, templates, widgets, accounts, settings, family];
+  const pending = queries.some((query) => query.isPending);
+  const failed = queries.find((query) => query.isError);
+
+  const memberList = members.data ?? [];
+  const privateOwn = accounts.data?.privateOwn ?? [];
+  const me = currentMember(memberList, templates.data, privateOwn);
+  const currencyCode = settings.data?.baseCurrencyCode ?? "UAH";
+  const version = t("settings.version", { version: Constants.expoConfig?.version ?? "" });
+
+  const openRoute = (href: string) => {
+    setDrawerOpen(false);
+    router.push(href as Href);
+  };
+
+  const onSelectDrawerItem = (item: DrawerItem) => {
+    setDrawerOpen(false);
+    // The drawer's own entry for this screen just closes it; pushing would stack a second copy.
+    if (!item.href || item.id === "settings") return;
+    router.push(item.href as Href);
+  };
+
+  const header = (
+    <ScreenHeader
+      title={t("settings.title")}
+      gradient
+      leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
+    />
+  );
+
+  const overlay = (
+    <Drawer
+      visible={drawerOpen}
+      onClose={() => setDrawerOpen(false)}
+      account={{ name: me?.displayName ?? "", email: me?.email ?? "" }}
+      household={{
+        name: family.data?.family?.name ?? "",
+        // The shared balance only: private accounts are excluded server-side and must never
+        // reach a family-scoped total in the UI.
+        balance: accounts.data ? fromWire(accounts.data.sharedBalance, currencyCode) : undefined,
+      }}
+      scopes={[
+        { id: "family", label: t("common.family") },
+        ...memberList.map((member) => ({ id: member.userId, label: member.displayName })),
+      ]}
+      // Settings has nothing to scope, so the row navigates instead of pretending to filter:
+      // a member opens their spending, "Родина" goes home.
+      onSelectScope={(id) => {
+        setDrawerOpen(false);
+        if (id === "family") {
+          router.push("/(app)");
+          return;
+        }
+        router.push({ pathname: "/(app)/members/spending", params: { memberId: id } });
+      }}
+      items={drawerItems}
+      activeId="settings"
+      onSelect={onSelectDrawerItem}
+      footer={t("nav.syncedAt", { time: clockTime(accounts.dataUpdatedAt) })}
+    />
+  );
+
+  if (pending) {
+    return (
+      <Screen>
+        {header}
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+        </View>
+        {overlay}
+      </Screen>
+    );
   }
 
+  if (failed) {
+    const shown = toDisplayError(failed.error, t("common.loadFailed"));
+    return (
+      <Screen>
+        {header}
+        <View className="flex-1 justify-center">
+          <EmptyState
+            icon="gear"
+            title={t("gate.errorTitle")}
+            body={shown.message}
+            action={{
+              label: t("common.tryAgain"),
+              onPress: () => queries.forEach((query) => void query.refetch()),
+            }}
+          />
+          {shown.reference ? (
+            <Text className="px-n6 text-center text-[12px] text-neutral-600">
+              {t("common.errorReference", { ref: shown.reference })}
+            </Text>
+          ) : null}
+        </View>
+        {overlay}
+      </Screen>
+    );
+  }
+
+  const templateCount = templates.data?.length ?? 0;
+  const widgetCount = widgets.data?.length ?? 0;
+
   return (
-    <SafeAreaView className="flex-1 bg-bg dark:bg-bg-dark">
-      <ScrollView contentContainerClassName="gap-xl p-lg pb-2xl">
-        <Section title="Household">
-          <Card className="gap-xs p-lg">
-            <Text className="text-body text-fg dark:text-fg-dark">
-              {family.data.family?.name}
-            </Text>
-            <Text className="text-caption text-muted dark:text-muted-dark">
-              {members.data?.members.length ?? 0} member
-              {(members.data?.members.length ?? 0) === 1 ? "" : "s"}
-            </Text>
-          </Card>
-          {(members.data?.members ?? []).map((m) => (
-            <Card key={m.userId} className="flex-row justify-between p-md">
-              <Text className="text-body text-fg dark:text-fg-dark">
-                {m.displayName !== "" ? m.displayName : m.email}
-              </Text>
-              <Text className="text-caption text-muted dark:text-muted-dark">
-                {m.role === 1 ? "admin" : "member"}
-              </Text>
-            </Card>
-          ))}
-          <InviteBox familyId={familyId} />
-        </Section>
+    <Screen>
+      {header}
 
-        <Section title="Categories">
-          <CategoryManager />
-        </Section>
+      <ScrollView className="flex-1" contentContainerClassName="gap-n3 px-n4 pb-n5 pt-n5">
+        <SettingsRow
+          icon="users-three"
+          tone="accent"
+          label={t("settings.family")}
+          meta={t("settings.familyMeta", {
+            members: t("common.memberCount", { count: memberList.length }),
+          })}
+          onPress={() => openRoute("/(app)/household")}
+        />
+        <SettingsRow
+          icon="lightning"
+          tone="accent"
+          label={t("settings.templates")}
+          meta={t("settings.templatesMeta", {
+            count: templateCount,
+            name: me?.displayName ?? "",
+          })}
+          onPress={() => openRoute("/(app)/templates")}
+        />
+        <SettingsRow
+          icon="squares-four"
+          tone="accent"
+          label={t("settings.widgets")}
+          meta={t("common.activeCount", { count: widgetCount })}
+          onPress={() => openRoute("/(app)/widgets")}
+        />
+        <SettingsRow
+          icon="eye-slash"
+          tone="accent"
+          label={t("settings.privacy")}
+          meta={t("common.hiddenAccountCount", { count: privateOwn.length })}
+          onPress={() => setSheet("privacy")}
+        />
 
-        <Button title="Sign out" variant="secondary" onPress={() => void signOut()} />
+        {/* The canvas breaks the list here: what the household owns, then device preferences. */}
+        <View className="h-[8px]" />
+
+        <SettingsRow icon="lock-key" label={t("settings.pin")} onPress={() => setSheet("pin")} />
+        <SettingsRow
+          icon="palette"
+          label={t("settings.appearance")}
+          onPress={() => setSheet("appearance")}
+        />
+        <SettingsRow icon="database" label={t("settings.data")} onPress={() => setSheet("data")} />
+        <SettingsRow
+          icon="sliders-horizontal"
+          label={t("settings.advanced")}
+          onPress={() => setSheet("advanced")}
+        />
       </ScrollView>
-    </SafeAreaView>
-  );
-}
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View className="gap-sm">
-      <Text className="text-title font-semibold text-fg dark:text-fg-dark">{title}</Text>
-      {children}
-    </View>
-  );
-}
+      <Text className="px-n5 pb-n4 text-[10.5px] text-neutral-700">{version}</Text>
 
-function InviteBox({ familyId }: { familyId: string }) {
-  const invite = useInviteMember();
-  const [email, setEmail] = useState("");
-
-  return (
-    <View className="gap-sm">
-      <Field
-        label="Invite by email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
+      <PrivacySheet
+        visible={sheet === "privacy"}
+        onClose={() => setSheet(null)}
+        privateOwn={privateOwn}
+        currencyCode={currencyCode}
       />
-      <Button
-        title="Create invitation"
-        variant="secondary"
-        loading={invite.isPending}
-        disabled={email.trim() === "" || familyId === ""}
-        onPress={() => invite.mutate({ familyId, email: email.trim() })}
+      <PinSheet
+        visible={sheet === "pin"}
+        onClose={() => setSheet(null)}
+        enabled={settings.data?.pinLockEnabled ?? false}
+        onChange={(next) => updateSettings.mutate({ pinLockEnabled: next })}
       />
-      {invite.data ? (
-        <Card className="gap-xs p-md">
-          <Text className="text-caption text-muted dark:text-muted-dark">
-            Share this code — it is shown once and expires.
-          </Text>
-          <Text selectable className="text-body text-fg dark:text-fg-dark">
-            {invite.data.token}
-          </Text>
-        </Card>
-      ) : null}
-      {invite.isError ? (
-        <Text className="text-caption text-expense">{invite.error.message}</Text>
-      ) : null}
-    </View>
-  );
-}
-
-function CategoryManager() {
-  const categories = useCategories();
-  const create = useCreateCategory();
-
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<TransactionType>(TransactionType.EXPENSE);
-
-  return (
-    <View className="gap-sm">
-      {(categories.data?.categories ?? []).map((c, i) => (
-        <Card key={c.id} className="flex-row items-center gap-md p-md">
-          <Dot color={categoryColor(c.color, i, categoryPalette)} />
-          <Text className="flex-1 text-body text-fg dark:text-fg-dark">{c.name}</Text>
-          <Text className="text-caption text-muted dark:text-muted-dark">
-            {c.kind === TransactionType.INCOME ? "income" : "expense"}
-          </Text>
-        </Card>
-      ))}
-
-      <Field label="New category" value={name} onChangeText={setName} placeholder="Groceries" />
-      <View className="flex-row gap-xs">
-        <KindToggle
-          label="Expense"
-          active={kind === TransactionType.EXPENSE}
-          onPress={() => setKind(TransactionType.EXPENSE)}
-        />
-        <KindToggle
-          label="Income"
-          active={kind === TransactionType.INCOME}
-          onPress={() => setKind(TransactionType.INCOME)}
-        />
-      </View>
-      <Button
-        title="Add category"
-        variant="secondary"
-        loading={create.isPending}
-        disabled={name.trim() === ""}
-        onPress={() =>
-          create.mutate(
-            {
-              name: name.trim(),
-              kind,
-              // An empty colour lets the palette assign one, keeping charts consistent.
-              color: "",
-              icon: "",
-            },
-            { onSuccess: () => setName("") },
-          )
-        }
+      <AppearanceSheet visible={sheet === "appearance"} onClose={() => setSheet(null)} />
+      <DataSheet
+        visible={sheet === "data"}
+        onClose={() => setSheet(null)}
+        settings={settings.data ?? null}
+        syncedAt={t("nav.syncedAt", { time: clockTime(settings.dataUpdatedAt) })}
       />
-      {create.isError ? (
-        <Text className="text-caption text-expense">{create.error.message}</Text>
-      ) : null}
-    </View>
-  );
-}
+      <AdvancedSheet
+        visible={sheet === "advanced"}
+        onClose={() => setSheet(null)}
+        version={version}
+        onSignOut={() => {
+          setSheet(null);
+          void signOut();
+        }}
+      />
 
-function KindToggle({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      className={`flex-1 rounded-md py-xs ${
-        active ? "bg-primary" : "border border-border dark:border-border-dark"
-      }`}
-    >
-      <Text
-        className={`text-center text-caption ${
-          active ? "text-primary-fg" : "text-muted dark:text-muted-dark"
-        }`}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      {overlay}
+    </Screen>
   );
 }

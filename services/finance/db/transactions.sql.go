@@ -11,54 +11,101 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countTransactionsForRecurringOccurrence = `-- name: CountTransactionsForRecurringOccurrence :one
+SELECT COUNT(*) FROM transactions
+WHERE family_id = $1 AND recurring_id = $2 AND occurred_on = $3
+`
+
+type CountTransactionsForRecurringOccurrenceParams struct {
+	FamilyID    pgtype.UUID
+	RecurringID pgtype.UUID
+	OccurredOn  pgtype.Date
+}
+
+func (q *Queries) CountTransactionsForRecurringOccurrence(ctx context.Context, arg CountTransactionsForRecurringOccurrenceParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countTransactionsForRecurringOccurrence, arg.FamilyID, arg.RecurringID, arg.OccurredOn)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createTransaction = `-- name: CreateTransaction :one
-INSERT INTO transactions (
-    family_id, account_id, counter_account_id, category_id, type,
-    amount_minor, currency_code, note, occurred_on, created_by_user_id
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, family_id, account_id, counter_account_id, category_id, type, amount_minor, currency_code, note, occurred_on, created_by_user_id, created_at, updated_at
+
+INSERT INTO transactions (family_id, type, account_id, counter_account_id, category_id,
+    amount_minor, currency_code, received_amount_minor, received_currency_code,
+    note, merchant, occurred_on, member_id, created_by_user_id, template_id, recurring_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+RETURNING id, family_id, type, account_id, counter_account_id, category_id, amount_minor, currency_code, received_amount_minor, received_currency_code, note, merchant, occurred_on, member_id, created_by_user_id, template_id, recurring_id, created_at, updated_at
 `
 
 type CreateTransactionParams struct {
-	FamilyID         pgtype.UUID
-	AccountID        pgtype.UUID
-	CounterAccountID pgtype.UUID
-	CategoryID       pgtype.UUID
-	Type             string
-	AmountMinor      int64
-	CurrencyCode     string
-	Note             string
-	OccurredOn       pgtype.Date
-	CreatedByUserID  pgtype.UUID
+	FamilyID             pgtype.UUID
+	Type                 string
+	AccountID            pgtype.UUID
+	CounterAccountID     pgtype.UUID
+	CategoryID           pgtype.UUID
+	AmountMinor          int64
+	CurrencyCode         string
+	ReceivedAmountMinor  *int64
+	ReceivedCurrencyCode string
+	Note                 string
+	Merchant             string
+	OccurredOn           pgtype.Date
+	MemberID             pgtype.UUID
+	CreatedByUserID      pgtype.UUID
+	TemplateID           pgtype.UUID
+	RecurringID          pgtype.UUID
 }
 
+// The visibility boundary again, this time on the ledger: a transaction is readable when the
+// account it was paid from is readable. Every read in this file joins accounts and carries
+// @viewer_member_id, so "shared accounts plus my own private ones" is one predicate written
+// once rather than a filter each handler could forget.
+//
+// Aggregates therefore include the caller's own private spend and no one else's — the design
+// excludes private BALANCES from the family headline (SumFamilyBalances does that), not the
+// caller's own spending from their own donut.
+//
+// Transfers are excluded from every income/expense total: moving money between two of your
+// own accounts is not spending, and a report that counted it would double the month.
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
 	row := q.db.QueryRow(ctx, createTransaction,
 		arg.FamilyID,
+		arg.Type,
 		arg.AccountID,
 		arg.CounterAccountID,
 		arg.CategoryID,
-		arg.Type,
 		arg.AmountMinor,
 		arg.CurrencyCode,
+		arg.ReceivedAmountMinor,
+		arg.ReceivedCurrencyCode,
 		arg.Note,
+		arg.Merchant,
 		arg.OccurredOn,
+		arg.MemberID,
 		arg.CreatedByUserID,
+		arg.TemplateID,
+		arg.RecurringID,
 	)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
+		&i.Type,
 		&i.AccountID,
 		&i.CounterAccountID,
 		&i.CategoryID,
-		&i.Type,
 		&i.AmountMinor,
 		&i.CurrencyCode,
+		&i.ReceivedAmountMinor,
+		&i.ReceivedCurrencyCode,
 		&i.Note,
+		&i.Merchant,
 		&i.OccurredOn,
+		&i.MemberID,
 		&i.CreatedByUserID,
+		&i.TemplateID,
+		&i.RecurringID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -83,62 +130,437 @@ func (q *Queries) DeleteTransaction(ctx context.Context, arg DeleteTransactionPa
 	return result.RowsAffected(), nil
 }
 
-const getCategoryBreakdown = `-- name: GetCategoryBreakdown :many
-SELECT
-    c.id                                  AS category_id,
-    c.name                                AS category_name,
-    c.color                               AS color,
-    COALESCE(SUM(t.amount_minor), 0)::bigint AS total_minor,
-    COUNT(t.id)::bigint                   AS transaction_count
+const getVisibleTransaction = `-- name: GetVisibleTransaction :one
+SELECT t.id, t.family_id, t.type, t.account_id, t.counter_account_id, t.category_id, t.amount_minor, t.currency_code, t.received_amount_minor, t.received_currency_code, t.note, t.merchant, t.occurred_on, t.member_id, t.created_by_user_id, t.template_id, t.recurring_id, t.created_at, t.updated_at, c.group_id AS group_id
 FROM transactions t
-JOIN categories c ON c.id = t.category_id
-WHERE t.family_id = $1
-  AND t.occurred_on >= $2
-  AND t.occurred_on <= $3
-  AND t.type = $4::text
-  AND (
-      cardinality($5::uuid[]) = 0
-      OR t.account_id = ANY ($5::uuid[])
-  )
-GROUP BY c.id, c.name, c.color
-ORDER BY total_minor DESC
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.id = $1
+  AND t.family_id = $2
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
 `
 
-type GetCategoryBreakdownParams struct {
-	FamilyID   pgtype.UUID
-	FromDate   pgtype.Date
-	ToDate     pgtype.Date
-	Type       string
-	AccountIds []pgtype.UUID
+type GetVisibleTransactionParams struct {
+	ID             pgtype.UUID
+	FamilyID       pgtype.UUID
+	ViewerMemberID pgtype.UUID
 }
 
-type GetCategoryBreakdownRow struct {
-	CategoryID       pgtype.UUID
-	CategoryName     string
-	Color            string
-	TotalMinor       int64
-	TransactionCount int64
+type GetVisibleTransactionRow struct {
+	ID                   pgtype.UUID
+	FamilyID             pgtype.UUID
+	Type                 string
+	AccountID            pgtype.UUID
+	CounterAccountID     pgtype.UUID
+	CategoryID           pgtype.UUID
+	AmountMinor          int64
+	CurrencyCode         string
+	ReceivedAmountMinor  *int64
+	ReceivedCurrencyCode string
+	Note                 string
+	Merchant             string
+	OccurredOn           pgtype.Date
+	MemberID             pgtype.UUID
+	CreatedByUserID      pgtype.UUID
+	TemplateID           pgtype.UUID
+	RecurringID          pgtype.UUID
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	GroupID              pgtype.UUID
 }
 
-func (q *Queries) GetCategoryBreakdown(ctx context.Context, arg GetCategoryBreakdownParams) ([]GetCategoryBreakdownRow, error) {
-	rows, err := q.db.Query(ctx, getCategoryBreakdown,
+func (q *Queries) GetVisibleTransaction(ctx context.Context, arg GetVisibleTransactionParams) (GetVisibleTransactionRow, error) {
+	row := q.db.QueryRow(ctx, getVisibleTransaction, arg.ID, arg.FamilyID, arg.ViewerMemberID)
+	var i GetVisibleTransactionRow
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Type,
+		&i.AccountID,
+		&i.CounterAccountID,
+		&i.CategoryID,
+		&i.AmountMinor,
+		&i.CurrencyCode,
+		&i.ReceivedAmountMinor,
+		&i.ReceivedCurrencyCode,
+		&i.Note,
+		&i.Merchant,
+		&i.OccurredOn,
+		&i.MemberID,
+		&i.CreatedByUserID,
+		&i.TemplateID,
+		&i.RecurringID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.GroupID,
+	)
+	return i, err
+}
+
+const listVisibleTransactions = `-- name: ListVisibleTransactions :many
+SELECT t.id, t.family_id, t.type, t.account_id, t.counter_account_id, t.category_id, t.amount_minor, t.currency_code, t.received_amount_minor, t.received_currency_code, t.note, t.merchant, t.occurred_on, t.member_id, t.created_by_user_id, t.template_id, t.recurring_id, t.created_at, t.updated_at, c.group_id AS group_id
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $2::uuid)
+  AND t.occurred_on >= $3::date
+  AND t.occurred_on <= $4::date
+  AND ($5::text IS NULL OR t.type = $5)
+  AND ($6::bool OR t.type <> 'transfer')
+  AND (cardinality($7::uuid[]) = 0 OR t.member_id = ANY($7::uuid[]))
+  AND (cardinality($8::uuid[]) = 0 OR t.account_id = ANY($8::uuid[]))
+  AND (cardinality($9::uuid[]) = 0 OR t.category_id = ANY($9::uuid[]))
+  AND (cardinality($10::uuid[]) = 0 OR c.group_id = ANY($10::uuid[]))
+  AND ($11::text IS NULL
+       -- The escape makes % and _ literal: a search for "50%" must not match every row.
+       OR lower(t.note) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\'
+       OR lower(t.merchant) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\')
+  AND ($12::date IS NULL
+       OR t.occurred_on < $12
+       OR (t.occurred_on = $12 AND t.id < $13::uuid))
+ORDER BY t.occurred_on DESC, t.id DESC
+LIMIT $14::int
+`
+
+type ListVisibleTransactionsParams struct {
+	FamilyID         pgtype.UUID
+	ViewerMemberID   pgtype.UUID
+	FromDate         pgtype.Date
+	ToDate           pgtype.Date
+	Kind             *string
+	IncludeTransfers bool
+	MemberIds        []pgtype.UUID
+	AccountIds       []pgtype.UUID
+	CategoryIds      []pgtype.UUID
+	GroupIds         []pgtype.UUID
+	Query            *string
+	CursorDate       pgtype.Date
+	CursorID         pgtype.UUID
+	PageSize         int32
+}
+
+type ListVisibleTransactionsRow struct {
+	ID                   pgtype.UUID
+	FamilyID             pgtype.UUID
+	Type                 string
+	AccountID            pgtype.UUID
+	CounterAccountID     pgtype.UUID
+	CategoryID           pgtype.UUID
+	AmountMinor          int64
+	CurrencyCode         string
+	ReceivedAmountMinor  *int64
+	ReceivedCurrencyCode string
+	Note                 string
+	Merchant             string
+	OccurredOn           pgtype.Date
+	MemberID             pgtype.UUID
+	CreatedByUserID      pgtype.UUID
+	TemplateID           pgtype.UUID
+	RecurringID          pgtype.UUID
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	GroupID              pgtype.UUID
+}
+
+// ListVisibleTransactions is the feed. Every filter is a no-op sentinel when unset — NULL for
+// the text and uuid ones, an empty array for the repeated ones — so the app sends one shape of
+// request whether it is browsing a month or searching one merchant across a member's cards.
+// The cursor is (occurred_on, id), matching idx_transactions_feed, because an OFFSET moves
+// under a feed that is being written to.
+func (q *Queries) ListVisibleTransactions(ctx context.Context, arg ListVisibleTransactionsParams) ([]ListVisibleTransactionsRow, error) {
+	rows, err := q.db.Query(ctx, listVisibleTransactions,
 		arg.FamilyID,
+		arg.ViewerMemberID,
 		arg.FromDate,
 		arg.ToDate,
-		arg.Type,
+		arg.Kind,
+		arg.IncludeTransfers,
+		arg.MemberIds,
+		arg.AccountIds,
+		arg.CategoryIds,
+		arg.GroupIds,
+		arg.Query,
+		arg.CursorDate,
+		arg.CursorID,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListVisibleTransactionsRow
+	for rows.Next() {
+		var i ListVisibleTransactionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FamilyID,
+			&i.Type,
+			&i.AccountID,
+			&i.CounterAccountID,
+			&i.CategoryID,
+			&i.AmountMinor,
+			&i.CurrencyCode,
+			&i.ReceivedAmountMinor,
+			&i.ReceivedCurrencyCode,
+			&i.Note,
+			&i.Merchant,
+			&i.OccurredOn,
+			&i.MemberID,
+			&i.CreatedByUserID,
+			&i.TemplateID,
+			&i.RecurringID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.GroupID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumBudgetSpend = `-- name: SumBudgetSpend :one
+SELECT COALESCE(SUM(t.amount_minor), 0)::bigint AS total_minor
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $2::uuid)
+  AND t.occurred_on >= $3::date
+  AND t.occurred_on <= $4::date
+  AND t.type = 'expense'
+  AND t.currency_code = $5::text
+  AND ($6::uuid IS NULL OR c.group_id = $6)
+  AND ($7::uuid IS NULL OR t.category_id = $7)
+  AND ($8::uuid IS NULL OR t.member_id = $8)
+`
+
+type SumBudgetSpendParams struct {
+	FamilyID       pgtype.UUID
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	GroupID        pgtype.UUID
+	CategoryID     pgtype.UUID
+	MemberID       pgtype.UUID
+}
+
+// SumBudgetSpend is one budget's window, evaluated against either its group or its single
+// category and optionally narrowed to one member. It is deliberately its own query rather
+// than a filter on SumByGroup: a budget's window is not the screen's period.
+func (q *Queries) SumBudgetSpend(ctx context.Context, arg SumBudgetSpendParams) (int64, error) {
+	row := q.db.QueryRow(ctx, sumBudgetSpend,
+		arg.FamilyID,
+		arg.ViewerMemberID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.GroupID,
+		arg.CategoryID,
+		arg.MemberID,
+	)
+	var total_minor int64
+	err := row.Scan(&total_minor)
+	return total_minor, err
+}
+
+const sumByCategory = `-- name: SumByCategory :many
+SELECT t.category_id, COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
+                         THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor,
+       COUNT(*)::int AS transaction_count
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
+  AND t.occurred_on >= $4::date
+  AND t.occurred_on <= $5::date
+  AND t.type <> 'transfer'
+  AND t.currency_code = $6::text
+  AND ($2::text IS NULL OR t.type = $2)
+  AND ($7::uuid IS NULL OR c.group_id = $7)
+  AND (cardinality($8::uuid[]) = 0 OR t.member_id = ANY($8::uuid[]))
+GROUP BY t.category_id
+`
+
+type SumByCategoryParams struct {
+	FamilyID       pgtype.UUID
+	Kind           *string
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	GroupID        pgtype.UUID
+	MemberIds      []pgtype.UUID
+}
+
+type SumByCategoryRow struct {
+	CategoryID       pgtype.UUID
+	TotalMinor       int64
+	TransactionCount int32
+}
+
+func (q *Queries) SumByCategory(ctx context.Context, arg SumByCategoryParams) ([]SumByCategoryRow, error) {
+	rows, err := q.db.Query(ctx, sumByCategory,
+		arg.FamilyID,
+		arg.Kind,
+		arg.ViewerMemberID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.GroupID,
+		arg.MemberIds,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SumByCategoryRow
+	for rows.Next() {
+		var i SumByCategoryRow
+		if err := rows.Scan(&i.CategoryID, &i.TotalMinor, &i.TransactionCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumByGroup = `-- name: SumByGroup :many
+SELECT c.group_id, COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
+                         THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor,
+       COUNT(*)::int AS transaction_count
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
+  AND t.occurred_on >= $4::date
+  AND t.occurred_on <= $5::date
+  AND t.type <> 'transfer'
+  AND t.currency_code = $6::text
+  AND ($2::text IS NULL OR t.type = $2)
+  AND (cardinality($7::uuid[]) = 0 OR t.member_id = ANY($7::uuid[]))
+  AND (cardinality($8::uuid[]) = 0 OR t.account_id = ANY($8::uuid[]))
+GROUP BY c.group_id
+`
+
+type SumByGroupParams struct {
+	FamilyID       pgtype.UUID
+	Kind           *string
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	MemberIds      []pgtype.UUID
+	AccountIds     []pgtype.UUID
+}
+
+type SumByGroupRow struct {
+	GroupID          pgtype.UUID
+	TotalMinor       int64
+	TransactionCount int32
+}
+
+// SumByGroup backs the donut and the Home group rows in one pass. The join to categories is a
+// LEFT one: a transaction with no category still spent money, and dropping it here would make
+// the sum of the group rows smaller than the period total the same period reports.
+func (q *Queries) SumByGroup(ctx context.Context, arg SumByGroupParams) ([]SumByGroupRow, error) {
+	rows, err := q.db.Query(ctx, sumByGroup,
+		arg.FamilyID,
+		arg.Kind,
+		arg.ViewerMemberID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.MemberIds,
 		arg.AccountIds,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetCategoryBreakdownRow
+	var items []SumByGroupRow
 	for rows.Next() {
-		var i GetCategoryBreakdownRow
+		var i SumByGroupRow
+		if err := rows.Scan(&i.GroupID, &i.TotalMinor, &i.TransactionCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumByMember = `-- name: SumByMember :many
+SELECT t.member_id, c.group_id, COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
+                         THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor,
+       COUNT(*)::int AS transaction_count
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
+  AND t.occurred_on >= $4::date
+  AND t.occurred_on <= $5::date
+  AND t.type <> 'transfer'
+  AND t.currency_code = $6::text
+  AND ($2::text IS NULL OR t.type = $2)
+  AND (cardinality($7::uuid[]) = 0 OR t.account_id = ANY($7::uuid[]))
+GROUP BY t.member_id, c.group_id
+`
+
+type SumByMemberParams struct {
+	FamilyID       pgtype.UUID
+	Kind           *string
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	AccountIds     []pgtype.UUID
+}
+
+type SumByMemberRow struct {
+	MemberID         pgtype.UUID
+	GroupID          pgtype.UUID
+	TotalMinor       int64
+	TransactionCount int32
+}
+
+// SumByMember is the split bar on the member screen and the stacked series on the charts
+// screen; group_id is carried so one pass fills both the per-member totals and the per-group
+// member segments.
+func (q *Queries) SumByMember(ctx context.Context, arg SumByMemberParams) ([]SumByMemberRow, error) {
+	rows, err := q.db.Query(ctx, sumByMember,
+		arg.FamilyID,
+		arg.Kind,
+		arg.ViewerMemberID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.AccountIds,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SumByMemberRow
+	for rows.Next() {
+		var i SumByMemberRow
 		if err := rows.Scan(
-			&i.CategoryID,
-			&i.CategoryName,
-			&i.Color,
+			&i.MemberID,
+			&i.GroupID,
 			&i.TotalMinor,
 			&i.TransactionCount,
 		); err != nil {
@@ -152,149 +574,69 @@ func (q *Queries) GetCategoryBreakdown(ctx context.Context, arg GetCategoryBreak
 	return items, nil
 }
 
-const getSummary = `-- name: GetSummary :one
-SELECT
-    COALESCE(SUM(amount_minor) FILTER (WHERE type = 'income'), 0)::bigint  AS income_minor,
-    COALESCE(SUM(amount_minor) FILTER (WHERE type = 'expense'), 0)::bigint AS expense_minor
-FROM transactions
-WHERE family_id = $1
-  AND occurred_on >= $2
-  AND occurred_on <= $3
-  AND (
-      cardinality($4::uuid[]) = 0
-      OR account_id = ANY ($4::uuid[])
-  )
+const sumDailyTotals = `-- name: SumDailyTotals :many
+SELECT t.occurred_on, t.member_id, c.group_id,
+       COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
+                         THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
+  AND t.occurred_on >= $4::date
+  AND t.occurred_on <= $5::date
+  AND t.type <> 'transfer'
+  AND t.currency_code = $6::text
+  AND ($2::text IS NULL OR t.type = $2)
+  AND (cardinality($7::uuid[]) = 0 OR t.member_id = ANY($7::uuid[]))
+  AND (cardinality($8::uuid[]) = 0 OR t.account_id = ANY($8::uuid[]))
+GROUP BY t.occurred_on, t.member_id, c.group_id
+ORDER BY t.occurred_on
 `
 
-type GetSummaryParams struct {
-	FamilyID   pgtype.UUID
-	FromDate   pgtype.Date
-	ToDate     pgtype.Date
-	AccountIds []pgtype.UUID
+type SumDailyTotalsParams struct {
+	FamilyID       pgtype.UUID
+	Kind           *string
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	MemberIds      []pgtype.UUID
+	AccountIds     []pgtype.UUID
 }
 
-type GetSummaryRow struct {
-	IncomeMinor  int64
-	ExpenseMinor int64
+type SumDailyTotalsRow struct {
+	OccurredOn pgtype.Date
+	MemberID   pgtype.UUID
+	GroupID    pgtype.UUID
+	TotalMinor int64
 }
 
-// Transfers are excluded from both totals: moving money between your own accounts is not
-// income and not spending.
-func (q *Queries) GetSummary(ctx context.Context, arg GetSummaryParams) (GetSummaryRow, error) {
-	row := q.db.QueryRow(ctx, getSummary,
+// SumDailyTotals feeds the bucketed series: one row per calendar day, bucketed in Go so the
+// week/month/year switch does not need three queries.
+func (q *Queries) SumDailyTotals(ctx context.Context, arg SumDailyTotalsParams) ([]SumDailyTotalsRow, error) {
+	rows, err := q.db.Query(ctx, sumDailyTotals,
 		arg.FamilyID,
+		arg.Kind,
+		arg.ViewerMemberID,
 		arg.FromDate,
 		arg.ToDate,
+		arg.CurrencyCode,
+		arg.MemberIds,
 		arg.AccountIds,
-	)
-	var i GetSummaryRow
-	err := row.Scan(&i.IncomeMinor, &i.ExpenseMinor)
-	return i, err
-}
-
-const getTransaction = `-- name: GetTransaction :one
-SELECT id, family_id, account_id, counter_account_id, category_id, type, amount_minor, currency_code, note, occurred_on, created_by_user_id, created_at, updated_at FROM transactions
-WHERE id = $1 AND family_id = $2
-`
-
-type GetTransactionParams struct {
-	ID       pgtype.UUID
-	FamilyID pgtype.UUID
-}
-
-func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error) {
-	row := q.db.QueryRow(ctx, getTransaction, arg.ID, arg.FamilyID)
-	var i Transaction
-	err := row.Scan(
-		&i.ID,
-		&i.FamilyID,
-		&i.AccountID,
-		&i.CounterAccountID,
-		&i.CategoryID,
-		&i.Type,
-		&i.AmountMinor,
-		&i.CurrencyCode,
-		&i.Note,
-		&i.OccurredOn,
-		&i.CreatedByUserID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const listTransactions = `-- name: ListTransactions :many
-SELECT id, family_id, account_id, counter_account_id, category_id, type, amount_minor, currency_code, note, occurred_on, created_by_user_id, created_at, updated_at FROM transactions
-WHERE family_id = $1
-  AND occurred_on >= $2
-  AND occurred_on <= $3
-  AND (
-      cardinality($4::uuid[]) = 0
-      OR account_id = ANY ($4::uuid[])
-      OR counter_account_id = ANY ($4::uuid[])
-  )
-  AND (cardinality($5::uuid[]) = 0 OR category_id = ANY ($5::uuid[]))
-  AND ($6::text = '' OR type = $6::text)
-  AND ($7::text = '' OR note ILIKE '%' || $7::text || '%')
-  AND (
-      NOT $8::bool
-      OR (occurred_on, id) < ($9::date, $10::uuid)
-  )
-ORDER BY occurred_on DESC, id DESC
-LIMIT $11
-`
-
-type ListTransactionsParams struct {
-	FamilyID    pgtype.UUID
-	FromDate    pgtype.Date
-	ToDate      pgtype.Date
-	AccountIds  []pgtype.UUID
-	CategoryIds []pgtype.UUID
-	Type        string
-	Search      string
-	UseCursor   bool
-	CursorDate  pgtype.Date
-	CursorID    pgtype.UUID
-	PageSize    int32
-}
-
-// Keyset pagination on (occurred_on, id): OFFSET drifts when a row is inserted mid-scroll,
-// and the ledger is written to while it is being read.
-func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error) {
-	rows, err := q.db.Query(ctx, listTransactions,
-		arg.FamilyID,
-		arg.FromDate,
-		arg.ToDate,
-		arg.AccountIds,
-		arg.CategoryIds,
-		arg.Type,
-		arg.Search,
-		arg.UseCursor,
-		arg.CursorDate,
-		arg.CursorID,
-		arg.PageSize,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Transaction
+	var items []SumDailyTotalsRow
 	for rows.Next() {
-		var i Transaction
+		var i SumDailyTotalsRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.FamilyID,
-			&i.AccountID,
-			&i.CounterAccountID,
-			&i.CategoryID,
-			&i.Type,
-			&i.AmountMinor,
-			&i.CurrencyCode,
-			&i.Note,
 			&i.OccurredOn,
-			&i.CreatedByUserID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.MemberID,
+			&i.GroupID,
+			&i.TotalMinor,
 		); err != nil {
 			return nil, err
 		}
@@ -306,60 +648,137 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 	return items, nil
 }
 
+const sumVisibleTransactions = `-- name: SumVisibleTransactions :one
+SELECT COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
+                         THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor,
+       COUNT(*)::int AS transaction_count
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+LEFT JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND (a.visibility = 'shared' OR a.owner_member_id = $3::uuid)
+  AND t.occurred_on >= $4::date
+  AND t.occurred_on <= $5::date
+  AND t.type <> 'transfer'
+  AND t.currency_code = $6::text
+  AND ($2::text IS NULL OR t.type = $2)
+  AND (cardinality($7::uuid[]) = 0 OR t.member_id = ANY($7::uuid[]))
+  AND (cardinality($8::uuid[]) = 0 OR t.account_id = ANY($8::uuid[]))
+  AND (cardinality($9::uuid[]) = 0 OR t.category_id = ANY($9::uuid[]))
+  AND (cardinality($10::uuid[]) = 0 OR c.group_id = ANY($10::uuid[]))
+  AND ($11::text IS NULL
+       -- The escape makes % and _ literal: a search for "50%" must not match every row.
+       OR lower(t.note) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\'
+       OR lower(t.merchant) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\')
+`
+
+type SumVisibleTransactionsParams struct {
+	FamilyID       pgtype.UUID
+	Kind           *string
+	ViewerMemberID pgtype.UUID
+	FromDate       pgtype.Date
+	ToDate         pgtype.Date
+	CurrencyCode   string
+	MemberIds      []pgtype.UUID
+	AccountIds     []pgtype.UUID
+	CategoryIds    []pgtype.UUID
+	GroupIds       []pgtype.UUID
+	Query          *string
+}
+
+type SumVisibleTransactionsRow struct {
+	TotalMinor       int64
+	TransactionCount int32
+}
+
+// SumVisibleTransactions is the period total behind the feed header and the Home headline. It
+// covers the whole period, not the page the feed happens to be showing.
+//
+// With a kind filter every row is on the same side of the ledger and the sum is a magnitude.
+// Without one the two sides are netted — expenses minus income — because adding "spent 5,000"
+// to "earned 20,000" produces a number that describes nothing.
+func (q *Queries) SumVisibleTransactions(ctx context.Context, arg SumVisibleTransactionsParams) (SumVisibleTransactionsRow, error) {
+	row := q.db.QueryRow(ctx, sumVisibleTransactions,
+		arg.FamilyID,
+		arg.Kind,
+		arg.ViewerMemberID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.MemberIds,
+		arg.AccountIds,
+		arg.CategoryIds,
+		arg.GroupIds,
+		arg.Query,
+	)
+	var i SumVisibleTransactionsRow
+	err := row.Scan(&i.TotalMinor, &i.TransactionCount)
+	return i, err
+}
+
 const updateTransaction = `-- name: UpdateTransaction :one
 UPDATE transactions
-SET account_id         = $1,
-    counter_account_id = $2,
-    category_id        = $3,
-    type               = $4,
-    amount_minor       = $5,
-    currency_code      = $6,
-    note               = $7,
-    occurred_on        = $8,
-    updated_at         = NOW()
-WHERE id = $9 AND family_id = $10
-RETURNING id, family_id, account_id, counter_account_id, category_id, type, amount_minor, currency_code, note, occurred_on, created_by_user_id, created_at, updated_at
+SET type        = COALESCE($3::text, type),
+    account_id  = COALESCE($4::uuid, account_id),
+    category_id = COALESCE($5::uuid, category_id),
+    amount_minor = COALESCE($6::bigint, amount_minor),
+    currency_code = COALESCE($7::text, currency_code),
+    note        = COALESCE($8::text, note),
+    merchant    = COALESCE($9::text, merchant),
+    occurred_on = COALESCE($10::date, occurred_on),
+    member_id   = COALESCE($11::uuid, member_id),
+    updated_at  = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, type, account_id, counter_account_id, category_id, amount_minor, currency_code, received_amount_minor, received_currency_code, note, merchant, occurred_on, member_id, created_by_user_id, template_id, recurring_id, created_at, updated_at
 `
 
 type UpdateTransactionParams struct {
-	AccountID        pgtype.UUID
-	CounterAccountID pgtype.UUID
-	CategoryID       pgtype.UUID
-	Type             string
-	AmountMinor      int64
-	CurrencyCode     string
-	Note             string
-	OccurredOn       pgtype.Date
-	ID               pgtype.UUID
-	FamilyID         pgtype.UUID
+	ID           pgtype.UUID
+	FamilyID     pgtype.UUID
+	Type         *string
+	AccountID    pgtype.UUID
+	CategoryID   pgtype.UUID
+	AmountMinor  *int64
+	CurrencyCode *string
+	Note         *string
+	Merchant     *string
+	OccurredOn   pgtype.Date
+	MemberID     pgtype.UUID
 }
 
 func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionParams) (Transaction, error) {
 	row := q.db.QueryRow(ctx, updateTransaction,
-		arg.AccountID,
-		arg.CounterAccountID,
-		arg.CategoryID,
+		arg.ID,
+		arg.FamilyID,
 		arg.Type,
+		arg.AccountID,
+		arg.CategoryID,
 		arg.AmountMinor,
 		arg.CurrencyCode,
 		arg.Note,
+		arg.Merchant,
 		arg.OccurredOn,
-		arg.ID,
-		arg.FamilyID,
+		arg.MemberID,
 	)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
+		&i.Type,
 		&i.AccountID,
 		&i.CounterAccountID,
 		&i.CategoryID,
-		&i.Type,
 		&i.AmountMinor,
 		&i.CurrencyCode,
+		&i.ReceivedAmountMinor,
+		&i.ReceivedCurrencyCode,
 		&i.Note,
+		&i.Merchant,
 		&i.OccurredOn,
+		&i.MemberID,
 		&i.CreatedByUserID,
+		&i.TemplateID,
+		&i.RecurringID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

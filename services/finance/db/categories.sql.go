@@ -11,55 +11,112 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const countCategoryTransactions = `-- name: CountCategoryTransactions :one
-SELECT count(*) FROM transactions
-WHERE category_id = $1
+const countCategoriesInGroup = `-- name: CountCategoriesInGroup :one
+SELECT COUNT(*) FROM categories
+WHERE group_id = $1 AND family_id = $2
 `
 
-func (q *Queries) CountCategoryTransactions(ctx context.Context, categoryID pgtype.UUID) (int64, error) {
-	row := q.db.QueryRow(ctx, countCategoryTransactions, categoryID)
+type CountCategoriesInGroupParams struct {
+	GroupID  pgtype.UUID
+	FamilyID pgtype.UUID
+}
+
+func (q *Queries) CountCategoriesInGroup(ctx context.Context, arg CountCategoriesInGroupParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countCategoriesInGroup, arg.GroupID, arg.FamilyID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countCategoryTransactions = `-- name: CountCategoryTransactions :one
+SELECT COUNT(*) FROM transactions
+WHERE category_id = $1 AND family_id = $2
+`
+
+type CountCategoryTransactionsParams struct {
+	CategoryID pgtype.UUID
+	FamilyID   pgtype.UUID
+}
+
+func (q *Queries) CountCategoryTransactions(ctx context.Context, arg CountCategoryTransactionsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countCategoryTransactions, arg.CategoryID, arg.FamilyID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
 const createCategory = `-- name: CreateCategory :one
-INSERT INTO categories (family_id, name, kind, color, icon, parent_id, sort_order)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, family_id, name, kind, color, icon, parent_id, archived, sort_order, created_at, updated_at
+INSERT INTO categories (family_id, group_id, name, kind, icon, sort_order)
+VALUES ($1, $2, $3, $4, $5,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM categories WHERE group_id = $2), 0))
+RETURNING id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at
 `
 
 type CreateCategoryParams struct {
-	FamilyID  pgtype.UUID
-	Name      string
-	Kind      string
-	Color     string
-	Icon      string
-	ParentID  pgtype.UUID
-	SortOrder int32
+	FamilyID pgtype.UUID
+	GroupID  pgtype.UUID
+	Name     string
+	Kind     string
+	Icon     string
 }
 
 func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
 	row := q.db.QueryRow(ctx, createCategory,
 		arg.FamilyID,
+		arg.GroupID,
 		arg.Name,
 		arg.Kind,
-		arg.Color,
 		arg.Icon,
-		arg.ParentID,
-		arg.SortOrder,
 	)
 	var i Category
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
+		&i.GroupID,
 		&i.Name,
 		&i.Kind,
-		&i.Color,
 		&i.Icon,
-		&i.ParentID,
-		&i.Archived,
 		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createCategoryGroup = `-- name: CreateCategoryGroup :one
+INSERT INTO category_groups (family_id, name, kind, icon, color_step, sort_order)
+VALUES ($1, $2, $3, $4, $5,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM category_groups WHERE family_id = $1), 0))
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at
+`
+
+type CreateCategoryGroupParams struct {
+	FamilyID  pgtype.UUID
+	Name      string
+	Kind      string
+	Icon      string
+	ColorStep int32
+}
+
+func (q *Queries) CreateCategoryGroup(ctx context.Context, arg CreateCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, createCategoryGroup,
+		arg.FamilyID,
+		arg.Name,
+		arg.Kind,
+		arg.Icon,
+		arg.ColorStep,
+	)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -84,8 +141,26 @@ func (q *Queries) DeleteCategory(ctx context.Context, arg DeleteCategoryParams) 
 	return result.RowsAffected(), nil
 }
 
+const deleteCategoryGroup = `-- name: DeleteCategoryGroup :execrows
+DELETE FROM category_groups
+WHERE id = $1 AND family_id = $2
+`
+
+type DeleteCategoryGroupParams struct {
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+}
+
+func (q *Queries) DeleteCategoryGroup(ctx context.Context, arg DeleteCategoryGroupParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteCategoryGroup, arg.ID, arg.FamilyID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getCategory = `-- name: GetCategory :one
-SELECT id, family_id, name, kind, color, icon, parent_id, archived, sort_order, created_at, updated_at FROM categories
+SELECT id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at FROM categories
 WHERE id = $1 AND family_id = $2
 `
 
@@ -100,13 +175,40 @@ func (q *Queries) GetCategory(ctx context.Context, arg GetCategoryParams) (Categ
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
+		&i.GroupID,
 		&i.Name,
 		&i.Kind,
-		&i.Color,
 		&i.Icon,
-		&i.ParentID,
-		&i.Archived,
 		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCategoryGroup = `-- name: GetCategoryGroup :one
+SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at FROM category_groups
+WHERE id = $1 AND family_id = $2
+`
+
+type GetCategoryGroupParams struct {
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+}
+
+func (q *Queries) GetCategoryGroup(ctx context.Context, arg GetCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, getCategoryGroup, arg.ID, arg.FamilyID)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -114,21 +216,28 @@ func (q *Queries) GetCategory(ctx context.Context, arg GetCategoryParams) (Categ
 }
 
 const listCategories = `-- name: ListCategories :many
-SELECT id, family_id, name, kind, color, icon, parent_id, archived, sort_order, created_at, updated_at FROM categories
+SELECT id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at FROM categories
 WHERE family_id = $1
-  AND ($2::text = '' OR kind = $2::text)
-  AND ($3::bool OR archived = FALSE)
-ORDER BY sort_order, name
+  AND ($2::uuid IS NULL OR group_id = $2)
+  AND ($3::text IS NULL OR kind = $3)
+  AND ($4::bool OR NOT archived)
+ORDER BY sort_order, created_at
 `
 
 type ListCategoriesParams struct {
 	FamilyID        pgtype.UUID
-	Kind            string
+	GroupID         pgtype.UUID
+	Kind            *string
 	IncludeArchived bool
 }
 
 func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error) {
-	rows, err := q.db.Query(ctx, listCategories, arg.FamilyID, arg.Kind, arg.IncludeArchived)
+	rows, err := q.db.Query(ctx, listCategories,
+		arg.FamilyID,
+		arg.GroupID,
+		arg.Kind,
+		arg.IncludeArchived,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -139,13 +248,12 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.FamilyID,
+			&i.GroupID,
 			&i.Name,
 			&i.Kind,
-			&i.Color,
 			&i.Icon,
-			&i.ParentID,
-			&i.Archived,
 			&i.SortOrder,
+			&i.Archived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -159,52 +267,252 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 	return items, nil
 }
 
+const listCategoryGroups = `-- name: ListCategoryGroups :many
+SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at FROM category_groups
+WHERE family_id = $1
+  AND ($2::text IS NULL OR kind = $2)
+  AND ($3::bool OR NOT archived)
+ORDER BY sort_order, created_at
+`
+
+type ListCategoryGroupsParams struct {
+	FamilyID        pgtype.UUID
+	Kind            *string
+	IncludeArchived bool
+}
+
+func (q *Queries) ListCategoryGroups(ctx context.Context, arg ListCategoryGroupsParams) ([]CategoryGroup, error) {
+	rows, err := q.db.Query(ctx, listCategoryGroups, arg.FamilyID, arg.Kind, arg.IncludeArchived)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CategoryGroup
+	for rows.Next() {
+		var i CategoryGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.FamilyID,
+			&i.Name,
+			&i.Kind,
+			&i.Icon,
+			&i.ColorStep,
+			&i.SortOrder,
+			&i.Archived,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const moveCategoriesToGroup = `-- name: MoveCategoriesToGroup :execrows
+UPDATE categories
+SET group_id = $3, updated_at = NOW()
+WHERE group_id = $1 AND family_id = $2
+`
+
+type MoveCategoriesToGroupParams struct {
+	GroupID   pgtype.UUID
+	FamilyID  pgtype.UUID
+	GroupID_2 pgtype.UUID
+}
+
+// MoveCategoriesToGroup is the reassignment DeleteCategoryGroup requires: a group holding
+// categories that hold transactions cannot silently vanish, so its categories are re-parented
+// first and the delete is refused if that did not happen.
+func (q *Queries) MoveCategoriesToGroup(ctx context.Context, arg MoveCategoriesToGroupParams) (int64, error) {
+	result, err := q.db.Exec(ctx, moveCategoriesToGroup, arg.GroupID, arg.FamilyID, arg.GroupID_2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const moveCategory = `-- name: MoveCategory :one
+UPDATE categories
+SET group_id = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at
+`
+
+type MoveCategoryParams struct {
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+	GroupID  pgtype.UUID
+}
+
+func (q *Queries) MoveCategory(ctx context.Context, arg MoveCategoryParams) (Category, error) {
+	row := q.db.QueryRow(ctx, moveCategory, arg.ID, arg.FamilyID, arg.GroupID)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.GroupID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const moveTransactionsToCategory = `-- name: MoveTransactionsToCategory :execrows
+UPDATE transactions
+SET category_id = $3::uuid, updated_at = NOW()
+WHERE category_id = $1 AND family_id = $2
+`
+
+type MoveTransactionsToCategoryParams struct {
+	CategoryID       pgtype.UUID
+	FamilyID         pgtype.UUID
+	TargetCategoryID pgtype.UUID
+}
+
+func (q *Queries) MoveTransactionsToCategory(ctx context.Context, arg MoveTransactionsToCategoryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, moveTransactionsToCategory, arg.CategoryID, arg.FamilyID, arg.TargetCategoryID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const reorderCategory = `-- name: ReorderCategory :execrows
+UPDATE categories
+SET sort_order = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2 AND group_id = $4::uuid
+`
+
+type ReorderCategoryParams struct {
+	ID        pgtype.UUID
+	FamilyID  pgtype.UUID
+	SortOrder int32
+	GroupID   pgtype.UUID
+}
+
+// ReorderCategory renumbers one category inside the group the client named. The group is part
+// of the predicate rather than a thing the handler trusts the list to agree with: a batch that
+// mixed in an id from another group would otherwise renumber a grid nobody was looking at.
+func (q *Queries) ReorderCategory(ctx context.Context, arg ReorderCategoryParams) (int64, error) {
+	result, err := q.db.Exec(ctx, reorderCategory,
+		arg.ID,
+		arg.FamilyID,
+		arg.SortOrder,
+		arg.GroupID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const reorderCategoryGroup = `-- name: ReorderCategoryGroup :exec
+UPDATE category_groups
+SET sort_order = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+`
+
+type ReorderCategoryGroupParams struct {
+	ID        pgtype.UUID
+	FamilyID  pgtype.UUID
+	SortOrder int32
+}
+
+func (q *Queries) ReorderCategoryGroup(ctx context.Context, arg ReorderCategoryGroupParams) error {
+	_, err := q.db.Exec(ctx, reorderCategoryGroup, arg.ID, arg.FamilyID, arg.SortOrder)
+	return err
+}
+
 const updateCategory = `-- name: UpdateCategory :one
 UPDATE categories
-SET name       = $1,
-    color      = $2,
-    icon       = $3,
-    parent_id  = $4,
-    archived   = $5,
-    sort_order = $6,
+SET name       = COALESCE($3::text, name),
+    icon       = COALESCE($4::text, icon),
+    archived   = COALESCE($5::bool, archived),
     updated_at = NOW()
-WHERE id = $7 AND family_id = $8
-RETURNING id, family_id, name, kind, color, icon, parent_id, archived, sort_order, created_at, updated_at
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at
 `
 
 type UpdateCategoryParams struct {
-	Name      string
-	Color     string
-	Icon      string
-	ParentID  pgtype.UUID
-	Archived  bool
-	SortOrder int32
-	ID        pgtype.UUID
-	FamilyID  pgtype.UUID
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+	Name     *string
+	Icon     *string
+	Archived *bool
 }
 
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
 	row := q.db.QueryRow(ctx, updateCategory,
-		arg.Name,
-		arg.Color,
-		arg.Icon,
-		arg.ParentID,
-		arg.Archived,
-		arg.SortOrder,
 		arg.ID,
 		arg.FamilyID,
+		arg.Name,
+		arg.Icon,
+		arg.Archived,
 	)
 	var i Category
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
+		&i.GroupID,
 		&i.Name,
 		&i.Kind,
-		&i.Color,
 		&i.Icon,
-		&i.ParentID,
-		&i.Archived,
 		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateCategoryGroup = `-- name: UpdateCategoryGroup :one
+UPDATE category_groups
+SET name       = COALESCE($3::text, name),
+    icon       = COALESCE($4::text, icon),
+    color_step = COALESCE($5::int, color_step),
+    archived   = COALESCE($6::bool, archived),
+    updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at
+`
+
+type UpdateCategoryGroupParams struct {
+	ID        pgtype.UUID
+	FamilyID  pgtype.UUID
+	Name      *string
+	Icon      *string
+	ColorStep *int32
+	Archived  *bool
+}
+
+func (q *Queries) UpdateCategoryGroup(ctx context.Context, arg UpdateCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, updateCategoryGroup,
+		arg.ID,
+		arg.FamilyID,
+		arg.Name,
+		arg.Icon,
+		arg.ColorStep,
+		arg.Archived,
+	)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

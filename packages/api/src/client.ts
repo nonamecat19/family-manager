@@ -18,6 +18,9 @@ const PUBLIC_PROCEDURES = new Set([
   `${AuthService.typeName}/${AuthService.method.refresh.name}`,
 ]);
 
+/** The services this package can reach. One transport, and one dev port, per name. */
+export type ServiceName = "auth" | "family" | "finance" | "recipes";
+
 export interface ClientsOptions {
   /**
    * Base URL for every service. Correct behind a gateway that routes by procedure path,
@@ -28,7 +31,7 @@ export interface ClientsOptions {
    * Per-service overrides. In development each service listens on its own port and there is
    * no gateway, so without these every call would land on whichever service baseUrl names.
    */
-  serviceUrls?: Partial<Record<"auth" | "family" | "finance" | "recipes", string>>;
+  serviceUrls?: Partial<Record<ServiceName, string>>;
   /** Resolves a fresh access token, or null when anonymous. Supplied by @fm/auth. */
   getAccessToken: () => Promise<string | null>;
 }
@@ -63,7 +66,7 @@ export interface Clients {
 
 /** Builds one client per service. Call once per app and put the result in a context. */
 export function createClients(opts: ClientsOptions): Clients {
-  const urlFor = (service: "auth" | "family" | "finance" | "recipes") =>
+  const urlFor = (service: ServiceName) =>
     opts.serviceUrls?.[service] ?? opts.baseUrl;
 
   return {
