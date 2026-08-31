@@ -35,7 +35,9 @@ overrides:
   "@expo/metro-runtime": ~57.0.14
   # expo-modules-core 57 peers on worklets <0.11; @expo/ui otherwise drags 0.11 in.
   react-native-worklets: 0.10.4
-  react-native: 0.86.2
+  react-native: 0.86.3
+  # Auto-installed peer of @react-native/community-cli-plugin; it lags react-native without this.
+  "@react-native/metro-config": 0.86.3
   react-native-screens: ~4.26.0
   react-native-safe-area-context: ~5.7.0
   react-native-svg: 15.15.4
