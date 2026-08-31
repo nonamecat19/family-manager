@@ -1,4 +1,5 @@
 import type { Money } from "@fm/api";
+import type { Href } from "expo-router";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "../i18n/index.tsx";
@@ -12,7 +13,7 @@ export interface DrawerItem {
   label: string;
   /** An expo-router href. The kit does not navigate — `onSelect` gets the whole item and the
    * screen decides. */
-  href?: string;
+  href?: Href;
 }
 
 /**
