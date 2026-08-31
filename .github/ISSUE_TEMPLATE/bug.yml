@@ -45,7 +45,6 @@ body:
       label: Where
       options:
         - Recipes app
-        - Finance app
         - Not sure
     validations:
       required: true

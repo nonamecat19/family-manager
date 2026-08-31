@@ -468,7 +468,7 @@ func (h *Handler) ListInvitations(
 	return connect.NewResponse(&familyv1.ListInvitationsResponse{Invitations: out}), nil
 }
 
-// CheckMembership is called by sibling services (finance) over gRPC before they touch
+// CheckMembership is called by sibling services over gRPC before they touch
 // family-scoped rows. It answers about any user, so it is not restricted to the caller.
 func (h *Handler) CheckMembership(
 	ctx context.Context, req *connect.Request[familyv1.CheckMembershipRequest],

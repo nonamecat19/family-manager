@@ -5,7 +5,7 @@
 
 ## Context
 
-`notifications` must react to things that happen in `family`, `shopping` and `finance` without
+`notifications` must react to things that happen in `family`, `shopping` and `recipes` without
 those services knowing it exists. Synchronous gRPC would make every writer depend on the
 notifier and fail when it is down.
 

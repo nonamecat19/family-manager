@@ -20,7 +20,7 @@ const (
 
 // Options configures the process-wide logger.
 type Options struct {
-	// Service is the service name stamped on every record, e.g. "finance".
+	// Service is the service name stamped on every record, e.g. "recipes".
 	Service string
 	// Level is one of debug, info, warn, error. Empty means info.
 	Level string
