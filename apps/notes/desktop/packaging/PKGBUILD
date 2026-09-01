@@ -1,0 +1,76 @@
+# Maintainer: family-manager
+#
+# Builds Commonplace from this checkout, not from a release tarball: there is no release
+# tarball, and there is one machine that installs this. `source=()` plus a `build()` that
+# reaches back into the repo is the honest shape for a package like that — makepkg is being
+# used as an installer, not as a distribution mechanism.
+#
+# Run it from this directory, with the repo checked out around it:
+#
+#   cd apps/notes/desktop/packaging && makepkg -si
+#
+# Build dependencies you need on the host, and what each is actually for:
+#
+#   webkit2gtk-4.1        the webview itself. Tauri v2 links 4.1, not the older 4.0 — if a
+#                         build fails at `pkg-config javascriptcoregtk-4.1`, this is missing.
+#   libappindicator-gtk3  tray/indicator symbols wry links against on GTK.
+#   librsvg               SVG rendering for the window icon.
+#   rust (stable)         Arch's `rust` package, or a rustup stable toolchain.
+#   base-devel            gcc, pkgconf, patchelf, make.
+#   nodejs + pnpm         to produce the Expo web export the shell wraps.
+#
+# `depends` below is the *runtime* set, which is much smaller: the webview and its icon
+# renderer. Everything else is statically linked into the binary.
+
+pkgname=commonplace
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Family notes — notebooks, notes made of blocks, and sharing inside one family"
+arch=('x86_64')
+url="https://github.com/nnc/family-manager"
+# The repo carries no LICENSE file; this is a private family application, not something
+# published. `custom` is the accurate answer, not a placeholder to be filled in with MIT.
+license=('custom')
+depends=('webkit2gtk-4.1' 'gtk3' 'librsvg' 'libappindicator-gtk3')
+makedepends=('rust' 'cargo' 'nodejs' 'pnpm' 'pkgconf' 'patchelf')
+source=()
+sha256sums=()
+
+# The repo root, four levels up from apps/notes/desktop/packaging.
+_repo="$(cd "$startdir/../../../.." && pwd)"
+
+build() {
+  cd "$_repo"
+
+  # The web export first — tauri.conf.json's frontendDist points at apps/notes/dist and
+  # `tauri build` will not produce it for us (beforeBuildCommand is deliberately empty so
+  # that the export happens exactly once, here or in `just desktop-build`, never twice).
+  pnpm install --frozen-lockfile
+  pnpm --filter @fm/app-notes exec expo export --platform web
+
+  cd "$_repo/apps/notes/desktop/src-tauri"
+  # Plain `cargo build`, not `cargo tauri build`: the web export is baked into the binary by
+  # `tauri::generate_context!` at compile time, so cargo alone produces a complete, runnable
+  # program. `cargo tauri build` would go on to emit a .deb/.rpm/AppImage that makepkg would
+  # immediately throw away, and it needs tauri-cli installed on top of everything above.
+  cargo build --release --locked
+}
+
+package() {
+  cd "$_repo/apps/notes/desktop/src-tauri"
+
+  install -Dm755 "target/release/commonplace" "$pkgdir/usr/bin/commonplace"
+  install -Dm644 "$startdir/commonplace.desktop" \
+    "$pkgdir/usr/share/applications/commonplace.desktop"
+
+  # Named after the .desktop file's Icon= key, in the sizes the icon set actually has.
+  local size
+  for size in 32 128; do
+    install -Dm644 "icons/${size}x${size}.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/commonplace.png"
+  done
+  install -Dm644 "icons/128x128@2x.png" \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/commonplace.png"
+  install -Dm644 "icons/icon.png" \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/commonplace.png"
+}

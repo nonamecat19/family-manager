@@ -242,3 +242,62 @@ install-apk:
     set -euo pipefail
     export ANDROID_HOME=${ANDROID_HOME:-$HOME/Android}
     "$ANDROID_HOME/platform-tools/adb" install -r apps/recipes/android/app/build/outputs/apk/debug/app-debug.apk
+
+# -------------------------------------------------------------- desktop ----
+
+# Deliberately builds nothing and starts nothing: `tauri dev` attaches to the Metro dev server
+# that apps/notes/desktop/src-tauri/tauri.conf.json points at (devUrl, :8081), so run
+# `pnpm --filter @fm/app-notes dev` in another terminal first. Letting tauri own Metro's
+# lifecycle would restart it — and drop fast refresh — every time the Rust side recompiles.
+#
+# Needs a Rust toolchain and webkit2gtk-4.1; see apps/notes/desktop/README.md.
+#
+# Run the Commonplace desktop shell against the running Expo dev server.
+desktop-dev:
+    cd apps/notes/desktop/src-tauri && cargo tauri dev
+
+# The export is a separate step rather than tauri's beforeBuildCommand so that it happens
+# exactly once — the PKGBUILD does its own export and would otherwise run a second one.
+# --platform web, not the app's own `build` script: that one is `expo export --platform all`,
+# and the native bundles it also produces are dead weight to a desktop window.
+#
+# Output: .deb, .rpm and AppImage under apps/notes/desktop/src-tauri/target/release/bundle/.
+# The web assets are compiled into the binary, so the artifact does not read apps/notes/dist
+# at runtime.
+#
+# Export the notes app to web, then bundle it as a desktop app (deb/rpm/AppImage).
+desktop-build:
+    pnpm --filter @fm/app-notes exec expo export --platform web
+    cd apps/notes/desktop/src-tauri && cargo tauri build
+
+# Not part of `just verify`, for the same reason lint-go and vuln are not: this repo compiles
+# Rust in exactly one directory, most contributors will never install a toolchain, and a
+# target that silently passes because the tool is missing is worse than no target at all.
+# So the split is: locally a missing cargo is a SKIP (a Rust-less machine is the normal case
+# here, and failing it would train people to ignore the gate), but under CI=true it is a
+# FAILURE — the desktop job installs the toolchain, and if that install ever breaks, the job
+# must go red instead of quietly checking nothing.
+#
+# Format, lint and typecheck the Tauri desktop shell. Skips when cargo is not installed.
+check-desktop:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v cargo >/dev/null; then
+      if [ "${CI:-}" = "true" ]; then
+        echo "cargo not installed, and CI=true: the desktop check must not be skipped in CI" >&2
+        exit 1
+      fi
+      echo "cargo not installed; skipping the desktop shell check." >&2
+      echo "Install a Rust toolchain (see apps/notes/desktop/README.md) to run it." >&2
+      exit 0
+    fi
+    for component in fmt clippy; do
+      cargo "$component" --version >/dev/null 2>&1 || {
+        echo "cargo-$component not installed; run 'rustup component add ${component/fmt/rustfmt}'" >&2
+        exit 1; }
+    done
+    cd apps/notes/desktop/src-tauri
+    # No web export needed: nothing here reads apps/notes/dist until `cargo tauri build`
+    # bundles it, so the gate runs on a checkout with no pnpm install behind it.
+    cargo fmt --all --check
+    cargo clippy --all-targets --all-features -- -D warnings
