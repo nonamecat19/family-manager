@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Commonplace
+GenericName=Notes
+Comment=Family notes — notebooks, blocks and sharing
+Exec=commonplace
+Icon=commonplace
+Terminal=false
+Categories=Office;Utility;TextEditor;
+Keywords=notes;notebook;capture;commonplace;
+StartupWMClass=Commonplace

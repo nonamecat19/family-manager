@@ -1,0 +1,30 @@
+[package]
+name = "commonplace"
+version = "0.1.0"
+description = "Commonplace — the family notes app, as a desktop window"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+# The binary is a four-line shim; everything real lives in the library so that the same
+# `run()` is reachable from a mobile entry point if this shell is ever pointed at one.
+[lib]
+name = "commonplace_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+# The one plugin. See src/lib.rs for why quick capture needs an OS-level shortcut.
+tauri-plugin-global-shortcut = "2"
+
+# A desktop shell is not a hot path, and the wheel of a debug build is not worth the size:
+# opt for the smallest binary the bundle can carry.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

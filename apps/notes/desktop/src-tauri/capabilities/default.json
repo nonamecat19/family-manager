@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Deliberately empty. The bundled frontend is the plain Expo web export — it imports no @tauri-apps/api and calls no command, so the webview needs no permission at all. The only native behaviour in this shell (the quick-capture shortcut) is driven entirely from Rust. Granting anything here would be granting it to a bundle that cannot use it.",
+  "windows": ["main"],
+  "permissions": []
+}
