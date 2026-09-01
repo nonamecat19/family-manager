@@ -43,6 +43,10 @@ const (
 	SubjectRecipesRecipeUpdated Subject = "recipes.recipe.updated"
 	SubjectRecipesRecipeDeleted Subject = "recipes.recipe.deleted"
 	SubjectRecipesMealPlanned   Subject = "recipes.meal.planned"
+
+	SubjectNotesNoteCreated  Subject = "notes.note.created"
+	SubjectNotesNoteUpdated  Subject = "notes.note.updated"
+	SubjectNotesShareGranted Subject = "notes.share.granted"
 )
 
 // ErrBadSubject is returned when a subject does not match `<domain>.<entity>.<verb>`.

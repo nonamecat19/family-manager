@@ -11,6 +11,7 @@ use (
 	./services/auth
 	./services/family
 	./services/finance
+	./services/notes
 	./services/recipes
 )
 
