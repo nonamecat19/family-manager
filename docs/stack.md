@@ -36,6 +36,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | app styling | NativeWind (Tailwind for RN) | `packages/theme`, `packages/config` | [0002](adr/0002-nativewind.md) |
 | app data layer | TanStack Query over `packages/api` | `packages/api` | — |
 | app secrets | expo-secure-store | `packages/auth` | — |
+| desktop shell | Tauri v2 wrapping the Expo web export, gated by `just check-desktop` (CI only; skips without cargo) | `apps/notes/desktop/src-tauri/tauri.conf.json`, `just check-desktop` | [0009](adr/0009-tauri-desktop.md) |
 | deployment | Docker Compose on a VPS + Caddy | `infra/` | [0004](adr/0004-compose-vps.md) |
 | language versions | Go 1.25 · Node ≥22 · pnpm 11 | `go.work`, `package.json` | — |
 | Go module paths | `github.com/nnc/family-manager/{services,libs/go,sdk/go}/<name>` | each `go.mod` | — |
@@ -54,8 +55,8 @@ Connect (:8080, apps, JSON)    ─┘        │
   compiled by **sqlc** into `db/`. Hand-writing a query struct instead of a `.sql` file is a
   review reject — the graph extracts `PERSISTS_TO` edges from those SQL files, so invisible
   queries mean an incomplete graph.
-- **viper** config, env-prefixed per service (`AUTH_`, `FAMILY_`…). Secrets have no defaults —
-  a missing secret must crash at boot, not silently default.
+- **viper** config, env-prefixed per service (`AUTH_`, `FAMILY_`, `NOTES_`…). Secrets have no
+  defaults — a missing secret must crash at boot, not silently default.
 - **slog** from `libs/go/logger`: text handler in dev, JSON in prod, request id + user id in
   the context. No `fmt.Println`, no logrus/zap — one logger repo-wide.
 - **air** for hot reload in dev; `just up` supplies Postgres/MinIO/NATS.
@@ -83,8 +84,12 @@ it reaches the human gate.
 
 - **expo-router** file-based navigation; screens live only in `apps/*`.
 - **NativeWind**: Tailwind classes on React Native. The token source is a Tailwind preset in
-  `packages/theme`, imported by every app's `tailwind.config.js` via `packages/config`. No
-  per-app color or spacing literals.
+  `packages/theme`, imported by every app's `tailwind.config.js` via `packages/config`; an app
+  may extend or repaint those roles in its own `tailwind.config.js` (`apps/notes` does, for
+  Nocturne). No colour literals anywhere in an app — colours, radii and font faces are read from
+  the config or the app's token module, never typed as a hex into a screen or `app.config.js`.
+  Arbitrary-value spacing and size utilities (`px-[18px]`, `w-[268px]`, `text-[15.5px]`) are
+  allowed for one-off layout; a value that repeats as a role earns a named token.
 - **TanStack Query** wraps every Connect call inside `packages/api` (query keys, cache,
   retry, optimistic updates). Apps never import `sdk/typescript` or call `fetch` directly.
 - **expo-secure-store** holds tokens; `packages/auth` owns refresh and the auth state machine.
