@@ -25,9 +25,9 @@ library that displaces a row in that table without an ADR.
 ## Layout
 
 ```
-apps/        Expo apps (family-manager, shopping, recipes)
+apps/        Expo apps (family-manager, shopping, recipes, notes)
 packages/    shared TS: ui, auth, api, theme, config
-services/    Go microservices, app-specific: auth, family, notifications, shopping
+services/    Go microservices, app-specific: auth, family, notes, notifications, shopping
 libs/go/     shared Go: auth, logger, rpc, database, events, storage
 libs/proto/  .proto contracts — the ONLY cross-boundary contract surface
 sdk/         generated clients: typescript/, go/
@@ -206,8 +206,13 @@ through the human gate.
 
 **TypeScript**: apps hold screens (expo-router) only. Anything reusable goes to `packages/*`;
 anything talking to a service goes through `sdk/typescript` (generated) wrapped by `packages/api`
-(TanStack Query). Styling is NativeWind against the `packages/theme` preset — no literal colors
-or spacing in an app. Cross-package imports use `workspace:*`.
+(TanStack Query). Styling is NativeWind against the `packages/theme` preset — an app may repaint
+the shared roles in its own `tailwind.config.js` (as `apps/notes` does for Nocturne), but **no
+colour literals in an app**: every colour, radius and font face comes from a config or token
+module, never a hex or `rgba()` typed into a screen, a component or `app.config.js`.
+Arbitrary-value spacing and size utilities (`px-[18px]`, `w-[268px]`, `text-[15.5px]`) are
+allowed for one-off layout; a value that repeats as a role earns a named token instead.
+Cross-package imports use `workspace:*`.
 
 **Every new module registers itself**: a Go module in `go.work`, a TS package in
 `pnpm-workspace.yaml` globs (automatic under `apps/`, `packages/`). Then `just graph`.
