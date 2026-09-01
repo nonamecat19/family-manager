@@ -90,6 +90,7 @@ services:
       ACME_EMAIL: ${ACME_EMAIL}
       AUTH_HOST: ${AUTH_HOST}
       FAMILY_HOST: ${FAMILY_HOST}
+      FINANCE_HOST: ${FINANCE_HOST}
       RECIPES_HOST: ${RECIPES_HOST}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
