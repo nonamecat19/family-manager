@@ -6,6 +6,7 @@ import { requestIdInterceptor } from "./requestId.ts";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import { FamilyService } from "@fm/sdk/family/v1/family_pb";
 import { FinanceService } from "@fm/sdk/finance/v1/finance_pb";
+import { NotesService } from "@fm/sdk/notes/v1/notes_pb";
 import { RecipesService } from "@fm/sdk/recipes/v1/recipes_pb";
 
 /**
@@ -19,7 +20,7 @@ const PUBLIC_PROCEDURES = new Set([
 ]);
 
 /** The services this package can reach. One transport, and one dev port, per name. */
-export type ServiceName = "auth" | "family" | "finance" | "recipes";
+export type ServiceName = "auth" | "family" | "finance" | "recipes" | "notes";
 
 export interface ClientsOptions {
   /**
@@ -62,6 +63,7 @@ export interface Clients {
   family: Client<typeof FamilyService>;
   finance: Client<typeof FinanceService>;
   recipes: Client<typeof RecipesService>;
+  notes: Client<typeof NotesService>;
 }
 
 /** Builds one client per service. Call once per app and put the result in a context. */
@@ -74,5 +76,6 @@ export function createClients(opts: ClientsOptions): Clients {
     family: createClient(FamilyService, createTransport(urlFor("family"), opts.getAccessToken)),
     finance: createClient(FinanceService, createTransport(urlFor("finance"), opts.getAccessToken)),
     recipes: createClient(RecipesService, createTransport(urlFor("recipes"), opts.getAccessToken)),
+    notes: createClient(NotesService, createTransport(urlFor("notes"), opts.getAccessToken)),
   };
 }
