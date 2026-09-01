@@ -8,6 +8,7 @@ apps/                Expo apps — screens + navigation only
   shopping/
   recipes/
   finance/
+  notes/             Commonplace — Expo app + a Tauri desktop shell in desktop/
 packages/            shared TS, consumed via workspace:*
   ui/                design-system components
   auth/              session/token handling, hooks
@@ -15,7 +16,7 @@ packages/            shared TS, consumed via workspace:*
   theme/             tokens, dark/light
   config/            eslint/tsconfig/babel/metro presets — single source of truth
 services/            Go microservices, one module each
-  auth/ family/ notifications/ shopping/
+  auth/ family/ notes/ notifications/ shopping/
 libs/go/             shared Go modules, one module each
   auth/ logger/ database/ events/
 libs/proto/          .proto contracts, versioned: <domain>/v1/*.proto
@@ -56,7 +57,8 @@ managed mode derives it (`libs/proto/buf.gen.yaml`).
 | `services/auth/` | — | **done** — moved, module renamed to `github.com/nnc/family-manager/services/auth`, contract moved to `libs/proto/auth/v1` |
 | `postgres/init/` | `infra/postgres/` | pending |
 | `docker-compose.yml` | root, plus `infra/` overrides | keep at root |
-| `notes-android/`, `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired |
+| `notes-android/` | `apps/notes/` + `services/notes/` | **replaced** — Commonplace on `notes.v1`; the Flutter dir is dead weight, delete it in its own change |
+| `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired — nothing has replaced it yet |
 
 Nothing in the table is moved automatically. Each move is its own change, and it must end with
 `just graph` showing the same edges under the new paths — the graph is how you prove a move did
@@ -76,6 +78,30 @@ just check-go
 
 The diff is the proof. Same edges under new ids = the move dropped nothing. A missing edge means
 a dependency was silently severed — fix before committing.
+
+## Object storage is public by default, which is why notes has no image blocks in v1
+
+`libs/go/storage`'s `EnsureBucket` creates the bucket **and sets an anonymous-read policy on
+it** (`ADR 0007`). That is right for `services/recipes`, whose photos are illustrations of a
+shared recipe, and wrong for `services/notes`, whose whole promise is that a note is private
+until its owner shares it: an object under a public-read bucket is fetchable by anyone holding
+the URL, whether or not the note was ever shared, and unsharing the note would not take the
+image back.
+
+So `services/notes` ships with **no `NOTES_STORAGE_*` environment at all** — not in
+`docker-compose.yml`, not in `infra/docker-compose.prod.yml`, not in its `.env.example`. With
+`STORAGE_ENDPOINT` unset, `imagesOrNil` logs `image storage disabled` and returns nil, exactly
+as `services/recipes` does; the service boots, every procedure but one works, `UploadNoteImage`
+errors — and, the point of the whole arrangement, `EnsureBucket` is never called, so no notes
+bucket and no public policy exist to leak through.
+
+The contract keeps `UploadNoteImage` and `BlockType.BLOCK_TYPE_IMAGE`: deleting either is a
+breaking change (`just proto-check`) that buys nothing, and the numbers have to survive for the
+day the feature returns. The proto says so in the comments. What the feature actually needs
+first is **presigned reads in `libs/go/storage`** — a per-object, expiring URL minted for a
+caller the service has already authorised — at which point the notes bucket can be private and
+`UploadNoteImage` can be wired to a real editor button. Configuring `NOTES_STORAGE_*` before
+that exists re-opens the hole; it is not a feature flag.
 
 ## Codegen
 
