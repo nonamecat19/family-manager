@@ -1,5 +1,5 @@
 # Caddy is the only process on this box that listens on a public port. It terminates TLS for the
-# four API subdomains and reverse-proxies to the compose-internal service names; nothing else is
+# five API subdomains and reverse-proxies to the compose-internal service names; nothing else is
 # published. Mounted read-only at /etc/caddy/Caddyfile.
 #
 # One subdomain per service rather than one host with /auth, /family, … path prefixes: the apps
@@ -12,7 +12,7 @@
 # below to already resolve to this box's public IP with :80 reachable. If the A records still
 # point elsewhere, Caddy starts, serves the sites over plain HTTP, and retries issuance in a
 # loop — the API looks broken over https:// and `docker compose logs caddy` fills with ACME
-# failures. That is a human step: point auth/family/finance/recipes at the VPS, then restart
+# failures. That is a human step: point auth/family/finance/recipes/notes at the VPS, then restart
 # caddy. Repeated failed issuance also counts against Let's Encrypt rate limits, so fix DNS
 # before restarting in a loop.
 {
@@ -77,4 +77,8 @@
 
 {$RECIPES_HOST} {
 	import api recipes:8080
+}
+
+{$NOTES_HOST} {
+	import api notes:8080
 }

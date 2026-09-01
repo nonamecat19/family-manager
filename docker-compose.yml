@@ -193,6 +193,46 @@ services:
       retries: 3
       start_period: 30s
 
+  notes:
+    build:
+      context: .
+      dockerfile: services/notes/Dockerfile
+    environment:
+      NOTES_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/notes?sslmode=disable
+      NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      NOTES_NATS_URL: nats://nats:4222
+      NOTES_HTTP_PORT: "8080"
+      # No NOTES_STORAGE_* on purpose, and this is a security control rather than an omission.
+      # v1 ships no image blocks, so the service runs in the degraded storage mode it already
+      # supports: imagesOrNil logs "image storage disabled", UploadNoteImage errors, and — the
+      # point — EnsureBucket is never called, so no bucket is created and no policy is set.
+      # libs/go/storage sets an anonymous-read policy on every bucket it makes (docs/adr/0007),
+      # which would make a photo inside a never-shared note fetchable by anyone holding its URL
+      # and would survive revoking the share. A note is private by default; that bucket is not.
+      # Restoring these lines re-opens that hole — the fix is presigned reads in libs/go/storage,
+      # not this environment. See docs/architecture.md and libs/proto/notes/v1/notes.proto.
+      NOTES_LOG_JSON: "true"
+    ports:
+      - "${NOTES_PORT:-8085}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        # service_healthy, not service_started: notes fetches auth's JWKS at boot, and a
+        # container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image has no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
 secrets:
   auth-signing-key:
     file: ./infra/secrets/auth-signing-key.pem

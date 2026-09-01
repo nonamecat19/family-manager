@@ -4,7 +4,7 @@
 #
 #   ssh root@79.108.160.103 '/opt/family-manager/deploy.sh <commit-sha>'
 #
-# Pulls the pinned tag, brings the stack up, waits for all four services to report healthy, and
+# Pulls the pinned tag, brings the stack up, waits for all five services to report healthy, and
 # rolls back to the previously deployed tag if any of them does not. Safe to run twice in
 # a row with the same tag: everything it does is idempotent.
 #
@@ -17,7 +17,12 @@ DEPLOY_DIR="${DEPLOY_DIR:-/opt/family-manager}"
 PROJECT="family-manager"
 COMPOSE_FILE="docker-compose.prod.yml"
 STATE_FILE=".deployed-tag"
-SERVICES=(auth family finance recipes)
+# Every application service in docker-compose.prod.yml, and nothing else. This is what
+# wait_healthy iterates: a service running on the box but missing from this list is never
+# waited on, so a container that never becomes healthy is invisible — the script writes
+# .deployed-tag, reports success, and the rollback below never fires for it. Add a service
+# here in the same change that adds it to the compose file.
+SERVICES=(auth family finance notes recipes)
 # Migrations run at boot, so first start on an empty database is the slow case. 180s is chosen
 # to be longer than that, not longer than a healthy restart.
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
@@ -35,16 +40,17 @@ compose() { docker compose -p "$PROJECT" -f "$COMPOSE_FILE" "$@"; }
 [[ -f .env ]] || fail "$DEPLOY_DIR/.env is missing — copy infra/.env.example and fill it in"
 [[ -f Caddyfile ]] || fail "$DEPLOY_DIR/Caddyfile is missing"
 # nats.conf carries the JetStream store limits, which have no command-line equivalent. Without
-# it nats exits immediately, and family, finance and recipes all wait on nats being healthy — so a
-# missing file here is three services down, which is worth catching before anything is replaced.
+# it nats exits immediately, and family, finance, notes and recipes all wait on nats being healthy
+# — so a missing file here is four services down, which is worth catching before anything is
+# replaced.
 [[ -f nats.conf ]] || fail "$DEPLOY_DIR/nats.conf is missing — nats will not start without it"
 
 # The signing key, and its permissions. Compose bind-mounts a file-backed secret with the host's
 # ownership and mode — `mode:` on the secret is rejected and the service-level uid/gid/mode are
 # ignored with a warning — so a key that is root-owned 0600 (which is what a careful admin, or a
 # hardening script, will leave behind) is unreadable by the distroless `nonroot` uid the auth
-# image runs as, and auth exits at boot while the other three come up fine. That is a deploy
-# that looks 3/4 successful and has no working login, so it is corrected here rather than
+# image runs as, and auth exits at boot while the other four come up fine. That is a deploy
+# that looks 4/5 successful and has no working login, so it is corrected here rather than
 # reported. deploy.sh runs as root, so the chown is ours to make.
 KEY=secrets/auth-signing-key.pem
 KEY_UID=65532 # distroless nonroot

@@ -10,3 +10,4 @@ CREATE DATABASE family OWNER admin;
 -- volume initialised, so the service failed to connect nowhere but prod.
 CREATE DATABASE recipes OWNER admin;
 CREATE DATABASE finance OWNER admin;
+CREATE DATABASE notes OWNER admin;

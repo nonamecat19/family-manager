@@ -1,4 +1,4 @@
-# Build the four service images in CI and push-deploy them to the VPS.
+# Build the five service images in CI and push-deploy them to the VPS.
 #
 # The VPS is 1 vCPU / 1.6 GiB with no swap (see the deploy contract): `go build` there would
 # OOM or crawl, so images are NEVER built on the box. CI builds and pushes to GHCR; the VPS
@@ -39,12 +39,13 @@ on:
 
 # No `pull_request` trigger, and no path filters.
 #
-# Path filters were considered and rejected: the four Dockerfiles copy go.work, libs/go/ and
+# Path filters were considered and rejected: the five Dockerfiles copy go.work, libs/go/ and
 # sdk/go/ as well as their own service, migrations live under services/*, and the compose
 # overlay on the VPS is not in this repo's blast-radius calculation at all. A filter that is
 # subtly wrong silently skips a deploy and leaves production on an old image with a green
 # check next to the commit — a failure mode nobody notices for days. An extra four-minute
-# build on a README push costs nothing by comparison.
+# build on a README push costs nothing by comparison — the matrix legs run concurrently, so
+# adding a service widens the run rather than lengthening it.
 
 permissions:
   contents: read
@@ -61,7 +62,7 @@ jobs:
     #
     # There is no `needs:` across workflows; the only mechanism is `workflow_run`, which runs
     # the default branch's copy of the workflow, reports its status somewhere nobody looks, and
-    # would serialise a ~4 minute verify in front of every deploy. For a four-service family
+    # would serialise a ~4 minute verify in front of every deploy. For a five-service family
     # app the cheaper failure handling is forward: verify runs on this same push, and because
     # every image is tagged with its commit SHA, backing out is `workflow_dispatch` with the
     # previous SHA rather than a revert-and-rebuild. If this ever grows real users, the trade
@@ -70,9 +71,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
-      fail-fast: false # one broken service should not hide whether the other three build
+      fail-fast: false # one broken service should not hide whether the other four build
       matrix:
-        service: [auth, family, finance, recipes]
+        # Every service with a Dockerfile under services/ must be listed here. A service that is
+        # in infra/docker-compose.prod.yml but missing from this matrix has no image in GHCR,
+        # and deploy.sh's `compose pull` — the first thing it does, under `set -euo pipefail` —
+        # aborts on "manifest unknown" before anything starts. That fails the WHOLE deploy, not
+        # just the new service, so this list and the compose file are edited together.
+        service: [auth, family, finance, notes, recipes]
     steps:
       - uses: actions/checkout@v7
 
@@ -102,12 +108,12 @@ jobs:
           # actually attached to that repo, so without it the deploy job's ephemeral login
           # below authenticates fine and is then denied on the pull.
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          # Cache scope is per service, not shared. The four Dockerfiles do share their base
+          # Cache scope is per service, not shared. The five Dockerfiles do share their base
           # layers (same golang:1.25-alpine, same `go mod download all` over the same module
           # set), which makes one common scope look attractive — but the matrix legs run
           # concurrently and type=gha,mode=max is last-writer-wins per scope, so a shared key
-          # means four jobs overwriting each other's manifest and each finding a cache written
-          # for a different final layer. Separate scopes cost four copies of the module cache
+          # means five jobs overwriting each other's manifest and each finding a cache written
+          # for a different final layer. Separate scopes cost five copies of the module cache
           # and give every leg a stable hit on its own previous run, which is the layer that
           # actually takes the time.
           cache-from: type=gha,scope=${{ matrix.service }}
