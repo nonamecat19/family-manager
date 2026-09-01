@@ -135,7 +135,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         # The box needs a GHCR credential to `docker compose pull`, because GHCR packages are
         # private by default. Of the three ways to give it one, this job injects a token that
         # dies with the job:
