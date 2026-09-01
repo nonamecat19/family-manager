@@ -17,7 +17,7 @@
     "test": "echo \"config package: no tests\""
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
     "expo": "*",
