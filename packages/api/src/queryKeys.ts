@@ -1,3 +1,4 @@
+import type { NoteListFilters } from "./notes.ts";
 import type { RecipeListFilters } from "./recipes.ts";
 import {
   periodKey,
@@ -54,6 +55,27 @@ function sorted(values: readonly string[] | undefined): string[] {
   return values ? [...values].sort() : [];
 }
 
+/**
+ * Filters normalized to one canonical shape, for the same reason the transaction filters are:
+ * the notes list pane rebuilds its filter object on every render, and an object that differs
+ * only in which optional keys were spelled out must not be a second cache entry — that is a
+ * refetch of the whole list every time the sidebar re-renders.
+ *
+ * `sort` and `facet`-like enum fields normalize to their proto zero value rather than to
+ * undefined, so "not set" and "explicitly the default" key the same entry.
+ */
+export function normalizeNoteFilters(filters: NoteListFilters = {}) {
+  return {
+    notebookId: filters.notebookId ?? "",
+    starredOnly: filters.starredOnly ?? false,
+    includeArchived: filters.includeArchived ?? false,
+    archivedOnly: filters.archivedOnly ?? false,
+    sharedOnly: filters.sharedOnly ?? false,
+    sort: filters.sort ?? 0,
+    pageSize: filters.pageSize ?? 0,
+  } as const;
+}
+
 export interface CategoryTreeFilters {
   kind?: number;
   includeArchived?: boolean;
@@ -86,6 +108,26 @@ export const queryKeys = {
     ["recipes", "totalIngredients", fromDate, toDate] as const,
   sumIngredients: (items: readonly { recipeId: string; servings: number }[]) =>
     ["recipes", "sumIngredients", items] as const,
+
+  /* -------------------------------------------------------------------- notes */
+
+  // The notes domain root. A note edit moves the list row, the notebook's count and the
+  // activity rail at once, so mutations invalidate this rather than naming each reader.
+  notes: ["notes"] as const,
+  notesList: (filters: NoteListFilters = {}) => ["notes", "list", normalizeNoteFilters(filters)] as const,
+  note: (id: string) => ["notes", "detail", id] as const,
+  notebooks: (includeArchived = false) => ["notes", "notebooks", includeArchived] as const,
+  // The query is trimmed and lowercased here: the palette fires a key at a time and two
+  // spellings of the same search must not be two round trips.
+  noteSearch: (query: string, facet = 0) =>
+    ["notes", "search", query.trim().toLowerCase(), facet] as const,
+  // Shares hang off either a note or a notebook, and the two id spaces are separate — the
+  // kind is part of the key so a notebook id can never read a note's share list.
+  noteShares: (id: string, kind: "note" | "notebook" = "note") => ["notes", "shares", kind, id] as const,
+  noteComments: (id: string, includeResolved = false) =>
+    ["notes", "comments", id, includeResolved] as const,
+  noteActivity: (id: string) => ["notes", "activity", id] as const,
+  sharedWithMe: () => ["notes", "sharedWithMe"] as const,
 
   /* ------------------------------------------------------------------ finance */
 

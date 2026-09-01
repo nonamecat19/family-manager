@@ -44,6 +44,7 @@ export { requestIdInterceptor, newRequestId, REQUEST_ID_HEADER } from "./request
 export {
   queryKeys,
   normalizeTransactionFilters,
+  normalizeNoteFilters,
   type TransactionFilters,
   type CategoryTreeFilters,
   type BudgetFilters,
@@ -71,3 +72,4 @@ export { toWireScope, toWirePeriod, toWireGranularity } from "./scopeWire.ts";
 export { bumpTemplateUsage, removeById, type UsageCounted } from "./optimistic.ts";
 export * from "./hooks.ts";
 export * from "./recipes.ts";
+export * from "./notes.ts";
