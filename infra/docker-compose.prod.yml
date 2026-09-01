@@ -92,9 +92,10 @@ services:
       FAMILY_HOST: ${FAMILY_HOST}
       FINANCE_HOST: ${FINANCE_HOST}
       RECIPES_HOST: ${RECIPES_HOST}
+      NOTES_HOST: ${NOTES_HOST}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Issued certificates and ACME account keys. Losing this volume means re-issuing four
+      # Issued certificates and ACME account keys. Losing this volume means re-issuing five
       # certificates and burning Let's Encrypt rate limit; it is the one piece of state here
       # that is not in Postgres.
       - caddydata:/data
@@ -109,6 +110,8 @@ services:
       finance:
         condition: service_started
       recipes:
+        condition: service_started
+      notes:
         condition: service_started
     restart: unless-stopped
     mem_limit: 96m
@@ -275,6 +278,49 @@ services:
       RECIPES_STORAGE_PUBLIC_URL: ${R2_PUBLIC_URL}
       RECIPES_LOG_JSON: "true"
       RECIPES_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        # service_healthy now that auth reports it: every one of these fetches auth's JWKS at
+        # boot, and a container that exists is not one that has migrated and can serve it.
+        condition: service_healthy
+    # The service binary is its own healthcheck: the distroless image ships no shell and no
+    # wget, so `/server -healthcheck` probes /healthz over loopback and exits on the answer.
+    # start_period covers migrations, which run at boot and are the slow part of a cold start
+    # on a 1 vCPU box.
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
+  notes:
+    image: ghcr.io/nonamecat19/family-manager/notes:${IMAGE_TAG:-latest}
+    environment:
+      NOTES_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/notes?sslmode=disable
+      NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      NOTES_NATS_URL: nats://nats:4222
+      NOTES_HTTP_PORT: "8080"
+      # No NOTES_STORAGE_* on purpose, and this is a security control rather than an omission.
+      # v1 ships no image blocks, so the service runs in the degraded storage mode it already
+      # supports: imagesOrNil logs "image storage disabled", UploadNoteImage errors, and no
+      # bucket is ever provisioned. libs/go/storage sets an anonymous-read policy on every
+      # bucket it creates (ADR 0007), so a photo inside a never-shared note would be fetchable
+      # by anyone holding its URL, and revoking the share would not revoke the image. A note is
+      # private by default; that bucket is not. Do not add an R2 bucket here to "turn images on"
+      # — the fix is presigned reads in libs/go/storage first. See docs/architecture.md and the
+      # UploadNoteImage comment in libs/proto/notes/v1/notes.proto.
+      NOTES_LOG_JSON: "true"
+      NOTES_LOG_LEVEL: ${LOG_LEVEL:-info}
       GOMEMLIMIT: 140MiB
       GOGC: "50"
     depends_on:

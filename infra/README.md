@@ -22,7 +22,7 @@ being a deploy. CI builds; the VPS only pulls.
 | `restore.sh` | VPS, on demand | restore one database, or `--drill` to rehearse without touching it |
 | `wizards/r2-setup.sh` | your workstation | walks Cloudflare's dashboard, validates the credentials |
 
-`.github/workflows/deploy.yml` is the other half: it builds the four images, pushes them to
+`.github/workflows/deploy.yml` is the other half: it builds the service images, pushes them to
 GHCR, and SSHes in to run `deploy.sh`.
 
 ## Topology
@@ -36,13 +36,14 @@ laptop and production except the hostnames.
   auth.nonamecat.pp.ua    ─┐                      ┌─ auth     :8080
   family.nonamecat.pp.ua  ─┤                      ├─ family   :8080  (+ :9090 internal gRPC)
   finance.nonamecat.pp.ua ─┼─→ caddy (TLS) ──────→┼─ finance  :8080  (+ :9090 internal gRPC)
-  recipes.nonamecat.pp.ua ─┘                      └─ recipes  :8080
+  recipes.nonamecat.pp.ua ─┤                      ├─ recipes  :8080
+  notes.nonamecat.pp.ua   ─┘                      └─ notes    :8080
                                                        │
                                     postgres ──────────┤
                                     nats ──────────────┘
 ```
 
-Caddy is the only container that publishes a host port. Postgres, NATS and all four services
+Caddy is the only container that publishes a host port. Postgres, NATS and all five services
 are reachable only on the compose network — `ufw` would not save us if they were published,
 because Docker writes its own iptables chain ahead of ufw's.
 
@@ -56,7 +57,7 @@ Steps 1 and 2 are yours; the rest is mechanical.
 
 ### 1. Point DNS at the box
 
-All three A records must resolve **before** the first start. Caddy issues certificates over the
+All five A records must resolve **before** the first start. Caddy issues certificates over the
 ACME HTTP-01 challenge, so a hostname that does not yet resolve to this box cannot get one, and
 repeated failed issuance counts against Let's Encrypt rate limits.
 
@@ -65,13 +66,15 @@ auth.nonamecat.pp.ua      A  79.108.160.103
 family.nonamecat.pp.ua    A  79.108.160.103
 finance.nonamecat.pp.ua   A  79.108.160.103
 recipes.nonamecat.pp.ua   A  79.108.160.103
+notes.nonamecat.pp.ua     A  79.108.160.103
 ```
 
 They currently point at `135.181.41.169`. Verify with `getent ahostsv4 auth.nonamecat.pp.ua`
 (`dig` needs the `dnsutils` package and is not installed by default on either end).
 
-If you use R2's custom domain for images, that hostname needs a record too — Cloudflare creates
-it for you when the bucket is in a zone you control.
+If you use R2's custom domain for recipe images, that hostname needs a record too — Cloudflare
+creates it for you when the bucket is in a zone you control. Notes has no bucket and no such
+host; see step 2.
 
 **If the stack started before DNS was correct, restart Caddy after fixing it.** Caddy backs off
 exponentially between failed ACME attempts, and after a handful of failures the next retry can
@@ -81,6 +84,13 @@ issuance completes in seconds. Check what actually failed first: an `unauthorize
 naming an IP that is not this box means DNS, not Caddy.
 
 ### 2. Provision R2
+
+One bucket, `recipes`, and deliberately none for notes: `libs/go/storage` puts an
+anonymous-read policy on every bucket it creates, so an image in a private note would be
+fetchable by anyone holding its URL and un-sharing the note could not take it back — which is
+why notes ships no image blocks in v1, is passed no `NOTES_STORAGE_*` by either compose file,
+and must not be given a bucket here. Do not add one back before object storage can hold a
+private object (docs/architecture.md).
 
 ```sh
 ./infra/wizards/r2-setup.sh
@@ -132,8 +142,8 @@ ssh root@79.108.160.103 'chown 65532:65532 /opt/family-manager/secrets/auth-sign
 ownership and mode, and ignores every override — `mode:` on a top-level secret is rejected
 outright, and the service-level `uid`/`gid`/`mode` are dropped with a warning. A key left
 `0600 root:root` is unreadable by uid 65532, the `nonroot` user the distroless image runs as,
-so auth exits at boot while the other three services come up fine. That is a deploy that looks
-three-quarters successful and has no working login. `deploy.sh` re-checks and repairs this on
+so auth exits at boot while the other four services come up fine. That is a deploy that looks
+four-fifths successful and has no working login. `deploy.sh` re-checks and repairs this on
 every run, but a hand-started stack will not.
 
 ### 6. Fill in `.env`
@@ -170,16 +180,16 @@ ssh root@79.108.160.103 '/opt/family-manager/deploy.sh <commit-sha>'
 
 ## Redeploy
 
-Every push to `master` builds the four images, tags them with the commit SHA and `latest`,
+Every push to `master` builds the service images, tags them with the commit SHA and `latest`,
 pushes to GHCR, then SSHes in and runs `deploy.sh <sha>`. The deploy is serialised — a second
 push waits rather than interleaving with the first, because interrupting a deploy between
 `pull` and `up -d` leaves the box running a mix of old and new images.
 
 `deploy.sh` pulls first and separately, so a bad tag or an expired credential fails while the
-old containers are still serving. After `up -d` it probes `/healthz` on all four services from
-inside the Caddy container — the services publish no ports and their distroless images have no
-shell, so there is no other vantage point — and rolls back to the previously deployed tag if
-any of them does not answer.
+old containers are still serving. After `up -d` it waits on the container healthchecks of every
+service in its `SERVICES=` list — the services publish no ports and their distroless images have
+no shell, so `/server -healthcheck` inside the container is the only vantage point — and rolls
+back to the previously deployed tag if any of them does not become healthy.
 
 ## Rollback
 
@@ -204,11 +214,15 @@ The whole point of the tuning. Total 1.6 GiB, plus the 2 GiB swapfile bootstrap 
 | postgres | 320m | `shared_buffers=128MB`, `max_connections=50`, `work_mem=4MB` |
 | nats | 128m | JetStream capped at 512MB file / 32MB memory store |
 | caddy | 96m | |
-| auth, family, finance, recipes | 160m each | `GOMEMLIMIT=140MiB`, `GOGC=50` |
+| auth, family, finance, recipes, notes | 160m each | `GOMEMLIMIT=140MiB`, `GOGC=50` |
 
-≈1.34 GiB committed, leaving ~240 MiB for the OS. finance was the fourth service onto a box
-sized for three; the next one needs either a bigger box or a smaller limit somewhere, and the
-honest number belongs here rather than in a surprise OOM kill.
+≈1.5 GiB committed against 1.6 GiB, leaving ~80 MiB for the OS. That is over the line the
+previous entry drew: finance was the fourth service onto a box sized for three and the note
+here said the next one needs either a bigger box or a smaller limit somewhere. notes is the
+fifth and neither has happened yet, so the stack now leans on the 2 GiB swapfile under any
+concurrent load. Before or shortly after the first notes deploy, either resize the box or drop
+the per-service limit (140m/`GOMEMLIMIT=120MiB` for all five buys back 100 MiB). The honest
+number belongs here rather than in a surprise OOM kill.
 
 Two settings that look redundant and are not. `mem_limit` rather than
 `deploy.resources.limits`: the latter is a swarm key that `docker compose up` ignores outside
@@ -225,7 +239,7 @@ is now a nightly backup, and a restore drill that has been run.
 `/var/backups/family-manager/<UTC timestamp>/`:
 
 - `pg_dump -Fc` of every non-template database, discovered from the cluster rather than listed,
-  so a fifth service is backed up without anyone editing the script.
+  so the `notes` database is backed up without anyone editing the script.
 - `globals.sql` — roles and grants. Without it, a restore onto a fresh cluster produces
   databases whose owner does not exist.
 - `config.tar.gz` — `.env` and `secrets/`, mode 0600. Not data, but the signing key and the R2
@@ -277,6 +291,33 @@ is exactly the state the box is in mid-deploy.
 - **No rolling deploys.** A service restart is a brief outage; mobile clients retry. Not
   acceptable during a migration, which is why migrations get a human gate.
 - **Observability** is `docker compose logs` and nothing else. See ADR 0006 for the intent.
+- **Adding a service touches five files, not one.** A service belongs in
+  `docker-compose.prod.yml`, in the `service:` matrix of `.github/workflows/deploy.yml`, in
+  `SERVICES=` in `deploy.sh`, in `Caddyfile`, and in `.env.example`. Miss the matrix and the
+  image is never pushed, so `deploy.sh`'s `compose pull` — the first thing it does, under
+  `set -euo pipefail` — aborts on "manifest unknown" and the WHOLE deploy fails before
+  anything is replaced. Miss `SERVICES=` and the opposite happens: the new container is never
+  waited on, so one that never becomes healthy is silently reported as a success and the
+  rollback path cannot see it either. Miss `.env.example` and a box provisioned from it hands
+  Caddy a site block with an empty address.
+- **The live cluster has no `notes` database yet, and the deploy will not create one.**
+  `postgres/init/init-services.sql` gained `CREATE DATABASE notes OWNER admin;`, but that file
+  is a `docker-entrypoint-initdb.d` script: Postgres runs it once, on an EMPTY data volume, and
+  the production volume has not been empty since the first deploy. Copying the file up (step 4)
+  changes nothing on its own. So before the first notes deploy, someone creates the database by
+  hand — it is one statement, and it is a human step because it is the only one that touches the
+  running cluster:
+
+  ```sh
+  ssh root@79.108.160.103 \
+    'docker compose -f /opt/family-manager/docker-compose.prod.yml exec -T postgres \
+       psql -U admin -c "CREATE DATABASE notes OWNER admin;"'
+  ```
+
+  Skip it and the notes container boots, fails to connect, and restarts forever while every
+  other service is fine — which reads like a notes bug rather than a missing database. The
+  service applies its own migrations on the next boot, so nothing else is needed.
+
 - **The live `finance` database still holds the OLD finance schema, and that blocks the
   rebuilt service from starting correctly.** finance was deleted from the repo and has now
   been rebuilt against a new contract; its migrations start again at `000001_init`. The
