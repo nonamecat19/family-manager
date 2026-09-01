@@ -7,14 +7,14 @@ on:
     branches: [master]
   pull_request:
 
-# Read-only. Nothing here publishes anything: the four jobs build, lint and compare. The
+# Read-only. Nothing here publishes anything: the six jobs build, lint and compare. The
 # workflow-level default would otherwise be whatever the repository setting happens to be,
 # which is a property of a settings page rather than of this file.
 permissions:
   contents: read
 
 # One verify per ref. A second push to a PR makes the first run's answer irrelevant, and
-# cancelling it returns four runners instead of paying for a result nobody will read.
+# cancelling it returns six runners instead of paying for a result nobody will read.
 # master is excluded from the cancellation: its runs are the record of whether each commit on
 # the branch was green, and cancelling one leaves a gap in that record.
 concurrency:
@@ -98,3 +98,47 @@ jobs:
         with:
           node-version: 22
       - run: node tools/repo-graph/extract.mjs --check
+
+  desktop:
+    # apps/notes/desktop is the only Rust in the repo (ADR 0009). It is not in `just verify` —
+    # a Rust-less machine skips it locally — so this job is the only thing that can turn red
+    # when the Tauri shell or its capabilities file breaks. CI=true is what makes the target
+    # refuse to skip.
+    #
+    # Deliberately NOT path-filtered, so a TypeScript-only PR does pay for the apt install and
+    # the toolchain. Three reasons, in order:
+    #   - Actions has no per-job `paths:`. The only ways to get one are a `dorny/paths-filter`
+    #     gate job every other job would then `needs:` — the "fake edges between jobs" line 2
+    #     rules out — or splitting this into its own workflow file, which gives it a separate
+    #     concurrency group and a separate required check.
+    #   - Nothing else in this repo filters: no job here does, and deploy.yml rejects the idea
+    #     outright, on the grounds that a subtly wrong filter skips the check and leaves a
+    #     green tick next to a commit nobody verified.
+    #   - The filter would have to list apps/notes/desktop/**, the justfile target, and this
+    #     file — and the Tauri config reads apps/notes/dist, so a web-side change can break the
+    #     bundle without touching src-tauri at all.
+    # Swatinem/rust-cache below already takes the repeat cost down to the apt install and a
+    # cache restore; if that stops being acceptable, split this into its own workflow rather
+    # than growing a gate job here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # webkit2gtk-4.1 and gtk3 are build-time pkg-config dependencies of tauri/wry, not just
+      # runtime ones: without them the *-sys crates fail to configure and nothing compiles.
+      - name: Linux webview dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libxdo-dev libssl-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/notes/desktop/src-tauri
+      - run: just --version || (curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin)
+      # No pnpm install and no `expo export` here: the checks run against the Rust crate, and
+      # apps/notes/dist is only read when `cargo tauri build` bundles the web assets.
+      - run: just check-desktop
