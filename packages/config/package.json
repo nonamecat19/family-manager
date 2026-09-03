@@ -9,7 +9,8 @@
     "./eslint.config.mjs": "./eslint.config.mjs",
     "./babel.config.cjs": "./babel.config.cjs",
     "./metro.config.cjs": "./metro.config.cjs",
-    "./tailwind.preset.cjs": "./tailwind.preset.cjs"
+    "./tailwind.preset.cjs": "./tailwind.preset.cjs",
+    "./nocturne.preset.cjs": "./nocturne.preset.cjs"
   },
   "scripts": {
     "lint": "echo \"config package: nothing to lint\"",
