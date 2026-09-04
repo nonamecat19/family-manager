@@ -1,22 +1,24 @@
 /**
- * Nocturne — the design system Commonplace is drawn from (the imported design's
- * `styles.css`; the same system apps/finance carries, extended here with the second accent
- * and the two pane grounds this app's three-column layout needs).
+ * Nocturne, as Commonplace draws it.
  *
- * These values are notes-only on purpose: @fm/theme and @fm/config are shared with the other
- * apps, so retuning them there would repaint those too. The Tailwind mirror lives in
- * `apps/notes/tailwind.config.js` — that file must stay CommonJS, which is why the palette
- * exists twice. Change one, change the other.
+ * The core — the neutral and accent ramps, the three radii, the ground/surface/text/divider
+ * roles — lives in `@fm/theme` (`nocturneCore`), shared with apps/finance, which is drawn from
+ * the same system. What stays here is what only THIS design uses: the two pane grounds the
+ * three-column layout needs, and the muted second accent.
+ *
+ * The Tailwind mirror lives in `apps/notes/tailwind.config.js` — that file must stay CommonJS,
+ * which is why the palette exists twice. Change one, change the other.
  *
  * Nocturne is DARK ONLY. There is no light pass of these screens; a component that needs a
  * "light" surface uses a lighter neutral, never a light theme.
  */
+import { initialOf, nocturneCore, type Tint } from "@fm/theme";
+
+export { initialOf, type Tint };
 
 export const nocturne = {
-  /** The app ground. Every screen sits on it; no screen paints its own background. */
-  bg: "#161826",
-  /** Cards, rows, list groups, the editor's block chrome. */
-  surface: "#232532",
+  ...nocturneCore,
+
   /**
    * The sidebar's ground — a shade under `bg`, which is how the design separates navigation
    * from content without a border. A named token rather than a literal in a screen: it is a
@@ -25,35 +27,6 @@ export const nocturne = {
   rail: "#1b1d2c",
   /** The note-list pane's ground, a shade over the rail and under `surface`. */
   list: "#191b29",
-  text: "#e9e9ed",
-  /** The signature rule. It is drawn faded at both ends — see `Divider` in ui.tsx. */
-  divider: "rgba(233,233,237,.16)",
-
-  neutral: {
-    100: "#f3f5fe",
-    200: "#e4e7f5",
-    300: "#cfd3e5",
-    400: "#b2b6ca",
-    500: "#9397ab",
-    600: "#75798c",
-    700: "#595d6c",
-    800: "#3f424d",
-    900: "#292b31",
-  },
-
-  /** Blurple — the primary accent: the primary button's outline, stars, active rail rows. */
-  accent: {
-    DEFAULT: "#9184d9",
-    100: "#f5f4ff",
-    200: "#e7e5fe",
-    300: "#d2cefd",
-    400: "#b5abfc",
-    500: "#968ae0",
-    600: "#796cbf",
-    700: "#5d5294",
-    800: "#423a6a",
-    900: "#2b2741",
-  },
 
   /** The muted second accent: avatars, share chips, comment marks. */
   accent2: {
@@ -68,22 +41,10 @@ export const nocturne = {
     800: "#423e5d",
     900: "#2b293a",
   },
-
-  /** Corner radii, the design's three steps. Mirrored in tailwind's `rounded-{sm,md,lg}`. */
-  radius: {
-    sm: 4,
-    md: 8,
-    lg: 14,
-  },
 } as const;
 
 /** The type system: Inter, four weights, loaded per file in app/_layout.tsx. */
 export const FONT_NOTE = "Inter; weights 400/500/600/700" as const;
-
-export interface Tint {
-  bg: string;
-  fg: string;
-}
 
 /**
  * The tint a person is drawn in. Family members are a handful of names, not a fixed set, so a
@@ -111,8 +72,3 @@ function hashString(s: string): number {
   return h;
 }
 
-/** The uppercase initial an avatar shows. */
-export function initialOf(text: string): string {
-  const first = text.trim()[0];
-  return first ? first.toUpperCase() : "?";
-}
