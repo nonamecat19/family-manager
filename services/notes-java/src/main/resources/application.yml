@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: notes-java
+
+  datasource:
+    url: ${NOTES_DB_URL:jdbc:postgresql://localhost:5432/notes}
+    username: ${NOTES_DB_USER:postgres}
+    # No default on purpose: an unresolved placeholder fails the context at startup, which is
+    # the behaviour wanted here. A default would let the service boot against a guessed secret.
+    password: ${NOTES_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    # Off, so a lazy association touched outside a service transaction fails in a test rather
+    # than silently issuing queries from the view layer. Services return DTOs for this reason.
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.example.notesjava: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    password: ${NOTES_DB_PASSWORD:secret}
+  jpa:
+    show-sql: true
+logging:
+  level:
+    com.example.notesjava: DEBUG
+    org.hibernate.SQL: DEBUG
