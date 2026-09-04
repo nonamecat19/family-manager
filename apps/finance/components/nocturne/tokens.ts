@@ -1,55 +1,29 @@
 /**
- * Nocturne — the design system this app is drawn from (design canvas
- * `docs/design/finance/Family Money Manager.dc.html`, DS bundle
- * `nocturne-987014d8-7bfe-4008-8599-21473d96769b`).
+ * Nocturne, as apps/finance draws it.
  *
- * These values are finance-only on purpose: @fm/theme and @fm/config are shared with
- * apps/recipes, so retuning them there would repaint that app too. The Tailwind mirror lives
- * in `apps/finance/tailwind.config.js` — that file must stay CommonJS, which is why the
- * palette exists twice. Change one, change the other.
+ * The core — the neutral and accent ramps, the three radii, the ground/surface/text/divider
+ * roles — lives in `@fm/theme` (`nocturneCore`), shared with apps/notes, which is drawn from
+ * the same system. What stays here is what only THIS design uses: the header gradient, the
+ * canvas and scrim behind the phone frame, the overspend hue, and the spacing scale.
+ *
+ * The Tailwind mirror lives in `apps/finance/tailwind.config.js` — that file must stay
+ * CommonJS, which is why the palette exists twice. Change one, change the other.
  *
  * Nocturne is DARK ONLY. There is no light pass of these screens; a component that needs a
  * "light" surface uses a lighter neutral, never a light theme.
  */
+import { initialOf, nocturneCore, type Tint } from "@fm/theme";
+
+export { initialOf, type Tint };
 
 export const nocturne = {
-  /** The app ground. Every screen sits on it; no screen paints its own background. */
-  bg: "#161826",
-  /** Cards, rows, list groups. */
-  surface: "#232532",
+  ...nocturneCore,
+
   /** The header's gradient, top to bottom. */
   headerGradient: ["#2b2741", "#242137"] as const,
-  text: "#e9e9ed",
-  divider: "rgba(233,233,237,.16)",
   /** Behind the phone frame on the canvas; also the scrim base. */
   canvas: "#101120",
   scrim: "rgba(16,17,32,.55)",
-
-  neutral: {
-    100: "#f3f5fe",
-    200: "#e4e7f5",
-    300: "#cfd3e5",
-    400: "#b2b6ca",
-    500: "#9397ab",
-    600: "#75798c",
-    700: "#595d6c",
-    800: "#3f424d",
-    900: "#292b31",
-  },
-
-  /** Blurple — the only hue in the system. Eight tonal steps carry the whole chart language. */
-  accent: {
-    DEFAULT: "#9184d9",
-    100: "#f5f4ff",
-    200: "#e7e5fe",
-    300: "#d2cefd",
-    400: "#b5abfc",
-    500: "#968ae0",
-    600: "#796cbf",
-    700: "#5d5294",
-    800: "#423a6a",
-    900: "#2b2741",
-  },
 
   /**
    * The one value added to Nocturne: a budget breach. Generated in OKLCH at accent-400's own
@@ -58,8 +32,6 @@ export const nocturne = {
    * colour, and an expense that is merely large is not drawn in it.
    */
   overspend: "#e5928a",
-
-  radius: { sm: 4, md: 8, lg: 14 },
 
   /** Nocturne's spacing scale, mirrored by the `n1`…`n6` Tailwind steps. */
   space: { n1: 2.8, n2: 5.6, n3: 8.4, n4: 11.2, n5: 16.8, n6: 22.4 },
@@ -104,23 +76,12 @@ export function memberColor(index: number): string {
 }
 
 /** The tint of a category/group avatar: the ramp step plus a foreground that survives it. */
-export interface Tint {
-  bg: string;
-  fg: string;
-}
-
 const DARK_ON = new Set(["#968ae0", "#b5abfc", "#9397ab"]);
 
 /** Icon-circle tint for the nth group or category. Light steps get the dark ground back. */
 export function tintFor(index: number): Tint {
   const bg = seriesColor(index);
   return { bg, fg: DARK_ON.has(bg) ? nocturne.bg : nocturne.accent[200] };
-}
-
-/** The uppercase initial an avatar shows for a member with no photo. */
-export function initialOf(text: string): string {
-  const first = text.trim()[0];
-  return first ? first.toUpperCase() : "?";
 }
 
 /**
