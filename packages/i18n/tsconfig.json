@@ -1,0 +1,4 @@
+{
+  "extends": "@fm/config/tsconfig.expo.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
