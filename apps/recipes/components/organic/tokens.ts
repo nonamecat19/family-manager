@@ -1,61 +1,36 @@
 /**
- * Organic — the design system this app is drawn from (Claude Design project
- * `Family Recipes App.dc.html`, DS bundle `organic-0a9cdade`).
+ * Organic, as apps/recipes draws it (Claude Design project `Family Recipes App.dc.html`, DS
+ * bundle `organic-0a9cdade`).
  *
- * These values are recipes-only on purpose: @fm/theme and @fm/config are shared with
- * another app, so retuning them there would repaint that app too. The Tailwind
- * mirror lives in `apps/recipes/tailwind.config.js` — that file must stay CommonJS, which
- * is why the palette exists twice. Change one, change the other.
+ * The palette itself is `organicTheme` in `@fm/theme` — one of the two themes the shared
+ * component library renders against. It lives there rather than here so a component in
+ * `@fm/ui` can be drawn in Organic without importing an app, which is the one boundary rule
+ * that never bends.
+ *
+ * What stays here is what only this app draws: the category tints and the name-to-tint rule.
+ *
+ * The Tailwind mirror lives in `apps/recipes/tailwind.config.js` — that file must stay
+ * CommonJS, which is why the palette exists twice. `themes.test.ts` in @fm/theme asserts the
+ * two never drift.
  */
+import { organicTheme } from "@fm/theme";
 
+/**
+ * The app's token object. Shaped exactly as it was when the values lived here, so no screen
+ * changed: `organic.accent[700]`, `organic.divider` and the rest all still resolve.
+ */
 export const organic = {
-  bg: "#f5ead8",
-  surface: "#ebddc5",
-  text: "#201e1d",
-  divider: "rgba(32,30,29,0.16)",
-
-  neutral: {
-    100: "#f9f4ed",
-    200: "#eee7db",
-    300: "#dcd3c4",
-    400: "#c0b6a5",
-    500: "#a19786",
-    600: "#82796a",
-    700: "#645c50",
-    800: "#474238",
-    900: "#2e2b25",
-  },
-
-  /** Terracotta — the primary accent: buttons, active pills, ratings. */
-  accent: {
-    DEFAULT: "#c67139",
-    100: "#fff2eb",
-    200: "#ffe1d0",
-    300: "#ffc6a5",
-    400: "#f6a06b",
-    500: "#d67f48",
-    600: "#b2622d",
-    700: "#8c491a",
-    800: "#643312",
-    900: "#402310",
-  },
-
-  /** Olive — the secondary accent: the plan, notes, step numbers. */
-  accent2: {
-    DEFAULT: "#7a8a5e",
-    100: "#f0fae1",
-    200: "#e1eecc",
-    300: "#ccdbb2",
-    400: "#aebf92",
-    500: "#8fa073",
-    600: "#728157",
-    700: "#56633f",
-    800: "#3d472b",
-    900: "#272e1b",
-  },
-
-  /** Destructive actions. Organic has no error role, so this is the palette's warm red. */
-  danger: "#a5341f",
+  bg: organicTheme.bg,
+  // Note: this role previously carried #ebddc5 here while the Tailwind mirror resolved it to
+  // neutral-100. No screen read either, so they are one value now — the Tailwind one.
+  surface: organicTheme.surface,
+  text: organicTheme.text,
+  divider: organicTheme.divider,
+  muted: organicTheme.muted,
+  neutral: organicTheme.neutral,
+  accent: organicTheme.accent,
+  accent2: organicTheme.accent2,
+  danger: organicTheme.danger,
 } as const;
 
 /**
