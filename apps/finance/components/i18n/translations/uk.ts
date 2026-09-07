@@ -1,5 +1,5 @@
 import type { en } from "./en.ts";
-import type { PluralForms } from "../plural.ts";
+import type { PluralForms } from "@fm/i18n";
 
 /**
  * Ukrainian copy — the app's actual face, lifted verbatim from the design canvas
@@ -275,6 +275,34 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "household.groupBudgets": "Бюджети груп",
   "household.overspendNotifications": "Сповіщення про перевитрату",
   "household.inviteError": "Не вдалося надіслати запрошення. Спробуйте ще раз.",
+
+  // ---- керування родиною ----
+  "family.name.heading": "НАЗВА РОДИНИ",
+  "family.name.rename": "Перейменувати",
+  "family.name.label": "Назва",
+  "family.name.save": "Зберегти",
+  "family.name.cancel": "Скасувати",
+  "family.name.required": "Родина потребує назви.",
+  "family.name.error": "Не вдалося перейменувати родину. Спробуйте ще раз.",
+  "family.members.heading": "УЧАСНИКИ",
+  "family.members.you": "(ви)",
+  "family.members.admin": "АДМІН",
+  "family.members.remove": "Вилучити",
+  "family.members.empty": "Учасників ще немає.",
+  "family.members.removeError": "Не вдалося вилучити учасника. Спробуйте ще раз.",
+  "family.invitations.heading": "НАДІСЛАНІ ЗАПРОШЕННЯ",
+  "family.invitations.revoke": "Відкликати",
+  "family.invitations.empty": "Немає запрошень, що очікують.",
+  "family.invitations.spent": "ВИКОРИСТАНО",
+  "family.invitations.expires": "Діє до {date}",
+  "family.invitations.revokeError": "Не вдалося відкликати запрошення. Спробуйте ще раз.",
+  "family.leave.heading": "ВИХІД",
+  "family.leave.body": "Ви втратите доступ до рахунків, бюджетів та історії цієї родини.",
+  "family.leave.action": "Вийти з родини",
+  "family.leave.confirm": "Так, вийти",
+  "family.leave.cancel": "Залишитись",
+  "family.leave.lastAdmin": "Ви єдиний адміністратор. Призначте іншого, перш ніж вийти.",
+  "family.leave.error": "Не вдалося вийти з родини. Спробуйте ще раз.",
 
   // ---- 06 per-member spending ------------------------------------------------------------
   "member.title": "Хто витрачає",
