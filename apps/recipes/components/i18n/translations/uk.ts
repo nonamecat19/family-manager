@@ -1,5 +1,5 @@
 import type { en } from "./en.ts";
-import type { PluralForms } from "../plural.ts";
+import type { PluralForms } from "@fm/i18n";
 
 /**
  * Ukrainian copy. Typed against `en`'s exact key set, each mapped to the general `string` or

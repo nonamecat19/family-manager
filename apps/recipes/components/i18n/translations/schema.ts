@@ -1,4 +1,4 @@
-import type { PluralForms } from "../plural.ts";
+import type { PluralForms } from "@fm/i18n";
 
 /** A leaf is either a plain (optionally interpolated, `{like_this}`) string, or a set of
  * plural forms selected by a `count` param. Every screen's copy bottoms out in one of these
