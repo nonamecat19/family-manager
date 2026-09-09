@@ -1,6 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-
-import { ErrorState } from "./primitives.tsx";
+import { Pressable, Text, View } from "react-native";
 
 export interface ErrorBoundaryProps {
   children: ReactNode;
@@ -62,4 +61,43 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
       />
     );
   }
+}
+
+/**
+ * The last-resort screen, deliberately NOT themed.
+ *
+ * Every app mounts its ErrorBoundary outside the ThemeProvider, so that a crash while the
+ * providers themselves are mounting is still caught. A themed crash screen would therefore
+ * call `useTheme` with no provider above it, throw inside the boundary's own render, and take
+ * the tree down for a second time with a less useful error than the original.
+ *
+ * So this paints itself: neutral values that read on any ground, chosen to be legible rather
+ * than on-brand. It is the one component in this library allowed a colour literal, and this
+ * comment is why.
+ */
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,
+        padding: 24,
+        backgroundColor: "#1a1a1a",
+      }}
+    >
+      <Text style={{ color: "#f2f2f2", fontSize: 15, textAlign: "center", lineHeight: 22 }}>
+        {message}
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Try again"
+        onPress={onRetry}
+        style={{ borderWidth: 1, borderColor: "#6c6c6c", borderRadius: 8, paddingHorizontal: 18, paddingVertical: 10 }}
+      >
+        <Text style={{ color: "#f2f2f2", fontSize: 14, fontWeight: "600" }}>Try again</Text>
+      </Pressable>
+    </View>
+  );
 }
