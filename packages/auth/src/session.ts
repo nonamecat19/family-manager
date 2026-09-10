@@ -89,6 +89,11 @@ export class SessionManager {
     return this.tokens;
   }
 
+  /**
+   * The tokens held in memory. Never refreshes — sign-out needs the refresh token ITSELF to
+   * revoke it, and a rotation first would hand back a new chain link and revoke the old one,
+   * leaving the new one live.
+   */
   current(): Tokens | null {
     return this.tokens;
   }
@@ -109,6 +114,29 @@ export class SessionManager {
     this.loaded = true;
     this.inFlight = null;
     await this.store.clear();
+  }
+
+  /**
+   * Ends the session: revokes the refresh-token chain server-side, then forgets the tokens
+   * here. Lives on the manager rather than in the React provider so the ordering below is
+   * testable without a renderer.
+   *
+   * The order is load-bearing in both directions. Revoke FIRST, because `clear` leaves nothing
+   * to revoke with. Clear REGARDLESS, because the user asked to sign out — a server that
+   * cannot be reached must not strand them signed in on this device. A revoke that fails
+   * leaves the chain alive until it expires on its own, which is exactly where sign-out stood
+   * before revocation existed, so failing this way is never worse than not trying.
+   */
+  async end(revoke?: (refreshToken: string) => Promise<void>): Promise<void> {
+    const tokens = this.tokens;
+    if (revoke && tokens) {
+      try {
+        await revoke(tokens.refreshToken);
+      } catch {
+        // Best effort — see above.
+      }
+    }
+    await this.clear();
   }
 
   /**
