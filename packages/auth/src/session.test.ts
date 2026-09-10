@@ -204,3 +204,86 @@ test("a kept session refreshes again on the next call", async () => {
   assert.equal(fresh?.accessToken, "a2");
   assert.equal(attempts, 2);
 });
+
+/* --------------------------------------------------- ending a session (revocation) ------ */
+
+test("end revokes the refresh token before forgetting it", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  const revoked: string[] = [];
+  await mgr.end(async (token) => {
+    // The tokens must still be in hand at this point — revoking after `clear` is impossible.
+    assert.equal(mgr.current()?.refreshToken, "r");
+    revoked.push(token);
+  });
+
+  assert.deepEqual(revoked, ["r"], "the refresh token is what gets revoked");
+  assert.equal(mgr.status(), "anonymous");
+  assert.equal(store.value, null, "and the device forgets it either way");
+});
+
+test("a revoke that fails still signs the user out on this device", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  // A server that cannot be reached must not strand the user signed in.
+  await mgr.end(async () => {
+    throw new Error("network down");
+  });
+
+  assert.equal(mgr.status(), "anonymous");
+  assert.equal(store.value, null);
+});
+
+test("end without a revoker is the old clear-only behaviour", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  await mgr.end();
+
+  assert.equal(mgr.status(), "anonymous");
+  assert.equal(store.value, null);
+});
+
+test("ending an already-anonymous session revokes nothing", async () => {
+  const store = memoryStore(null);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  let called = 0;
+  await mgr.end(async () => {
+    called += 1;
+  });
+
+  assert.equal(called, 0, "there is no chain to revoke");
+  assert.equal(mgr.status(), "anonymous");
+});
+
+test("end does not refresh first — the revoked token is the one the device held", async () => {
+  // Rotation on refresh means a refresh here would revoke the OLD link and leave the NEW one
+  // live, which is the opposite of signing out.
+  const rotated: Tokens = { accessToken: "a2", refreshToken: "r2", expiresAt: NOW + 900_000 };
+  const store = memoryStore({ ...fresh, expiresAt: NOW });
+  let refreshes = 0;
+  const mgr = new SessionManager(
+    store,
+    async () => {
+      refreshes += 1;
+      return rotated;
+    },
+    () => NOW,
+  );
+  await mgr.load();
+
+  const revoked: string[] = [];
+  await mgr.end(async (t) => {
+    revoked.push(t);
+  });
+
+  assert.equal(refreshes, 0, "sign-out must not trigger a rotation");
+  assert.deepEqual(revoked, ["r"]);
+});
