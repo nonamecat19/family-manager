@@ -21,6 +21,14 @@ import {
   type QuickTemplate,
 } from "@fm/sdk/finance/v1/finance_pb";
 
+import {
+  Role as FamilyMemberRole,
+  InvitationStatus,
+  type Family,
+  type Invitation,
+  type Member as FamilyMember,
+} from "@fm/sdk/family/v1/family_pb";
+
 import { toWire } from "./convert.ts";
 import type { Money } from "./money.ts";
 import { bumpTemplateUsage } from "./optimistic.ts";
@@ -82,6 +90,70 @@ export function useInviteMember() {
   return useMutation({
     mutationFn: (input: { familyId: string; email: string }) => family.inviteMember(input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.family }),
+  });
+}
+
+export function useUpdateFamily() {
+  const { family } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { familyId: string; name: string }) => family.updateFamily(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.family }),
+  });
+}
+
+/**
+ * Pending and spent invitations. ADMIN ONLY on the server, so `enabled` is the caller's job:
+ * mounting this for an ordinary member spends a round trip to be told PermissionDenied, and
+ * logs an auth failure that is not one.
+ */
+export function useInvitations(familyId: string, opts: { enabled?: boolean } = {}) {
+  const { family } = useClients();
+  return useQuery({
+    queryKey: queryKeys.invitations(),
+    queryFn: () => family.listInvitations({ familyId }),
+    enabled: familyId !== "" && (opts.enabled ?? true),
+  });
+}
+
+export function useRevokeInvitation() {
+  const { family } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => family.revokeInvitation({ invitationId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.family }),
+  });
+}
+
+/**
+ * Removes someone else. The server refuses the caller's own id — leaving is `useLeaveFamily`,
+ * which has a different guard — so a screen must not offer this on its own row.
+ */
+export function useRemoveMember() {
+  const { family } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { familyId: string; userId: string }) => family.removeMember(input),
+    // A member leaving changes who appears in every household figure, not just the roster.
+    onSuccess: () => qc.invalidateQueries(),
+  });
+}
+
+/**
+ * Leaves the family. The server refuses the last admin ("promote another admin before
+ * leaving"), which surfaces as FailedPrecondition.
+ *
+ * Like accepting an invitation, this changes WHICH household's data the user may see, so the
+ * whole cache is dropped rather than one domain. The caller must also refresh the session
+ * afterwards — `family_id` is a token claim, and until the token is reminted the app still
+ * carries the old family. `useAuth().refreshNow()` is what does that.
+ */
+export function useLeaveFamily() {
+  const { family } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (familyId: string) => family.leaveFamily({ familyId }),
+    onSuccess: () => qc.invalidateQueries(),
   });
 }
 
@@ -1160,6 +1232,10 @@ export function useWidgetData(widgetIds: readonly string[] = []) {
 export {
   AccountKind,
   AccountVisibility,
+  // family.v1 — the household's own enums, distinct from finance's MemberRole/MemberStatus,
+  // which describe a member's standing inside the FINANCE service, not the family.
+  FamilyMemberRole,
+  InvitationStatus,
   BudgetPeriod,
   BudgetTargetFilter,
   BudgetTargetKind,
@@ -1176,6 +1252,8 @@ export {
   WidgetSize,
   WidgetType,
 };
+
+export type { Family, FamilyMember, Invitation };
 
 export type {
   Account,
