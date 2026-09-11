@@ -70,6 +70,7 @@ export {
 } from "./scope.ts";
 export { toWireScope, toWirePeriod, toWireGranularity } from "./scopeWire.ts";
 export { bumpTemplateUsage, removeById, type UsageCounted } from "./optimistic.ts";
+export { familyStanding, type FamilyStanding } from "./family.ts";
 export * from "./hooks.ts";
 export * from "./recipes.ts";
 export * from "./notes.ts";
