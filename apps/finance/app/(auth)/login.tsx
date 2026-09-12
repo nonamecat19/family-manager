@@ -1,10 +1,12 @@
 import { toDisplayError, useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
+
+import { Body, Button, Caption, Field, Heading, Screen, TextLink } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Button, Field, Icon, nocturne, Screen } from "../../components/nocturne/index.ts";
+import { Icon, nocturne } from "../../components/nocturne/index.ts";
 
 export default function LoginScreen() {
   const { auth } = useClients();
@@ -50,13 +52,15 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-n5 px-n6"
       >
         <View>
+          {/* The app's own mark stays app-local: a brand is the one thing a shared component
+              set must not try to own. Everything below it is @fm/ui. */}
           <View className="mb-n5 h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
             <Icon name="wallet" size={22} color={nocturne.accent[400]} />
           </View>
-          <Text className="text-[27px] font-medium leading-[31px] text-fg">{t("auth.title")}</Text>
-          <Text className="mt-n3 text-[13.5px] leading-[21px] text-neutral-500">
-            {mode === "login" ? t("auth.signInBody") : t("auth.registerBody")}
-          </Text>
+          <Heading>{t("auth.title")}</Heading>
+          <View className="mt-n3">
+            <Body>{mode === "login" ? t("auth.signInBody") : t("auth.registerBody")}</Body>
+          </View>
         </View>
 
         {mode === "register" ? (
@@ -80,28 +84,22 @@ export default function LoginScreen() {
           error={error ?? undefined}
         />
 
-        {errorRef ? (
-          <Text className="text-[12px] text-neutral-600">{t("common.errorReference", { ref: errorRef })}</Text>
-        ) : null}
+        {errorRef ? <Caption>{t("common.errorReference", { ref: errorRef })}</Caption> : null}
 
         <Button
-          title={busy ? t("auth.oneMoment") : mode === "login" ? t("auth.signIn") : t("auth.createAccount")}
+          title={mode === "login" ? t("auth.signIn") : t("auth.createAccount")}
           disabled={!canSubmit}
+          busy={busy}
           onPress={() => void submit()}
         />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={mode === "login" ? t("auth.switchToRegister") : t("auth.switchToLogin")}
+        <TextLink
+          label={mode === "login" ? t("auth.switchToRegister") : t("auth.switchToLogin")}
           onPress={() => {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
-        >
-          <Text className="text-center text-[13.5px] font-medium text-accent-400">
-            {mode === "login" ? t("auth.switchToRegister") : t("auth.switchToLogin")}
-          </Text>
-        </Pressable>
+        />
       </KeyboardAvoidingView>
     </Screen>
   );
