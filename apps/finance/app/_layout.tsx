@@ -2,7 +2,8 @@ import "../global.css";
 
 import { ApiProvider, isRefreshRejection } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
-import { ErrorBoundary } from "@fm/ui";
+import { ErrorBoundary, ThemeProvider } from "@fm/ui";
+import { nocturneTheme, type Theme } from "@fm/theme";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
@@ -37,6 +38,18 @@ async function refresh(refreshToken: string): Promise<Tokens> {
   return tokensFromResponse(res, Date.now());
 }
 
+/** Ends the session server-side: Logout revokes the whole refresh-token chain, so the token
+ * this device is about to forget cannot go on minting access tokens. */
+async function revoke(refreshToken: string): Promise<void> {
+  await refreshClient.logout({ refreshToken });
+}
+
+/**
+ * Nocturne, as this app draws it: the shared palette, inputs as a bare rule (notes outlines
+ * its own), and no font file — the design's stack ends in the platform sans.
+ */
+const theme: Theme = { ...nocturneTheme, fieldStyle: "underline" };
+
 export default function RootLayout() {
   return (
     // Outside AuthProvider, so a crash while restoring the session is caught too — which is
@@ -45,11 +58,16 @@ export default function RootLayout() {
       message={bootT("gate.renderError")}
       onError={(error) => console.error("[finance] unhandled render error", error)}
     >
-      <AuthProvider store={secureTokenStore} refresh={refresh} isRefreshRejection={isRefreshRejection}>
+      {/* Nocturne is this app's theme; shared @fm/ui components read their palette from here,
+          which is what lets one component library serve this app and the light Organic one. */}
+      <ThemeProvider theme={theme}>
+        <AuthProvider store={secureTokenStore} refresh={refresh}
+          revoke={revoke} isRefreshRejection={isRefreshRejection}>
         <ApiGate />
         {/* Nocturne is dark-only, so the status bar is light on every screen, always. */}
         <StatusBar style="light" />
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
