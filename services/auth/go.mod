@@ -1,6 +1,6 @@
 module github.com/nnc/family-manager/services/auth
 
-go 1.25.0
+go 1.26.0
 
 // The monorepo's modules are never published: go.work covers builds inside the repo, and
 // these replaces keep `go mod tidy` and single-module builds working too.
@@ -21,7 +21,7 @@ require (
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
 	github.com/nnc/family-manager/sdk/go v0.0.0
 	github.com/spf13/viper v1.21.0
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.57.0
 )
 
 require (
@@ -44,9 +44,9 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
