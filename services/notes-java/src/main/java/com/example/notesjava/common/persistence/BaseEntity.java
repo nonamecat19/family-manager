@@ -35,11 +35,6 @@ public abstract class BaseEntity {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    /**
-     * Identity is the database id, so two unsaved instances are never equal. {@code getClass()}
-     * rather than {@code instanceof} would break under Hibernate proxies, hence the unproxied
-     * class comparison below.
-     */
     @Override
     public final boolean equals(Object o) {
         if (this == o) {
@@ -51,10 +46,6 @@ public abstract class BaseEntity {
         return id != null && id.equals(other.id);
     }
 
-    /**
-     * Constant per type: the id is null before the insert and non-null after it, and a hash that
-     * changed mid-transaction would lose the entity inside any HashSet holding it.
-     */
     @Override
     public final int hashCode() {
         return entityClass(this).hashCode();

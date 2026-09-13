@@ -15,11 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Returns DTOs rather than entities. {@code open-in-view} is off, so a {@code Note} mapped
- * after the method returns would be detached and its lazy {@code parent}/{@code group} would
- * blow up in the controller.
- */
 @Service
 @Transactional(readOnly = true)
 public class NoteService {
@@ -63,7 +58,6 @@ public class NoteService {
         return NoteResponse.from(noteRepository.saveAndFlush(note));
     }
 
-    /** Cascades to the subtree: deleting a note deletes everything filed under it. */
     @Transactional
     public void delete(Long id) {
         noteRepository.delete(require(id));
@@ -74,11 +68,6 @@ public class NoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Note", id));
     }
 
-    /**
-     * Walks the candidate parent's ancestry looking for the note being edited. Without this a
-     * client could close a loop in the tree, and every later traversal of it would not
-     * terminate.
-     */
     Note resolveParent(Long parentId, Long selfId) {
         if (parentId == null) {
             return null;

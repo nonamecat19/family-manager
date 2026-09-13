@@ -56,7 +56,6 @@ class GroupControllerTest {
                 .andExpect(jsonPath("$.errors.title").exists());
     }
 
-    /** Colour is mandatory on PUT: the request is a full replacement, not a patch. */
     @Test
     void rejectsAnUpdateWithoutAColour() throws Exception {
         mockMvc.perform(put("/api/groups/1").contentType(MediaType.APPLICATION_JSON)

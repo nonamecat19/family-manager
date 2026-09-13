@@ -82,7 +82,6 @@ class NoteControllerTest {
         mockMvc.perform(delete("/api/notes/1")).andExpect(status().isNoContent());
     }
 
-    /** Regression: the catch-all handler used to turn every framework failure into a 500. */
     @Test
     void anUnsupportedMethodStaysA405() throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
