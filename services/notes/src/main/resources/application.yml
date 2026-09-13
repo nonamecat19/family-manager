@@ -26,6 +26,12 @@ spring:
     problemdetails:
       enabled: true
 
+notes:
+  auth:
+    jwk-set-uri: ${NOTES_JWKS_URL:http://auth:8080/.well-known/jwks.json}
+    issuer: ${NOTES_ISSUER:}
+    audience: ${NOTES_AUDIENCE:}
+
 management:
   endpoints:
     web:

@@ -1,7 +1,9 @@
 package com.example.notesjava.common.web;
 
 import com.example.notesjava.common.error.InvalidRequestException;
+import com.example.notesjava.common.error.MissingFamilyException;
 import com.example.notesjava.common.error.ResourceNotFoundException;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -35,6 +37,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return problem(HttpStatus.BAD_REQUEST, "Invalid request", ex.getMessage());
     }
 
+    @ExceptionHandler(MissingFamilyException.class)
+    public ProblemDetail handleMissingFamily(MissingFamilyException ex) {
+        return problem(HttpStatus.FORBIDDEN, "No family in token", ex.getMessage());
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ProblemDetail handleConcurrentModification(ObjectOptimisticLockingFailureException ex) {
         log.warn("Optimistic lock conflict", ex);
@@ -59,9 +66,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request
     ) {
         Map<String, String> errors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
