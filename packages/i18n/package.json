@@ -26,9 +26,9 @@
     "@types/react": "~19.2.18",
     "@types/node": "^26.4.0",
     "expo-localization": "~57.0.1",
-    "expo-secure-store": "~57.0.1",
+    "expo-secure-store": "~57.0.3",
     "react": "19.2.8",
-    "react-native": "0.86.3",
+    "react-native": "0.87.1",
     "typescript": "^5.7.0"
   },
   "type": "module"
