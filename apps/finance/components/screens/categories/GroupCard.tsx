@@ -12,26 +12,17 @@ import {
 
 export interface GroupCardProps {
   name: string;
-  /** The stored icon key; the kit falls back for anything it cannot draw. */
   icon?: string | null;
-  /** The group's slot on the accent ramp (finance.v1 CategoryGroup.color_step). */
   colorStep: number;
-  /** "7 категорій · бюджет ₴6,000", already assembled by the screen from the dictionary. */
   meta: string;
   expanded: boolean;
   onToggle: () => void;
   categories: readonly CategoryGridItem[];
-  /** Label of the trailing cell that adds a category to this group. */
   addLabel: string;
   onAddCategory: () => void;
   onSelectCategory: (item: CategoryGridItem) => void;
 }
 
-/**
- * One row of screen 04: the group header, and — when expanded — its categories as a
- * four-across icon grid. Collapsed and expanded are the same card, so the list does not
- * reflow into a different shape when a group opens.
- */
 export function GroupCard({
   name,
   icon,

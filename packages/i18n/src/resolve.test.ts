@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import { localeFromTag } from "./resolve.ts";
 
-// The two shipped configurations, which default opposite ways on purpose.
 const FINANCE = { locales: ["uk", "en"] as const, fallback: "uk" as const };
 const RECIPES = { locales: ["en", "uk"] as const, fallback: "en" as const };
 

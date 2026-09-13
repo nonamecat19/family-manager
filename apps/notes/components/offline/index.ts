@@ -1,4 +1,3 @@
-/** Offline capture: the queue and the sheet that fills it. */
 export {
   useCaptureQueue,
   hydrateQueue,

@@ -1,4 +1,3 @@
-/** The editor's single door. */
 export {
   NO_BLOCK,
   canRetype,

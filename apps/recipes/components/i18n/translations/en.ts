@@ -1,10 +1,4 @@
-/**
- * English copy — the source of truth for the key set. `uk.ts` is typed against
- * `keyof typeof en`, so adding, renaming or dropping a key here is a compile error in the
- * Ukrainian file until it is kept in sync.
- */
 export const en = {
-  // ---- common --------------------------------------------------------------------------
   "common.back": "Back",
   "common.cancel": "Cancel",
   "common.close": "Close",
@@ -16,19 +10,15 @@ export const en = {
   "common.all": "All",
   "common.any": "Any",
   "common.loadingEllipsis": "…",
-  // Shown under a failure message when the service returned an opaque internal error. The
-  // code means nothing to the reader; it is what lets someone find the request in the logs.
   "common.errorReference": "Reference {ref}",
   "common.loadFailed": "Could not load this. Check your connection and try again.",
 
-  // ---- tabs (app/(app)/_layout.tsx) -----------------------------------------------------
   "tabs.home": "Home",
   "tabs.recipes": "Recipes",
   "tabs.plan": "Plan",
   "tabs.list": "List",
   "tabs.you": "You",
 
-  // ---- app gate / kitchen loading states -------------------------------------------------
   "kitchen.appName": "Family Recipes",
   "kitchen.warmingOven": "Warming the oven…",
   "kitchen.restoringSession": "Restoring your session…",
@@ -37,11 +27,8 @@ export const en = {
   "kitchen.noHouseholdBody": "Create one to start cooking, or accept an invitation from a family member.",
   "kitchen.createHousehold": "Create a household",
   "kitchen.errorTitle": "Something\nwent wrong",
-  // Shown by the root error boundary, when the app itself failed to render rather than a
-  // request failing.
   "kitchen.somethingBurned": "The app hit an unexpected problem. Try again, and tell us what you were doing.",
 
-  // ---- profile screen (app/(app)/settings.tsx — the "You" tab) --------------------------
   "profile.familyFallback": "Family",
   "profile.householdFallback": "Your household",
   "profile.keeperOfTheCookbook": "Keeper of the cookbook",
@@ -66,14 +53,12 @@ export const en = {
   "profile.sending": "Sending…",
   "profile.sendTheInvitation": "Send the invitation",
 
-  // ---- preferences screen (app/(app)/preferences.tsx) ------------------------------------
   "preferences.title": "Preferences",
   "preferences.language": "Language",
   "preferences.languageHint": "The cookbook reads back to you in whichever of these you pick.",
   "preferences.english": "English",
   "preferences.ukrainian": "Українська",
 
-  // ---- home (app/(app)/index.tsx) --------------------------------------------------------
   "home.title": "The family\ncookbook",
   "home.yourProfile": "Your profile",
   "home.searchRecipes": "Search recipes",
@@ -91,7 +76,6 @@ export const en = {
   "home.favorites": "Favorites",
   "home.keepComingBackTo": "The ones you keep coming back to",
 
-  // ---- recipes list (app/(app)/recipes.tsx) ----------------------------------------------
   "recipesList.sortRating": "Rating",
   "recipesList.sortTime": "Time",
   "recipesList.sortTitle": "A–Z",
@@ -130,18 +114,15 @@ export const en = {
     other: "Show {count} recipes",
   },
 
-  // ---- search (app/(app)/search.tsx) -----------------------------------------------------
   "search.placeholder": "Search recipes",
   "search.recent": "Recent",
   "search.searchFor": "Search {term}",
   "search.searching": "Searching…",
   "search.noMatches": "Nothing matches “{query}”. Try an ingredient instead of a dish.",
 
-  // ---- favorites (app/(app)/favorites.tsx) -----------------------------------------------
   "favorites.title": "Favourites",
   "favorites.empty": "Nothing saved yet. Tap the heart on a recipe and it will wait for you here.",
 
-  // ---- shopping list (app/(app)/basket.tsx) ----------------------------------------------
   "shoppingList.title": "Shopping list",
   "shoppingList.nothingToBuyYet": "Nothing to buy yet",
   "shoppingList.fromRecipesInBasket": "From {recipes} · {bought} of {total} in the basket",
@@ -150,7 +131,6 @@ export const en = {
   "shoppingList.openThePlan": "+ Open the plan",
   "shoppingList.untickEverything": "Untick everything",
 
-  // ---- meal plan (app/(app)/meal-plan.tsx) -----------------------------------------------
   "mealPlan.title": "Plan",
   "mealPlan.tabBasket": "Basket",
   "mealPlan.tabWeek": "Week",
@@ -185,7 +165,6 @@ export const en = {
   "mealPlan.slotSnack": "Snack",
   "mealPlan.slotDessert": "Dessert",
 
-  // ---- cook mode (app/(app)/cook/[id].tsx) -----------------------------------------------
   "cook.leaveCookMode": "Leave cook mode",
   "cook.stepOf": "Step {index} of {total}",
   "cook.cook": "Cook",
@@ -201,7 +180,6 @@ export const en = {
   "cook.tapToPause": "tap to pause",
   "cook.tapToStart": "tap to start",
 
-  // ---- recipe detail (app/(app)/recipe/[id].tsx) -----------------------------------------
   "recipeDetail.gotAway": "This one got away",
   "recipeDetail.editRecipe": "Edit recipe",
   "recipeDetail.removeFromFavourites": "Remove from favourites",
@@ -230,7 +208,6 @@ export const en = {
   "recipeDetail.deleteRecipeBody": "This cannot be undone.",
   "recipeDetail.fetching": "Fetching the recipe…",
 
-  // ---- recipe edit (app/(app)/recipe-edit/[id].tsx) --------------------------------------
   "recipeEdit.newRecipe": "New recipe",
   "recipeEdit.editRecipe": "Edit recipe",
   "recipeEdit.openingRecipe": "Opening the recipe…",
@@ -272,7 +249,6 @@ export const en = {
   "recipeEdit.saveChanges": "Save changes",
   "recipeEdit.cancel": "Cancel",
 
-  // ---- onboarding (app/(app)/onboarding.tsx) ---------------------------------------------
   "onboarding.title": "Start your\ncookbook",
   "onboarding.body": "Name your household. Everything you write down from here on belongs to it, and to everyone you invite.",
   "onboarding.familyName": "Family name",
@@ -280,7 +256,6 @@ export const en = {
   "onboarding.creating": "Creating…",
   "onboarding.create": "Create",
 
-  // ---- login (app/(auth)/login.tsx) ------------------------------------------------------
   "login.appName": "Family Recipes",
   "login.signInBody": "Sign in to your family cookbook.",
   "login.registerBody": "Create your account and start writing it down.",
@@ -295,7 +270,6 @@ export const en = {
   "login.switchToRegister": "Create an account",
   "login.switchToLogin": "I already have an account",
 
-  // ---- shared organic UI (components/organic/ui.tsx) -------------------------------------
   "ui.decrease": "Decrease {label}",
   "ui.increase": "Increase {label}",
   "ui.stars": {
@@ -306,7 +280,6 @@ export const en = {
   },
   "ui.ratedOutOf5": "Rated {rating} out of 5",
 
-  // ---- aisles (components/organic/aisles.ts) ---------------------------------------------
   "aisles.produce": "Produce",
   "aisles.dairyAndEggs": "Dairy & eggs",
   "aisles.meatAndFish": "Meat & fish",
@@ -314,7 +287,6 @@ export const en = {
   "aisles.pantry": "Pantry",
   "aisles.other": "Other",
 
-  // ---- weekdays (components/organic/week.ts) ---------------------------------------------
   "weekdays.sun": "Sun",
   "weekdays.mon": "Mon",
   "weekdays.tue": "Tue",
@@ -323,14 +295,12 @@ export const en = {
   "weekdays.fri": "Fri",
   "weekdays.sat": "Sat",
 
-  // ---- nutrition strip (components/organic/ui.tsx) ---------------------------------------
   "nutrition.kcal": "kcal",
   "nutrition.protein": "protein",
   "nutrition.fat": "fat",
   "nutrition.carbs": "carbs",
   "nutrition.grams": "{value} g",
 
-  // ---- duration formatting (components/organic/format.ts) --------------------------------
   "duration.minutes": "{count} min",
   "duration.hours": "{count} h",
   "duration.hoursAndMinutes": "{hours} h {minutes} min",
@@ -338,7 +308,6 @@ export const en = {
   "duration.minutesTotal": "{count} min total",
   "duration.hoursTotal": "{count} h total",
 
-  // ---- pluralized counts (used across several screens) -----------------------------------
   "plurals.recipesCount": {
     one: "{count} recipe",
     few: "{count} recipes",

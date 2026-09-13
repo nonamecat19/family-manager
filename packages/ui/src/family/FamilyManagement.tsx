@@ -17,20 +17,7 @@ import {
 import type { FamilyInvitationView, FamilyMemberView } from "./types.ts";
 import { useTheme } from "../theme.tsx";
 
-/**
- * The family-management surface, drawn once for every app.
- *
- * Every control here is gated server-side as well — UpdateFamily, RemoveMember,
- * RevokeInvitation and ListInvitations all require an admin, and RemoveMember refuses the
- * caller's own id. `isAdmin` therefore decides what to DRAW, never what is permitted: it comes
- * from the access token's unverified claims (see @fm/auth/claims.ts), so a tampered client
- * gets a rendered button and a refusal from the server, which is the correct outcome.
- *
- * Copy arrives as props. The library ships no strings, so an app can be Ukrainian-first
- * (finance) or English-first (recipes) without this file knowing either exists.
- */
 
-/* ------------------------------------------------------------------ family name */
 
 export interface FamilyNameCardStrings {
   heading: string;
@@ -38,7 +25,6 @@ export interface FamilyNameCardStrings {
   save: string;
   cancel: string;
   nameLabel: string;
-  /** Shown when the field is emptied — the server requires a name. */
   required: string;
 }
 
@@ -47,7 +33,6 @@ export interface FamilyNameCardProps {
   isAdmin: boolean;
   strings: FamilyNameCardStrings;
   onRename: (name: string) => Promise<void>;
-  /** Rendered under the field when the round trip fails. */
   error?: string | null;
   busy?: boolean;
 }
@@ -65,7 +50,6 @@ export function FamilyNameCard({
   const [localError, setLocalError] = useState<string | null>(null);
 
   const start = () => {
-    // Seed from the current name each time rather than from the last aborted edit.
     setDraft(name);
     setLocalError(null);
     setEditing(true);
@@ -121,7 +105,6 @@ export function FamilyNameCard({
   );
 }
 
-/* --------------------------------------------------------------------- members */
 
 export interface FamilyMembersCardStrings {
   heading: string;
@@ -136,7 +119,6 @@ export interface FamilyMembersCardProps {
   isAdmin: boolean;
   strings: FamilyMembersCardStrings;
   onRemove: (member: FamilyMemberView) => void;
-  /** The member currently being removed, so its row can show the pending state. */
   removingUserId?: string | null;
 }
 
@@ -170,8 +152,8 @@ export function FamilyMembersCard({
                 </View>
                 <Muted>{member.email}</Muted>
               </View>
-              {/* Removing yourself is LeaveFamily, a different call with a different guard —
-                  the server rejects RemoveMember aimed at the caller, so it is not offered. */}
+              {
+}
               {isAdmin && !member.isSelf ? (
                 <InlineAction
                   label={strings.remove}
@@ -188,7 +170,6 @@ export function FamilyMembersCard({
   );
 }
 
-/* ----------------------------------------------------------------- invitations */
 
 export interface FamilyInvitationsCardStrings {
   heading: string;
@@ -226,8 +207,8 @@ export function FamilyInvitationsCard({
                 <Title>{invitation.email}</Title>
                 {invitation.expiresLabel ? <Muted>{invitation.expiresLabel}</Muted> : null}
               </View>
-              {/* Only a pending invitation can be revoked — the server answers anything else
-                  with FailedPrecondition, so a spent one is shown as history, not an action. */}
+              {
+}
               {invitation.pending ? (
                 <InlineAction
                   label={strings.revoke}
@@ -246,7 +227,6 @@ export function FamilyInvitationsCard({
   );
 }
 
-/* ---------------------------------------------------------------------- leaving */
 
 export interface LeaveFamilyCardStrings {
   heading: string;
@@ -254,13 +234,11 @@ export interface LeaveFamilyCardStrings {
   leave: string;
   confirm: string;
   cancel: string;
-  /** Why the button is unavailable — the server refuses the last admin. */
   lastAdmin: string;
 }
 
 export interface LeaveFamilyCardProps {
   strings: LeaveFamilyCardStrings;
-  /** False when the caller is the only admin; the server would refuse, so it is explained. */
   canLeave: boolean;
   onLeave: () => void;
   busy?: boolean;

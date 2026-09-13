@@ -17,18 +17,8 @@ import { Icon, iconOr, type IconName } from "./icons.tsx";
 import { formatMoney, type MoneyFormatOptions } from "./money.ts";
 import { initialOf, memberColor, nocturne, tintFor, type Tint } from "./tokens.ts";
 
-/**
- * The Nocturne kit. Every repeated shape in the eleven designed screens lives here, so a
- * screen file is composition and data and nothing else — no raw hex, no raw type sizes, no
- * second version of the same row.
- *
- * Nocturne is DARK ONLY: there is no light pass of these screens, and nothing here reads
- * `dark:` classes or the colour scheme.
- */
 
-// ---- screen scaffolding ---------------------------------------------------------------------
 
-/** Every screen sits on the same ground; no screen paints its own background. */
 export function Screen({
   children,
   edges,
@@ -45,9 +35,6 @@ export function Screen({
   );
 }
 
-/** The header's top-to-bottom gradient, drawn in SVG rather than pulled in as
- * expo-linear-gradient — a new native module for two stops is not a row this repo's stack
- * table should grow. */
 function HeaderGradient() {
   return (
     <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -66,25 +53,17 @@ function HeaderGradient() {
 
 export interface HeaderAction {
   icon: IconName;
-  /** Spoken label — required, because every one of these is an icon with no text beside it. */
   label: string;
   onPress: () => void;
-  /** Draws the accent dot the design puts on an action with something waiting behind it. */
   badge?: boolean;
 }
 
 export interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
-  /** The left-hand icon: the drawer button on a root screen, back on a pushed one. */
   leading?: HeaderAction;
-  /** One or more right-hand icons, drawn in the order given. */
   trailing?: HeaderAction | HeaderAction[];
-  /** Paints the accent gradient behind the header (Home and the detail screens); off gives a
-   * flat `bg` header (the list screens). */
   gradient?: boolean;
-  /** Anything that belongs inside the header block under the title — a segmented control, a
-   * scope switcher, a balance. */
   children?: ReactNode;
   className?: string;
 }
@@ -117,7 +96,6 @@ export function ScreenHeader({
   );
 }
 
-/** A 36px tappable icon. The one place a bare icon is allowed to be a control. */
 export function IconButton({ icon, label, onPress, badge, size = 20, color = nocturne.text }: HeaderAction & {
   size?: number;
   color?: string;
@@ -138,7 +116,6 @@ export function IconButton({ icon, label, onPress, badge, size = 20, color = noc
   );
 }
 
-/** The small uppercase label above a group — Nocturne's section eyebrow. */
 export function Kicker({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <Text
@@ -150,12 +127,10 @@ export function Kicker({ children, className = "" }: { children: ReactNode; clas
   );
 }
 
-/** The hairline the design uses between rows and above a footer. */
 export function Divider({ className = "" }: { className?: string }) {
   return <View className={`h-[1px] w-full ${className}`} style={{ backgroundColor: nocturne.divider }} />;
 }
 
-/** Android's gesture pill. Drawn because the design draws it; it is decoration, not a control. */
 export function BottomIndicator() {
   return (
     <View className="items-center py-n2" pointerEvents="none">
@@ -164,16 +139,12 @@ export function BottomIndicator() {
   );
 }
 
-// ---- surfaces --------------------------------------------------------------------------------
 
 export interface CardProps {
   children: ReactNode;
-  /** Makes the whole card a control. Adds the role and the pressed state; without it the card
-   * is inert and must not be wrapped in a Pressable by the caller either. */
   onPress?: () => void;
   onLongPress?: () => void;
   accessibilityLabel?: string;
-  /** Off for a card that lays out its own padding (a chart, a full-bleed list). */
   padded?: boolean;
   className?: string;
 }
@@ -203,16 +174,12 @@ export function Card({
 }
 
 export interface ListSectionProps {
-  /** Rendered as a Kicker above the group. Omit for an unlabelled group. */
   title?: string;
-  /** The right-hand affordance on the section's own header row — "Додати", "Історія". */
   action?: { label: string; onPress: () => void };
   children: ReactNode;
   className?: string;
 }
 
-/** A titled group of rows on one surface. Rows separate themselves; this owns the heading,
- * the rounding and the clip. */
 export function ListSection({ title, action, children, className = "" }: ListSectionProps) {
   return (
     <View className={className}>
@@ -234,22 +201,16 @@ export function ListSection({ title, action, children, className = "" }: ListSec
 export interface RowProps {
   title: string;
   subtitle?: string;
-  /** Usually an `IconCircle` or a `MemberAvatar`. */
   leading?: ReactNode;
-  /** Usually a `MoneyText`. Drawn right-aligned. */
   trailing?: ReactNode;
-  /** Small right-aligned line under `trailing` — "з ₴16,000", "65%". */
   trailingSubtitle?: string;
   onPress?: () => void;
   onLongPress?: () => void;
-  /** Draws the caret the design puts on a row that opens something. */
   chevron?: boolean;
-  /** Hairline under the row. Off on the last row of a section. */
   divider?: boolean;
   className?: string;
 }
 
-/** The list row every screen is built out of. */
 export function Row({
   title,
   subtitle,
@@ -307,17 +268,14 @@ export function Row({
   );
 }
 
-// ---- money -----------------------------------------------------------------------------------
 
 export type MoneyTone = "default" | "muted" | "accent" | "overspend" | "positive";
 
 export interface MoneyTextProps extends MoneyFormatOptions {
   value: Money;
-  /** Font size in px. The design runs 11 (widget) → 34 (the period total on Home). */
   size?: number;
   weight?: "regular" | "medium" | "semibold";
   tone?: MoneyTone;
-  /** Shorthand for `tone="overspend"` — what a budget row passes straight from `budgetState`. */
   over?: boolean;
   className?: string;
 }
@@ -336,10 +294,6 @@ const WEIGHT_CLASS = {
   semibold: "font-semibold",
 } as const;
 
-/**
- * An amount. The ONLY place a figure is drawn, so the minus sign, the grouping and the
- * overspend colour are the same on all eleven screens.
- */
 export function MoneyText({
   value,
   size = 15,
@@ -360,18 +314,12 @@ export function MoneyText({
   );
 }
 
-// ---- people and categories --------------------------------------------------------------------
 
 export interface MemberAvatarProps {
-  /** The member's display name; the avatar shows its first letter. */
   name: string;
-  /** Household order, stable — decides the colour. The first two land on the design's own
-   * two member colours. */
   index?: number;
   size?: number;
-  /** Overrides the index-derived colour, for a member whose colour is stored. */
   color?: string;
-  /** Draws the accent ring the design puts on the selected member pill. */
   selected?: boolean;
 }
 
@@ -399,15 +347,12 @@ export function MemberAvatar({ name, index = 0, size = 26, color, selected = fal
 }
 
 export interface IconCircleProps {
-  /** A stored icon key; anything unknown falls back to the kit's own default glyph. */
   icon: string | null | undefined;
-  /** Series slot — decides the tint. Ignored when `tint` is given. */
   index?: number;
   tint?: Tint;
   size?: number;
 }
 
-/** A category or group avatar: the glyph inside its tinted circle. */
 export function IconCircle({ icon, index = 0, tint, size = 38 }: IconCircleProps) {
   const resolved = tint ?? tintFor(index);
   return (
@@ -422,7 +367,6 @@ export function IconCircle({ icon, index = 0, tint, size = 38 }: IconCircleProps
 
 export type BadgeTone = "neutral" | "accent" | "overspend";
 
-/** ВЛАСНИК, шаблон, приховано — a word that qualifies the row it sits on. */
 export function Badge({ label, tone = "neutral" }: { label: string; tone?: BadgeTone }) {
   const style =
     tone === "accent"
@@ -440,23 +384,18 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: Badge
   );
 }
 
-// ---- controls -----------------------------------------------------------------------------------
 
 export interface ChipProps {
   label: string;
-  /** The right-hand figure on a template chip — `Кава ₴50`. */
   amount?: Money;
   icon?: IconName;
   onPress?: () => void;
-  /** The design's long-press affordance: tap logs, long-press opens the sheet prefilled. */
   onLongPress?: () => void;
   selected?: boolean;
-  /** A chip that adds rather than picks — the dashed `Новий`. */
   variant?: "solid" | "outline";
   className?: string;
 }
 
-/** The template chip: a pill carrying a name and, usually, its amount. */
 export function Chip({
   label,
   amount,
@@ -494,7 +433,6 @@ export interface ButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
-  /** `primary` fills with the accent; `ghost` is the quiet secondary the sheets use. */
   variant?: "primary" | "ghost";
   icon?: IconName;
   className?: string;
@@ -519,7 +457,6 @@ export function Button({ title, onPress, disabled = false, variant = "primary", 
   );
 }
 
-/** The floating add button. One per screen, bottom-right, above the gesture pill. */
 export function Fab({ label, onPress, icon = "plus" }: { label: string; onPress: () => void; icon?: IconName }) {
   return (
     <Pressable
@@ -543,11 +480,9 @@ export function Fab({ label, onPress, icon = "plus" }: { label: string; onPress:
 
 export interface FieldProps extends Omit<TextInputProps, "className" | "style"> {
   label: string;
-  /** Turns the underline and the message to `overspend`. */
   error?: string;
 }
 
-/** The underlined input from the onboarding screen — Nocturne has no boxed text field. */
 export function Field({ label, error, ...input }: FieldProps) {
   return (
     <View>
@@ -565,7 +500,6 @@ export function Field({ label, error, ...input }: FieldProps) {
   );
 }
 
-/** A settings toggle row — "Сповіщення про перевитрату". */
 export function ToggleRow({
   label,
   subtitle,
@@ -597,7 +531,6 @@ export function ToggleRow({
   );
 }
 
-/** One figure with its label under it — the household screen's Витрати / Частка / Операцій. */
 export function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: MoneyTone }) {
   return (
     <View className="flex-1">
@@ -609,7 +542,6 @@ export function Stat({ label, value, tone = "default" }: { label: string; value:
   );
 }
 
-// ---- states -------------------------------------------------------------------------------------
 
 export interface EmptyStateProps {
   title: string;
@@ -634,21 +566,15 @@ export function EmptyState({ title, body, icon = "tray", action, className = "" 
   );
 }
 
-// ---- sheet ----------------------------------------------------------------------------------------
 
 export interface SheetProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
   children: ReactNode;
-  /** A sheet whose body should scroll rather than grow past the screen. */
   scroll?: boolean;
 }
 
-/**
- * The bottom sheet: scrim, rounded top, grabber, then the caller's content. A plain
- * `Modal` — no gesture-driven sheet library, which would be a new stack row for one screen.
- */
 export function Sheet({ visible, onClose, title, children, scroll = false }: SheetProps) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

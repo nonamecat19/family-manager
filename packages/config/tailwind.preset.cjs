@@ -1,27 +1,19 @@
-// The Tailwind preset every app's tailwind.config.js extends. Token values live in
-// @fm/theme (tokens.ts) and are mirrored here because Tailwind config is CommonJS and must
-// stay loadable without a TS pipeline. packages/theme/src/tokens.test.ts asserts the two
-// stay in sync — a drift there is a test failure, not a surprise at runtime.
 const colors = {
-  // Brand
   primary: {
     DEFAULT: "#2F855A",
     fg: "#FFFFFF",
     muted: "#C6F6D5",
   },
-  // Semantic money colours: income is never red, expense is never green.
   income: "#2F855A",
   expense: "#C53030",
   transfer: "#2B6CB0",
 
-  // Surfaces, light
   bg: "#F7FAFC",
   surface: "#FFFFFF",
   border: "#E2E8F0",
   fg: "#1A202C",
   muted: "#718096",
 
-  // Surfaces, dark
   "bg-dark": "#12161C",
   "surface-dark": "#1A202C",
   "border-dark": "#2D3748",
@@ -56,7 +48,6 @@ module.exports = {
         body: ["15px", { lineHeight: "22px" }],
         title: ["20px", { lineHeight: "26px" }],
         display: ["32px", { lineHeight: "38px" }],
-        // Balances and amounts get their own scale — they are the reason the app exists.
         amount: ["28px", { lineHeight: "34px" }],
       },
     },

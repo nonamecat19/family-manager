@@ -4,11 +4,6 @@ import type { TokenStore, Tokens } from "./session.ts";
 
 const KEY = "fm.session";
 
-/**
- * Tokens live in the platform keychain, never in AsyncStorage or a state library — see
- * docs/adr/0005-auth.md. SecureStore values are limited in size, so we store one compact JSON
- * blob rather than three keys.
- */
 export const secureTokenStore: TokenStore = {
   async read(): Promise<Tokens | null> {
     const raw = await SecureStore.getItemAsync(KEY);
@@ -20,8 +15,6 @@ export const secureTokenStore: TokenStore = {
         typeof parsed.refreshToken !== "string" ||
         typeof parsed.expiresAt !== "number"
       ) {
-        // A shape we do not recognise is a leftover from an older build; drop it rather
-        // than crashing every launch.
         await SecureStore.deleteItemAsync(KEY);
         return null;
       }

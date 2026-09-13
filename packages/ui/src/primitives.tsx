@@ -5,20 +5,6 @@ import type { Theme } from "@fm/theme";
 
 import { useTheme } from "./theme.tsx";
 
-/**
- * The themed primitives every app draws from.
- *
- * They style from the theme object rather than NativeWind classes on purpose. A class like
- * `bg-surface` resolves through whichever Tailwind config the CONSUMING app compiled, so a
- * shared component would silently look different depending on who rendered it, and could not
- * be re-themed at runtime at all. Reading `theme.surface` makes the theme the single answer
- * and makes switching it actually repaint.
- *
- * This replaced a NativeWind-class set that had no consumers left: the apps had each forked
- * their own copy (Nocturne in finance and notes, Organic in recipes) because the shared one was
- * painted for a system none of them use any more. Reading roles from the theme is what lets
- * one set serve all three.
- */
 
 export function Card({ children }: { children: ReactNode }) {
   const t = useTheme();
@@ -82,7 +68,6 @@ export function Row({ children }: { children: ReactNode }) {
   );
 }
 
-/** The initial an avatar shows, with a tint derived from the person so it is stable. */
 export function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   const t = useTheme();
   const tint = avatarTint(t, name, index);
@@ -105,11 +90,6 @@ export function Avatar({ name, index = 0 }: { name: string; index?: number }) {
   );
 }
 
-/**
- * A stable tint per person: the same name is the same colour on every screen, and two people
- * in one list are not the same colour. Hashed rather than indexed because a member list
- * reorders (someone leaves) and a colour that moves with the row reads as a different person.
- */
 function avatarTint(t: Theme, name: string, fallbackIndex: number): { bg: string; fg: string } {
   const key = name.trim().toLowerCase();
   const slots = [
@@ -184,7 +164,6 @@ export function Button({ title, onPress, tone = "primary", disabled = false, bus
   );
 }
 
-/** A borderless text action — "Rename", "Revoke" — sized to sit inside a row. */
 export function InlineAction({
   label,
   onPress,
@@ -243,22 +222,16 @@ export function Field({ label, error, ...input }: FieldProps) {
   );
 }
 
-/** How a label is set, per theme. See `Theme.labelCase`. */
 function labelCase(t: Theme, tracking: number) {
   return (t.labelCase ?? "uppercase") === "sentence"
     ? ({ textTransform: "none", letterSpacing: 0 } as const)
     : ({ textTransform: "uppercase", letterSpacing: tracking } as const);
 }
 
-/**
- * The shape of an input, per theme. See `Theme.fieldStyle` — three apps draw three different
- * inputs, and unifying that would be a restyle, not a refactor.
- */
 function inputTreatment(t: Theme, invalid: boolean) {
   const edge = invalid ? t.danger : t.divider;
   switch (t.fieldStyle ?? "outline") {
     case "underline":
-      // A bare rule under the text: no box, no fill. Nocturne's finance screens.
       return {
         borderBottomWidth: 1,
         borderColor: edge,
@@ -266,7 +239,6 @@ function inputTreatment(t: Theme, invalid: boolean) {
         paddingVertical: 10,
       } as const;
     case "filled":
-      // A filled pill on the app ground. Organic.
       return {
         backgroundColor: t.neutral[100],
         borderRadius: t.radius.sm,
@@ -297,12 +269,7 @@ export function Title({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.text, fontSize: 15, fontWeight: "600", fontFamily: t.fonts?.semibold }}>{children}</Text>;
 }
 
-/* ------------------------------------------------------------------ screen & type --- */
 
-/**
- * The app ground. Every screen sits on it and none paints its own background — that rule is
- * why a theme switch repaints the whole app instead of leaving islands behind.
- */
 export function Screen({ children }: { children: ReactNode }) {
   const t = useTheme();
   return <View style={{ flex: 1, backgroundColor: t.bg }}>{children}</View>;
@@ -320,13 +287,11 @@ export function Body({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.muted, fontSize: 13.5, lineHeight: 21, fontFamily: t.fonts?.body }}>{children}</Text>;
 }
 
-/** The quiet line under an error — a support reference, a hint. */
 export function Caption({ children }: { children: ReactNode }) {
   const t = useTheme();
   return <Text style={{ color: t.neutral[600], fontSize: 12, fontFamily: t.fonts?.body }}>{children}</Text>;
 }
 
-/** A centred text action: "I don't have an account yet". */
 export function TextLink({ label, onPress }: { label: string; onPress: () => void }) {
   const t = useTheme();
   return (
@@ -338,10 +303,6 @@ export function TextLink({ label, onPress }: { label: string; onPress: () => voi
   );
 }
 
-/**
- * The pre-content state. Deliberately text-light: it renders before an app has finished
- * loading its own fonts, so it must read in the platform face.
- */
 export function Loading({ label }: { label?: string }) {
   const t = useTheme();
   return (

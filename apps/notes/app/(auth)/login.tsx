@@ -7,7 +7,6 @@ import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
 
 import { strings } from "../../components/i18n/index.ts";
 
-/** Sign in / register. The recipes screen's flow, drawn in Nocturne. */
 export default function LoginScreen() {
   const { auth } = useClients();
   const { signIn } = useAuth();
@@ -29,9 +28,6 @@ export default function LoginScreen() {
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
     } catch (e) {
-      // The service phrases the useful failures itself ("that email is already registered");
-      // toDisplayError keeps those and falls back to the generic line only when there is
-      // nothing readable in the error.
       const shown = toDisplayError(
         e,
         mode === "register" ? strings.login.registerError : strings.login.loginError,

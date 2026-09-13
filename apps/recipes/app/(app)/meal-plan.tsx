@@ -51,11 +51,6 @@ const SLOT_LABEL_KEYS: Record<number, TranslationKey> = {
   5: "mealPlan.slotDessert",
 };
 
-/**
- * Plan holds the two halves of "what are we eating": an ad-hoc basket of recipes you intend
- * to cook (which becomes the shopping list), and the week itself. They share a tab because
- * they answer the same question at different resolutions.
- */
 export default function PlanScreen() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("Basket");
@@ -155,7 +150,7 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
             : ""}
         </Text>
       </View>
-      {/* Stepping below 1 removes the recipe — the basket has no "zero batches" state. */}
+      {}
       <Stepper
         compact
         min={0}

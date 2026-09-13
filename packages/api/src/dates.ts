@@ -1,14 +1,5 @@
-/**
- * Calendar helpers for reports. A spending period is a calendar question ("this month"), not
- * an instant one, so dates are handled as `YYYY-MM-DD` strings in the user's local calendar
- * and never as UTC timestamps — the classic bug is a transaction added at 23:30 on the 31st
- * landing in next month's report.
- */
-
 export interface DateRange {
-  /** Inclusive start, YYYY-MM-DD. */
   from: string;
-  /** Inclusive end, YYYY-MM-DD. */
   to: string;
 }
 
@@ -16,7 +7,6 @@ export type PeriodKind = "day" | "week" | "month" | "year" | "all" | "custom";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Formats a Date's *local* calendar day. */
 export function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = `${d.getMonth() + 1}`.padStart(2, "0");
@@ -24,7 +14,6 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Parses YYYY-MM-DD into a local-midnight Date. Throws on anything else. */
 export function fromISODate(s: string): Date {
   if (!ISO_DATE.test(s)) throw new Error(`dates: ${JSON.stringify(s)} is not YYYY-MM-DD`);
   const [y, m, d] = s.split("-").map(Number) as [number, number, number];
@@ -55,7 +44,6 @@ export function addMonths(s: string, months: number): string {
   const d = fromISODate(s);
   const targetMonth = d.getMonth() + months;
   const anchor = new Date(d.getFullYear(), targetMonth, 1);
-  // Clamp: one month after Jan 31 is Feb 28/29, not Mar 3.
   const lastDay = daysInMonth(anchor.getFullYear(), anchor.getMonth());
   anchor.setDate(Math.min(d.getDate(), lastDay));
   return toISODate(anchor);
@@ -66,13 +54,10 @@ function daysInMonth(year: number, monthIndex: number): number {
 }
 
 export interface PeriodOptions {
-  /** 0 = Sunday, 1 = Monday (the default — most of the world, and the app's origin locale). */
   weekStartsOn?: 0 | 1;
-  /** The day treated as "today"; defaults to the system date. Injected by tests. */
   today?: Date;
 }
 
-/** The range covering `kind` around a reference day. "all" starts at the Unix epoch. */
 export function periodRange(kind: Exclude<PeriodKind, "custom">, opts: PeriodOptions = {}): DateRange {
   const today = opts.today ?? new Date();
   const weekStartsOn = opts.weekStartsOn ?? 1;
@@ -101,7 +86,6 @@ export function periodRange(kind: Exclude<PeriodKind, "custom">, opts: PeriodOpt
   }
 }
 
-/** Shifts a range by whole periods — the arrows either side of the period label. */
 export function shiftPeriod(
   range: DateRange,
   kind: Exclude<PeriodKind, "custom" | "all">,
@@ -136,13 +120,11 @@ export function contains(range: DateRange, day: string): boolean {
   return day >= range.from && day <= range.to;
 }
 
-/** Inclusive day count — a range's denominator when averaging spend per day. */
 export function dayCount(range: DateRange): number {
   const ms = fromISODate(range.to).getTime() - fromISODate(range.from).getTime();
   return Math.round(ms / 86_400_000) + 1;
 }
 
-/** Label for the period header: "March 2026", "1–7 Mar 2026", "12 Mar 2026". */
 export function formatRange(range: DateRange, locale?: string): string {
   const from = fromISODate(range.from);
   const to = fromISODate(range.to);

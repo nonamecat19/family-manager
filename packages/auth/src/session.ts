@@ -1,14 +1,6 @@
-/**
- * Session state machine: what tokens we hold, when they expire, and when to refresh.
- *
- * Pure logic on purpose — no React, no SecureStore, no clock of its own. Storage and timers
- * are injected, which is what makes expiry behaviour testable without waiting 15 minutes.
- */
-
 export interface Tokens {
   accessToken: string;
   refreshToken: string;
-  /** Absolute expiry of the access token, epoch milliseconds. */
   expiresAt: number;
 }
 
@@ -20,27 +12,20 @@ export interface TokenStore {
 
 export type SessionStatus = "loading" | "authenticated" | "anonymous";
 
-/**
- * Refresh this long before the access token actually expires, so an in-flight request never
- * races the expiry.
- */
 export const REFRESH_MARGIN_MS = 60_000;
 
 export function isExpired(tokens: Tokens, now: number): boolean {
   return now >= tokens.expiresAt;
 }
 
-/** True when the token is inside the refresh margin (or already past expiry). */
 export function needsRefresh(tokens: Tokens, now: number): boolean {
   return now >= tokens.expiresAt - REFRESH_MARGIN_MS;
 }
 
-/** Milliseconds until the next refresh should fire; 0 when it is already due. */
 export function msUntilRefresh(tokens: Tokens, now: number): number {
   return Math.max(0, tokens.expiresAt - REFRESH_MARGIN_MS - now);
 }
 
-/** Builds Tokens from an auth.v1 token response, which carries a relative expires_in. */
 export function tokensFromResponse(
   res: { accessToken: string; refreshToken: string; expiresIn: number | bigint },
   now: number,
@@ -52,10 +37,6 @@ export function tokensFromResponse(
   };
 }
 
-/**
- * Serialises refreshes: many components can call ensureFresh() at once (a screen mounting
- * fires five queries) and exactly one network refresh happens.
- */
 export class SessionManager {
   private tokens: Tokens | null = null;
   private inFlight: Promise<Tokens | null> | null = null;
@@ -66,8 +47,6 @@ export class SessionManager {
   private readonly now: () => number;
   private readonly isRejection: (error: unknown) => boolean;
 
-  // Written out rather than as parameter properties: Node's type-stripping runtime (used by
-  // `pnpm test`) rejects that syntax.
   constructor(
     store: TokenStore,
     refreshFn: (refreshToken: string) => Promise<Tokens>,
@@ -80,7 +59,6 @@ export class SessionManager {
     this.isRejection = isRejection;
   }
 
-  /** Loads persisted tokens once. Safe to call repeatedly. */
   async load(): Promise<Tokens | null> {
     if (!this.loaded) {
       this.tokens = await this.store.read();
@@ -89,11 +67,6 @@ export class SessionManager {
     return this.tokens;
   }
 
-  /**
-   * The tokens held in memory. Never refreshes — sign-out needs the refresh token ITSELF to
-   * revoke it, and a rotation first would hand back a new chain link and revoke the old one,
-   * leaving the new one live.
-   */
   current(): Tokens | null {
     return this.tokens;
   }
@@ -116,55 +89,30 @@ export class SessionManager {
     await this.store.clear();
   }
 
-  /**
-   * Ends the session: revokes the refresh-token chain server-side, then forgets the tokens
-   * here. Lives on the manager rather than in the React provider so the ordering below is
-   * testable without a renderer.
-   *
-   * The order is load-bearing in both directions. Revoke FIRST, because `clear` leaves nothing
-   * to revoke with. Clear REGARDLESS, because the user asked to sign out — a server that
-   * cannot be reached must not strand them signed in on this device. A revoke that fails
-   * leaves the chain alive until it expires on its own, which is exactly where sign-out stood
-   * before revocation existed, so failing this way is never worse than not trying.
-   */
   async end(revoke?: (refreshToken: string) => Promise<void>): Promise<void> {
     const tokens = this.tokens;
     if (revoke && tokens) {
       try {
         await revoke(tokens.refreshToken);
-      } catch {
-        // Best effort — see above.
+      } catch (error) {
+        void error;
       }
     }
     await this.clear();
   }
 
-  /**
-   * Returns a usable access token, refreshing first when it is due. Returns null when there
-   * is no session or the refresh failed — the caller then treats the request as anonymous.
-   *
-   * A failed refresh only ends the session when isRejection says the server rejected the
-   * token; a refresh that could not reach the server leaves the session intact to try again.
-   */
   async ensureFresh(): Promise<Tokens | null> {
     await this.load();
     const tokens = this.tokens;
     if (!tokens) return null;
     if (!needsRefresh(tokens, this.now())) return tokens;
 
-    // Collapse concurrent callers onto one refresh.
     this.inFlight ??= this.doRefresh(tokens.refreshToken).finally(() => {
       this.inFlight = null;
     });
     return this.inFlight;
   }
 
-  /**
-   * Refreshes unconditionally, ignoring expiry. Use after a mutation that changes what the
-   * access token's claims say about the caller (e.g. joining/creating a family) — those
-   * claims are baked in at issuance, so nothing else picks up the change until the token
-   * is replaced.
-   */
   async forceRefresh(): Promise<Tokens | null> {
     await this.load();
     const tokens = this.tokens;
@@ -182,15 +130,6 @@ export class SessionManager {
       await this.set(fresh);
       return fresh;
     } catch (error) {
-      // Two very different failures used to end the same way. A server that rejected the
-      // token means the session is over and the tokens are worthless. A refresh that never
-      // reached the server — no signal on a train, a captive portal, the VPS restarting —
-      // says nothing about the token, and dropping the session for it signs the user out of
-      // an app they were using a minute ago and makes them type their password to get back
-      // into something they never left.
-      //
-      // Only a rejection clears. Anything else keeps the tokens and returns null, so this
-      // call is anonymous and the next one tries again.
       if (this.isRejection(error)) {
         await this.clear();
       }

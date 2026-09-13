@@ -1,8 +1,3 @@
-/**
- * The six widget previews. Each one is a static picture of what the placed widget shows —
- * the gallery adds nothing to the home screen itself (that is the launcher's own long-press
- * flow), so nothing here is a control.
- */
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 
@@ -29,14 +24,12 @@ import type {
   RecentLine,
 } from "./data.ts";
 
-/** Ten thousand: where the design stops printing an account balance in full. */
 const COMPACT_FROM = 10_000;
 
 function EmptyLine({ label }: { label: string }) {
   return <Text className="py-n2 text-[11px] text-neutral-600">{label}</Text>;
 }
 
-// ---- 4×2 · Швидке додавання -------------------------------------------------------------
 
 export function QuickAddPreview({
   model,
@@ -44,9 +37,7 @@ export function QuickAddPreview({
   otherLabel,
 }: {
   model: QuickAddModel;
-  /** "Шаблони · Сергій", already translated. */
   ownerLabel: string;
-  /** "Інше" — the cell that opens the full add sheet. */
   otherLabel: string;
 }) {
   return (
@@ -66,8 +57,8 @@ export function QuickAddPreview({
           />
         ))}
         <TemplateCell icon="plus" label={otherLabel} amount={<Dash />} highlighted={false} />
-        {/* The grid is four cells wide whatever the household has saved, so a member with one
-            template does not get a full-width chip. */}
+        {
+}
         {Array.from({ length: Math.max(3 - model.templates.length, 0) }, (_, index) => (
           <View key={`spacer-${index}`} className="flex-1" />
         ))}
@@ -118,14 +109,12 @@ function TemplateCell({
   );
 }
 
-// ---- 2×2 · Місяць -----------------------------------------------------------------------
 
 export function MonthPreview({
   model,
   overspentLabel,
 }: {
   model: MonthModel;
-  /** "2 бюджети", or null when nothing is over its limit. */
   overspentLabel: string | null;
 }) {
   return (
@@ -151,7 +140,6 @@ export function MonthPreview({
   );
 }
 
-// ---- 2×1 · Категорія --------------------------------------------------------------------
 
 export function CategoryPreview({
   model,
@@ -174,7 +162,6 @@ export function CategoryPreview({
   );
 }
 
-// ---- 4×3 · Бюджети + родина -------------------------------------------------------------
 
 export function BudgetsAndFamilyPreview({
   model,
@@ -221,7 +208,6 @@ export function BudgetsAndFamilyPreview({
   );
 }
 
-// ---- 4×2 · Останні операції -------------------------------------------------------------
 
 export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; emptyLabel: string }) {
   if (lines.length === 0) return <EmptyLine label={emptyLabel} />;
@@ -247,7 +233,6 @@ export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; empt
   );
 }
 
-// ---- 4×1 · Рахунки ----------------------------------------------------------------------
 
 export function AccountsPreview({
   model,

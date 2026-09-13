@@ -1,20 +1,3 @@
-// Nocturne — the dark design system apps/finance and apps/notes are both drawn from, as a
-// Tailwind preset.
-//
-// It exists because the two apps' `tailwind.config.js` files carried this block verbatim:
-// the same nine neutrals, the same nine accents, the same three radii, and the same repaint
-// of the shared roles @fm/ui renders against. Two copies of a palette is how one app's
-// surface quietly drifts a shade off the other's.
-//
-// This is a SEPARATE preset from `tailwind.preset.cjs`, not an edit to it: that one is shared
-// with apps/recipes (`just impact pkg:@fm/config`), which is drawn in Organic — a light
-// system — and repainting it there would repaint that app too. An app opts in by listing this
-// after the base preset.
-//
-// The TypeScript mirror is `nocturneCore` in @fm/theme; `packages/theme/src/nocturne.test.ts`
-// asserts the two never drift. This file must stay CommonJS, which is why the palette exists
-// twice at all.
-
 const neutral = {
   100: "#f3f5fe",
   200: "#e4e7f5",
@@ -45,13 +28,8 @@ const surface = "#232532";
 const text = "#e9e9ed";
 const divider = "rgba(233,233,237,.16)";
 
-// Nocturne carries no danger role of its own. The design adds exactly one value for it,
-// generated in OKLCH at accent-400's own lightness and chroma (L 0.734, C 0.125, hue 27) so it
-// sits on the same perceptual step as the rest of the ramp. In finance it means "over budget"
-// and nothing else; it is also what both apps point `error` and `expense` at.
 const overspend = "#e5928a";
 
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   theme: {
     extend: {
@@ -59,9 +37,6 @@ module.exports = {
         neutral,
         accent,
         overspend,
-        // The shared roles @fm/ui renders against, repainted in Nocturne. Nocturne is
-        // dark-only, so the `*-dark` counterparts resolve to the same values — a shared
-        // component using `dark:` classes must not fall back to the preset's blue-greys.
         primary: { DEFAULT: accent.DEFAULT, fg: bg, muted: accent[900] },
         bg,
         surface,

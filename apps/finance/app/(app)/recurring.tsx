@@ -48,14 +48,6 @@ import {
 import { AmountRow } from "@/components/screens/add-transaction/AmountRow";
 import { AccountSheet, CategorySheet } from "@/components/screens/add-transaction/pickers";
 
-/**
- * Регулярні платежі — the drawer's third row.
- *
- * A schedule is not a transaction: nothing is in the ledger until an occurrence is posted.
- * So the screen's job is the decision on a due one — "заплатили" or "пропустити" — and the
- * two are drawn side by side on the row rather than behind a menu. Posting twice for the same
- * due date is a server-side no-op, which is what makes a double tap harmless.
- */
 export default function RecurringScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -75,8 +67,6 @@ export default function RecurringScreen() {
   const remove = useDeleteRecurringPayment();
 
   const currency = settings.data?.baseCurrencyCode || "UAH";
-  // ListRecurringPayments answers with a status per schedule — the payment plus whether this
-  // occurrence is already overdue, which the server decides in the household's timezone.
   const list = (payments.data ?? []).filter((status) => status.payment != null);
   const due = list.filter((status) => status.overdue);
   const upcoming = list.filter((status) => !status.overdue);
@@ -219,7 +209,6 @@ export default function RecurringScreen() {
   );
 }
 
-/** "щомісяця · наступний 5 вер" — the cadence in the household's own words. */
 function cadenceLabel(t: Translate, payment: RecurringPayment, _currency: string): string {
   const interval = payment.cadence?.interval ?? 1;
   const unit = payment.cadence?.unit ?? RecurrenceUnit.MONTH;

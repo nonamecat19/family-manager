@@ -6,19 +6,6 @@ import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "r
 import { strings } from "./i18n/index.ts";
 import { Icon, Kbd, nocturne, type IconName } from "./nocturne/index.ts";
 
-/**
- * The ⌘K palette (artboard 1d). Desktop only.
- *
- * Search is the SERVER's, not a filter over a loaded list: the proto is explicit about why —
- * a client-side filter stops working at the first notebook nobody has opened yet. So this
- * component owns a query string and a facet, and everything else is drawn from the response,
- * including the footer's "Searched 128 notes in 31ms", which is the server's own measurement
- * rather than a round trip the user's network dominates.
- *
- * The key handling is a raw `window` listener behind a Platform guard. React Native has no
- * key events for a component that is not a text input, and the palette's ↑↓/↵/⌘↵/esc have to
- * work while the caret is in the field.
- */
 
 export interface PaletteProps {
   visible: boolean;
@@ -28,11 +15,6 @@ export interface PaletteProps {
   onCreateNote: (title: string) => void;
 }
 
-/**
- * The facet row, shared by the ⌘K palette and the mobile search tab so the same control keeps
- * one shape. 1d draws these as fully-round pills, which the shared Chip (rounded-md, 8px)
- * cannot be talked into without editing it; this is that pill, in one place instead of two.
- */
 export function FacetPill({
   label,
   active,
@@ -59,7 +41,6 @@ export function FacetPill({
   );
 }
 
-/** The facets, in the order ⇥ cycles them and the order the search tab draws them. */
 export const FACETS: readonly { facet: SearchFacet; label: string }[] = [
   { facet: SearchFacet.ALL, label: strings.palette.facetAll },
   { facet: SearchFacet.NOTES, label: strings.palette.facetNotes },
@@ -152,8 +133,8 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
         onPress={onClose}
         className="flex-1 items-center"
       >
-        {/* The scrim is its own layer: putting the opacity on the parent would fade the
-            palette with it. */}
+        {
+}
         <View pointerEvents="none" className="absolute inset-0" style={SCRIM} />
         <Pressable
           accessibilityRole="none"
@@ -305,10 +286,6 @@ function HitRow({
   );
 }
 
-/**
- * The server sends the matching text with the terms left in place and no markup — the proto
- * says so — so the highlight is drawn here, by splitting on the query.
- */
 function Highlighted({ text, query, className }: { text: string; query: string; className: string }) {
   const term = query.trim();
   const at = term === "" ? -1 : text.toLowerCase().indexOf(term.toLowerCase());
@@ -357,10 +334,6 @@ function groupHits(hits: readonly SearchHit[]): HitGroup[] {
   return groups;
 }
 
-/**
- * Binds ⌘K and ⌘N on web. A no-op everywhere else — the shortcuts are the desktop shell's,
- * and a phone has no meta key to press.
- */
 export function useDesktopShortcuts({
   onPalette,
   onNewNote,
@@ -386,9 +359,4 @@ export function useDesktopShortcuts({
   }, [onPalette, onNewNote]);
 }
 
-/**
- * The overlay the design dims the app with behind a sheet. Drawn as the ground colour at
- * opacity rather than as a fourth hard-coded rgba: the ground is a token, and the scrim is
- * "the ground, mostly opaque".
- */
 const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;

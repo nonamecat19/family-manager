@@ -51,14 +51,6 @@ import {
 } from "@/components/nocturne";
 import { HomeGroupCard } from "@/components/screens/home/groupCard.tsx";
 
-/**
- * Screen 02 — Home. The whole screen is one call: `GetHomeSummary` returns the headline
- * balance, the period total, the donut slices, the group rows, the member chips and the
- * caller's quick templates for exactly the scope/period/kind the controls are set to. Nothing
- * here recomputes a total client-side, so what the donut says and what the rows add up to
- * cannot drift, and private accounts stay out of the family view because the server leaves
- * them out — the app never filters them itself.
- */
 export default function HomeScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -106,10 +98,6 @@ export default function HomeScreen() {
     [data?.slices, currency, t],
   );
 
-  // The design's "Швидко · шаблони Сергія". The templates are the caller's own (the server
-  // defaults ListTemplates/GetHomeSummary to the caller), but no RPC tells the app who the
-  // caller is — see the note in the return value. Naming the selected member when there is
-  // one, and the household otherwise, is the closest honest label.
   const templateOwner =
     scope.kind === "member"
       ? (members.find((m) => m.id === scope.id)?.name ?? family.data?.family?.name ?? "")
@@ -123,8 +111,6 @@ export default function HomeScreen() {
   const onTab = (next: PeriodTab) => {
     setTab(next);
     if (next === "custom") {
-      // No date-range picker exists in the kit yet; "Період" opens on the window currently
-      // shown rather than on an empty range.
       setPeriod({ granularity: "custom", range: periodWindow(period) });
       return;
     }
@@ -135,8 +121,6 @@ export default function HomeScreen() {
   const openGroup = (groupId: string) =>
     router.push({
       pathname: "/(app)/transactions",
-      // Both the tab and the window travel with the tap: a group row read under "Доходи" in
-      // July must open the July income feed, not the current month's expenses.
       params: {
         groupId,
         kind,
@@ -235,7 +219,6 @@ export default function HomeScreen() {
               centerLabel={t("common.groupCount", {
                 count: data?.groupCount ?? groups.filter((g) => g.groupId !== "").length,
               })}
-              // The uncategorised wedge has no group to filter by, so it is not a link.
               onPressSegment={(segment) => {
                 if (segment.id !== "") openGroup(segment.id);
               }}
@@ -259,8 +242,6 @@ export default function HomeScreen() {
                   label={template.label}
                   icon={iconOr(template.icon)}
                   amount={fromWire(template.amount, currency)}
-                  // Tap logs it straight away — the optimistic path in useLogTemplate; a
-                  // long press opens the add screen prefilled instead.
                   onPress={() => logTemplate.mutate({ templateId: template.id })}
                   onLongPress={() => router.push(`/(app)/add?templateId=${template.id}`)}
                 />
@@ -314,9 +295,6 @@ export default function HomeScreen() {
                         }
                       : undefined
                   }
-                  // Spending with no category is a row so the shares add up, but there is no
-                  // group filter that would show it — tapping would open the whole feed
-                  // unfiltered, which reads as "the filter was ignored".
                   onPress={group.groupId === "" ? undefined : () => openGroup(group.groupId)}
                 />
               );
@@ -355,7 +333,6 @@ export default function HomeScreen() {
   );
 }
 
-/** "Серпень 2026", "29 серпня, сб", "8/24 – 8/30" — whatever the current granularity names. */
 function periodLabel(t: Translate, period: PeriodInput): string {
   if (period.granularity === "custom") {
     return `${shortDate(period.range.from)} – ${shortDate(period.range.to)}`;

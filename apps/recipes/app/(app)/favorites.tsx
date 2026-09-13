@@ -8,7 +8,6 @@ import { formatDuration, metaLine } from "../../components/organic/format.ts";
 import { initialOf, tintFor } from "../../components/organic/tokens.ts";
 import { Display, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
-/** Favourites is a wall of dishes, not a list of rows — you recognise these by sight. */
 export default function FavoritesScreen() {
   const router = useRouter();
   const { t } = useI18n();

@@ -1,13 +1,4 @@
 #!/usr/bin/env node
-// Repo knowledge graph extractor.
-// Stages 4-8 of docs/ontology.yaml: extract typed nodes/edges from the repo, validate
-// domain/range, fuse duplicates, emit docs/graph/graph.json + graph.mmd.
-//
-//   node tools/repo-graph/extract.mjs              rebuild the graph
-//   node tools/repo-graph/extract.mjs --impact ID  print blast radius of a node
-//   node tools/repo-graph/extract.mjs --check      fail (exit 1) if the graph is stale
-//
-// No dependencies on purpose: this must run before `pnpm install` on a fresh clone.
 
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -18,7 +9,6 @@ const OUT_DIR = path.join(ROOT, "docs/graph");
 const EXTRACTED_AT = new Date().toISOString();
 const COMMIT = sh("git rev-parse --short HEAD") || "unknown";
 
-// --- ontology (mirror of docs/ontology.yaml; keep both in sync) --------------
 const ENTITY_TYPES = new Set([
   "app", "package", "service", "golib", "gomodule", "contract",
   "rpc", "message", "table", "migration", "infra", "external",
@@ -79,7 +69,6 @@ function walk(dir, filter, acc = []) {
   return acc;
 }
 
-// --- stage 4/5: TypeScript workspaces ---------------------------------------
 function extractNode() {
   for (const [base, type] of [["apps", "app"], ["packages", "package"]]) {
     for (const name of dirs(base)) {
@@ -105,7 +94,6 @@ function extractNode() {
   }
 }
 
-// --- stage 4/5: Go modules ---------------------------------------------------
 function goModuleId(dir) {
   const raw = read(path.join(ROOT, dir, "go.mod"));
   if (!raw) return null;
@@ -116,16 +104,15 @@ function goModuleId(dir) {
 function extractGo() {
   const work = read(path.join(ROOT, "go.work")) ?? "";
   const uses = [...work.matchAll(/^\s*(?:use\s+)?(\.\/[^\s)]+)/gm)].map((m) => m[1].replace(/^\.\//, ""));
-  const localModules = new Map(); // module path -> node id
+  const localModules = new Map();
 
   for (const dir of uses) {
     const modPath = goModuleId(dir);
     if (!modPath) { dropped.push({ why: "go.work member without go.mod", dir }); continue; }
-    // fusion: directory location decides the entity type, module path is the identity
     let type = "gomodule";
     if (dir.startsWith("services/")) type = "service";
     else if (dir.startsWith("libs/go/") || dir === "sdk/go") type = "golib";
-    else if (dir.endsWith("-service")) type = "service"; // pre-migration layout
+    else if (dir.endsWith("-service")) type = "service";
     const name = path.basename(dir).replace(/-service$/, "");
     const id = type === "service" ? `service:${name}` : type === "golib" ? `golib:${name}` : `gomod:${modPath}`;
     addNode(id, type, { dir, module: modPath, aliases: [modPath, dir, name] }, { source: `${dir}/go.mod` });
@@ -136,7 +123,7 @@ function extractGo() {
     const dir = nodes.get(id).props.dir;
     const raw = read(path.join(ROOT, dir, "go.mod")) ?? "";
     for (const m of raw.matchAll(/^\s+(\S+)\s+v\S+(\s+\/\/ indirect)?$/gm)) {
-      if (m[2]) continue; // indirect deps stay out of the graph — noise, not architecture
+      if (m[2]) continue;
       const target = localModules.get(m[1]) ?? `ext:${m[1]}`;
       if (!localModules.has(m[1])) addNode(target, "external", { name: m[1] }, { source: `${dir}/go.mod`, confidence: 0.9 });
       addEdge(id, "DEPENDS_ON", target, { source: `${dir}/go.mod`, line: lineOf(raw, m.index), internal: localModules.has(m[1]) });
@@ -145,7 +132,6 @@ function extractGo() {
   return localModules;
 }
 
-// --- stage 4/5: proto contracts ---------------------------------------------
 function extractProto(localModules) {
   const protoFiles = [
     ...walk(path.join(ROOT, "libs/proto"), (p) => p.endsWith(".proto")),
@@ -179,11 +165,6 @@ function extractProto(localModules) {
       addNode(`msg:${pkg}.${m[1]}`, "message", { name: m[1] }, { source, line: lineOf(text, m.index) });
     }
 
-    // fusion: bind the contract to the service that implements it.
-    // 1. libs/proto/<domain>/v1/*.proto  -> service:<domain>            (convention, confidence 1)
-    // 2. go_package pointing at a service module                        (confidence 1)
-    // 3. contract sitting inside a service directory                    (confidence 0.6)
-    // sdk/go and libs/go modules are generated/shared — never owners.
     let owner = null;
     let conf = 1;
     const domain = source.startsWith("libs/proto/") ? source.split("/")[2] : null;
@@ -205,7 +186,6 @@ function extractProto(localModules) {
   }
 }
 
-// --- stage 4/5: persistence --------------------------------------------------
 function extractSql() {
   const owners = [...nodes.values()].filter((n) => n.type === "service");
   const sqlFiles = owners.flatMap((svc) => walk(path.join(ROOT, svc.props.dir), (p) => p.endsWith(".sql")).map((f) => [svc, f]));
@@ -225,13 +205,12 @@ function extractSql() {
     }
     for (const m of text.matchAll(/\b(?:from|join|into|update)\s+"?(\w+)"?/gi)) {
       const t = `table:${m[1]}`;
-      if (!nodes.has(t)) continue; // only edges to tables we actually saw created
+      if (!nodes.has(t)) continue;
       addEdge(svc.id, "PERSISTS_TO", t, { source, line: lineOf(text, m.index), confidence: 0.8 });
     }
   }
 }
 
-// --- stage 4/5: infra --------------------------------------------------------
 function extractInfra() {
   const text = read(path.join(ROOT, "docker-compose.yml"));
   if (!text) return;
@@ -249,7 +228,6 @@ function extractInfra() {
   }
 }
 
-// --- stage 7: validate domain/range, drop violations -------------------------
 function validate() {
   const kept = [];
   const seen = new Set();
@@ -259,14 +237,13 @@ function validate() {
     if (!from || !to) { dropped.push({ why: "dangling endpoint", edge: e }); continue; }
     if (!spec.domain.includes(from.type) || !spec.range.includes(to.type)) { dropped.push({ why: "domain/range", edge: e }); continue; }
     const key = `${e.from}|${e.rel}|${e.to}`;
-    if (seen.has(key)) continue; // fusion: identical edges collapse, first provenance wins
+    if (seen.has(key)) continue;
     seen.add(key);
     kept.push(e);
   }
   return kept;
 }
 
-// --- serve: mermaid + impact -------------------------------------------------
 function mermaid(graph) {
   const shown = graph.nodes.filter((n) => ["app", "package", "service", "golib", "contract", "table", "infra"].includes(n.type));
   const ids = new Set(shown.map((n) => n.id));
@@ -307,7 +284,6 @@ function impact(graph, target) {
   return out;
 }
 
-// --- main --------------------------------------------------------------------
 const args = process.argv.slice(2);
 extractNode();
 const localModules = extractGo();
@@ -342,10 +318,6 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 const json = JSON.stringify(graph, null, 2) + "\n";
 if (args.includes("--check")) {
   const prev = read(path.join(OUT_DIR, "graph.json"));
-  // `commit` is stripped alongside the timestamps: it records the HEAD the facts were read
-  // at, so committing the graph changes it and the very next --check would call the file
-  // stale — with no way to ever satisfy it. Staleness is about structure (nodes, edges,
-  // sources), which the rest of the comparison covers.
   const strip = (s) => (s ?? "").replace(/"(generated_at|extracted_at|commit)": "[^"]*"/g, "");
   if (strip(prev) !== strip(json)) { console.error("graph is stale — run `just graph`"); process.exit(1); }
   console.log("graph up to date");

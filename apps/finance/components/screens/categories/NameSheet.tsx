@@ -5,22 +5,15 @@ import { Button, Field, Sheet } from "@/components/nocturne";
 
 export interface NameSheetProps {
   visible: boolean;
-  /** "Нова група" / "Додати" — the sheet's own heading, also the field's label. */
   title: string;
   saveLabel: string;
   cancelLabel: string;
   submitting: boolean;
-  /** A failed mutation, already phrased by the screen. */
   error?: string | null;
   onClose: () => void;
   onSubmit: (name: string) => void;
 }
 
-/**
- * Creating a group or a category is one text field, so both use this sheet rather than a
- * route. The name lives here: the screen only learns it on submit, which keeps the screen
- * free of a draft-state branch per sheet.
- */
 export function NameSheet({
   visible,
   title,
@@ -33,8 +26,6 @@ export function NameSheet({
 }: NameSheetProps) {
   const [name, setName] = useState("");
 
-  // Every opening starts empty — a sheet that reopens holding the previous name is how a
-  // household ends up with two groups called the same thing.
   useEffect(() => {
     if (visible) setName("");
   }, [visible]);

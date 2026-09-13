@@ -6,11 +6,6 @@ import { relative, strings } from "../../components/i18n/index.ts";
 import { EmptyState, Icon, Screen, nocturne } from "../../components/nocturne/index.ts";
 import { NoteListBody, useIsDesktop, useShell } from "./_layout.tsx";
 
-/**
- * "Shared with me": everything the caller can see that they do not own. ListSharedWithMe
- * returns two lists — notes and notebooks — and both are drawn, because a shared notebook is
- * how most of the shared notes arrive.
- */
 export default function SharedScreen() {
   const router = useRouter();
   const shell = useShell();

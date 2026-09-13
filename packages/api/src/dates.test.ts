@@ -15,12 +15,10 @@ import {
   toISODate,
 } from "./dates.ts";
 
-// A Thursday, deliberately near a month edge.
-const REFERENCE = new Date(2026, 2, 12); // 2026-03-12
+const REFERENCE = new Date(2026, 2, 12);
 
 test("toISODate uses the local calendar day", () => {
   assert.equal(toISODate(new Date(2026, 0, 5)), "2026-01-05");
-  // 23:30 local must still be that local day, not tomorrow in UTC.
   assert.equal(toISODate(new Date(2026, 0, 31, 23, 30)), "2026-01-31");
 });
 
@@ -36,7 +34,7 @@ test("addDays crosses month and year boundaries", () => {
   assert.equal(addDays("2026-01-31", 1), "2026-02-01");
   assert.equal(addDays("2026-12-31", 1), "2027-01-01");
   assert.equal(addDays("2026-03-01", -1), "2026-02-28");
-  assert.equal(addDays("2028-03-01", -1), "2028-02-29"); // leap year
+  assert.equal(addDays("2028-03-01", -1), "2028-02-29");
 });
 
 test("addMonths clamps instead of overflowing", () => {
@@ -127,6 +125,5 @@ test("dayCount is inclusive", () => {
 });
 
 test("dayCount is unaffected by a DST transition", () => {
-  // Europe/Kyiv springs forward on 2026-03-29; the day count must stay 31.
   assert.equal(dayCount({ from: "2026-03-01", to: "2026-03-31" }), 31);
 });

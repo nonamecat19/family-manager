@@ -1,12 +1,4 @@
 #!/usr/bin/env node
-// Deterministic enforcement of docs/autonomy.md. Inspects a diff and prints AUTO or STOP.
-//
-//   node tools/autonomy/gate-check.mjs              # staged changes (pre-commit)
-//   node tools/autonomy/gate-check.mjs --range A..B # a whole branch (pre-merge)
-//
-// exit 0 = AUTO (unattended commit/merge allowed)
-// exit 3 = STOP (write an escalation, block the unit, keep going with other units)
-// exit 1 = the check itself failed — treat as STOP.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -23,7 +15,6 @@ const diffArgs = RANGE ? [RANGE] : ["--cached"];
 let files, patch;
 try {
   files = git("diff", ...diffArgs, "--name-status").split("\n").filter(Boolean);
-  // Explicit prefixes: a user's diff.mnemonicPrefix would otherwise emit c//i/ and break parsing.
   patch = git("diff", ...diffArgs, "-U0", "--src-prefix=a/", "--dst-prefix=b/");
 } catch (e) {
   console.error(`gate-check: cannot read diff (${e.message})`);
@@ -33,7 +24,6 @@ try {
 const stops = [];
 const stop = (rule, detail) => stops.push({ rule, detail });
 
-// --- path-based rules -------------------------------------------------------
 const PATH_RULES = [
   [/^services\/auth\//, "auth service is hand-reviewed, always"],
   [/^libs\/go\/auth\//, "shared auth library is hand-reviewed, always"],
@@ -56,7 +46,6 @@ for (const { status, file } of changed) {
   if (status === "D") deletions.push(file);
 }
 
-// --- deleted nodes with inbound edges ---------------------------------------
 function readGraph() {
   try { return JSON.parse(fs.readFileSync(path.join(ROOT, "docs/graph/graph.json"), "utf8")); }
   catch { return null; }
@@ -71,7 +60,6 @@ for (const file of deletions) {
   }
 }
 
-// --- destructive SQL --------------------------------------------------------
 const DESTRUCTIVE = [
   [/\bdrop\s+(table|column|schema|type|index)\b/i, "DROP"],
   [/\btruncate\b/i, "TRUNCATE"],
@@ -80,8 +68,6 @@ const DESTRUCTIVE = [
   [/\bset\s+not\s+null\b/i, "NOT NULL on an existing column (needs a 3-step rollout)"],
 ];
 
-// --- breaking proto changes -------------------------------------------------
-// Removed lines that declare an rpc or a numbered field mean a removal or renumber.
 const PROTO_BREAKING = [
   [/^-\s*rpc\s+\w+/, "removed or renamed rpc"],
   [/^-\s*(repeated\s+|optional\s+)?[\w.]+\s+\w+\s*=\s*\d+\s*;/, "removed, renamed or renumbered field"],
@@ -106,7 +92,6 @@ for (const line of patch.split("\n")) {
   }
 }
 
-// --- report -----------------------------------------------------------------
 const dedup = [...new Map(stops.map((s) => [`${s.rule}|${s.detail}`, s])).values()];
 if (!dedup.length) {
   console.log(`AUTO — ${changed.length} file(s), nothing in the STOP column (docs/autonomy.md)`);

@@ -5,7 +5,6 @@ import type { MealSlot, RecipeSort } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useClients } from "./provider.tsx";
 import { queryKeys } from "./queryKeys.ts";
 
-/* ------------------------------------------------------------------ categories */
 
 export function useRecipeCategories() {
   const { recipes } = useClients();
@@ -42,7 +41,6 @@ export function useCreateSubcategory() {
   });
 }
 
-/* ------------------------------------------------------------------ recipes */
 
 export interface RecipeListFilters {
   categoryId?: string;
@@ -50,11 +48,8 @@ export interface RecipeListFilters {
   favoriteOnly?: boolean;
   search?: string;
   sort?: RecipeSort;
-  /** 0..5; 0 means "don't filter on rating". */
   minRating?: number;
-  /** prep + cook ceiling in seconds; 0 means "don't filter on time". */
   maxTotalSeconds?: number;
-  /** substring match on an ingredient name — "what can I cook with chicken". */
   ingredient?: string;
 }
 
@@ -102,13 +97,7 @@ export interface CreateRecipeInput {
   ingredients: IngredientInput[];
   steps: StepInput[];
   notes: string;
-  /** 1..5, or 0 for unrated. */
   rating: number;
-  /**
-   * Per-serving figures. Omitting this on an update leaves the stored macros alone rather
-   * than zeroing them — the server COALESCEs it — so a caller that does not collect
-   * nutrition cannot silently erase what a recipe was imported with.
-   */
   nutrition?: { kcal: number; proteinG: number; fatG: number; carbsG: number };
 }
 
@@ -154,10 +143,6 @@ export function useUploadRecipeImage() {
   });
 }
 
-/**
- * useRateRecipe is the one-tap star control. It is separate from useUpdateRecipe because
- * rating from a list row must not require sending the recipe's whole body back.
- */
 export function useRateRecipe() {
   const { recipes } = useClients();
   const qc = useQueryClient();
@@ -170,7 +155,6 @@ export function useRateRecipe() {
   });
 }
 
-/* ------------------------------------------------------------------ favorites */
 
 export function useFavoriteRecipes() {
   const { recipes } = useClients();
@@ -189,7 +173,6 @@ export function useToggleFavorite() {
   });
 }
 
-/* ------------------------------------------------------------------ comments */
 
 export function useComments(recipeId: string) {
   const { recipes } = useClients();
@@ -209,7 +192,6 @@ export function useAddComment() {
   });
 }
 
-/* ------------------------------------------------------------------ meal plan */
 
 export function useMealPlan(fromDate: string, toDate: string) {
   const { recipes } = useClients();
@@ -239,7 +221,6 @@ export function useRemoveMealPlanEntry() {
   });
 }
 
-/* ------------------------------------------------------------------ totals */
 
 export function useTotalIngredients(fromDate: string, toDate: string) {
   const { recipes } = useClients();
@@ -250,18 +231,11 @@ export function useTotalIngredients(fromDate: string, toDate: string) {
   });
 }
 
-/** One line of an ad-hoc cooking basket: a recipe and how many servings of it. */
 export interface BasketItem {
   recipeId: string;
-  /** 0 means "cook it as written" (the recipe's own servings). */
   servings: number;
 }
 
-/**
- * useSumIngredients totals an ad-hoc basket. It is a query, not a mutation, because nothing
- * is persisted — the basket lives in the app and the server just does the arithmetic, which
- * keeps the summing rules identical to the meal-plan totals.
- */
 export function useSumIngredients(items: BasketItem[]) {
   const { recipes } = useClients();
   return useQuery({

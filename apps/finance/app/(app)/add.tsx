@@ -53,37 +53,19 @@ import {
 
 type Kind = "expense" | "income";
 
-/** How far back the calendar sheet reaches. A transaction typed by hand is days old. */
 const RECENT_DAYS = 14;
 
-/**
- * Screen 03 — Нова операція.
- *
- * The screen is built around the template strip, not the form: the common case is "the usual
- * coffee", which is one tap and never touches the fields below. Everything under the strip is
- * the fallback for the transaction that is not a template.
- *
- * Every selection is *derived* rather than seeded by an effect — `pickedAccountId || first
- * account` — so the form is correct on the render where the data lands, instead of one render
- * later, and a refetch can never silently move a choice the user already made.
- */
 export default function AddTransactionScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  // Three ways in: a bare tap on the FAB, a long-press on a template chip (?templateId), and a
-  // tap on a feed row (?transactionId), which turns this screen into the edit form.
   const params = useLocalSearchParams<{ templateId?: string; transactionId?: string }>();
   const editingId = typeof params.transactionId === "string" ? params.transactionId : "";
   const seedTemplateId = typeof params.templateId === "string" ? params.templateId : "";
 
-  // Every field is "what the user picked, else what the seed says, else the sensible default",
-  // so the form is right on the render the transaction lands on rather than one render later.
   const [pickedKind, setPickedKind] = useState<Kind | null>(null);
   const [typedAmount, setTypedAmount] = useState<string | null>(null);
   const [pickedMemberId, setPickedMemberId] = useState("");
   const [pickedAccountId, setPickedAccountId] = useState("");
-  // These three are `null` until the user touches them and "" once they clear them, because a
-  // falsy fallback to the seed would resurrect a category the kind switch just cleared.
   const [pickedGroupId, setPickedGroupId] = useState<string | null>(null);
   const [pickedCategoryId, setPickedCategoryId] = useState<string | null>(null);
   const [pickedTemplateId, setPickedTemplateId] = useState<string | null>(null);
@@ -105,11 +87,6 @@ export default function AddTransactionScreen() {
   const seedTemplate = (templates.data ?? []).find((tpl) => tpl.id === seedTemplateId);
   const editingTx = editingId === "" ? null : (existing.data ?? null);
 
-  /**
-   * What the screen was opened with, flattened to plain fields. An edit wins over a template:
-   * the two params are never sent together, and if they were, the row being edited is the one
-   * the user is looking at.
-   */
   const seed = useMemo(() => {
     const from = (
       type: TransactionType,
@@ -189,14 +166,9 @@ export default function AddTransactionScreen() {
   const account = selectableAccounts.find((a) => a.id === accountId);
 
   const chosenCategoryId = pickedCategoryId ?? seed?.categoryId ?? "";
-  // The group follows the chosen category, so a seeded category opens its own grid rather than
-  // the first group's.
   const owningGroupId =
     groups.find((node) => node.categories.some((category) => category.id === chosenCategoryId))
       ?.group?.id ?? "";
-  // A category from the other tree is not a category this screen may submit: the server refuses
-  // an expense filed under an income category, and the grid is not showing it either. Once the
-  // tree has loaded, a category it does not contain is dropped rather than sent.
   const categoryId = !tree.isSuccess || owningGroupId !== "" ? chosenCategoryId : "";
   const groupId = pickedGroupId || owningGroupId || groups[0]?.group?.id || "";
   const group = groups.find((node) => node.group?.id === groupId);
@@ -307,8 +279,6 @@ export default function AddTransactionScreen() {
           value={kind}
           onChange={(next) => {
             setPickedKind(next);
-            // A category belongs to one kind's tree; keeping it across the switch would post
-            // an expense against an income category.
             setPickedCategoryId("");
             setPickedGroupId("");
             setPickedTemplateId("");

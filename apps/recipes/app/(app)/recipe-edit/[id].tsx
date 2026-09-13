@@ -67,7 +67,6 @@ export default function RecipeEditScreen() {
   if (!isNew && recipe.isError) {
     return <Placeholder label={toDisplayError(recipe.error, t("common.loadFailed")).message} />;
   }
-  // Load the existing recipe into the form once, on the render where it first arrives.
   if (!isNew && recipe.data && title === "" && recipe.data.title !== "") {
     const r = recipe.data;
     setTitle(r.title);
@@ -79,11 +78,7 @@ export default function RecipeEditScreen() {
     setSubcategoryId(r.subcategoryId);
     setNotes(r.notes);
     setRating(r.rating);
-    // Blank rather than "0" for an unrecorded figure: a 0 in the box is a claim that the
-    // dish has no calories, and it would be saved back as one.
     setKcal(r.nutrition?.kcal ? `${r.nutrition.kcal}` : "");
-    // formatMacro, not template interpolation: the column is a 4-byte float, so a typed
-    // 32.3 comes back as 32.29999923706055 and would fill the box with it.
     setProteinG(r.nutrition?.proteinG ? formatMacro(r.nutrition.proteinG) : "");
     setFatG(r.nutrition?.fatG ? formatMacro(r.nutrition.fatG) : "");
     setCarbsG(r.nutrition?.carbsG ? formatMacro(r.nutrition.carbsG) : "");
@@ -105,10 +100,6 @@ export default function RecipeEditScreen() {
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
-    // quality < 1 or allowsEditing both make expo-image-picker re-encode the asset as JPEG on
-    // Android/iOS, which has no alpha channel — a background-removed PNG would come back with
-    // a black or white background baked in. Passing the original file through untouched is the
-    // only way to keep transparency, since the backend already stores whatever bytes it gets.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       base64: true,
@@ -119,8 +110,6 @@ export default function RecipeEditScreen() {
     setPickedImage({ uri: asset.uri, base64: asset.base64, contentType: asset.mimeType ?? "image/jpeg" });
   };
 
-  // The recipe must exist before an image can be attached to it, so a picked photo is
-  // uploaded as a second request once create/update has returned an id.
   const uploadPickedImage = (recipeId: string) => {
     if (!pickedImage) return;
     uploadImage.mutate({
@@ -432,8 +421,6 @@ export default function RecipeEditScreen() {
   );
 }
 
-/** Empty means "not recorded", which is 0 on the wire. A decimal comma is accepted because
- * the keyboard on a Ukrainian locale offers one. */
 function parseNumber(text: string): number {
   const n = parseFloat(text.replace(",", "."));
   return Number.isFinite(n) && n > 0 ? n : 0;
@@ -457,8 +444,6 @@ function updateRow<T extends object>(rows: T[], setRows: (r: T[]) => void, idx: 
 
 const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-// RN's JS engine has no built-in atob, so ImagePicker's base64 string is decoded by hand
-// rather than pulling in a polyfill for one call site.
 function base64ToBytes(base64: string): Uint8Array {
   const clean = base64.replace(/=+$/, "");
   const bytes = new Uint8Array(Math.floor((clean.length * 3) / 4));

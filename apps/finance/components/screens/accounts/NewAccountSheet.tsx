@@ -5,18 +5,9 @@ import { View } from "react-native";
 import { useI18n } from "@/components/i18n";
 import { Button, Field, Sheet, ToggleRow } from "@/components/nocturne";
 
-/**
- * The Fab's sheet: name plus the one decision that changes what the rest of the family sees.
- *
- * Deliberately narrow. Kind, currency and opening balance have no copy in the dictionary and
- * no cell in the design canvas, so this creates a cash account in the household's currency
- * with a zero opening balance and leaves the rest to the account editor. Private implies
- * excluded from the family total — that is the contract's own rule, not a choice offered here.
- */
 export interface NewAccountSheetProps {
   visible: boolean;
   onClose: () => void;
-  /** The household's headline currency, so a new account lands in the one the family counts in. */
   currencyCode: string;
 }
 

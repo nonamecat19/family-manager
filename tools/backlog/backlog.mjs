@@ -1,21 +1,4 @@
 #!/usr/bin/env node
-// Durable backlog for autonomous runs. State lives in docs/backlog/<brief>.json, NOT in an
-// agent's context — a run that loses its session re-reads the file and continues.
-// The state machine is deterministic here so the model never has to remember where it was.
-//
-//   backlog.mjs new <brief-id> <branch>          create an empty backlog
-//   backlog.mjs add <brief-id> '<unit json>'     append a unit
-//   backlog.mjs status <brief-id>                human/agent readable summary
-//   backlog.mjs next <brief-id>                  print the next ready unit (exit 4 if none)
-//   backlog.mjs start <brief-id> <unit-id>
-//   backlog.mjs done <brief-id> <unit-id> [sha]
-//   backlog.mjs block <brief-id> <unit-id> "reason"
-//   backlog.mjs unblock <brief-id> <unit-id>
-//   backlog.mjs fail <brief-id> <unit-id> "reason"   increments attempts; blocks at 3
-//
-// A unit: { id, title, kind, nodes[], files[], depends_on[], acceptance, gate, status,
-//           attempts, commit, blocked_reason }
-// status: todo | doing | done | blocked
 
 import fs from "node:fs";
 import path from "node:path";
@@ -87,7 +70,7 @@ switch (cmd) {
   case "next": {
     const b = load(brief);
     const doing = b.units.find((u) => u.status === "doing");
-    if (doing) { console.log(JSON.stringify(doing, null, 2)); break; } // resume, do not start a second
+    if (doing) { console.log(JSON.stringify(doing, null, 2)); break; }
     const ready = b.units.find(
       (u) => u.status === "todo" && u.depends_on.every((d) => unit(b, d).status === "done"),
     );

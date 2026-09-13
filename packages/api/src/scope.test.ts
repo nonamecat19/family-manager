@@ -13,7 +13,6 @@ import {
   stepPeriod,
 } from "./scope.ts";
 
-/* ------------------------------------------------------------------------- scope */
 
 test("scopeKey is one comparable string per scope", () => {
   assert.equal(scopeKey(familyScope), "family");
@@ -26,7 +25,6 @@ test("scopes of different kinds never collide", () => {
   assert.notEqual(scopeKey(memberScope("x")), scopeKey(accountScope("x")));
 });
 
-/* ------------------------------------------------------------------------ window */
 
 test("a month window is the whole calendar month, whatever the anchor", () => {
   assert.deepEqual(periodWindow({ granularity: "month", anchor: "2026-08-30" }), {
@@ -40,7 +38,6 @@ test("a month window is the whole calendar month, whatever the anchor", () => {
 });
 
 test("a week window honours the household's week start", () => {
-  // 2026-08-30 is a Sunday.
   assert.deepEqual(periodWindow({ granularity: "week", anchor: "2026-08-30" }), {
     from: "2026-08-24",
     to: "2026-08-30",
@@ -66,7 +63,6 @@ test("a custom range with a malformed edge fails here, not on the server", () =>
   assert.throws(() => periodWindow(customPeriod({ from: "2026-08-01", to: "not-a-date" })));
 });
 
-/* --------------------------------------------------------------------- period key */
 
 test("two anchors inside one month are one cache entry", () => {
   assert.equal(
@@ -87,15 +83,12 @@ test("adjacent windows never share a key", () => {
 });
 
 test("granularities of the same window are distinct keys", () => {
-  // A single-day custom range and the day period cover the same dates but are different
-  // requests; keying them alike would serve a day feed to a custom-range screen.
   assert.notEqual(
     periodKey({ granularity: "day", anchor: "2026-08-30" }),
     periodKey(customPeriod({ from: "2026-08-30", to: "2026-08-30" })),
   );
 });
 
-/* ---------------------------------------------------------------------- stepping */
 
 test("stepping a month lands on the neighbouring month, not 30 days away", () => {
   assert.deepEqual(stepPeriod({ granularity: "month", anchor: "2026-08-30" }, 1), {

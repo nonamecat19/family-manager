@@ -29,18 +29,6 @@ import { AccountRow, HiddenPrivateRow } from "@/components/screens/accounts/Acco
 import { NewAccountSheet } from "@/components/screens/accounts/NewAccountSheet.tsx";
 import { TransferSheet } from "@/components/screens/accounts/TransferSheet.tsx";
 
-/**
- * Screen 08 — Accounts.
- *
- * The screen's one idea: shared money and private money are drawn as two different things.
- * The headline counts the shared accounts only, private accounts are captioned with why they
- * are missing from it, and another member's private accounts appear as a count with no
- * balance at all.
- *
- * No filtering happens here. `ListAccounts` returns the split already made — shared,
- * private_own, hidden — because the server decides what the caller may see, so a bug in this
- * file cannot leak a balance the API never sent.
- */
 export default function AccountsScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -63,15 +51,10 @@ export default function AccountsScreen() {
   const sharedBalance = fromWire(data?.sharedBalance);
   const savings = fromWire(data?.savingsTotal, sharedBalance.currencyCode);
 
-  // Whose private accounts these are. The contract lets a member create a private account only
-  // for themselves, so the owner of `privateOwn` IS the signed-in member — which is also the
-  // only way this app can name the caller: no RPC marks a member as "me".
   const selfId = privateOwn[0]?.ownerMemberId ?? "";
   const self = members.data?.find((m) => m.userId === selfId);
   const selfName = self?.displayName ?? "";
 
-  // What a transfer may move between: shared plus the caller's own private accounts, never a
-  // hidden one — those are only ever a count.
   const transferable: Account[] = useMemo(() => [...shared, ...privateOwn], [shared, privateOwn]);
 
   const isEmpty = shared.length === 0 && privateOwn.length === 0 && hidden.length === 0;
@@ -130,7 +113,6 @@ export default function AccountsScreen() {
           contentContainerStyle={{
             paddingHorizontal: nocturne.space.n4,
             paddingTop: nocturne.space.n5,
-            // Clears the Fab, which floats over the list rather than reserving space.
             paddingBottom: 96,
             gap: nocturne.space.n3,
           }}
@@ -195,7 +177,6 @@ export default function AccountsScreen() {
   );
 }
 
-/** The list's own failure, drawn like the gate's: what happened, its reference, and a retry. */
 function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   const { t } = useI18n();
   const shown = toDisplayError(error, t("common.loadFailed"));

@@ -1,16 +1,3 @@
-/**
- * Screen 06 — Per-member spending ("Хто витрачає").
- *
- * Design: `docs/design/finance/Family Money Manager.dc.html`, block `id="s6"`. Three blocks
- * stacked on the app ground: the family split bar, the same split repeated per category group,
- * and the insight the server composed. One request feeds all three — `GetMemberBreakdown`
- * returns the total, the members, the group splits and the insights together, so the three
- * cards can never disagree about a month.
- *
- * Private accounts never reach this screen: `MemberSpending.private_account_count` is the only
- * fact about them that crosses the wire, and the design does not draw it, so nothing here can
- * leak one member's private spending into the family total.
- */
 import {
   fromWire,
   InsightKind,
@@ -48,9 +35,6 @@ import {
   type Translate,
 } from "@/components/nocturne";
 
-/** One member, already off the wire: the colour and the amount every block on this screen
- * shares. Both the split bar and the per-group bars index into this list, which is what keeps
- * Сергій the same purple in all six bars. */
 interface MemberSlice {
   id: string;
   name: string;
@@ -68,9 +52,6 @@ function todayISO(): string {
 export default function PerMemberSpendingScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  // Screen 05 opens this screen on one member. The screen still shows the whole household —
-  // the split is the point — but it says whose card was tapped and marks them in the legend,
-  // so tapping Сергій and tapping Олена are not the same screen.
   const params = useLocalSearchParams<{ memberId?: string }>();
   const focusMemberId = typeof params.memberId === "string" ? params.memberId : "";
   const [anchor, setAnchor] = useState(todayISO);
@@ -186,8 +167,6 @@ export default function PerMemberSpendingScreen() {
   );
 }
 
-/** The header's month affordance — "Серпень ⌄". `ScreenHeader` takes icon-only actions, so the
- * design's text-plus-caret control rides in the header's own children slot. */
 function MonthButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable
@@ -203,7 +182,6 @@ function MonthButton({ label, onPress }: { label: string; onPress: () => void })
   );
 }
 
-/** "Розподіл": the family total cut by member, then the same colours spelled out underneath. */
 function SplitCard({
   title,
   total,
@@ -213,7 +191,6 @@ function SplitCard({
   title: string;
   total: Money;
   members: readonly MemberSlice[];
-  /** The member the screen was opened on, drawn brighter than the rest. */
   highlightId: string;
 }) {
   return (
@@ -257,11 +234,6 @@ function SplitCard({
   );
 }
 
-/**
- * The insight callout. The sentence is composed server-side so app, widget and notification
- * say the same thing; when the server sends only the figures, the app spells them out itself
- * from `current`/`previous`/`ratio` rather than parsing a body.
- */
 function InsightCard({
   insight,
   currency,

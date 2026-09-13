@@ -59,37 +59,9 @@ import {
 import { ShareSheet, useMemberDirectory } from "../../../components/share.tsx";
 import { ActionSheet, PANE, firstName, usePaneFit, useShell, type SheetAction } from "../_layout.tsx";
 
-/**
- * The note editor — artboard 1c on desktop, 1e on mobile.
- *
- * DELIBERATE DEPARTURE FROM THE MOCK. The design draws live presence ("3 editing now"), a
- * typing indicator, and comments pinned to individual blocks. There is no realtime channel in
- * this system — no CRDT, no presence, no websocket — so rather than fake it, the same chrome
- * is rendered from data that is actually true:
- *
- *   - the avatar stack is the note's SHARES, i.e. who can see this note;
- *   - "Maya edited 4m ago" is last_edited_by_user_id + updated_at;
- *   - the margin comments are ListComments, which are note-level in the proto, so they sit
- *     beside the block column rather than pointing at one block;
- *   - the typing indicator is gone entirely. Nothing could make it true.
- *
- * Concurrent editing is handled by expected_version instead: the conflict banner is the
- * honest version of "3 editing now".
- *
- * IMAGE BLOCKS ARE NOT IN V1, and this screen is where they used to be made. There is no
- * picker, no permission request and no UploadNoteImage call here on purpose: libs/go/storage
- * sets an anonymous-read policy on every bucket it creates, so a photo in a note that was
- * never shared would be readable by anyone holding the URL, and un-sharing the note would not
- * take the image back. "Private by default" is the product, so the feature waits for storage
- * that can keep a private object. The rpc and BLOCK_TYPE_IMAGE stay in the contract, unused;
- * an image block that arrives from an older client still renders (BlockEditor draws a labelled
- * placeholder) and is written back untouched by the save loop.
- */
 export default function NoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const noteId = id ?? "";
-  // Which of 1c's columns this window can afford. The margin comments and the right rail are
-  // the two that give way; see usePaneFit in the shell for the arithmetic.
   const panes = usePaneFit();
   const desktop = panes.desktop;
   const router = useRouter();
@@ -100,18 +72,11 @@ export default function NoteScreen() {
   const canEdit = note?.canEdit ?? false;
   const draft = useNoteDraft(note, canEdit);
 
-  // NO_BLOCK, not 0. Until the user puts a caret somewhere there is no focused block, and 0 is
-  // a real one: starting there made the first press on the block bar retype the note's first
-  // block. An IMAGE block renders no TextInput, so it never reports focus and never corrects
-  // that guess — opening a note that starts with an image and pressing any type button
-  // replaced the image with an empty paragraph.
   const [focused, setFocused] = useState(NO_BLOCK);
   const [shareOpen, setShareOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  // The desktop comment button opens the composer the margin column draws. Comments are
-  // note-level here (the proto has no block anchor), so it is one thread, not one per block.
   const [composing, setComposing] = useState(false);
   const closeComposer = useCallback(() => setComposing(false), []);
   const toggleStar = useToggleStar();
@@ -121,9 +86,6 @@ export default function NoteScreen() {
   const { nameOf } = useMemberDirectory();
 
   const applyType = (type: BlockType) => {
-    // Both halves of "is there something to retype": an index that points at a block at all,
-    // and a block that holds text. The gutter's move can leave the index on an image or a
-    // rule, so the index alone is never the answer. setType refuses the same cases.
     if (!canRetype(draft.blocks, focused)) return;
     if (type === BlockType.DIVIDER) {
       const next = insertDivider(draft.blocks, focused);
@@ -157,9 +119,6 @@ export default function NoteScreen() {
     );
   }
 
-  // What the bar lights up, and whether it is live at all. UNSPECIFIED matches no button, so
-  // with nothing focused the bar shows no type as active instead of claiming the note starts
-  // as a paragraph.
   const retypeable = canRetype(draft.blocks, focused);
   const activeType = retypeable
     ? (draft.blocks[focused]?.type ?? BlockType.PARAGRAPH)
@@ -188,15 +147,6 @@ export default function NoteScreen() {
     />
   );
 
-  /**
-   * The header's overflow menu, both layouts.
-   *
-   * Archive is a write, so it sits behind `note.canEdit` — the server's answer, never
-   * re-derived from owner_user_id here — next to move and delete. `archived` is the value to
-   * set rather than a toggle, and the screen deliberately stays put afterwards: the note leaves
-   * the lists but the route it is on still resolves, which is what makes "take it back out"
-   * the same menu item one press later.
-   */
   const overflow: SheetAction[] = [
     {
       key: "star",
@@ -362,12 +312,10 @@ export default function NoteScreen() {
         <View className="min-h-0 flex-1 flex-row">
           <View className="min-w-0 flex-1">
             <ScrollView
-              // The floating block bar hangs over the bottom of this column, so an editable
-              // note reserves the room it covers rather than hiding the last thing written.
               contentContainerClassName={`px-[40px] pt-[44px] ${canEdit ? "pb-[96px]" : "pb-[44px]"}`}
             >
-              {/* The design's measure, plus the lane the block gutter is drawn in when the
-                  note is editable — so the text is 560px wide either way. */}
+              {
+}
               <View
                 className="w-full self-center"
                 style={{ maxWidth: BLOCK_COLUMN_WIDTH + (canEdit ? GUTTER_LANE : 0) }}
@@ -503,7 +451,6 @@ export default function NoteScreen() {
   );
 }
 
-/* ------------------------------------------------------------------ pieces */
 
 function NoteMeta({ note }: { note: Note }) {
   return (
@@ -541,11 +488,6 @@ function SaveState({ state }: { state: string }) {
   );
 }
 
-/**
- * The conflict banner. The proto refuses a write whose expected_version is stale with ABORTED
- * precisely so this can exist: two people editing one shared note find out, instead of one of
- * them silently losing a paragraph. Nothing is sent again until the user picks a side.
- */
 function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOverwrite: () => void }) {
   return (
     <View
@@ -573,17 +515,6 @@ function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOve
   );
 }
 
-/**
- * The design's margin comments, anchored beside the block column rather than to a block.
- *
- * The block bar's comment button opens the composer here: 1c draws the button as "comment on
- * THIS block", and the proto's Comment has no block id, so what it can honestly do is start a
- * comment on the note. The column appears for the composer even when there is nothing in it
- * yet — otherwise the button would look like it did nothing.
- *
- * It is drawn only when the window has the width for it; below that the same thread stacks
- * under the note (StackedComments), which is also the mobile shape.
- */
 function CommentsColumn({
   noteId,
   nameOf,
@@ -659,16 +590,6 @@ function CommentsColumn({
   );
 }
 
-/**
- * The open comments, then the resolved ones behind a disclosure.
- *
- * Both lists ask ListComments for the resolved rows too. They used to ask for open ones only,
- * which made resolving one-way and half of CommentCard dead code: a resolved comment vanished
- * from the only list that could have un-resolved it, and `comment.resolved` was false wherever
- * the card rendered. Showing them collapsed is the cheaper of the two honest fixes — the
- * contract already carries the flag both ways (ResolveComment takes a bool, not a verb), and
- * the alternative was to delete the branch and leave "resolve" as a one-way door.
- */
 function CommentThread({
   comments,
   nameOf,
@@ -713,13 +634,6 @@ function CommentThread({
   );
 }
 
-/**
- * One comment. The control at the foot is a toggle in both directions — ResolveComment takes
- * the value to set, and a resolved card is reachable through the disclosure above, so pressing
- * it there re-opens the thread. The server decides who may: the comment's author or the note's
- * owner, and nobody else. That is a rule this app cannot see (there is no "canResolve" on the
- * message), so the control is drawn for everyone and the refusal is the server's to give.
- */
 function CommentCard({ comment, nameOf }: { comment: Comment; nameOf: (id: string) => string }) {
   const resolve = useResolveComment();
   const author = nameOf(comment.authorUserId);
@@ -751,12 +665,6 @@ function CommentCard({ comment, nameOf }: { comment: Comment; nameOf: (id: strin
   );
 }
 
-/**
- * The comment thread stacked under the note: the mobile shape, and the desktop one whenever the
- * window is too narrow for the margin column. `composing` is the block bar's comment button
- * arriving from a layout that has no margin to open — it puts the caret in the field here
- * instead, then hands the flag back so the next press fires again.
- */
 function StackedComments({
   noteId,
   nameOf,
@@ -813,7 +721,6 @@ function StackedComments({
   );
 }
 
-/** The right rail of artboard 1c: outline, activity, who this note is shared with. */
 function EditorRail({
   note,
   blocks,
@@ -920,7 +827,6 @@ function RailHeading({ label }: { label: string }) {
   );
 }
 
-/** The server sends kinds, not prose — the proto says so — so the sentence is written here. */
 function sentenceFor(entry: Activity, nameOf: (id: string) => string): string {
   const who = firstName(nameOf(entry.actorUserId)) || "Someone";
   switch (entry.kind) {
@@ -941,10 +847,6 @@ function sentenceFor(entry: Activity, nameOf: (id: string) => string): string {
   }
 }
 
-/**
- * The avatar stack. In the mock it was "who is editing right now"; here it is who the note is
- * shared with, which is the true version of the same picture.
- */
 function shareNamesOf(note: Note, nameOf: (id: string) => string): string[] {
   const names = [nameOf(note.ownerUserId)];
   for (const share of note.shares) {

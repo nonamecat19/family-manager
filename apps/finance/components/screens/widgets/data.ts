@@ -1,16 +1,3 @@
-/**
- * Screen 10's data layer. The gallery draws one preview per widget TYPE, not per placed
- * widget, so every preview needs a model even when nothing of that type is on the home
- * screen yet. Two sources, in this order:
- *
- *  1. `GetWidgetData` for a type the household has actually placed — the exact bytes the
- *     Android widget will render, so the preview cannot drift from the real thing;
- *  2. the domain aggregates otherwise, assembled here into the same shape.
- *
- * Everything is family-scoped and expense-kind, which is what the design's figures are.
- * Private accounts never reach a family total: the accounts preview reads only the `shared`
- * list `ListAccounts` already separates out.
- */
 import {
   BudgetTargetFilter,
   TransactionKind,
@@ -39,7 +26,6 @@ import { useMemo } from "react";
 
 import { parseISO } from "@/components/nocturne";
 
-/** A budget line as the two budget-bearing widgets draw it: a name, a spend and a limit. */
 export interface BudgetLine {
   id: string;
   label: string;
@@ -47,14 +33,12 @@ export interface BudgetLine {
   limit: Money;
 }
 
-/** One row of the "Останні операції" widget: a coloured dot, "category · member", an amount. */
 export interface RecentLine {
   id: string;
   label: string;
   amount: Money;
 }
 
-/** A template cell: the glyph, the label and the amount the tap would log. */
 export interface TemplateCellModel {
   id: string;
   label: string;
@@ -63,7 +47,6 @@ export interface TemplateCellModel {
 }
 
 export interface QuickAddModel {
-  /** The templates' owner — the member the widget is bound to. */
   ownerName: string;
   templates: TemplateCellModel[];
 }
@@ -72,7 +55,6 @@ export interface MonthModel {
   label: string;
   total: Money;
   slices: { id: string; value: number }[];
-  /** Budgets currently past their limit; the design prints it in `overspend`. */
   overspentCount: number;
 }
 
@@ -80,7 +62,6 @@ export interface CategoryModel {
   name: string;
   icon: string;
   amount: Money;
-  /** Series slot, so the circle's tint matches the same category elsewhere. */
   index: number;
 }
 
@@ -110,7 +91,6 @@ export interface WidgetPreviewsResult {
   refetch: () => void;
 }
 
-/** A month name, from the dictionary — the screen passes `t` in so this file stays pure. */
 export type MonthLabel = (month: number) => string;
 
 function payloadOf(payloads: readonly WidgetPayload[] | undefined, type: WidgetType) {
@@ -118,8 +98,6 @@ function payloadOf(payloads: readonly WidgetPayload[] | undefined, type: WidgetT
 }
 
 export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult {
-  // One anchor for every query on this screen: two `new Date()` calls a millisecond apart
-  // could straddle midnight and key two different caches.
   const period = useMemo(() => currentPeriod("month"), []);
   const kind = TransactionKind.EXPENSE;
 
@@ -132,8 +110,6 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
   const tree = useCategoryTree();
   const feed = useTransactionFeed({ period, kind, pageSize: 10 });
 
-  // The biggest group of the month is the one whose top category the "Категорія" widget
-  // shows; the request is skipped until there is a group to ask about.
   const topGroupId = home.data?.slices[0]?.groupId ?? "";
   const groupBreakdown = useGroupBreakdown(topGroupId, { period, kind });
 
@@ -191,12 +167,9 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
       balance: fromWire(account.balance, currency),
     });
 
-    // ---- quick add ---------------------------------------------------------------------
     const quickAddPayload = payloadOf(data, WidgetType.QUICK_ADD);
     const quickTemplates =
       quickAddPayload?.case === "quickAdd" ? quickAddPayload.value.templates : templates.data;
-    // A template carries the member it logs for, which is exactly the binding the widget
-    // announces — no separate "who am I" call, which the session does not expose anyway.
     const ownerId = quickTemplates[0]?.memberId ?? "";
     const quickAdd: QuickAddModel = {
       ownerName: memberName(ownerId),
@@ -208,7 +181,6 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
       })),
     };
 
-    // ---- month -------------------------------------------------------------------------
     const monthPayload = payloadOf(data, WidgetType.MONTH);
     const window = periodWindow(period);
     const monthNumber = parseISO(window.from).month;
@@ -235,7 +207,6 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
             overspentCount: Math.max(overspentFromList, 0),
           };
 
-    // ---- category ----------------------------------------------------------------------
     const categoryPayload = payloadOf(data, WidgetType.CATEGORY);
     const topSlice = groupBreakdown.data?.categories[0] ?? null;
     const category: CategoryModel | null =
@@ -255,7 +226,6 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
             }
           : null;
 
-    // ---- budgets + family --------------------------------------------------------------
     const bafPayload = payloadOf(data, WidgetType.BUDGETS_AND_FAMILY);
     const budgetsAndFamily: BudgetsAndFamilyModel =
       bafPayload?.case === "budgetsAndFamily"
@@ -268,7 +238,6 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
             members: memberBreakdown.data.members.slice(0, 2).map(memberLine),
           };
 
-    // ---- recent ------------------------------------------------------------------------
     const recentPayload = payloadOf(data, WidgetType.RECENT_TRANSACTIONS);
     const feedTransactions =
       recentPayload?.case === "recentTransactions"
@@ -284,10 +253,7 @@ export function useWidgetPreviews(monthLabel: MonthLabel): WidgetPreviewsResult 
       };
     });
 
-    // ---- accounts ----------------------------------------------------------------------
     const accountsPayload = payloadOf(data, WidgetType.ACCOUNTS);
-    // `shared` only — a private account is excluded from the family total by contract, and a
-    // widget that lives on a shared home screen must not leak one.
     const shared =
       accountsPayload?.case === "accounts"
         ? accountsPayload.value.accounts.filter((a) => !a.excludedFromFamilyTotal)

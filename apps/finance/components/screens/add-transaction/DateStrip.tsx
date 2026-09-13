@@ -3,23 +3,15 @@ import { Pressable, Text, View } from "react-native";
 import { Icon, nocturne, relativeDay, shortDate, type Translate } from "@/components/nocturne";
 
 export interface DateStripProps {
-  /** The chosen day, `YYYY-MM-DD`. */
   value: string;
-  /** The three offered days, newest first — today, yesterday, the day before. */
   options: readonly string[];
   today: string;
   onChange: (iso: string) => void;
-  /** Opens the fuller day list. */
   onOpenCalendar: () => void;
   calendarLabel: string;
   t: Translate;
 }
 
-/**
- * "8/30 сьогодні · 8/29 вчора · 8/28 2 дні", then the calendar glyph. Three chips because
- * that is what a transaction typed after the fact almost always is; anything older goes
- * through the calendar.
- */
 export function DateStrip({
   value,
   options,

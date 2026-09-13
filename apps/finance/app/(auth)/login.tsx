@@ -32,9 +32,6 @@ export default function LoginScreen() {
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
     } catch (e) {
-      // The service phrases the useful failures itself — "that email is already registered",
-      // "password must be at least 8 characters". toDisplayError keeps those and falls back
-      // to the generic copy only for failures with nothing readable in them.
       const shown = toDisplayError(e, mode === "register" ? t("auth.registerError") : t("auth.loginError"));
       setError(shown.message);
       setErrorRef(shown.reference ?? null);
@@ -52,8 +49,8 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-n5 px-n6"
       >
         <View>
-          {/* The app's own mark stays app-local: a brand is the one thing a shared component
-              set must not try to own. Everything below it is @fm/ui. */}
+          {
+}
           <View className="mb-n5 h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
             <Icon name="wallet" size={22} color={nocturne.accent[400]} />
           </View>

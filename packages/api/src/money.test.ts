@@ -86,12 +86,10 @@ test("toInput round-trips parseAmount", () => {
 });
 
 test("convert rounds half up on the target minor unit", () => {
-  // 10.00 EUR at 1.005 USD/EUR = 10.05 USD
   assert.deepEqual(convert(money(1000, "EUR"), "USD", 1.005), {
     amountMinor: 1005,
     currencyCode: "USD",
   });
-  // Into a zero-decimal currency the result is whole units.
   assert.deepEqual(convert(money(1000, "EUR"), "JPY", 160.4), {
     amountMinor: 1604,
     currencyCode: "JPY",

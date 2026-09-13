@@ -12,8 +12,6 @@ export interface FilterSheetProps {
   visible: boolean;
   onClose: () => void;
   members: readonly FilterOption[];
-  /** Shared accounts only — a private account is nobody else's business, and filtering the
-   * family feed by one would put its spending back into a family-scoped total. */
   accounts: readonly FilterOption[];
   memberIds: readonly string[];
   accountIds: readonly string[];
@@ -22,7 +20,6 @@ export interface FilterSheetProps {
   onClear: () => void;
 }
 
-/** The funnel in the header: who paid, and out of which shared account. */
 export function FilterSheet({
   visible,
   onClose,

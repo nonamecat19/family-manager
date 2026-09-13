@@ -1,15 +1,3 @@
-/**
- * Every string the app renders, in one module.
- *
- * apps/recipes carries a full `I18nProvider` with per-locale translation files. Commonplace
- * does not, deliberately: this app ships one locale, and a provider whose only job is to look
- * a key up in a single table is indirection without a second table to justify it. What the
- * provider actually buys — "no literal strings scattered through the screens" — is bought here
- * too, and the day a second locale lands, this object is the table it plugs into.
- *
- * Copy tone follows the imported design: sentence case, no exclamation marks, and the app
- * never congratulates the user for typing.
- */
 export const strings = {
   app: {
     name: "Commonplace",
@@ -104,21 +92,6 @@ export const strings = {
     emptySharedTitle: "Nobody has shared a note with you",
     emptySharedBody: "When someone shares a note or a notebook, it lands here.",
     emptyArchiveTitle: "The archive is empty",
-    // This list is ListNotes with archived_only, which reads the NOTE's archived flag and
-    // nothing else — there is no predicate on the notebook's. So archiving a notebook does not
-    // put its notes here, and the old copy ("Archived notebooks and their notes rest here")
-    // promised something the server does not do. The copy now says what the filter does.
-    //
-    // FOLLOW-UP, server side, deliberately not worked around in the client: to make the
-    // notebook half true, ListNotes would have to join notebooks and treat a note whose
-    // notebook is archived as archived — roughly, alongside the existing archived_only
-    // predicate in services/notes/internal/db/queries/notes.sql:
-    //   LEFT JOIN notebooks nb ON nb.id = n.notebook_id
-    //   ... AND (NOT archived_only OR n.archived OR nb.archived)
-    // and the same term inverted in the include_archived line, so an archived notebook's notes
-    // also leave "All notes". That is a change to what every list returns, so it belongs in a
-    // task with its own impact check — not in a client that would have to page and filter
-    // locally to fake it.
     emptyArchiveBody: "Notes you archive rest here instead of being deleted. Archiving a notebook leaves its notes where they are.",
     newNote: "New note",
     notSynced: "Not synced yet",
@@ -157,8 +130,6 @@ export const strings = {
     canView: "Can view",
     readOnly: "You can read this note, not edit it.",
     placeholder: "Type. “# ” for a heading, “- ” for a list, “[] ” for a task.",
-    // The label on an image block written by a client that still had them. This app cannot
-    // make one and does not show the picture — see BlockEditor — but the block is still here.
     imageBlock: "Image — not shown in this version",
     titlePlaceholder: "Untitled",
     created: (when: string) => `Created ${when}`,

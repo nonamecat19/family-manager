@@ -12,14 +12,7 @@ import {
   ToggleRow,
 } from "@/components/nocturne";
 
-/**
- * The four preference rows on screen 11 draw a caret, so each opens something. None of them
- * has a route in the design's eleven screens, so each opens a sheet on this screen instead of
- * inventing a twelfth route the drawer would then have to list.
- */
 
-/** "Приватність" — the caller's OWN private accounts. Another member's private accounts are
- * never named here: the server sends only a count for those, and this sheet asks for none. */
 export function PrivacySheet({
   visible,
   onClose,
@@ -29,7 +22,6 @@ export function PrivacySheet({
   visible: boolean;
   onClose: () => void;
   privateOwn: readonly Account[];
-  /** The household's base currency, used only when an account carries no amount of its own. */
   currencyCode: string;
 }) {
   const { t } = useI18n();
@@ -53,7 +45,6 @@ export function PrivacySheet({
   );
 }
 
-/** "PIN" — `pin_lock_enabled` is a household setting, not a device one, so this writes it. */
 export function PinSheet({
   visible,
   onClose,
@@ -75,9 +66,6 @@ export function PinSheet({
   );
 }
 
-/** "Вигляд" — Nocturne is dark-only, so the one appearance choice is the language. Locales
- * are labelled by their own code: a language name would be app copy, and screens do not add
- * copy to the dictionary. */
 export function AppearanceSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { t, locale, setLocale } = useI18n();
   return (
@@ -94,8 +82,6 @@ export function AppearanceSheet({ visible, onClose }: { visible: boolean; onClos
   );
 }
 
-/** "Дані та синхронізація" — what the household's data is keyed to, and when this device last
- * heard from the service. */
 export function DataSheet({
   visible,
   onClose,
@@ -124,7 +110,6 @@ export function DataSheet({
   );
 }
 
-/** "Додатково" — the build, and the one destructive control the app has. */
 export function AdvancedSheet({
   visible,
   onClose,

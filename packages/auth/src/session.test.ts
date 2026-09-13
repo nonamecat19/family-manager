@@ -46,7 +46,6 @@ test("msUntilRefresh never goes negative", () => {
 test("tokensFromResponse turns expires_in into an absolute expiry", () => {
   const t = tokensFromResponse({ accessToken: "a", refreshToken: "r", expiresIn: 900 }, NOW);
   assert.equal(t.expiresAt, NOW + 900_000);
-  // The Go side sends int64, which protobuf-es surfaces as bigint.
   const big = tokensFromResponse({ accessToken: "a", refreshToken: "r", expiresIn: 900n }, NOW);
   assert.equal(big.expiresAt, NOW + 900_000);
 });
@@ -138,14 +137,10 @@ test("ensureFresh on an empty store is anonymous, not an error", async () => {
   assert.equal(await mgr.ensureFresh(), null);
 });
 
-/** Tokens that are inside the refresh margin, so any call triggers a refresh. */
 function dueTokens(): Tokens {
   return { accessToken: "a", refreshToken: "r", expiresAt: NOW + REFRESH_MARGIN_MS / 2 };
 }
 
-// The failure this distinction exists for: no signal on a train, a captive portal, the VPS
-// restarting. None of them says anything about the refresh token, and signing the user out for
-// one makes them type their password to get back into an app they never left.
 test("a refresh that never reached the server keeps the session", async () => {
   const store = memoryStore(dueTokens());
   const manager = new SessionManager(
@@ -174,8 +169,6 @@ test("a rejected refresh token ends the session", async () => {
   assert.equal(manager.status(), "anonymous");
 });
 
-// The default is the behaviour that existed before the classifier did, so a caller that does
-// not pass one is not silently changed.
 test("without a classifier every failure ends the session", async () => {
   const store = memoryStore(dueTokens());
   const manager = new SessionManager(store, () => Promise.reject(new Error("boom")), () => NOW);
@@ -184,7 +177,6 @@ test("without a classifier every failure ends the session", async () => {
   assert.equal(store.value, null);
 });
 
-// Keeping the tokens is only useful if the next attempt actually retries.
 test("a kept session refreshes again on the next call", async () => {
   const store = memoryStore(dueTokens());
   let attempts = 0;
@@ -205,7 +197,6 @@ test("a kept session refreshes again on the next call", async () => {
   assert.equal(attempts, 2);
 });
 
-/* --------------------------------------------------- ending a session (revocation) ------ */
 
 test("end revokes the refresh token before forgetting it", async () => {
   const store = memoryStore(fresh);
@@ -214,7 +205,6 @@ test("end revokes the refresh token before forgetting it", async () => {
 
   const revoked: string[] = [];
   await mgr.end(async (token) => {
-    // The tokens must still be in hand at this point — revoking after `clear` is impossible.
     assert.equal(mgr.current()?.refreshToken, "r");
     revoked.push(token);
   });
@@ -229,7 +219,6 @@ test("a revoke that fails still signs the user out on this device", async () => 
   const mgr = new SessionManager(store, async () => fresh, () => NOW);
   await mgr.load();
 
-  // A server that cannot be reached must not strand the user signed in.
   await mgr.end(async () => {
     throw new Error("network down");
   });
@@ -264,8 +253,6 @@ test("ending an already-anonymous session revokes nothing", async () => {
 });
 
 test("end does not refresh first — the revoked token is the one the device held", async () => {
-  // Rotation on refresh means a refresh here would revoke the OLD link and leave the NEW one
-  // live, which is the opposite of signing out.
   const rotated: Tokens = { accessToken: "a2", refreshToken: "r2", expiresAt: NOW + 900_000 };
   const store = memoryStore({ ...fresh, expiresAt: NOW });
   let refreshes = 0;

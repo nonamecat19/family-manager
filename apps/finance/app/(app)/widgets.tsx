@@ -1,9 +1,3 @@
-/**
- * Screen 10 — the widget gallery. Six widget types, each drawn at its home-screen footprint
- * with the household's live figures in it. Previews only: placing a widget is the Android
- * launcher's long-press flow, which is what the body copy tells the reader, so nothing on
- * this screen is tappable except the back button.
- */
 import { toDisplayError } from "@fm/api";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -58,8 +52,6 @@ export default function WidgetsScreen() {
             <QuickAddPreview
               model={previews.quickAdd}
               ownerLabel={t("widgets.templatesOf", {
-                // A widget with no member behind it is the family-bound one the body copy
-                // describes; naming it beats printing "Шаблони · ".
                 name: previews.quickAdd.ownerName || t("common.family"),
               })}
               otherLabel={t("widgets.other")}

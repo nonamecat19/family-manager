@@ -16,12 +16,6 @@ const preset = require("@fm/config/nocturne.preset.cjs") as {
 
 const colors = preset.theme.extend.colors;
 
-/**
- * Nocturne exists twice on purpose — once here as TypeScript, once as a CommonJS Tailwind
- * preset, because a Tailwind config cannot import ESM. These tests are the reason that is
- * survivable: a value edited on one side and not the other fails here rather than showing up
- * as one screen a shade off from the rest.
- */
 
 test("the neutral ramp matches the tailwind preset", () => {
   assert.deepEqual(colors.neutral, { ...nocturneCore.neutral });
@@ -49,8 +43,6 @@ test("the radii match the tailwind preset", () => {
 });
 
 test("Nocturne is dark-only: the *-dark roles resolve to the same values", () => {
-  // A shared @fm/ui component using `dark:` classes must not fall back to the base preset's
-  // blue-greys — there is no light pass of these screens to fall back to.
   assert.equal(colors["bg-dark"], colors.bg);
   assert.equal(colors["surface-dark"], colors.surface);
   assert.equal(colors["border-dark"], colors.border);

@@ -1,18 +1,4 @@
-/**
- * English copy — the source of truth for the KEY SET, not for the app's face. Every one of
- * the eleven designed screens is drawn in Ukrainian; `uk.ts` carries that copy verbatim and
- * is typed against `keyof typeof en`, so adding, renaming or dropping a key here is a compile
- * error in the Ukrainian file until it is kept in sync.
- *
- * Keys are namespaced per screen — `onboarding.`, `home.`, `add.`, `categories.`,
- * `household.`, `member.`, `transactions.`, `accounts.`, `charts.`, `widgets.`,
- * `settings.` — plus `common.` (shared words, counts, calendar), `nav.` (the drawer),
- * `gate.` (the pre-screen states) and `auth.` (sign in). Screens do not add keys: this file
- * and its Ukrainian twin are owned by the shell, and a screen that needs a word it cannot
- * find should say so rather than hard-code it.
- */
 export const en = {
-  // ---- common: words the design repeats on more than one screen --------------------------
   "common.cancel": "Cancel",
   "common.save": "Save",
   "common.done": "Done",
@@ -28,21 +14,14 @@ export const en = {
   "common.none": "None",
   "common.tryAgain": "Try again",
   "common.loadFailed": "Could not load this. Check your connection and try again.",
-  // Shown under a failure message when the service returned an opaque internal error. The
-  // code means nothing to the reader; it is what lets someone find the request in the logs.
   "common.errorReference": "Reference {ref}",
   "common.loadingEllipsis": "…",
 
-  // The two-way switch at the top of Home, Add, Categories and Transactions. Uppercase in
-  // the design; the copy carries the case rather than a `uppercase` class, because Ukrainian
-  // and English do not capitalise the same way under `text-transform`.
   "common.expenses": "EXPENSES",
   "common.income": "INCOME",
-  /** Charts adds a third segment ahead of those two. */
   "common.total": "TOTAL",
   "common.family": "Family",
 
-  // Period tabs: День / Тиждень / Місяць / Рік / Період.
   "common.period.day": "Day",
   "common.period.week": "Week",
   "common.period.month": "Month",
@@ -53,11 +32,9 @@ export const en = {
   "common.yesterday": "yesterday",
   "common.daysAgo": { one: "{count} day", other: "{count} days" },
 
-  /** "₴15,723 з ₴16,000" — a spend against its budget. */
   "common.ofLimit": "of {amount}",
   "common.budgetOf": "budget {amount}",
   "common.noBudget": "no budget",
-  /** "4 з 5" — budgets kept out of budgets set. */
   "common.xOfY": "{done} of {total}",
   "common.percent": "{value}%",
 
@@ -72,11 +49,6 @@ export const en = {
   "common.hiddenAccountCount": { one: "{count} hidden account", other: "{count} hidden accounts" },
   "common.activeCount": { one: "{count} active", other: "{count} active" },
 
-  // Calendar. Four forms per month, because Ukrainian needs them and English does not:
-  // `month` heads a period ("Серпень 2026"), `monthLower` sits inside a sentence
-  // ("Бюджети груп · серпень"), `monthGen` dates a day ("29 серпня"), `monthShort` labels a
-  // chart axis. Keyed 1-12 so a caller indexes with a month number, never a locale-specific
-  // array order.
   "common.month.1": "January",
   "common.month.2": "February",
   "common.month.3": "March",
@@ -125,7 +97,6 @@ export const en = {
   "common.monthShort.10": "Oct",
   "common.monthShort.11": "Nov",
   "common.monthShort.12": "Dec",
-  // ISO weekday numbering: 1 = Monday … 7 = Sunday.
   "common.weekdayShort.1": "Mon",
   "common.weekdayShort.2": "Tue",
   "common.weekdayShort.3": "Wed",
@@ -133,10 +104,8 @@ export const en = {
   "common.weekdayShort.5": "Fri",
   "common.weekdayShort.6": "Sat",
   "common.weekdayShort.7": "Sun",
-  /** "29 серпня, сб" — the day header on Transactions. */
   "common.dayHeading": "{day} {month}, {weekday}",
 
-  // ---- drawer (screen 11 overlay) ---------------------------------------------------------
   "nav.menu": "Menu",
   "nav.home": "Home",
   "nav.accounts": "Accounts",
@@ -149,7 +118,6 @@ export const en = {
   "nav.settings": "Settings",
   "nav.syncedAt": "Synced {time}",
 
-  // ---- app gate: everything shown before a screen can render -------------------------------
   "gate.appName": "Family Money",
   "gate.restoringSession": "Restoring your session…",
   "gate.preparing": "Counting up…",
@@ -159,7 +127,6 @@ export const en = {
   "gate.errorTitle": "Something\nwent wrong",
   "gate.renderError": "The app could not draw this screen. Reopening it usually clears it.",
 
-  // ---- sign in ------------------------------------------------------------------------------
   "auth.title": "Family Money",
   "auth.signInBody": "One shared budget. Private accounts stay private.",
   "auth.registerBody": "Create an account, then a family — or accept an invitation.",
@@ -174,7 +141,6 @@ export const en = {
   "auth.loginError": "Could not sign in. Check the email and password and try again.",
   "auth.registerError": "Could not create the account. Try again.",
 
-  // ---- 01 onboarding -------------------------------------------------------------------------
   "onboarding.title": "Create a family",
   "onboarding.body": "A shared budget, shared categories. Private accounts stay private.",
   "onboarding.nameLabel": "NAME",
@@ -187,20 +153,16 @@ export const en = {
   "onboarding.createError": "Could not create the family. Try again.",
   "onboarding.nameRequired": "Give the family a name first.",
 
-  // ---- 02 home --------------------------------------------------------------------------------
   "home.title": "Home",
   "home.scopeFamily": "Family",
-  /** The "Усі 2" pill that resets a member/account scope back to everyone. */
   "home.scopeAll": "All {count}",
   "home.quickTemplates": "Quick · {name}'s templates",
-  /** "1 категорія · Сергій" under a group row. */
   "home.groupMeta": "{categories} · {name}",
   "home.emptyTitle": "Nothing here yet",
   "home.emptyBody": "Add the first transaction and this month starts filling in.",
   "home.addTransaction": "Add a transaction",
   "home.uncategorised": "No category",
 
-  // ---- 03 add transaction ------------------------------------------------------------------------
   "add.title": "New transaction",
   "add.editTitle": "Edit transaction",
   "add.amount": "Amount",
@@ -219,24 +181,19 @@ export const en = {
   "add.saveError": "Could not save the transaction. Try again.",
   "add.logged": "Logged {amount}",
 
-  // ---- 04 categories & groups ----------------------------------------------------------------------
   "categories.title": "Categories",
   "categories.addCategory": "Add",
   "categories.newGroup": "New group",
-  /** "7 категорій · бюджет ₴6,000" — the two halves come from common.categoryCount and
-   * common.budgetOf / common.noBudget. */
   "categories.groupMeta": "{categories} · {budget}",
   "categories.emptyTitle": "No categories yet",
   "categories.emptyBody": "Groups collapse a long list into something you can scan. Start with one.",
 
-  // ---- 05 household ---------------------------------------------------------------------------------
   "household.title": "Family",
   "household.sharedBalance": "Shared balance",
   "household.spendingIn": "Spending · {month}",
   "household.members": "MEMBERS",
   "household.owner": "OWNER",
   "household.fullAccess": "Full access",
-  /** "Повний доступ · 2 приватні рахунки" */
   "household.accessMeta": "{access} · {accounts}",
   "household.spending": "Spending",
   "household.share": "Share",
@@ -248,7 +205,6 @@ export const en = {
   "household.overspendNotifications": "Overspend notifications",
     "household.inviteError": "Could not send the invitation. Try again.",
 
-  // ---- family management (admin-gated server-side; these only decide what is drawn) ----
   "family.name.heading": "FAMILY NAME",
   "family.name.rename": "Rename",
   "family.name.label": "Name",
@@ -276,22 +232,17 @@ export const en = {
   "family.leave.lastAdmin": "You are the only admin. Make someone else an admin before you leave.",
   "family.leave.error": "Could not leave the family. Try again.",
 
-  // ---- 06 per-member spending -------------------------------------------------------------------------
   "member.title": "Who spends what",
   "member.split": "Split",
   "member.byGroup": "By group",
   "member.insights": "What changed",
-  /** The insight card's own two lines, when the service returns numbers rather than prose. */
   "member.insightComparison": "{current} against {previous} in {month}.",
   "member.insightBudget": "The group budget is {percent}% spent.",
   "member.emptyTitle": "Nothing to compare yet",
   "member.emptyBody": "Once there are two months of spending, this screen shows what moved.",
 
-  // ---- 07 transactions -----------------------------------------------------------------------------------
   "transactions.title": "Transactions",
-  /** "29 серпня, сб · ₴20,268" */
   "transactions.dayHeading": "{date} · {amount}",
-  /** "Mono · Дім" — account then category, under the title of a row. */
   "transactions.rowMeta": "{account} · {category}",
   "transactions.templateBadge": "template",
   "transactions.search": "Search",
@@ -301,7 +252,6 @@ export const en = {
   "transactions.emptyBody": "Nothing was logged in this period.",
   "transactions.deleteConfirm": "Delete this transaction?",
 
-  // ---- 08 accounts -----------------------------------------------------------------------------------------
   "templates.title": "Templates",
   "templates.subtitle": "Yours only",
   "templates.yours": "Your templates",
@@ -379,10 +329,7 @@ export const en = {
   "accounts.emptyTitle": "No accounts yet",
   "accounts.emptyBody": "Add the accounts the family actually pays from.",
 
-  // ---- 09 charts -------------------------------------------------------------------------------------------
   "charts.title": "Charts",
-  // Lowercase in the design, unlike the period tabs above — this is the chart's own
-  // granularity switch, not a period.
   "charts.granularity.year": "year",
   "charts.granularity.month": "month",
   "charts.granularity.week": "week",
@@ -392,11 +339,9 @@ export const en = {
   "charts.emptyTitle": "Not enough data",
   "charts.emptyBody": "Charts start being useful after a few weeks of transactions.",
 
-  // ---- 10 widgets -------------------------------------------------------------------------------------------
   "widgets.title": "Widgets",
   "widgets.body":
     "Press and hold to add one to your home screen. Every widget is bound to a member or to the whole family.",
-  /** "4×2" — the tile size badge. */
   "widgets.size": "{cols}×{rows}",
   "widgets.quickAdd": "Quick add",
   "widgets.templatesOf": "Templates · {name}",
@@ -407,7 +352,6 @@ export const en = {
   "widgets.recent": "Recent transactions",
   "widgets.accounts": "Accounts",
 
-  // ---- 11 settings ------------------------------------------------------------------------------------------
   "settings.title": "Settings",
   "settings.family": "Family",
   "settings.familyMeta": "{members} · one shared budget",

@@ -32,11 +32,6 @@ export default function LoginScreen() {
       const res = await auth.login({ email, password });
       await signIn(tokensFromResponse(res, Date.now()));
     } catch (e) {
-      // The service phrases the useful failures itself — "that email is already registered",
-      // "password must be at least 8 characters" — and this screen used to discard all of
-      // them and print the same sentence, so a fixable mistake looked identical to a wrong
-      // password. toDisplayError keeps those and falls back to the generic copy only for
-      // failures with nothing readable in them.
       const shown = toDisplayError(
         e,
         mode === "register" ? t("login.registerError") : t("login.loginError"),
@@ -57,8 +52,8 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-[18px] px-[24px]"
       >
         <View>
-          {/* Display stays app-local: Alegreya at 36px is this cookbook's brand voice, not a
-              role a shared component should decide. Everything below it is @fm/ui. */}
+          {
+}
           <Display size={36}>{t("login.appName")}</Display>
           <View className="mt-[10px]">
             <Body>{mode === "login" ? t("login.signInBody") : t("login.registerBody")}</Body>

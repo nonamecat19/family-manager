@@ -3,44 +3,25 @@ import Svg, { Circle, G } from "react-native-svg";
 
 import { budgetState, nocturne, seriesColor } from "./tokens.ts";
 
-/**
- * The four chart shapes the eleven screens use, in react-native-svg (already a repo
- * dependency) and plain views. No charting library: each of these is thirty lines of geometry,
- * and a library would be a stack row plus a theming layer to fight.
- *
- * Values are plain numbers in minor units. Charts do not format money — a caller labels them
- * with `MoneyText` or `formatMoney`, so the grammar stays in one place.
- */
 
-// ---- donut -----------------------------------------------------------------------------------
 
 export interface DonutSegment {
   id: string;
   label: string;
-  /** Minor units, or any consistent unit. Negative and zero values are skipped. */
   value: number;
-  /** Overrides the ramp slot; omit and the segment takes its colour from its index. */
   color?: string;
 }
 
 export interface DonutChartProps {
   segments: readonly DonutSegment[];
-  /** Outer diameter. */
   size?: number;
-  /** Ring width. */
   thickness?: number;
-  /** The big figure in the middle — usually the period total, already formatted. */
   centerValue?: string;
-  /** The line under it — "5 груп". */
   centerLabel?: string;
-  /** Drilling into a group is a tap on its arc, as well as on its row. */
   onPressSegment?: (segment: DonutSegment) => void;
-  /** Degrees of ground left between arcs. */
   gap?: number;
 }
 
-/** Home's group donut and Charts' own. Draws arcs as dashed circle strokes — one `Circle` per
- * segment, no path maths. */
 export function DonutChart({
   segments,
   size = 196,
@@ -59,7 +40,7 @@ export function DonutChart({
   return (
     <View style={{ width: size, height: size }} className="items-center justify-center">
       <Svg width={size} height={size}>
-        {/* The unfilled ring, so an empty period still reads as a chart rather than a hole. */}
+        {}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -68,7 +49,7 @@ export function DonutChart({
           strokeWidth={thickness}
           fill="none"
         />
-        {/* -90° puts the first segment at twelve o'clock, which is where the design starts. */}
+        {}
         <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
           {total > 0
             ? drawable.map((segment, index) => {
@@ -103,7 +84,6 @@ export function DonutChart({
   );
 }
 
-// ---- stacked bars ------------------------------------------------------------------------------
 
 export interface BarSeries {
   id: string;
@@ -112,29 +92,20 @@ export interface BarSeries {
 }
 
 export interface BarPoint {
-  /** The axis label — "Сер". */
   label: string;
-  /** One value per entry in `series`, same order. A short array is padded with zeros. */
   values: readonly number[];
 }
 
 export interface StackedBarSeriesProps {
   points: readonly BarPoint[];
   series: readonly BarSeries[];
-  /** Plot height, excluding the axis labels and the legend. */
   height?: number;
-  /** Dims every other column — the design highlights the month being viewed. */
   activeIndex?: number;
   onPressPoint?: (index: number) => void;
   legend?: boolean;
   className?: string;
 }
 
-/**
- * Charts' seven-month history, stacked by member. Built from views rather than SVG: the bars
- * are rectangles with rounded tops, and flexbox gets the column widths right at any screen
- * width without a measured viewport.
- */
 export function StackedBarSeries({
   points,
   series,
@@ -223,7 +194,6 @@ export function ChartLegend({
   );
 }
 
-// ---- split bar ------------------------------------------------------------------------------------
 
 export interface SplitPart {
   id: string;
@@ -235,13 +205,10 @@ export interface SplitPart {
 export interface SplitBarProps {
   parts: readonly SplitPart[];
   height?: number;
-  /** Rounds the whole bar rather than each part — the design's "Розподіл" is one capsule. */
   rounded?: boolean;
   className?: string;
 }
 
-/** The per-member split: one bar cut into shares. Two parts on screen 06, but it takes any
- * number. */
 export function SplitBar({ parts, height = 10, rounded = true, className = "" }: SplitBarProps) {
   const total = parts.reduce((sum, p) => sum + Math.max(p.value, 0), 0);
   return (
@@ -266,29 +233,17 @@ export function SplitBar({ parts, height = 10, rounded = true, className = "" }:
   );
 }
 
-// ---- budget bar --------------------------------------------------------------------------------------
 
 export interface BudgetBarProps {
-  /** Minor units. */
   spentMinor: number;
-  /** Minor units. `0` means "no budget": no bar is drawn at all, which is not the same as
-   * "spent nothing". */
   limitMinor: number;
-  /** The row's name, drawn above the bar. Omit to draw the bar alone. */
   label?: string;
-  /** Right-hand text. Defaults to the computed percentage — "98%", "256%". */
   valueLabel?: string;
   height?: number;
-  /** Overrides the fill colour while under budget; the overspend state always wins. */
   color?: string;
   className?: string;
 }
 
-/**
- * A group's budget. Under 100% the fill is the accent and grows with the ratio; past 100% the
- * bar fills completely in `overspend` and the figure turns with it — the one thing in this app
- * that has to read at a glance.
- */
 export function BudgetBar({
   spentMinor,
   limitMinor,

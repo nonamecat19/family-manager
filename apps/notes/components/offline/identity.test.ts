@@ -3,11 +3,6 @@ import test from "node:test";
 
 import { ownerFileKey, userIdFromToken } from "./identity.ts";
 
-/**
- * Reading the queue's owner out of an access token. The queue file's name and its stamp both
- * come from here, so "which user is this" has to survive a token that is missing, malformed, or
- * carries claims this app did not expect.
- */
 
 function token(claims: Record<string, unknown>): string {
   const payload = Buffer.from(JSON.stringify(claims), "utf8")
@@ -26,9 +21,6 @@ test("the owner is the token's subject", () => {
 });
 
 test("a non-ASCII claim does not corrupt the subject", () => {
-  // The payload is UTF-8, and a display name with an accent in it used to be enough to make a
-  // naive latin1 decode throw or return mojibake — which would have meant no owner, and a queue
-  // that quietly stops persisting.
   assert.equal(userIdFromToken(token({ sub: "user-1", name: "Renée Ø 家" })), "user-1");
 });
 
@@ -49,8 +41,6 @@ test("two owners never share a file key, and the key is a safe file name", () =>
 
   assert.notEqual(a, b);
   assert.match(a, /^[A-Za-z0-9_-]+$/);
-  // Characters a file name has no business carrying are dropped, but the id still decides the
-  // key: two ids that differ only in a stripped character must not collapse onto one file.
   assert.notEqual(ownerFileKey("../../etc/passwd"), ownerFileKey("etcpasswd"));
   assert.match(ownerFileKey("../../etc/passwd"), /^[A-Za-z0-9_-]+$/);
 });

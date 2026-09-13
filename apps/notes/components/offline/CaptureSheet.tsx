@@ -8,34 +8,6 @@ import { offlineCopy } from "./copy.ts";
 import { Chip, Icon, IconButton, PrimaryButton, nocturne } from "../nocturne/index.ts";
 import { useCaptureQueue } from "./queue.ts";
 
-/**
- * Quick capture (artboard 1f): the sheet the mobile FAB opens.
- *
- * It never calls CreateNote directly. Everything goes through the queue, which writes to disk
- * first and sends when there is a network — so the sheet behaves the same on the train as it
- * does at home, and the pill tells the truth about which one is happening.
- *
- * The design's Photo chip (1f) is gone and is not coming back in v1 — not an oversight, a
- * decision. Image blocks are deferred: libs/go/storage puts an anonymous-read policy on every
- * bucket it creates, so a photo captured into a private note would be fetchable by anyone
- * holding its URL and un-sharing the note would not revoke it. Until object storage can hold a
- * private object there is nowhere safe to put the bytes, so the sheet does not offer to take
- * them. (The chip had a second problem even then: UploadNoteImage needs a note_id, and a note
- * captured offline does not have one yet.)
- *
- * The Voice chip is absent for the older reason: there is no VOICE BlockType and no rpc that
- * would store the audio, so it would be a chip with nowhere to put its bytes.
- *
- * The notebook picker offers every notebook ListNotebooks returned, and some of those are shared
- * with the caller VIEW-only — capturing into one is refused server-side, after the note is
- * written. The sheet CANNOT filter them out today: Notebook carries owner_user_id but no
- * can_edit (notes.proto:176), and the proto is explicit that permission must not be re-derived
- * on the client from owner + shares. Filtering by ownership would also hide the notebooks shared
- * for EDIT, which are exactly the ones a family shares. So the refusal is handled instead of
- * predicted: the queue keeps the note, records why the server said no, and Settings offers to
- * refile it under the user's own notes. The proper fix is a `can_edit` on Notebook — a contract
- * change, reported rather than made here.
- */
 
 export interface CaptureSheetProps {
   visible: boolean;
@@ -75,13 +47,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
         ],
       });
     } catch (error) {
-      // The queue rejects when the note did not reach the disk. Keep the sheet open with the
-      // user's text still in it: clearing a draft that was saved nowhere is how a capture app
-      // loses a note. The queue has already logged why.
       console.warn("[notes] the capture was not saved", error);
-      // Silence here read as "saved" to the user, because the sheet simply did not move. It
-      // says so instead — the queue refuses to write a note it cannot attribute to the
-      // signed-in user, and that is a real (if brief) state right after a sign-in.
       setFailed(true);
       return;
     }
@@ -218,9 +184,4 @@ function firstLine(text: string): string {
   return line.length > 60 ? `${line.slice(0, 57)}…` : line || strings.common.untitled;
 }
 
-/**
- * The overlay the design dims the app with behind a sheet. Drawn as the ground colour at
- * opacity rather than as a fourth hard-coded rgba: the ground is a token, and the scrim is
- * "the ground, mostly opaque".
- */
 const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;

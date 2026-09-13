@@ -41,11 +41,6 @@ const RATING_PRESETS: { labelKey: TranslationKey; value: number }[] = [
   { labelKey: "recipesList.rating5", value: 5 },
 ];
 
-/**
- * The cookbook, browsable. Category comes in from Home (or the filter sheet), subcategory is
- * a chip row, and everything narrower than that lives in the sheet — so the list itself is
- * never more than a title, one row of chips and the recipes.
- */
 export default function RecipeListScreen() {
   const router = useRouter();
   const { t } = useI18n();
@@ -63,10 +58,6 @@ export default function RecipeListScreen() {
   const [debouncedIngredient, setDebouncedIngredient] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // Home links here with a category already chosen. Adjusting during render (rather than in
-  // an effect) keeps the list from painting the old category for a frame — and comparing
-  // against the last *link* rather than against `categoryId` means changing the category in
-  // the filter sheet is not immediately undone.
   if (linkedCategoryId !== lastLinked) {
     setLastLinked(linkedCategoryId);
     setCategoryId(linkedCategoryId);

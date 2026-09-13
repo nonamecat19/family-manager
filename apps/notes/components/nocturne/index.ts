@@ -1,8 +1,3 @@
-/**
- * The Nocturne kit's single door. Screens import from "../components/nocturne" and nothing
- * else under this folder — the file layout inside is free to move.
- */
-
 export {
   nocturne,
   FONT_NOTE,

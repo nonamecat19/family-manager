@@ -8,11 +8,6 @@ import { Icon } from "../../../components/organic/icons.tsx";
 import { organic } from "../../../components/organic/tokens.ts";
 import { Screen } from "../../../components/organic/ui.tsx";
 
-/**
- * Cook mode: one step, filling the screen, on a dark ground so a phone propped against a
- * bowl is readable at arm's length. It is the only surface in the app that inverts — the
- * point is that you are not browsing any more.
- */
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -100,10 +95,6 @@ export default function CookScreen() {
   );
 }
 
-/**
- * The step's own timer. It starts paused: a step's duration is how long it takes, not a
- * countdown that should begin the moment you happen to swipe onto it.
- */
 function StepTimer({ seconds }: { seconds: number }) {
   const { t } = useI18n();
   const [remaining, setRemaining] = useState(seconds);

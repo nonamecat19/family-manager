@@ -60,21 +60,10 @@ import {
   formatPercent,
 } from "@/components/nocturne";
 
-/**
- * Screen 05 — Родина. The household in one card stack: the two headline figures, one card per
- * member (spend, share, transaction count), the invite affordance, and the three shared
- * settings.
- *
- * Everything on it comes from a single `GetHouseholdOverview` round trip, which is also why
- * private accounts cannot leak into the family totals here: the server sends a shared balance
- * and, per member, nothing about their private accounts but a count.
- */
 export default function HouseholdScreen() {
   const { t } = useI18n();
   const router = useRouter();
 
-  // The design's header reads "Витрати · серпень": the current calendar month, not a period
-  // the user can step on this screen.
   const period = useMemo(() => currentPeriod("month"), []);
   const anchorMonth = "anchor" in period ? parseISO(period.anchor).month : new Date().getMonth() + 1;
 
@@ -84,23 +73,14 @@ export default function HouseholdScreen() {
   const invite = useInviteMember();
   const setOverspend = useSetOverspendNotifications();
 
-  /* ---- family management -------------------------------------------------------------
-   * Who the caller is comes from the access token's claims. It is NOT verified here and is
-   * not what grants anything: UpdateFamily, RemoveMember, RevokeInvitation and
-   * ListInvitations are all admin-gated on the server. It decides what to DRAW, so an
-   * ordinary member is not shown controls that would only come back refused.
-   */
   const { claims, refreshNow } = useAuth();
   const familyId = family.data?.family?.id ?? "";
   const familyMembers = useMemo(() => family.data?.members ?? [], [family.data]);
-  // isAdmin and the last-admin rule live in @fm/api, where they are unit-tested — they gate
-  // destructive controls, and the app shell runs no tests.
   const { isAdmin, canLeave } = useMemo(
     () => familyStanding(familyMembers, claims?.userId),
     [familyMembers, claims?.userId],
   );
 
-  // Admin-only on the server, so it is not even requested otherwise.
   const invitations = useInvitations(familyId, { enabled: isAdmin });
 
   const renameFamily = useUpdateFamily();
@@ -174,8 +154,6 @@ export default function HouseholdScreen() {
   const submitLeave = () => {
     setFamilyError(null);
     leaveFamily.mutate(familyId, {
-      // family_id is a token claim, so the session has to be reminted before the app stops
-      // believing it is still in this household.
       onSuccess: () => void refreshNow().then(() => router.replace("/(app)/onboarding")),
       onError: (error) => setFamilyError(toDisplayError(error, t("family.leave.error")).message),
     });
@@ -185,8 +163,6 @@ export default function HouseholdScreen() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
-  // The switch has to answer the tap before the round trip does; the query is still the truth
-  // once it lands.
   const [overspendPending, setOverspendPending] = useState<boolean | null>(null);
 
   const drawerItems = useDrawerItems();
@@ -319,8 +295,8 @@ export default function HouseholdScreen() {
             />
           </ListSection>
 
-          {/* Family management. Drawn from @fm/ui against the Nocturne theme, so apps/recipes
-              can mount the same cards and get Organic without this screen knowing. */}
+          {
+}
           <View className="mt-n3 gap-n3">
             <FamilyNameCard
               name={familyName}
@@ -420,7 +396,6 @@ export default function HouseholdScreen() {
   );
 }
 
-/** One member: who they are, what they may see, and their share of the period. */
 function MemberCard({
   index,
   name,
@@ -487,12 +462,10 @@ function MemberCard({
   );
 }
 
-/** The small grey counter the shared rows carry — "5", "4". */
 function Count({ value }: { value: number }) {
   return <Text className="text-[12px] text-neutral-600">{String(value)}</Text>;
 }
 
-/** Same shape the app gate uses, so a failed overview reads like every other failure. */
 function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   const { t } = useI18n();
   const shown = toDisplayError(error, t("common.loadFailed"));

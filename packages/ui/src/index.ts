@@ -1,12 +1,3 @@
-/**
- * @fm/ui — one design system, themed per app.
- *
- * Components read roles from the `<ThemeProvider>` above them (`surface`, `accent`,
- * `radius.md`) rather than NativeWind classes, which is what lets the same component render
- * native to Nocturne's tight dark system and Organic's soft light one. See @fm/theme for the
- * contract and the two themes.
- */
-
 export { ThemeProvider, useTheme, type ThemeProviderProps } from "./theme.tsx";
 
 export {
@@ -39,7 +30,6 @@ export { ErrorBoundary, type ErrorBoundaryProps } from "./ErrorBoundary.tsx";
 
 export { PieChart, type PieChartProps, type PieSlice } from "./PieChart.tsx";
 
-/* -------------------------------------------------------------------- family --- */
 
 export {
   FamilyNameCard,

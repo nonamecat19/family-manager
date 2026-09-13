@@ -42,21 +42,7 @@ import {
 import { familyScope, type PeriodGranularityInput, type PeriodInput, type ScopeInput } from "./scope.ts";
 import { toWireGranularity, toWirePeriod, toWireScope } from "./scopeWire.ts";
 
-/**
- * Hooks are the app's only door to a service. Two rules hold across this file:
- *
- *  - a query unwraps the response field it is named after, unless the response carries
- *    something else the screen needs (affected budgets, a total, a cursor) — then the whole
- *    response comes back;
- *  - a mutation invalidates the *domain* key. A transaction moves a balance, a budget bar, a
- *    donut slice and a member split at once; invalidating each of those by hand is how a
- *    screen ends up showing two different numbers for the same month.
- *
- * Amounts cross this boundary as the domain `Money` from money.ts (a plain integer) and are
- * converted to the wire's int64 exactly once, by `toWire`.
- */
 
-/* -------------------------------------------------------------------- family */
 
 export function useFamily() {
   const { family } = useClients();
@@ -102,11 +88,6 @@ export function useUpdateFamily() {
   });
 }
 
-/**
- * Pending and spent invitations. ADMIN ONLY on the server, so `enabled` is the caller's job:
- * mounting this for an ordinary member spends a round trip to be told PermissionDenied, and
- * logs an auth failure that is not one.
- */
 export function useInvitations(familyId: string, opts: { enabled?: boolean } = {}) {
   const { family } = useClients();
   return useQuery({
@@ -125,29 +106,15 @@ export function useRevokeInvitation() {
   });
 }
 
-/**
- * Removes someone else. The server refuses the caller's own id — leaving is `useLeaveFamily`,
- * which has a different guard — so a screen must not offer this on its own row.
- */
 export function useRemoveMember() {
   const { family } = useClients();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { familyId: string; userId: string }) => family.removeMember(input),
-    // A member leaving changes who appears in every household figure, not just the roster.
     onSuccess: () => qc.invalidateQueries(),
   });
 }
 
-/**
- * Leaves the family. The server refuses the last admin ("promote another admin before
- * leaving"), which surfaces as FailedPrecondition.
- *
- * Like accepting an invitation, this changes WHICH household's data the user may see, so the
- * whole cache is dropped rather than one domain. The caller must also refresh the session
- * afterwards — `family_id` is a token claim, and until the token is reminted the app still
- * carries the old family. `useAuth().refreshNow()` is what does that.
- */
 export function useLeaveFamily() {
   const { family } = useClients();
   const qc = useQueryClient();
@@ -162,12 +129,10 @@ export function useAcceptInvitation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (token: string) => family.acceptInvitation({ token }),
-    // Joining a family changes which household's data the user sees: drop everything.
     onSuccess: () => qc.invalidateQueries(),
   });
 }
 
-/* ------------------------------------------------- finance: household & settings */
 
 export interface BootstrapHouseholdInput {
   baseCurrencyCode: string;
@@ -176,7 +141,6 @@ export interface BootstrapHouseholdInput {
   weekStartsOn?: Weekday;
 }
 
-/** Onboarding step 2: seeds settings and the default taxonomy. Idempotent per family. */
 export function useBootstrapHousehold() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -192,7 +156,6 @@ export function useBootstrapHousehold() {
   });
 }
 
-/** Screen 05 in one round trip: balances, period spend, member cards, shared counters. */
 export function useHouseholdOverview(period: PeriodInput) {
   const { finance } = useClients();
   return useQuery({
@@ -227,7 +190,6 @@ export function useUpdateFinanceSettings() {
   });
 }
 
-/** The single toggle on screen 05, separate so a list row need not send the whole settings. */
 export function useSetOverspendNotifications() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -238,7 +200,6 @@ export function useSetOverspendNotifications() {
   });
 }
 
-/** The member projection behind the "Хто" picker and every avatar chip. */
 export function useFinanceMembers(includePending = false) {
   const { finance } = useClients();
   return useQuery({
@@ -247,12 +208,7 @@ export function useFinanceMembers(includePending = false) {
   });
 }
 
-/* ------------------------------------------------------------ finance: accounts */
 
-/**
- * Screen 08. The response is already split into what the caller may see — shared, own
- * private, and a count-only summary per other member — so no screen has to filter.
- */
 export function useAccounts(includeArchived = false) {
   const { finance } = useClients();
   return useQuery({
@@ -310,7 +266,6 @@ export interface UpdateAccountInput {
   icon?: string;
   colorStep?: number;
   excludedFromFamilyTotal?: boolean;
-  /** Editing the opening balance moves the derived balance with it. */
   openingBalance?: Money;
 }
 
@@ -348,7 +303,6 @@ export function useDeleteAccount() {
   });
 }
 
-/** Ordering is meaningful on screen 08, and one call beats N updates. */
 export function useReorderAccounts() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -362,7 +316,6 @@ export interface TransferInput {
   fromAccountId: string;
   toAccountId: string;
   amount: Money;
-  /** Required only across currencies: what actually landed, in the destination currency. */
   receivedAmount?: Money;
   occurredOn: string;
   note?: string;
@@ -389,9 +342,7 @@ export function useTransferBetweenAccounts() {
   });
 }
 
-/* ---------------------------------------------------------- finance: categories */
 
-/** Screen 04 whole-screen payload, and the category picker on screen 03. */
 export function useCategoryTree(filters: CategoryTreeFilters = {}) {
   const { finance } = useClients();
   return useQuery({
@@ -449,10 +400,6 @@ export function useUpdateCategoryGroup() {
   });
 }
 
-/**
- * `reassignToGroupId` is required when the group still holds categories: a group whose
- * categories hold transactions cannot silently vanish.
- */
 export function useDeleteCategoryGroup() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -549,7 +496,6 @@ export function useReorderCategories() {
   });
 }
 
-/* -------------------------------------------------------- finance: transactions */
 
 function transactionRequest(filters: TransactionFilters, cursor = "") {
   return {
@@ -566,10 +512,6 @@ function transactionRequest(filters: TransactionFilters, cursor = "") {
   };
 }
 
-/**
- * One page of the feed, already grouped into day sections with their subtotals. Backs the
- * "Історія" button on screen 08 (account_ids) and the recent-transactions widget too.
- */
 export function useTransactions(filters: TransactionFilters = {}, opts: { enabled?: boolean } = {}) {
   const { finance } = useClients();
   return useQuery({
@@ -579,15 +521,12 @@ export function useTransactions(filters: TransactionFilters = {}, opts: { enable
   });
 }
 
-/** Screen 07's infinite scroll. Same filters, paged by the server's cursor. */
 export function useTransactionFeed(filters: TransactionFilters = {}, opts: { enabled?: boolean } = {}) {
   const { finance } = useClients();
   return useInfiniteQuery({
     queryKey: queryKeys.financeTransactionFeed(filters),
     queryFn: ({ pageParam }) => finance.listTransactions(transactionRequest(filters, pageParam)),
     initialPageParam: "",
-    // An empty cursor is the server saying "that was the last page"; returning "" instead
-    // would make the list request page 1 again, forever.
     getNextPageParam: (last) => (last.nextCursor === "" ? undefined : last.nextCursor),
     enabled: opts.enabled ?? true,
   });
@@ -610,16 +549,10 @@ export interface CreateTransactionInput {
   occurredOn: string;
   note?: string;
   merchant?: string;
-  /** Who spent it. Empty means the caller — the "Хто" picker starts there. */
   memberId?: string;
-  /** Provenance only; drives the "шаблон" badge on the feed row. */
   templateId?: string;
 }
 
-/**
- * Returns the whole response: `affectedBudgets` is what lets screen 03 raise an overspend
- * toast and repaint the Home bars without waiting for a refetch.
- */
 export function useCreateTransaction() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -671,9 +604,7 @@ export function useDeleteTransaction() {
   });
 }
 
-/* ------------------------------------------------------------ finance: templates */
 
-/** Templates are private to their owner; asking for someone else's returns an empty list. */
 export function useTemplates(ownerUserId = "") {
   const { finance } = useClients();
   return useQuery({
@@ -753,17 +684,10 @@ export function useReorderTemplates() {
 
 export interface LogTemplateInput {
   templateId: string;
-  /** Defaults to today in the household timezone. */
   occurredOn?: string;
-  /** "The usual coffee, but it cost more today" — without editing the template. */
   amountOverride?: Money;
 }
 
-/**
- * Tap-to-log. The design gives the chip no confirmation step, so the usage count is bumped
- * optimistically and rolled back on failure; the write itself still invalidates the whole
- * finance domain, because a logged transaction moves balances, budgets and the donut.
- */
 export function useLogTemplate() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -791,9 +715,7 @@ export function useLogTemplate() {
   });
 }
 
-/* -------------------------------------------------------------- finance: budgets */
 
-/** Screen 09's "Бюджети груп · серпень · 4 з 5" card and screen 05's counter. */
 export function useBudgets(filters: BudgetFilters = {}) {
   const { finance } = useClients();
   return useQuery({
@@ -808,7 +730,6 @@ export function useBudgets(filters: BudgetFilters = {}) {
 }
 
 export interface CreateBudgetInput {
-  /** Exactly one of groupId / categoryId — a budget attaches to one target. */
   groupId?: string;
   categoryId?: string;
   limit: Money;
@@ -869,7 +790,6 @@ export function useDeleteBudget() {
   });
 }
 
-/* ------------------------------------------------------------ finance: analytics */
 
 export interface AggregateParams {
   scope?: ScopeInput;
@@ -877,7 +797,6 @@ export interface AggregateParams {
   kind?: TransactionKind;
 }
 
-/** Screen 02 in a single call — headline, donut, group rows, member chips, template chips. */
 export function useHomeSummary(params: AggregateParams) {
   const { finance } = useClients();
   const scope = params.scope ?? familyScope;
@@ -893,7 +812,6 @@ export function useHomeSummary(params: AggregateParams) {
   });
 }
 
-/** The donut drill-down and the caret on each Home group row. */
 export function useGroupBreakdown(groupId: string, params: AggregateParams) {
   const { finance } = useClients();
   const scope = params.scope ?? familyScope;
@@ -911,7 +829,6 @@ export function useGroupBreakdown(groupId: string, params: AggregateParams) {
   });
 }
 
-/** Screen 06: the split bar, the per-group stacked rows and the insight callout. */
 export function useMemberBreakdown(period: PeriodInput, kind: TransactionKind = TransactionKind.UNSPECIFIED) {
   const { finance } = useClients();
   return useQuery({
@@ -921,9 +838,7 @@ export function useMemberBreakdown(period: PeriodInput, kind: TransactionKind = 
 }
 
 export interface SpendingSeriesParams {
-  /** Bucket width. "custom" is not a bucket and the server rejects it. */
   granularity: PeriodGranularityInput;
-  /** Buckets back from today, inclusive. The chart on screen 09 draws 7. */
   bucketCount: number;
   kind?: TransactionKind;
   stackedBy?: SeriesStacking;
@@ -954,7 +869,6 @@ export function useSpendingSeries(params: SpendingSeriesParams) {
   });
 }
 
-/** Screen 06's "Олена подвоїла Розваги" card. The server composes the sentence. */
 export function useInsights(period: PeriodInput, limit = 0) {
   const { finance } = useClients();
   return useQuery({
@@ -964,7 +878,6 @@ export function useInsights(period: PeriodInput, limit = 0) {
   });
 }
 
-/* ------------------------------------------------------------ finance: recurring */
 
 export function useRecurringPayments(includeInactive = false, asOf = "") {
   const { finance } = useClients();
@@ -978,7 +891,6 @@ export function useRecurringPayments(includeInactive = false, asOf = "") {
 export interface CadenceInput {
   interval: number;
   unit: RecurrenceUnit;
-  /** 1..31 for month/year cadences; 0 means "same day as nextDueOn". */
   dayOfMonth?: number;
   dayOfWeek?: Weekday;
 }
@@ -993,7 +905,6 @@ export interface CreateRecurringPaymentInput {
   cadence: CadenceInput;
   nextDueOn: string;
   endOn?: string;
-  /** Off by default: a payment that may not have happened must not invent a row. */
   autoPost?: boolean;
 }
 
@@ -1068,7 +979,6 @@ export function useDeleteRecurringPayment() {
   });
 }
 
-/** Confirm one occurrence. `dueOn` identifies it, so posting twice is a no-op. */
 export function usePostRecurringOccurrence() {
   const { finance } = useClients();
   const qc = useQueryClient();
@@ -1093,7 +1003,6 @@ export function useSkipRecurringOccurrence() {
   });
 }
 
-/* ------------------------------------------------------------ finance: reminders */
 
 export function useReminders(includeDisabled = false) {
   const { finance } = useClients();
@@ -1104,7 +1013,6 @@ export function useReminders(includeDisabled = false) {
 }
 
 export interface UpsertReminderInput {
-  /** Empty creates; a reminder is edited far more often than it is created. */
   reminderId?: string;
   kind: ReminderKind;
   title: string;
@@ -1146,7 +1054,6 @@ function timestampFrom(date: Date) {
   return { seconds: BigInt(Math.floor(ms / 1000)), nanos: (ms % 1000) * 1_000_000 };
 }
 
-/* -------------------------------------------------------------- finance: widgets */
 
 export function useWidgets() {
   const { finance } = useClients();
@@ -1160,7 +1067,6 @@ export interface AddWidgetInput {
   type: WidgetType;
   size: WidgetSize;
   scope?: ScopeInput;
-  /** A category id, a group id, or empty. Account widgets use targetAccountIds. */
   targetRef?: string;
   targetAccountIds?: string[];
 }
@@ -1211,10 +1117,6 @@ export function useRemoveWidget() {
   });
 }
 
-/**
- * One request for every placed widget, not one per widget: a home-screen refresh pass has to
- * be cheap. An empty id list means "everything the caller has placed".
- */
 export function useWidgetData(widgetIds: readonly string[] = []) {
   const { finance } = useClients();
   return useQuery({
@@ -1223,17 +1125,10 @@ export function useWidgetData(widgetIds: readonly string[] = []) {
   });
 }
 
-/* ---------------------------------------------------------------------- re-exports */
 
-/**
- * Screens speak the contract's enums, but apps never import `@fm/sdk` directly — the SDK is
- * this package's dependency, not theirs.
- */
 export {
   AccountKind,
   AccountVisibility,
-  // family.v1 — the household's own enums, distinct from finance's MemberRole/MemberStatus,
-  // which describe a member's standing inside the FINANCE service, not the family.
   FamilyMemberRole,
   InvitationStatus,
   BudgetPeriod,

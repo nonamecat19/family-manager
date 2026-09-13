@@ -5,13 +5,9 @@ import { Chip, iconOr, Kicker } from "@/components/nocturne";
 
 export interface TemplateStripProps {
   templates: readonly QuickTemplate[];
-  /** The template whose values are currently in the form, if any. */
   selectedId: string;
-  /** Tap — write the transaction straight away. */
   onLog: (template: QuickTemplate) => void;
-  /** Long press — drop the template's values into the form and let the user edit. */
   onPrefill: (template: QuickTemplate) => void;
-  /** The dashed "Новий" chip. */
   onNew: () => void;
   title: string;
   newLabel: string;
@@ -19,11 +15,6 @@ export interface TemplateStripProps {
   fallbackCurrency: string;
 }
 
-/**
- * The row the whole screen is built around: the household's quick templates, wrapping, with
- * the add chip last and the two-gesture hint under them. Ordering is the service's
- * `sortOrder` — the list arrives ordered and is not re-sorted here.
- */
 export function TemplateStrip({
   templates,
   selectedId,

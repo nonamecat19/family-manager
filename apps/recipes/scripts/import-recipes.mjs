@@ -1,24 +1,4 @@
 #!/usr/bin/env node
-// Imports the scraped cookbook JSON (books/*/recipes/*.json) into the recipes DB, and
-// uploads each recipe's matching cutout image (books/<n>/cutouts/recipe-<page>.webp) to
-// MinIO via the `aws` CLI (S3-compatible), setting recipes.image_url to the public URL.
-// Nutrition (kcal/protein/fat/carbs) has no dedicated column, so it's folded into
-// `description` as readable text.
-//
-// Each book is a meal of the day (1 breakfast, 2 lunch, 3 dinner) — that's the category.
-// `section` (e.g. "Wok-обіди") is a subcategory within that meal, not a category of its own.
-//
-// Usage:
-//   FAMILY_ID=<uuid> AUTHOR_USER_ID=<uuid> \
-//   DATABASE_URL=postgres://admin:root@localhost:5432/recipes?sslmode=disable \
-//   MINIO_ENDPOINT=http://localhost:9000 MINIO_PUBLIC_URL=http://localhost:9000 \
-//   MINIO_BUCKET=recipes AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin \
-//   node scripts/import-recipes.mjs [path/to/books]
-//
-// Requires `psql` and `aws` on PATH. If `aws` is missing or MinIO is unreachable, image
-// upload is skipped (with a warning) and recipes import with image_url = ''. Builds one SQL
-// file (dollar-quoted, no manual escaping needed for the Cyrillic/free-text fields) and runs
-// it in a single transaction via `psql -f`.
 
 import { readdirSync, readFileSync, mkdtempSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -38,12 +18,9 @@ if (!FAMILY_ID || !AUTHOR_USER_ID) {
   process.exit(1);
 }
 
-const UUID_TAG = "zzimport"; // dollar-quote tag unlikely to collide with recipe text
+const UUID_TAG = "zzimport";
 const dq = (s) => `$${UUID_TAG}$${s}$${UUID_TAG}$`;
 
-// Each book is a meal of the day, not a topic — book 1 is breakfast, 2 is lunch, 3 is
-// dinner. That's the category; `section` (e.g. "Wok-обіди") is a subcategory *within* that
-// meal, not a category of its own.
 const BOOK_CATEGORIES = { 1: "Сніданок", 2: "Обід", 3: "Вечеря" };
 
 function loadRecipes(dir) {
@@ -55,7 +32,7 @@ function loadRecipes(dir) {
     try {
       files = readdirSync(recipesDir).filter((f) => f.endsWith(".json"));
     } catch {
-      continue; // book has no recipes/ dir or it's empty (e.g. book 1)
+      continue;
     }
     for (const f of files) {
       const raw = JSON.parse(readFileSync(join(recipesDir, f), "utf8"));
@@ -66,9 +43,6 @@ function loadRecipes(dir) {
   return out;
 }
 
-// Uploads via the aws CLI against MinIO's S3-compatible API. Returns null (not throw) on any
-// failure so a broken/unreachable MinIO degrades to "no images" rather than aborting the
-// whole import — the recipe text is the valuable part.
 let awsAvailable = true;
 function uploadImage(localPath, key) {
   if (!awsAvailable || !existsSync(localPath)) return null;
@@ -116,9 +90,6 @@ sql.push("BEGIN;");
 sql.push(`\\set family_id ${FAMILY_ID}`);
 sql.push(`\\set author_id ${AUTHOR_USER_ID}`);
 
-// Upsert categories (one per book/meal) first, then subcategories (one per book+section pair,
-// since the same section name could in principle appear under two meals), reusing both via
-// subselects per recipe insert rather than round-tripping ids through psql variables.
 const books = [...new Set(recipes.map((r) => r.book))];
 for (const book of books) {
   const name = BOOK_CATEGORIES[book] ?? `Книга ${book}`;

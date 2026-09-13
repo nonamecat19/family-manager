@@ -18,10 +18,6 @@ import {
   Sheet,
 } from "../../components/organic/ui.tsx";
 
-/**
- * "You" is the cookbook's colophon: who keeps it, who cooks from it, and how to let one more
- * person in. Account actions live at the bottom because they are the rarest thing here.
- */
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useI18n();

@@ -3,22 +3,13 @@ import { Text, TextInput, View } from "react-native";
 import { Icon, nocturne } from "@/components/nocturne";
 
 export interface AmountRowProps {
-  /** The raw text the user is typing — parsed by the screen, never here. */
   value: string;
   onChangeValue: (next: string) => void;
-  /** ISO 4217 code of the selected account, drawn beside the figure. */
   currencyCode: string;
-  /** Spoken label for the field; the design gives it no visible caption. */
   label: string;
   invalid?: boolean;
 }
 
-/**
- * The design's amount line: one underlined right-aligned figure, the currency code in accent
- * beside it, and the calculator glyph. It is a plain `TextInput` with a numeric keyboard
- * rather than an in-app pad — Android's own pad is the pad, and a hand-rolled one would be a
- * second keyboard the user has to learn.
- */
 export function AmountRow({ value, onChangeValue, currencyCode, label, invalid = false }: AmountRowProps) {
   return (
     <View className="flex-row items-end justify-center gap-n3">

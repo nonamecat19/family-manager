@@ -1,39 +1,9 @@
 #!/usr/bin/env node
-// Turns the normalized recipe-book SQLite database (books 1-3, 459 recipes) into a seed for
-// services/recipes. It reads recipes.db and writes two files: the SQL to load, and a manifest
-// of the dish photos to push to object storage.
-//
-//   node tools/recipe-import/import.mjs \
-//     --db      /path/to/recipes.db \
-//     --books   /path/to/books        # directory the cutout_image paths are relative to
-//     --family  <uuid> --author <uuid> \
-//     --public-url https://images.example/  \
-//     --out-sql   out/seed.sql \
-//     --out-images out/images.tsv
-//
-// The two schemas do not line up, so the mapping is spelled out here rather than left to the
-// reader of a 7000-line SQL dump:
-//
-//   book                -> recipe_categories        (3: Сніданки / Обіди / Вечері)
-//   section             -> recipe_subcategories     (35)
-//   recipe              -> recipes
-//   recipe_step         -> recipe_steps
-//   method_summary      -> recipe_steps             (see splitProse)
-//   recipe_component    -> recipe_steps, appended
-//   recipe_ingredient   -> recipe_ingredients       (see ingredientName / amount)
-//   kcal/protein/fat/carbs -> recipes.{kcal,protein_g,fat_g,carbs_g}  (migration 000004)
-//
-// What is deliberately dropped, and why, is at the bottom of this file.
-//
-// Every id is a UUIDv5 derived from the family id and the source row, so the import is
-// idempotent: running it twice against the same family produces the same uuids, the ON
-// CONFLICT clauses no-op, and the uploaded image keys still match the recipe rows.
 import { createHash, randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-// --- args -------------------------------------------------------------------
 
 function parseArgs(argv) {
   const out = {};
@@ -62,39 +32,28 @@ for (const k of ["family", "author"]) {
 }
 const familyId = args.family.toLowerCase();
 const authorId = args.author.toLowerCase();
-// A trailing slash here and a leading one on the key would produce "//" in the URL, which R2
-// serves as a different (missing) object.
 const publicUrl = (args["public-url"] ?? "").replace(/\/+$/, "");
 
-// --- deterministic ids ------------------------------------------------------
 
-// UUIDv5 (SHA-1, RFC 4122). Node has randomUUID but no v5, and the whole point here is that
-// the id is a pure function of the source row.
-const NAMESPACE = "6f9c1f2e-9a3b-5d47-8f21-2c7a4b6e0d13"; // random, fixed for this importer
+const NAMESPACE = "6f9c1f2e-9a3b-5d47-8f21-2c7a4b6e0d13";
 
 function uuid5(namespace, name) {
   const nsBytes = Buffer.from(namespace.replace(/-/g, ""), "hex");
   const hash = createHash("sha1").update(nsBytes).update(Buffer.from(name, "utf8")).digest();
   const b = Buffer.from(hash.subarray(0, 16));
-  b[6] = (b[6] & 0x0f) | 0x50; // version 5
-  b[8] = (b[8] & 0x3f) | 0x80; // RFC 4122 variant
+  b[6] = (b[6] & 0x0f) | 0x50;
+  b[8] = (b[8] & 0x3f) | 0x80;
   const h = b.toString("hex");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 const idFor = (kind, key) => uuid5(NAMESPACE, `${familyId}|${kind}|${key}`);
 
-// --- SQL emitting -----------------------------------------------------------
 
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const num = (n) => (n === null || n === undefined || Number.isNaN(n) ? "0" : String(n));
 
-// --- text helpers -----------------------------------------------------------
 
-// "у сухому вигляді" rather than "суха": a bare adjective has to agree with the noun's
-// gender, and the ingredient list mixes all three ("Імбир" is masculine, "Вишня" feminine,
-// "Філе" neuter). The prepositional form agrees with "вигляді" instead, so one table is
-// correct for every ingredient.
 const PREP_STATE_UK = {
   dry: "у сухому вигляді",
   cooked: "у відвареному вигляді",
@@ -112,11 +71,6 @@ const PREP_STATE_UK = {
   ready_made: "у готовому вигляді",
 };
 
-/** Ingredient display name. Canonical name first, because TotalIngredients aggregates the
- * shopping list by name+unit and the printed spellings would fragment it. State and fat
- * percentage are part of the name rather than dropped: per the source's own notes, dry and
- * cooked quinoa weigh very differently for the same portion, so folding them together would
- * produce a wrong total — the opposite of the aggregation this is trying to protect. */
 function ingredientName(row) {
   let name = row.name_uk;
   if (row.fat_pct !== null) {
@@ -129,9 +83,6 @@ function ingredientName(row) {
   return name;
 }
 
-/** Amount and unit. Grams for everything measurable — the source guarantees a gram weight on
- * every row that is not "to taste", and grams are what makes two recipes' shopping lists add
- * up. The printed form ("3 шт.", "1 ч. л.") is lost here; it survives in the book. */
 function ingredientAmount(row) {
   if (row.grams !== null) {
     const g = Number.isInteger(row.grams) ? row.grams : Number(row.grams.toFixed(1));
@@ -140,14 +91,6 @@ function ingredientAmount(row) {
   return { amount: "", unit: "за смаком" };
 }
 
-/** Splits a prose method into steps. 314 of the 459 recipes print prose instead of numbered
- * steps, and the cook screen walks steps one at a time — leaving the prose as a single step
- * would make cook mode useless for two thirds of the cookbook.
- *
- * Conservative on purpose: split only at ". " followed by an uppercase letter, and only keep
- * the split when every piece is a plausible instruction. "180°C." and "1:2" survive because
- * the following character is a space plus a capital only at real sentence ends. A missed
- * split costs a long step; a wrong one costs a nonsense fragment, so the check is one-sided. */
 function splitProse(text) {
   const parts = text
     .split(/(?<=[.!?])\s+(?=[A-ZА-ЯЁЇІЄҐ])/u)
@@ -159,8 +102,6 @@ function splitProse(text) {
 
 const COMPONENT_LABEL = { sauce: "Соус", salad: "Салат", dressing: "Заправка" };
 
-/** The cook's margin. The source spreads this across six columns; the target has one `notes`
- * field, so they are joined as labelled lines rather than concatenated into a paragraph. */
 function buildNotes(r) {
   const lines = [];
   const add = (label, value) => {
@@ -174,8 +115,6 @@ function buildNotes(r) {
   add("Про інгредієнти", r.ingredients_note);
   add("Про поживність", r.nutrition_addon);
   if (r.chill_minutes !== null) {
-    // Chilling is not in cook_seconds: "what can I make quickly" is about active time, and
-    // an overnight soak would otherwise hide a 10-minute recipe behind an 8-hour filter.
     add("Витримка", `${r.chill_minutes} хв (не входить у час приготування)`);
   }
   add("Про джерело", r.source_note);
@@ -183,7 +122,6 @@ function buildNotes(r) {
   return lines.join("\n");
 }
 
-// --- read -------------------------------------------------------------------
 
 const db = new DatabaseSync(args.db, { readOnly: true });
 const q = (sql, ...p) => db.prepare(sql).all(...p);
@@ -213,7 +151,6 @@ for (const ri of q(`
   ingByRecipe.get(ri.recipe_id).push(ri);
 }
 
-// --- transform --------------------------------------------------------------
 
 const sql = [];
 const images = [];
@@ -228,7 +165,6 @@ sql.push("-- than duplicating them or failing.");
 sql.push("BEGIN;");
 sql.push("");
 
-// categories
 sql.push("-- book -> recipe_categories");
 for (const b of books) {
   const id = idFor("category", `book:${b.id}`);
@@ -240,7 +176,6 @@ for (const b of books) {
 }
 sql.push("");
 
-// subcategories
 sql.push("-- section -> recipe_subcategories");
 for (const s of sections) {
   const id = idFor("subcategory", `section:${s.id}`);
@@ -256,8 +191,6 @@ sql.push("");
 
 sql.push("-- recipe -> recipes (+ ingredients, steps)");
 for (const r of recipes) {
-  // The book reprints two recipes on a later page. They are the same dish; a cookbook that
-  // lists it twice is just a cookbook with a bug in it.
   if (r.duplicate_of_recipe_id !== null) {
     stats.skippedDuplicates++;
     continue;
@@ -269,16 +202,11 @@ for (const r of recipes) {
 
   let imageUrl = "";
   if (r.cutout_image !== null && publicUrl !== "") {
-    // Same key shape the service itself uses when the app uploads a photo
-    // (handler.UploadRecipeImage): <family_id>/<recipe_id><ext>. A later in-app upload then
-    // replaces the seeded object instead of orphaning it.
     const key = `${familyId}/${id}.webp`;
     imageUrl = `${publicUrl}/${key}`;
     images.push(`${join(args.books, r.cutout_image)}\t${key}`);
   }
 
-  // The source records one total time. It goes to cook_seconds with prep at 0 rather than
-  // being split by guesswork; every query that cares uses prep + cook.
   const cookSeconds = (r.time_minutes ?? 0) * 60;
 
   stats.recipes++;
@@ -297,7 +225,6 @@ for (const r of recipes) {
       `    updated_at = NOW();`,
   );
 
-  // ingredients — rewritten wholesale so a re-run drops rows the source no longer has.
   sql.push(`DELETE FROM recipe_ingredients WHERE recipe_id = ${lit(id)};`);
   const ings = ingByRecipe.get(r.id) ?? [];
   ings.forEach((ri, i) => {
@@ -309,8 +236,6 @@ for (const r of recipes) {
     );
   });
 
-  // steps: the numbered ones if the book printed them, otherwise the prose method split into
-  // sentences; then any separately-printed sauce/salad/dressing as trailing steps.
   const numbered = stepsByRecipe.get(r.id) ?? [];
   let instructions;
   if (numbered.length > 0) {
@@ -328,9 +253,6 @@ for (const r of recipes) {
   sql.push(`DELETE FROM recipe_steps WHERE recipe_id = ${lit(id)};`);
   instructions.forEach((text, i) => {
     stats.steps++;
-    // duration_seconds is 0 throughout: the books print a total time per recipe, never a
-    // per-step one, and inventing per-step timers from "12–14 хв" in the prose would put
-    // numbers on the cook screen that the book never claimed.
     sql.push(
       `INSERT INTO recipe_steps (recipe_id, position, instruction, duration_seconds)\n` +
         `  VALUES (${lit(id)}, ${i + 1}, ${lit(text)}, 0);`,
@@ -342,7 +264,6 @@ for (const r of recipes) {
 sql.push("COMMIT;");
 sql.push("");
 
-// --- write ------------------------------------------------------------------
 
 for (const [path, body] of [
   [args["out-sql"], sql.join("\n")],
@@ -366,17 +287,3 @@ console.error(
   ].join("\n"),
 );
 
-// --- what is dropped --------------------------------------------------------
-//
-// ingredient_group (15 rows, ~5 recipes) — "Основа" / "Для пашот" blocks. recipe_ingredients
-//   has no group column, and folding the group into the ingredient name would fragment the
-//   shopping-list aggregation for exactly the ingredients most likely to repeat. The steps
-//   still say what belongs to the sauce.
-// recipe_ingredient_alternative (144 rows) — "фарш індички або курки". A shopping list has to
-//   name one thing to buy; the swap is a reading of the recipe, not a line item.
-// recipe_ingredient_qualifier (extra_virgin, lean, ...) — adjectives that do not change what
-//   you buy or what it weighs.
-// the printed amount form ("3 шт.", "1 ч. л.") — replaced by the gram weight, see
-//   ingredientAmount.
-// page_image — the full page scans (1.8 GB). Only the background-removed dish cutouts are
-//   uploaded; the scans are the source material, not app content.

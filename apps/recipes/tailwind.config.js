@@ -1,7 +1,3 @@
-// Organic — the recipes app's own palette. It deliberately overrides the shared
-// @fm/config preset's brand/surface roles instead of editing the preset, because the preset
-// is shared by every app that consumes it (see `just impact pkg:@fm/config`). Values mirror
-// `components/organic/tokens.ts`; this file must stay CommonJS, so they exist twice.
 const neutral = {
   100: "#f9f4ed",
   200: "#eee7db",
@@ -40,7 +36,6 @@ const accent2 = {
   900: "#272e1b",
 };
 
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "../../packages/ui/src/**/*.{ts,tsx}"],
   presets: [require("nativewind/preset"), require("@fm/config/tailwind.preset.cjs")],
@@ -50,9 +45,6 @@ module.exports = {
         neutral,
         accent,
         accent2,
-        // The shared roles @fm/ui renders against, repainted in Organic. Doing it here
-        // (rather than in the preset) is what keeps Button/Card/Field on-brand in this app
-        // without touching the shared preset.
         primary: { DEFAULT: accent.DEFAULT, fg: "#ffffff", muted: accent[200] },
         bg: "#f5ead8",
         surface: neutral[100],
@@ -60,9 +52,6 @@ module.exports = {
         divider: "rgba(32,30,29,0.16)",
         fg: "#201e1d",
         muted: neutral[600],
-        // Organic is a light, warm system with no dark counterpart in the design. The dark
-        // roles stay defined so shared @fm/ui `dark:` classes resolve to something warm
-        // instead of the shared preset's blue-greys.
         "bg-dark": accent[900],
         "surface-dark": "#2e2b25",
         "border-dark": neutral[800],
@@ -77,10 +66,6 @@ module.exports = {
         "3xl": "36px",
       },
       fontFamily: {
-        // Named `cap`/`fig` rather than `heading`/`bold` so they can never collide with
-        // Tailwind's own font-weight utilities — with per-weight TTFs, `font-bold` alone
-        // would not pick the right file. Faces are Alegreya (display) and Nunito Sans (body);
-        // the utility keys keep their original names so no screen has to change.
         cap: ["Alegreya_800ExtraBold"],
         fig: ["NunitoSans_400Regular"],
         "fig-med": ["NunitoSans_500Medium"],

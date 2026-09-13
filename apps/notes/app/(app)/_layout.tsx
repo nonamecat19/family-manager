@@ -47,18 +47,6 @@ import { useMemberDirectory } from "../../components/share.tsx";
 import { makeBlock } from "../../components/editor/index.ts";
 import type { QueuedNote } from "../../components/offline/index.ts";
 
-/**
- * The app shell. ONE route tree, two layouts.
- *
- * At >= 1024px (desktop, and the Tauri window) the design's three panes are a LAYOUT, not a
- * screen: the rail and the note list live here and stay put while `<Slot/>` swaps the third
- * pane. Below that width the same routes hang off a tab bar and each one is full-bleed.
- *
- * Everything the two layouts share — which list the rail has selected, the note rows, the
- * palette — is defined in this file and imported by the screens. It is the only file both
- * layouts render, so it is the only place that can hold their common state without a
- * component tree that exists twice.
- */
 
 export const DESKTOP_MIN_WIDTH = 1024;
 
@@ -67,48 +55,21 @@ export function useIsDesktop(): boolean {
   return width >= DESKTOP_MIN_WIDTH;
 }
 
-/**
- * The fixed widths of the desktop chrome, and the narrowest the editor's text column may get.
- *
- * These are numbers rather than four `w-[…]` classes scattered across two files because the
- * panes have to be decided by arithmetic against each other: 236 + 322 + 268 + 200 is 1026px
- * of chrome on its own, one pixel past the width at which the desktop layout switches on. In
- * React Native `flexShrink` defaults to 0, so a chrome sum wider than the window does not
- * squeeze anything — the flexible column between the panes is what collapses, to nothing.
- */
 export const PANE = {
   rail: 236,
   list: 322,
   editorRail: 268,
   comments: 200,
-  /** The design's measure is 560. Below this the column has stopped being a page. */
   minColumn: 460,
 } as const;
 
 export interface PaneFit {
   desktop: boolean;
-  /** The shell's note-list pane — the middle column of artboard 1a. */
   list: boolean;
-  /** Artboard 1c's outline / activity / shared-with rail. */
   editorRail: boolean;
-  /** The comment margin. When it does not fit, the thread stacks under the note instead. */
   comments: boolean;
 }
 
-/**
- * Which desktop panes this window can afford.
- *
- * On a list route there are only two panes (236 + 322) and they always fit. On the editor route
- * the width is spent in the order the design spends it — text column first, then 1c's right
- * rail, then the note list, then the comment margin. With these numbers that is: the rail and
- * the column below 1286px, the note list from 1286, the comment margin from 1486.
- *
- * Dropping the note list first is not a compromise. Artboard 1c is a FULL-WINDOW editor in the
- * mock — 1240px of header, text column and a 268px rail, with no note list beside it — so up to
- * 1286 this app draws what the mock draws, and the back arrow in the editor header is the way
- * back to the list. Nothing is unreachable at any width: the comment thread stacks under the
- * note when its margin is gone, and the outline the right rail draws is the note itself.
- */
 export function usePaneFit(): PaneFit {
   const { width } = useWindowDimensions();
   const pathname = usePathname();
@@ -120,20 +81,14 @@ export function usePaneFit(): PaneFit {
     return { desktop: true, list: true, editorRail: false, comments: false };
   }
 
-  // The rail is the app's navigation and the column is the note; everything after those two
-  // is bought with what is left, in priority order.
   let spare = width - PANE.rail - PANE.minColumn;
   const editorRail = spare >= PANE.editorRail;
   if (editorRail) spare -= PANE.editorRail;
   const list = spare >= PANE.list;
   if (list) spare -= PANE.list;
-  // The margin waits for everything ahead of it to have a place, so the panes only ever
-  // appear as the window grows. A column that turns up at 1240 and disappears at 1290 —
-  // because the wider window spent its width on the list instead — is a flicker, not a layout.
   return { desktop: true, list, editorRail, comments: list && spare >= PANE.comments };
 }
 
-/** Which list the rail has selected. `notebook` reads `notebookId` alongside it. */
 export type ListView = "all" | "shared" | "recent" | "starred" | "archive" | "notebook";
 
 export interface ShellValue {
@@ -145,7 +100,6 @@ export interface ShellValue {
   newNote: (title?: string) => void;
   density: "cards" | "dense";
   setDensity: (density: "cards" | "dense") => void;
-  /** The order ListNotes is asked for. One of the contract's NoteSort values, nothing else. */
   sort: NoteSort;
   setSort: (sort: NoteSort) => void;
   captureVisible: boolean;
@@ -161,7 +115,6 @@ export function useShell(): ShellValue {
   return value;
 }
 
-/** The filters a rail selection turns into. One place, so the two layouts cannot disagree. */
 export function filtersFor(
   view: ListView,
   notebookId: string,
@@ -172,7 +125,6 @@ export function filtersFor(
       return { sharedOnly: true, sort };
     case "starred":
       return { starredOnly: true, sort };
-    // "Recent" is an order, not a filter: it ignores the list's own sort by definition.
     case "recent":
       return { sort: NoteSort.UPDATED, pageSize: 20 };
     case "archive":
@@ -184,7 +136,6 @@ export function filtersFor(
   }
 }
 
-/** The sort control's menu, in the order the design lists it. */
 export const SORT_OPTIONS: readonly { sort: NoteSort; label: string }[] = [
   { sort: NoteSort.UPDATED, label: strings.list.sortUpdated },
   { sort: NoteSort.CREATED, label: strings.list.sortCreated },
@@ -195,11 +146,6 @@ export default function AppLayout() {
   return <Gate />;
 }
 
-/**
- * The family gate, the same shape apps/recipes uses: notes hang off a family, and every list
- * in this app is scoped by the token's family_id claim. FailedPrecondition means "you have an
- * account but no family yet", which is a screen, not an error.
- */
 function Gate() {
   const family = useFamily();
   const router = useRouter();
@@ -211,8 +157,6 @@ function Gate() {
   if (family.isError) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      // Onboarding lives under this same gate, so without this branch pushing to it only
-      // changes the URL — this component still short-circuits before any outlet renders.
       if (isOnboarding) return <Slot />;
       return (
         <Screen>
@@ -260,16 +204,8 @@ function Shell() {
   const [captureVisible, setCaptureVisible] = useState(false);
   const [density, setDensity] = useState<"cards" | "dense">("cards");
   const [sort, setSort] = useState<NoteSort>(NoteSort.UPDATED);
-  // Whether ListNotebooks is asked for the archived ones too. It is not `view === "archive"`:
-  // picking an archived notebook out of the archive moves the view to "notebook", and a query
-  // keyed on the view would unload the very notebook that was just selected — leaving the rail
-  // row gone and the list pane titled "All notes". It stays on until the user leaves for a
-  // view that is not about the archive.
   const [showArchivedNotebooks, setShowArchivedNotebooks] = useState(false);
 
-  // ONE notebook query for the whole shell. The rail draws it, the list pane titles itself
-  // from it, and the move/capture sheets offer it — three panes reading two different lists is
-  // how they end up disagreeing about which notebooks exist.
   const notebooks = useNotebooks(showArchivedNotebooks);
 
   const select = useCallback((next: ListView, id = "") => {
@@ -342,7 +278,6 @@ function Shell() {
   );
 }
 
-/* ------------------------------------------------------------------ desktop */
 
 function DesktopShell() {
   const panes = usePaneFit();
@@ -373,8 +308,6 @@ export function RailSidebar() {
   const [menuFor, setMenuFor] = useState<Notebook | null>(null);
   const [deleting, setDeleting] = useState<Notebook | null>(null);
 
-  // The shell's list, which carries the archived notebooks whenever the archive is in play —
-  // they are the only way back out of the archive, so the rail has to be able to draw them.
   const tree = useMemo(() => buildTree(shell.notebooks), [shell.notebooks]);
 
   const failed = createNotebook.isError || updateNotebook.isError || deleteNotebook.isError;
@@ -519,8 +452,6 @@ export function RailSidebar() {
       ) : null}
 
       <NotebookDialog
-        // Both dialogs are remounted per opening so the field starts empty, or from the
-        // notebook being renamed, rather than from whatever was typed the last time.
         key={creating ? "create-open" : "create-closed"}
         visible={creating}
         title={strings.rail.createNotebook}
@@ -647,8 +578,6 @@ function RailRow({
   active?: boolean;
   nested?: boolean;
   onPress: () => void;
-  /** Notebook rows carry rename/archive/delete. The design draws it on hover; there is no
-   *  hover on a touch screen, so it is a real control on the row and a long press as well. */
   onMenu?: () => void;
 }) {
   return (
@@ -689,10 +618,6 @@ function RailRow({
   );
 }
 
-/**
- * A control small enough to sit inside a 30px rail row. The kit's IconButton is a 36px tap
- * target and would stretch the row it belongs to; this one leans on hitSlop instead.
- */
 function MiniButton({
   icon,
   label,
@@ -717,7 +642,6 @@ function MiniButton({
   );
 }
 
-/* ------------------------------------------------------------------- sheets */
 
 const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;
 
@@ -725,22 +649,11 @@ export interface SheetAction {
   key: string;
   label: string;
   icon?: IconName;
-  /** Draws the check the design puts beside the chosen option in a menu. */
   selected?: boolean;
   tone?: "default" | "danger";
   onPress: () => void;
 }
 
-/**
- * A menu, as a sheet. The design draws its menus as popovers anchored to the control that
- * opened them; anchoring means measuring a view and doing arithmetic against the window, and
- * this app runs the same tree on a phone where a popover is the wrong shape anyway. One
- * centred card, the same on both.
- *
- * It lives in the shell rather than the Nocturne kit because it is a composition of kit parts
- * for these two screens, not a primitive: both the rail's notebook actions and the editor's
- * overflow menu are this list of rows and nothing more.
- */
 export function ActionSheet({
   visible,
   title,
@@ -816,7 +729,6 @@ export function ActionSheet({
   );
 }
 
-/** Create or rename a notebook: one field, because a notebook is a name and a parent. */
 function NotebookDialog({
   visible,
   title,
@@ -888,7 +800,6 @@ interface TreeNode {
   children: Notebook[];
 }
 
-/** The design's one-level tree. The column allows deeper; the rail draws two. */
 function buildTree(notebooks: readonly Notebook[]): TreeNode[] {
   const roots = notebooks.filter((n) => n.parentId === "");
   return roots.map((notebook) => ({
@@ -897,7 +808,6 @@ function buildTree(notebooks: readonly Notebook[]): TreeNode[] {
   }));
 }
 
-/** The middle pane: only ever drawn on desktop, where the list is chrome rather than a screen. */
 function NoteListPane() {
   const shell = useShell();
   const router = useRouter();
@@ -922,8 +832,8 @@ function NoteListPane() {
         </Text>
         <View className="ml-auto flex-row items-center gap-[2px]">
           <SortButton />
-          {/* 1b is 1a at a different density, so the toggle is a control of its own rather
-              than a second meaning bolted onto the sort glyph. */}
+          {
+}
           <IconButton
             icon={shell.density === "dense" ? "list-bullets" : "rows"}
             label={strings.list.density}
@@ -955,11 +865,6 @@ function NoteListPane() {
   );
 }
 
-/**
- * The sort control. The menu is exactly the NoteSort values the contract offers — the app has
- * no client-side ordering of its own, because a sort the server does not know about breaks the
- * moment the list is paged.
- */
 function SortButton() {
   const [open, setOpen] = useState(false);
   return (
@@ -1013,7 +918,6 @@ function emptyBodyFor(view: ListView): string {
   return strings.list.emptyBody;
 }
 
-/* --------------------------------------------------------------- note rows */
 
 export interface NoteListBodyProps {
   notes: readonly Note[];
@@ -1023,17 +927,10 @@ export interface NoteListBodyProps {
   onOpen: (noteId: string) => void;
   emptyTitle: string;
   emptyBody: string;
-  /** Omitted where an empty list is not an invitation to write — the archive. */
   onNewNote?: () => void;
-  /** Captures that have not reached the server yet, drawn above the real rows. */
   queued?: readonly QueuedNote[];
 }
 
-/**
- * The note list, shared by the desktop pane and the mobile screen. Two densities: the
- * comfortable card of artboard 1a and the one-line row of 1b — 1b is this same list at a
- * different density, not a second layout, so it is a prop rather than a component.
- */
 export function NoteListBody({
   notes,
   loading,
@@ -1222,7 +1119,6 @@ export function firstName(name: string): string {
   return name.split(" ")[0] ?? name;
 }
 
-/* ------------------------------------------------------------------- mobile */
 
 function MobileTabs() {
   return (
@@ -1258,33 +1154,21 @@ function MobileTabs() {
       />
       <Tabs.Screen name="onboarding" options={{ href: null }} />
       <Tabs.Screen name="notebook/[id]" options={{ href: null }} />
-      {/* A destination, not a tab: reached from the notes header, and small enough that a
-          fifth tab would cost the other four more than it is worth. */}
+      {
+}
       <Tabs.Screen name="archive" options={{ href: null }} />
-      {/* The editor is full-bleed: the block bar sits where the tab bar would be. */}
+      {}
       <Tabs.Screen name="note/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
     </Tabs>
   );
 }
 
 function tabIcon(name: IconName) {
-  // React Navigation hands the tint down as ColorValue; the opaque half of that union only
-  // turns up for PlatformColor, which this bar never sets.
   return function TabIcon({ color }: { color: ColorValue }) {
     return <Icon name={name} size={22} color={color as string} />;
   };
 }
 
-/**
- * The mobile list header + FAB, shared by the notes tab and a notebook screen. Drawn here
- * because both of those screens are the same screen with a different filter.
- *
- * `archiveLink` is the phone's way INTO the archive. On desktop that door is a rail row; a
- * phone has no rail, and the note menu offers Archive on both layouts — so without a door here
- * a note could be archived on a phone and then never seen again from one. It hangs off the
- * notes tab rather than off every list: the archive is a peer of "All notes", not of one
- * notebook.
- */
 export function MobileListHeader({
   title,
   count,
@@ -1328,7 +1212,6 @@ export function MobileListHeader({
   );
 }
 
-/** The capture FAB. Mobile only — desktop captures with ⌘N. */
 export function CaptureFab() {
   const shell = useShell();
   return (
