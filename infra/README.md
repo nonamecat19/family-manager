@@ -120,7 +120,7 @@ ssh root@79.108.160.103 'chmod 0755 /opt/family-manager/{deploy,backup,restore}.
 # Only this one file, by name and never a glob: it is what creates the per-service
 # databases, and a glob is how a dev-only init script ends up running on the production
 # cluster (Postgres runs everything in that directory once, silently, on an empty volume).
-scp postgres/init/init-services.sql root@79.108.160.103:/opt/family-manager/postgres-init/
+scp postgres/init/init-services.sh root@79.108.160.103:/opt/family-manager/postgres-init/
 ```
 
 ### 5. Install the signing key
@@ -301,7 +301,7 @@ is exactly the state the box is in mid-deploy.
   rollback path cannot see it either. Miss `.env.example` and a box provisioned from it hands
   Caddy a site block with an empty address.
 - **The live cluster has no `notes` database yet, and the deploy will not create one.**
-  `postgres/init/init-services.sql` gained `CREATE DATABASE notes OWNER admin;`, but that file
+  `postgres/init/init-services.sh` gained `notes` in its database list, but that file
   is a `docker-entrypoint-initdb.d` script: Postgres runs it once, on an EMPTY data volume, and
   the production volume has not been empty since the first deploy. Copying the file up (step 4)
   changes nothing on its own. So before the first notes deploy, someone creates the database by
@@ -311,8 +311,11 @@ is exactly the state the box is in mid-deploy.
   ```sh
   ssh root@79.108.160.103 \
     'docker compose -f /opt/family-manager/docker-compose.prod.yml exec -T postgres \
-       psql -U admin -c "CREATE DATABASE notes OWNER admin;"'
+       /docker-entrypoint-initdb.d/init-services.sh'
   ```
+
+  The script skips databases that already exist, so running it against the live cluster creates
+  only the missing ones.
 
   Skip it and the notes container boots, fails to connect, and restarts forever while every
   other service is fine — which reads like a notes bug rather than a missing database. The
@@ -326,7 +329,7 @@ is exactly the state the box is in mid-deploy.
   none of the new tables, and the service will come up answering every query with "relation
   does not exist". This is not something the deploy can fix on its own: before the first
   finance deploy someone has to drop and recreate the database (`DROP DATABASE finance;` then
-  the `CREATE DATABASE finance OWNER admin;` line from `postgres/init/init-services.sql`),
+  re-running `postgres/init/init-services.sh`, which recreates only what is missing),
   which is a human gate — take a backup first, and note that any data in it belongs to a
   contract that no longer exists. The `finance.nonamecat.pp.ua` A record and its issued
   certificate survived the deletion and are reused as-is.

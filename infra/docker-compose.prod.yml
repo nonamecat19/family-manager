@@ -13,11 +13,12 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      PGDATA: /var/lib/postgresql/data
     # Defaults are sized for a machine with GBs to spare; this one has ~1.6 GiB for everything.
     # shared_buffers is the number that matters — Postgres will happily reserve 25% of the
     # *host's* RAM and then get OOM-killed alongside the services it was sized against.

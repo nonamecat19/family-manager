@@ -397,9 +397,10 @@ Nothing is deployed yet. From your workstation, in the repo:
      The timer is already enabled, so without the script the first 03:20 fires and fails.
 
      Then exactly ONE init file — not the whole directory:
-         scp postgres/init/init-services.sql root@79.108.160.103:${DEPLOY_DIR}/postgres-init/
+         scp postgres/init/init-services.sh root@79.108.160.103:${DEPLOY_DIR}/postgres-init/
 
-     Copy only init-services.sql. It creates the auth, family, finance and recipes databases. It is
+     Copy only init-services.sh. It creates the auth, family, finance, notes and recipes
+     databases, and it skips any that already exist, so it is safe to re-run by hand. It is
      the only file in that directory today, and the copy stays a single named file rather than
      a glob: the pre-split leftovers that used to sit beside it (one creating schemas in the
      default database, one creating a role with a hardcoded password) were exactly the kind of
