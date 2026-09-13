@@ -202,7 +202,7 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1062,5 +1062,5 @@
       "notes": "Does not wait on the tasks chain (t00 is gated on brief 0003) or on r07. The tasks tail is m02 + t09 + t07, so run just verify again when they land."
     }
   ],
-  "updated_at": "2026-10-06T08:14:53.668Z"
+  "updated_at": "2026-10-06T08:18:13.498Z"
 }

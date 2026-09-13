@@ -61,7 +61,7 @@
         "c2"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -990,5 +990,5 @@
       "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
     }
   ],
-  "updated_at": "2026-10-06T08:19:53.405Z"
+  "updated_at": "2026-10-06T08:19:59.324Z"
 }

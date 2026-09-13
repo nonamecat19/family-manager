@@ -1363,9 +1363,9 @@
         "u18b"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "992083a",
       "blocked_reason": null,
       "id": "u27",
       "title": "tasks lint clean: errcheck Body.Close in gcal, forcetypeassert in gcal tests",
@@ -1374,5 +1374,5 @@
       "notes": "From u25 verify: 3 errcheck on res.Body.Close (gcal/http.go), 3 forcetypeassert (gcal/http_test.go). Handler gofmt/contextcheck issues belong to u12b (it owns those files). Separately: golangci-lint 2.12.2 staticcheck panics on go1.27 repo-wide (pre-existing; see E12)."
     }
   ],
-  "updated_at": "2026-10-06T08:20:26.998Z"
+  "updated_at": "2026-10-06T08:21:18.128Z"
 }
