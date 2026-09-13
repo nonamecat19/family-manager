@@ -42,17 +42,10 @@ async function refresh(refreshToken: string): Promise<Tokens> {
   return tokensFromResponse(res, Date.now());
 }
 
-/** Ends the session server-side: Logout revokes the whole refresh-token chain, so the token
- * this device is about to forget cannot go on minting access tokens. */
 async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-/**
- * Nocturne, in Inter. The palette is shared with apps/finance; the faces are not — finance
- * ships no font file and draws in the platform sans. That is exactly why fonts live on the
- * theme rather than on the design system.
- */
 const theme: Theme = {
   ...nocturneTheme,
   fonts: {
@@ -64,8 +57,6 @@ const theme: Theme = {
 };
 
 export default function RootLayout() {
-  // Nocturne is one face in four weights, each its own TTF. Loaded up front rather than per
-  // screen: a weight that arrives late reflows the note the user is already reading.
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -76,14 +67,12 @@ export default function RootLayout() {
   if (!fontsLoaded) return <Booting label={strings.app.booting} />;
 
   return (
-    // Outside AuthProvider, so a crash while restoring the session is caught too — the one
-    // place the user cannot navigate away from.
     <ErrorBoundary
       message={strings.app.crashed}
       onError={(error) => console.error("[notes] unhandled render error", error)}
     >
-      {/* Nocturne is this app's theme; the same shared components render in Organic over in
-          apps/recipes without either screen knowing which. */}
+      {
+}
       <ThemeProvider theme={theme}>
         <AuthProvider
           store={secureTokenStore}
@@ -106,14 +95,6 @@ function ApiGate() {
 
   const getToken = useCallback(() => getAccessToken(), [getAccessToken]);
 
-  // The app owns the QueryClient rather than letting ApiProvider mint one, for a single
-  // reason: something has to be able to EMPTY it. This gate keeps ApiProvider mounted when the
-  // session ends — the tree below it swaps to the login screen, the provider does not unmount —
-  // so without this the cache outlived the session, and with `gcTime` at 24h and note query
-  // keys carrying no user segment, the next person to sign in on the device would be served the
-  // previous person's notes until the first refetch landed. On a family's shared tablet those
-  // are somebody else's private notes on screen. (@fm/api's provider is shared with
-  // app:finance and app:recipes, so the fix belongs here, not there.)
   const queryClient = useMemo(() => createQueryClient(), []);
   const wasAuthenticated = useRef(false);
 
@@ -126,17 +107,12 @@ function ApiGate() {
     wasAuthenticated.current = false;
 
     void (async () => {
-      // Cancel first: a request that was already in flight for the old session would otherwise
-      // land after clear() and repopulate the cache it was just emptied from.
       try {
         await queryClient.cancelQueries();
       } catch (error) {
         console.warn("[notes] could not cancel in-flight queries on sign-out", error);
       }
       queryClient.clear();
-      // The offline capture queue is per-user and lives on disk; this forgets it in memory.
-      // The signed-out user's own file stays where it is, so their unsent writing comes back
-      // when they sign in again — see components/offline/queue.ts.
       await resetCaptureQueue();
     })();
   }, [status, queryClient]);
@@ -166,10 +142,6 @@ function ApiGate() {
   );
 }
 
-/**
- * The pre-font loading screen. It cannot use @fm/ui's Loading, because that renders text in a
- * font family this app has not loaded yet — the one screen where the platform face is right.
- */
 function Booting({ label }: { label: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-[10px] bg-bg">

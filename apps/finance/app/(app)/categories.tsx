@@ -31,7 +31,6 @@ import { NameSheet } from "@/components/screens/categories/NameSheet.tsx";
 
 type Kind = "expense" | "income";
 
-/** Which sheet is open, and what it will create when it submits. */
 type Draft = { kind: "group" } | { kind: "category"; groupId: string; groupName: string };
 
 const WIRE_KIND: Record<Kind, TransactionKind> = {
@@ -39,20 +38,11 @@ const WIRE_KIND: Record<Kind, TransactionKind> = {
   income: TransactionKind.INCOME,
 };
 
-/**
- * Screen 04 — Categories.
- *
- * The two-level taxonomy as the design draws it: a list of group cards, at most a few of
- * which are open, each opening into its own four-across icon grid. Nothing here paginates or
- * searches, because the grouping is the thing that keeps the list short.
- */
 export default function CategoriesScreen() {
   const { t } = useI18n();
   const router = useRouter();
 
   const [kind, setKind] = useState<Kind>("expense");
-  // null means "the screen has not been touched yet" — the first group is open, which is the
-  // state the design shows. An explicit [] is a user who closed everything.
   const [openIds, setOpenIds] = useState<readonly string[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -78,7 +68,6 @@ export default function CategoriesScreen() {
   ];
 
   const groupMeta = (node: GroupNode): string => {
-    // The wire carries int64 minor units as bigint; `fromWire` is @fm/api's one crossing.
     const limit = node.budget?.budget?.limit ? fromWire(node.budget.budget.limit) : null;
     return t("categories.groupMeta", {
       categories: t("common.categoryCount", { count: node.categoryCount || node.categories.length }),
@@ -120,8 +109,6 @@ export default function CategoriesScreen() {
         value={kind}
         onChange={(next) => {
           setKind(next);
-          // Expansion is per taxonomy: the ids on the other side of the switch are different
-          // rows, so carrying the set across would open arbitrary groups.
           setOpenIds(null);
         }}
         className="mt-n4"
@@ -224,7 +211,6 @@ export default function CategoriesScreen() {
   );
 }
 
-/** The gate's error shape, repeated here because a failed tree must not blank the header. */
 function ErrorPane({
   message,
   reference,

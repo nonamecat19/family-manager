@@ -13,25 +13,6 @@ import {
   useShell,
 } from "./_layout.tsx";
 
-/**
- * The archive, as a screen.
- *
- * It exists because archiving is offered on BOTH layouts — the note's overflow menu has it
- * wherever the note is open — while the only way back in used to be the desktop rail's Archive
- * row. On a phone that made archiving a one-way trip: the note left every list and no route
- * showed it again, so "take it out of the archive" was a menu item on a screen the user could
- * no longer reach. This is that route.
- *
- * The list is ListNotes with archived_only, the same filter the rail row uses — one
- * `filtersFor` call, so the two layouts cannot drift into showing different archives.
- *
- * On MOBILE this screen deliberately does NOT call `shell.select("archive")`. The shell's view
- * is what the notes TAB renders, and moving it here would leave the tab showing archived notes
- * under the heading "All notes" once the user went back. A pushed screen owns its own query.
- * On DESKTOP the opposite is true: the rail and the list pane are the chrome around this
- * route, so a deep link to /archive has to light the rail row up, exactly as notebook/[id]
- * does — otherwise the URL and the highlighted row disagree.
- */
 export default function ArchiveScreen() {
   const desktop = useIsDesktop();
   const shell = useShell();

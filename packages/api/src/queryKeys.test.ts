@@ -39,7 +39,6 @@ test("different periods never share a key", () => {
   );
 });
 
-/* ------------------------------------------------------------------------ finance */
 
 test("every finance key starts with the finance domain segment", () => {
   const keys = [
@@ -67,7 +66,6 @@ test("every finance key starts with the finance domain segment", () => {
   for (const key of keys) {
     assert.equal(key[0], "finance", `key ${JSON.stringify(key)} is not domain-prefixed`);
   }
-  // The entity roots a mutation may invalidate wholesale are prefixed too.
   for (const root of [
     queryKeys.finance,
     queryKeys.financeAccounts,
@@ -133,7 +131,6 @@ test("a filter that changes the result changes the key", () => {
     queryKeys.financeTransactionsList({ accountIds: ["a1"] }),
     queryKeys.financeTransactionsList({ accountIds: ["a2"] }),
   );
-  // The paged feed and the single-page list are different queries over the same filters.
   assert.notDeepEqual(
     queryKeys.financeTransactionsList({}),
     queryKeys.financeTransactionFeed({}),

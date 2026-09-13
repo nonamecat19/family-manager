@@ -15,11 +15,6 @@ import {
   useShell,
 } from "../_layout.tsx";
 
-/**
- * One notebook's notes. On desktop the shell's list pane is already scoped to it — this route
- * only has to put the rail's selection where the URL says it should be, which is what makes a
- * deep link into a notebook light up the right row.
- */
 export default function NotebookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const notebookId = id ?? "";

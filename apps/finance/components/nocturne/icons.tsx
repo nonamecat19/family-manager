@@ -2,24 +2,7 @@ import Svg, { Path } from "react-native-svg";
 
 import { nocturne } from "./tokens.ts";
 
-/**
- * The icon set, drawn as 24×24 stroked paths after Phosphor — the family the design canvas
- * uses (it loads `@phosphor-icons/web`, which is a WEB ICON FONT and cannot render in React
- * Native).
- *
- * Why not a package: apps/recipes already answers this question. It carries its own
- * `components/organic/icons.tsx` of hand-drawn paths rather than an icon dependency, and the
- * brief is explicit that an app should reuse that approach where it exists. Adding
- * `phosphor-react-native` would put a row in the stack that docs/stack.md does not carry, for
- * ~60 glyphs, and dependency additions are a gate this task may not walk through.
- *
- * `weight="fill"` — the design's category glyphs, which sit inside a solid tinted circle — is
- * approximated by a heavier stroke rather than a second set of silhouette paths. At the 17–24px
- * the design draws them, inside a filled circle, the two read the same; a real silhouette set
- * would double this file for no legibility gain.
- */
 const PATHS = {
-  // ---- navigation & chrome ----------------------------------------------------------------
   list: "M4 7h16M4 12h16M4 17h16",
   "caret-down": "M6 9.5l6 6 6-6",
   "caret-up": "M6 14.5l6-6 6 6",
@@ -40,12 +23,10 @@ const PATHS = {
   "pencil-simple": "M4 20h4L20 8l-4-4L4 16zM14.5 5.5l4 4",
   tray: "M4 15h4l1.5 2.5h5L16 15h4M5 15l2.5-9h9L19 15v4a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19z",
 
-  // ---- status bar --------------------------------------------------------------------------
   "bell-slash": "M6 10a6 6 0 0 1 9.6-4.8M18 12.5V10a6 6 0 0 0-.4-2.2M6 10c0 4-1.5 5.5-1.5 5.5h12M10 19a2 2 0 0 0 4 0M4 4l16 16",
   "wifi-high": "M4.5 10a11 11 0 0 1 15 0M7.5 13.2a6.5 6.5 0 0 1 9 0M12 17.5h.01",
   "cell-signal-medium": "M4 20h3.5v-5H4zM10 20h3.5V9H10zM16.5 20H20V4h-3.5z",
 
-  // ---- time & date -------------------------------------------------------------------------
   clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3.5 2",
   "clock-counter-clockwise": "M12 7.5v5l4 2M3.6 9.4A9 9 0 1 1 3 13.5M3.6 4.5v4.9h4.9",
   "calendar-dots":
@@ -53,13 +34,11 @@ const PATHS = {
   calculator:
     "M5.5 4.5A1.5 1.5 0 0 1 7 3h10a1.5 1.5 0 0 1 1.5 1.5v15A1.5 1.5 0 0 1 17 21H7a1.5 1.5 0 0 1-1.5-1.5zM8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01",
 
-  // ---- people ------------------------------------------------------------------------------
   "users-three":
     "M12 10.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM7.5 19c.9-2.3 2.5-3.5 4.5-3.5s3.6 1.2 4.5 3.5M5.5 13.5a2.5 2.5 0 1 1 0-5M2 18c.5-1.4 1.4-2.3 2.7-2.7M18.5 8.5a2.5 2.5 0 1 1 0 5M22 18c-.5-1.4-1.4-2.3-2.7-2.7",
   "user-plus": "M10 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM3 20c1.3-3.2 3.8-4.8 7-4.8M17 13.5v5.5M14.2 16.2h5.6",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20c1.2-3.3 3.8-5 7-5s5.8 1.7 7 5",
 
-  // ---- money & accounts ---------------------------------------------------------------------
   wallet:
     "M4 7.5A2.5 2.5 0 0 1 6.5 5H17v3.5M4 7.5v9A2.5 2.5 0 0 0 6.5 19H19v-3.5M20 10.5h-4.5a2 2 0 0 0 0 4H20z",
   "credit-card": "M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5zM3 10h18M6.5 14.5h3",
@@ -71,12 +50,10 @@ const PATHS = {
   "arrows-left-right": "M3 9h18M7 5L3 9l4 4M21 15H3M17 11l4 4-4 4",
   target: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z",
 
-  // ---- charts -------------------------------------------------------------------------------
   "chart-donut": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 3v5M18.4 16.5l-4.3-2.5",
   "chart-bar": "M4 20h16M7 20v-8M12 20V6M17 20v-5",
   "trend-up": "M4 17l6-6 3.5 3.5L21 7M15 7h6v6",
 
-  // ---- privacy & system ----------------------------------------------------------------------
   "eye-slash":
     "M4 4l16 16M9.6 9.7a3 3 0 0 0 4.2 4.2M6.4 6.6C3.9 8.2 2.5 10.6 2 12c1.3 3.3 5 7 10 7 1.8 0 3.4-.5 4.8-1.2M9.8 5.3A9.6 9.6 0 0 1 12 5c5 0 8.7 3.7 10 7-.6 1.5-1.7 3.2-3.3 4.6",
   "lock-key": "M6 10.5h12V20H6zM8.5 10.5V7a3.5 3.5 0 0 1 7 0v3.5M12 14a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 17v1.5",
@@ -93,7 +70,6 @@ const PATHS = {
   "folder-plus":
     "M4 6.5A1.5 1.5 0 0 1 5.5 5h3.6l2 2.5h7.4A1.5 1.5 0 0 1 20 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM12 11.5v6M9 14.5h6",
 
-  // ---- category glyphs (drawn filled inside a tinted circle) ----------------------------------
   "graduation-cap": "M2.5 9.5L12 5l9.5 4.5L12 14zM6.5 11.4V16c0 1.7 2.5 3 5.5 3s5.5-1.3 5.5-3v-4.6M20.5 10.2V16",
   "house-line": "M4 20.5h16M5.5 20.5v-9.7L12 5.5l6.5 5.3v9.7M10 20.5v-5h4v5",
   basket: "M3 9.5h18l-1.7 9.1a2 2 0 0 1-2 1.4H6.7a2 2 0 0 1-2-1.4zM7.5 9.5L11 4M16.5 9.5L13 4M9.5 13v3.5M14.5 13v3.5",
@@ -121,7 +97,6 @@ export const ICON_NAMES = Object.keys(PATHS) as IconName[];
 
 export interface IconProps {
   name: IconName;
-  /** Square side in px. The design draws chrome at 18–22 and category glyphs at 17–24. */
   size?: number;
   color?: string;
   weight?: IconWeight;
@@ -141,12 +116,10 @@ export function Icon({ name, size = 20, color = nocturne.text, weight = "regular
   );
 }
 
-/** Narrows an arbitrary string (a category's stored icon key) to a drawable name. */
 export function isIconName(value: string | null | undefined): value is IconName {
   return value != null && Object.hasOwn(PATHS, value);
 }
 
-/** The icon a category/group falls back to when its stored key is unknown or empty. */
 export const FALLBACK_ICON: IconName = "dots-three";
 
 export function iconOr(value: string | null | undefined, fallback: IconName = FALLBACK_ICON): IconName {

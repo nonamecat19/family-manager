@@ -7,20 +7,7 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { strings } from "./i18n/index.ts";
 import { Avatar, Divider, Icon, IconButton, nocturne } from "./nocturne/index.ts";
 
-/**
- * Sharing, in one sheet.
- *
- * The product rule this screen exists to express: a note is PRIVATE until someone shares it.
- * So the sheet opens on "not shared" and every row is an explicit grant — to one family
- * member, or to the whole family — at VIEW or EDIT. There is no comment-only tier; the proto
- * says why, and adding a third state in the UI would be inventing a rule the server does not
- * enforce.
- *
- * Family members come from the existing @fm/api family hooks. This app never asks the notes
- * service who is in the family: the notes service does not know, it trusts the token's claim.
- */
 
-/** The family as a name lookup. Everything that prints a person's name goes through it. */
 export function useMemberDirectory() {
   const family = useFamily();
   const members: Member[] = useMemo(() => family.data?.members ?? [], [family.data]);
@@ -39,10 +26,8 @@ export function useMemberDirectory() {
 export interface ShareSheetProps {
   visible: boolean;
   onClose: () => void;
-  /** Exactly one of these, matching where the share is granted. */
   noteId?: string;
   notebookId?: string;
-  /** The owner is drawn as a row that cannot be revoked. */
   ownerUserId?: string;
 }
 
@@ -161,7 +146,6 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
   );
 }
 
-/** The person (or the family) plus a two-value permission control and a revoke. */
 function ShareRow({
   label,
   avatarName,
@@ -249,9 +233,4 @@ function PermissionToggle({
   );
 }
 
-/**
- * The overlay the design dims the app with behind a sheet. Drawn as the ground colour at
- * opacity rather than as a fourth hard-coded rgba: the ground is a token, and the scrim is
- * "the ground, mostly opaque".
- */
 const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;

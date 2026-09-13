@@ -9,11 +9,6 @@ export interface DashedActionProps {
   className?: string;
 }
 
-/**
- * The dashed "Нова група" footer under the group list. It is deliberately not a `Button`:
- * the design gives the create affordance a dashed outline and a neutral label so it reads as
- * the end of the list rather than the screen's primary action.
- */
 export function DashedAction({ label, onPress, icon = "folder-plus", className = "" }: DashedActionProps) {
   return (
     <Pressable

@@ -10,11 +10,6 @@ import { formatDuration, metaLine } from "../../components/organic/format.ts";
 import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
 import { Avatar, Kicker, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
-/**
- * Search is its own screen rather than a field on the browse list, because "find me the
- * mushroom one" and "walk me through Desserts" are different intents — the design gives the
- * first a full-screen, keyboard-up surface and the second a drilldown.
- */
 export default function SearchScreen() {
   const router = useRouter();
   const { t } = useI18n();
@@ -22,14 +17,11 @@ export default function SearchScreen() {
   const [debounced, setDebounced] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
 
-  // One settle timer for the field: a keystroke must not be a request.
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(query.trim()), 300);
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Recents are remembered for the session only — nothing on the wire stores them, and
-  // persisting a search history locally is a decision for the family, not a side effect.
   useEffect(() => {
     if (debounced.length < 3) return;
     setRecent((prev) => [debounced, ...prev.filter((r) => r !== debounced)].slice(0, 6));

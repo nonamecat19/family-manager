@@ -21,7 +21,6 @@ export interface MemberSheetProps {
   onSelect: (memberId: string) => void;
 }
 
-/** "Хто" — the household's active members. Pending invitees cannot have spent anything yet. */
 export function MemberSheet({ visible, onClose, title, members, selectedId, onSelect }: MemberSheetProps) {
   return (
     <Sheet visible={visible} onClose={onClose} title={title} scroll>
@@ -42,9 +41,7 @@ export interface AccountSheetProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  /** Accounts the whole household sees. */
   shared: readonly Account[];
-  /** The caller's own private accounts — selectable, but labelled as theirs alone. */
   privateOwn: readonly Account[];
   sharedLabel: string;
   privateLabel: string;
@@ -52,10 +49,6 @@ export interface AccountSheetProps {
   onSelect: (accountId: string) => void;
 }
 
-/**
- * "Рахунок". Another member's private accounts are never in this list — the service does not
- * serialise them at all — so nothing here can put a hidden balance in front of the wrong person.
- */
 export function AccountSheet({
   visible,
   onClose,
@@ -112,7 +105,6 @@ export interface CategorySheetProps {
   onSelect: (groupId: string, categoryId: string) => void;
 }
 
-/** The full two-level list behind "Ще" and behind the group name beside "Категорія". */
 export function CategorySheet({
   visible,
   onClose,
@@ -152,17 +144,12 @@ export interface DateSheetProps {
   visible: boolean;
   onClose: () => void;
   title: string;
-  /** Candidate days, newest first. */
   days: readonly string[];
   selected: string;
   onSelect: (iso: string) => void;
   t: Translate;
 }
 
-/**
- * The calendar affordance. A list of recent days rather than a month grid: the app ships no
- * date-picker dependency, and a transaction typed by hand is days old, not months.
- */
 export function DateSheet({ visible, onClose, title, days, selected, onSelect, t }: DateSheetProps) {
   return (
     <Sheet visible={visible} onClose={onClose} title={title} scroll>

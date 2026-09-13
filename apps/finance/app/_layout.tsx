@@ -23,8 +23,6 @@ const extra = Constants.expoConfig?.extra as
 const API_BASE_URL = extra?.apiBaseUrl ?? "http://localhost:8083";
 const SERVICE_URLS = extra?.serviceUrls;
 
-// The only place in the app that touches the generated SDK directly: refreshing a session
-// happens outside the ApiProvider it would otherwise authenticate.
 const refreshClient = createClient(
   AuthService,
   createConnectTransport({
@@ -38,33 +36,25 @@ async function refresh(refreshToken: string): Promise<Tokens> {
   return tokensFromResponse(res, Date.now());
 }
 
-/** Ends the session server-side: Logout revokes the whole refresh-token chain, so the token
- * this device is about to forget cannot go on minting access tokens. */
 async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-/**
- * Nocturne, as this app draws it: the shared palette, inputs as a bare rule (notes outlines
- * its own), and no font file — the design's stack ends in the platform sans.
- */
 const theme: Theme = { ...nocturneTheme, fieldStyle: "underline" };
 
 export default function RootLayout() {
   return (
-    // Outside AuthProvider, so a crash while restoring the session is caught too — which is
-    // the one place a user cannot navigate away from.
     <ErrorBoundary
       message={bootT("gate.renderError")}
       onError={(error) => console.error("[finance] unhandled render error", error)}
     >
-      {/* Nocturne is this app's theme; shared @fm/ui components read their palette from here,
-          which is what lets one component library serve this app and the light Organic one. */}
+      {
+}
       <ThemeProvider theme={theme}>
         <AuthProvider store={secureTokenStore} refresh={refresh}
           revoke={revoke} isRefreshRejection={isRefreshRejection}>
         <ApiGate />
-        {/* Nocturne is dark-only, so the status bar is light on every screen, always. */}
+        {}
         <StatusBar style="light" />
         </AuthProvider>
       </ThemeProvider>
@@ -99,12 +89,6 @@ function ApiGate() {
   );
 }
 
-/**
- * The pre-provider loading screen. Painted from the raw tokens rather than `@fm/ui`'s
- * `Loading`, whose light surfaces would flash white before the first Nocturne screen mounts.
- * Its label comes from `bootT`, the device-locale lookup — `I18nProvider` cannot exist this
- * early.
- */
 function BootScreen({ label }: { label: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-n3" style={{ backgroundColor: nocturne.bg }}>

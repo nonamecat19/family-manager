@@ -6,14 +6,6 @@ import { Text, View } from "react-native";
 import { I18nProvider, useI18n } from "../../components/i18n/index.tsx";
 import { Button, EmptyState, nocturne, Screen } from "../../components/nocturne/index.ts";
 
-/**
- * The signed-in half of the app. Everything under this group renders inside the family gate,
- * so no screen has to handle "there is no household yet" itself.
- *
- * A plain `Stack`, not `Tabs`: the design navigates from the drawer overlay (screen 11) and
- * from Home, and gives no screen a tab bar. Routes are discovered by expo-router — this file
- * deliberately does not enumerate them, so the eleven screens can land independently.
- */
 export default function AppLayout() {
   return (
     <I18nProvider>
@@ -34,8 +26,6 @@ function Gate() {
   if (family.isError) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      // The onboarding screen lives under this same gate, so without this branch pushing to
-      // it just changes the URL — this component still short-circuits before any outlet renders.
       if (isOnboarding) return <Routes />;
       return (
         <Screen>
@@ -79,7 +69,6 @@ function Routes() {
     <Stack
       screenOptions={{
         headerShown: false,
-        // Screens draw their own header; this is the ground behind the push animation.
         contentStyle: { backgroundColor: nocturne.bg },
         animation: "slide_from_right",
       }}
@@ -87,7 +76,6 @@ function Routes() {
   );
 }
 
-/** The gate's own loading state, so the app never flashes a light spinner screen. */
 function Boot({ label }: { label: string }) {
   const { t } = useI18n();
   return (

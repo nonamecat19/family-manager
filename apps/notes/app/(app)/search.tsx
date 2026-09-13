@@ -9,11 +9,6 @@ import { Icon, Screen, nocturne, type IconName } from "../../components/nocturne
 import { FACETS, FacetPill } from "../../components/palette.tsx";
 import { useShell } from "./_layout.tsx";
 
-/**
- * Full-screen search. It is the mobile face of the same server-side Search the ⌘K palette
- * calls: same facets, same hits, same footer number. A phone has no meta key, so the palette's
- * overlay would be a modal over nothing — this is a tab instead.
- */
 export default function SearchScreen() {
   const router = useRouter();
   const shell = useShell();

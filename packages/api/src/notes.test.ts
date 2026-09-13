@@ -4,11 +4,6 @@ import { test } from "node:test";
 import { blocksToPlainText, countTasks, type BlockLike } from "./noteBlocks.ts";
 import { normalizeNoteFilters, queryKeys } from "./queryKeys.ts";
 
-/**
- * The notes.v1 enum members these tests use, as their wire numbers. The generated enums are
- * not imported at all — they are TypeScript `enum`s, and `node --test` strips types rather
- * than compiling them, so a value import of the SDK would make this file unloadable.
- */
 const BlockType = { HEADING: 2, TODO: 3, BULLET: 4, PARAGRAPH: 1, IMAGE: 8, DIVIDER: 9 } as const;
 const NoteSort = { UNSPECIFIED: 0, TITLE: 3 } as const;
 const SearchFacet = { ALL: 1, NOTES: 2, TASKS: 3 } as const;
@@ -17,7 +12,6 @@ function block(type: BlockLike["type"], text: string, checked = false): BlockLik
   return { type, text, checked };
 }
 
-/* ---------------------------------------------------------------- query keys */
 
 test("every notes key starts with the notes domain segment", () => {
   const keys = [
@@ -54,7 +48,6 @@ test("the search palette keys by the trimmed query and the facet", () => {
   );
 });
 
-/* ------------------------------------------------------------- filter normalizer */
 
 test("equivalent note filters normalize to one key", () => {
   const spelled = normalizeNoteFilters({
@@ -90,7 +83,6 @@ test("the sort default and an explicit default are one cache entry", () => {
   );
 });
 
-/* ------------------------------------------------------------------- helpers */
 
 test("blocksToPlainText joins the text blocks, one per line", () => {
   const text = blocksToPlainText([
@@ -123,7 +115,6 @@ test("countTasks counts only TODO blocks", () => {
     block(BlockType.TODO, "b"),
     block(BlockType.TODO, "c", true),
     block(BlockType.PARAGRAPH, "not a task"),
-    // A non-TODO block must never contribute, whatever `checked` happens to hold.
     block(BlockType.BULLET, "also not a task", true),
   ]);
   assert.deepEqual(counts, { total: 3, done: 2 });

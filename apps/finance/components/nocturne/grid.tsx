@@ -7,9 +7,7 @@ import { IconCircle } from "./ui.tsx";
 export interface CategoryGridItem {
   id: string;
   label: string;
-  /** The stored icon key; anything the kit cannot draw falls back to its default glyph. */
   icon?: string | null;
-  /** Overrides the ramp slot the item's position would give it. */
   color?: string;
 }
 
@@ -17,18 +15,11 @@ export interface CategoryIconGridProps {
   items: readonly CategoryGridItem[];
   selectedId?: string;
   onSelect: (item: CategoryGridItem) => void;
-  /** The design draws four across inside the add sheet. */
   columns?: number;
-  /** The trailing "Ще" cell that opens the full list. */
   more?: { label: string; onPress: () => void };
   className?: string;
 }
 
-/**
- * The category picker from the add sheet: a glyph in a tinted circle with its name under it.
- * The point of the two-level model is that this grid is never forty items long — it shows one
- * group's categories, with `more` for the rest.
- */
 export function CategoryIconGrid({
   items,
   selectedId,

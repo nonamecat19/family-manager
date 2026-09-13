@@ -4,8 +4,6 @@ import { ApiProvider, isRefreshRejection } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { ErrorBoundary, Loading, ThemeProvider } from "@fm/ui";
 import { organicTheme, type Theme } from "@fm/theme";
-// Imported per weight rather than from the package root: the root index requires every
-// weight and italic, and Metro bundles what it sees — ~500 kB of TTFs the app never renders.
 import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
 import { NunitoSans_400Regular } from "@expo-google-fonts/nunito-sans/400Regular";
 import { NunitoSans_500Medium } from "@expo-google-fonts/nunito-sans/500Medium";
@@ -43,16 +41,10 @@ async function refresh(refreshToken: string): Promise<Tokens> {
   return tokensFromResponse(res, Date.now());
 }
 
-/** Ends the session server-side: Logout revokes the whole refresh-token chain, so the token
- * this device is about to forget cannot go on minting access tokens. */
 async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-/**
- * Organic, in its two faces: Nunito Sans for body, Alegreya for display. Both are per-weight
- * TTFs, so these are the loaded font names rather than a CSS stack.
- */
 const theme: Theme = {
   ...organicTheme,
   fonts: {
@@ -64,9 +56,6 @@ const theme: Theme = {
 };
 
 export default function RootLayout() {
-  // Organic is a two-face system — Alegreya for display, Nunito Sans for everything else — and
-  // every weight is a separate file, so the whole set is loaded up front rather than letting
-  // screens render in the platform font and reflow a frame later.
   const [fontsLoaded] = useFonts({
     Alegreya_800ExtraBold,
     NunitoSans_400Regular,
@@ -76,8 +65,6 @@ export default function RootLayout() {
     NunitoSans_800ExtraBold,
   });
 
-  // Organic is this app's theme. The provider wraps the font gate as well as the app, because
-  // `Loading` below is themed and renders before anything else is mounted.
   if (!fontsLoaded) {
     return (
       <ThemeProvider theme={theme}>
@@ -87,9 +74,6 @@ export default function RootLayout() {
   }
 
   return (
-    // Outside AuthProvider, so a crash while restoring the session is caught too — which is
-    // the one place a user cannot navigate away from. Also outside ThemeProvider: the crash
-    // screen paints itself so it cannot fail for want of a theme.
     <ErrorBoundary
       message={bootT("kitchen.somethingBurned")}
       onError={(error) => console.error("[recipes] unhandled render error", error)}

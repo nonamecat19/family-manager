@@ -12,20 +12,9 @@ import { ScrollView, View } from "react-native";
 import { useI18n } from "@/components/i18n";
 import { Button, Chip, Field, Icon, Kicker, Sheet, nocturne } from "@/components/nocturne";
 
-/**
- * "Переказ" from the header. Two account pickers with the design's own arrows-left-right
- * between them, an amount, and the real TransferBetweenAccounts mutation — the service writes
- * both legs in one transaction, so nothing here has to reconcile two balances.
- *
- * Destination candidates are filtered to the source's currency: a cross-currency transfer
- * needs `receivedAmount` (what actually landed), and there is no dictionary copy for that
- * second field. Offering the pair and then failing server-side would be worse than not
- * offering it — see the report for the keys this needs.
- */
 export interface TransferSheetProps {
   visible: boolean;
   onClose: () => void;
-  /** Everything the caller may move money between: shared plus their own private accounts. */
   accounts: readonly Account[];
 }
 
@@ -82,7 +71,6 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
           selectedId={fromId}
           onSelect={(id) => {
             setFromId(id);
-            // The destination list is currency-scoped, so a changed source can invalidate it.
             setToId("");
           }}
         />

@@ -97,8 +97,8 @@ export default function RecipeDetailScreen() {
     <Screen edges={["bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-[28px]">
-          {/* Hero — the dish sits in a tinted well that runs under the status bar and curves
-              away from the content below it. */}
+          {
+}
           <View
             className="rounded-b-3xl px-[22px] pb-[16px] pt-[56px]"
             style={{ backgroundColor: tint.bg }}
@@ -124,8 +124,6 @@ export default function RecipeDetailScreen() {
             </View>
             <View className="mb-[2px] mt-[2px] items-center">
               {r.imageUrl !== "" ? (
-                // "contain" on the tint, not "cover": a background-removed PNG should read
-                // as the cut-out it is instead of being cropped into a circle.
                 <Image
                   source={{ uri: r.imageUrl }}
                   className="h-[244px] w-[244px]"
@@ -172,8 +170,8 @@ export default function RecipeDetailScreen() {
                   {r.description}
                 </Text>
               )}
-              {/* Per serving, not per recipe — so the figures do not move when the ingredient
-                  stepper scales the list. */}
+              {
+}
               <NutritionStrip
                 className="mt-[14px]"
                 kcal={r.nutrition?.kcal ?? 0}

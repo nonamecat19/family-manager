@@ -6,18 +6,8 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Icon, type IconName } from "./icons.tsx";
 import { initialOf, nocturne, tintFor, type Tint } from "./tokens.ts";
 
-/**
- * The Nocturne kit for Commonplace. Every repeated shape in the designed screens lives here,
- * so a screen file is composition and data and nothing else — no raw hex, no raw type sizes,
- * no second version of the same row.
- *
- * Nocturne is DARK ONLY: there is no light pass of these screens, and nothing here reads
- * `dark:` classes or the colour scheme.
- */
 
-// ---- scaffolding ------------------------------------------------------------------------------
 
-/** Every screen sits on the same ground; no screen paints its own background. */
 export function Screen({
   children,
   edges,
@@ -34,11 +24,6 @@ export function Screen({
   );
 }
 
-/**
- * The navigation column: notebooks, shared-with-me, starred, recent. It sits a shade UNDER
- * the app ground, which is how the design separates navigation from content without drawing
- * a border down the screen.
- */
 export function Rail({ children, className = "", ...props }: ViewProps & { className?: string }) {
   return (
     <View className={`bg-rail ${className}`} {...props}>
@@ -47,10 +32,6 @@ export function Rail({ children, className = "", ...props }: ViewProps & { class
   );
 }
 
-/**
- * A content column. `tone="list"` is the note-list pane's own ground (a shade over the rail);
- * `tone="bg"` is the reading/editing column, which sits on the app ground itself.
- */
 export function Pane({
   children,
   tone = "bg",
@@ -65,11 +46,6 @@ export function Pane({
   );
 }
 
-/**
- * The design's signature rule: a hairline that fades to transparent at BOTH ends rather than
- * stopping dead. Drawn as a gradient-filled rect in SVG — a plain 1px View cannot fade, and a
- * gradient package for one line is not a row this repo's stack table should grow.
- */
 export function Divider({
   orientation = "horizontal",
   className = "",
@@ -100,16 +76,13 @@ export function Divider({
   );
 }
 
-// ---- surfaces ----------------------------------------------------------------------------------
 
 export interface CardProps {
   children: ReactNode;
   onPress?: () => void;
   onLongPress?: () => void;
-  /** Required when the card is pressable — it is the whole row's spoken name. */
   accessibilityLabel?: string;
   padded?: boolean;
-  /** The note list's current row: an accent hairline instead of a fill. */
   selected?: boolean;
   className?: string;
 }
@@ -142,20 +115,15 @@ export function Card({
   );
 }
 
-// ---- people -------------------------------------------------------------------------------------
 
 export interface AvatarProps {
-  /** The person's display name; the avatar draws its first letter. */
   name: string;
   size?: number;
   tint?: Tint;
-  /** Slot used when the name is empty — keeps a placeholder row from going grey. */
   index?: number;
-  /** Draws the ring the stack uses to cut each disc out of the one behind it. */
   ringed?: boolean;
 }
 
-/** Initials on a token background. The same name is always the same colour. */
 export function Avatar({ name, size = 26, tint, index = 0, ringed = false }: AvatarProps) {
   const paint = tint ?? tintFor(name, index);
   return (
@@ -179,10 +147,6 @@ export function Avatar({ name, size = 26, tint, index = 0, ringed = false }: Ava
   );
 }
 
-/**
- * The design's overlapping stack: each disc laid over the previous one with a ring in the
- * ground colour, and a "+n" cap once the row would get longer than it earns.
- */
 export function AvatarStack({
   names,
   size = 24,
@@ -228,11 +192,9 @@ export function AvatarStack({
   );
 }
 
-// ---- controls ------------------------------------------------------------------------------------
 
 export interface ChipProps {
   label: string;
-  /** Omit to get the static tag the note row draws; pass it for the palette's facet row. */
   onPress?: () => void;
   active?: boolean;
   icon?: IconName;
@@ -240,7 +202,6 @@ export interface ChipProps {
   className?: string;
 }
 
-/** A facet pill or a static tag. Inactive is an outline so a row of them reads as one group. */
 export function Chip({ label, onPress, active = false, icon, tone = "accent", className = "" }: ChipProps) {
   const fill =
     tone === "accent2" ? "border-accent2-600 bg-accent2-900" : tone === "neutral" ? "border-neutral-700 bg-neutral-900" : "border-accent-600 bg-accent-900";
@@ -269,10 +230,6 @@ export function Chip({ label, onPress, active = false, icon, tone = "accent", cl
   );
 }
 
-/**
- * A key cap — ⌘K in the search field, ↵ in the palette's footer. Decoration on a phone, but
- * the design draws it and the app runs on web too, where it is the actual shortcut.
- */
 export function Kbd({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <View
@@ -285,18 +242,15 @@ export function Kbd({ children, className = "" }: { children: ReactNode; classNa
 
 export interface IconButtonProps {
   icon: IconName;
-  /** Spoken label — required, because every one of these is an icon with no text beside it. */
   label: string;
   onPress: () => void;
   size?: number;
   color?: string;
   weight?: "regular" | "fill";
-  /** Draws the accent dot the design puts on an action with something waiting behind it. */
   badge?: boolean;
   disabled?: boolean;
 }
 
-/** A 36px tappable icon. The one place a bare icon is allowed to be a control. */
 export function IconButton({
   icon,
   label,
@@ -325,11 +279,6 @@ export function IconButton({
   );
 }
 
-/**
- * The primary action. Nocturne draws it as an ACCENT OUTLINE on the ground rather than a
- * filled bar — on a dark system a solid accent slab is the loudest thing on the screen, and
- * this design reserves that weight for nothing.
- */
 export function PrimaryButton({
   title,
   onPress,
@@ -361,7 +310,6 @@ export function PrimaryButton({
   );
 }
 
-// ---- empty --------------------------------------------------------------------------------------
 
 export interface EmptyStateProps {
   title: string;

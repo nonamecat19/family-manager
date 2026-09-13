@@ -36,13 +36,6 @@ import {
 
 type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced";
 
-/**
- * Screen 11 — Settings, with the navigation drawer overlaid on top of it.
- *
- * The drawer is a `Modal` over this screen (the kit's `Drawer`), not an expo-router drawer
- * navigator: the design shows it over a stack, and a navigator would put a second edge
- * gesture on every screen in the app.
- */
 export default function SettingsScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -77,7 +70,6 @@ export default function SettingsScreen() {
 
   const onSelectDrawerItem = (item: DrawerItem) => {
     setDrawerOpen(false);
-    // The drawer's own entry for this screen just closes it; pushing would stack a second copy.
     if (!item.href || item.id === "settings") return;
     router.push(item.href as Href);
   };
@@ -97,16 +89,12 @@ export default function SettingsScreen() {
       account={{ name: me?.displayName ?? "", email: me?.email ?? "" }}
       household={{
         name: family.data?.family?.name ?? "",
-        // The shared balance only: private accounts are excluded server-side and must never
-        // reach a family-scoped total in the UI.
         balance: accounts.data ? fromWire(accounts.data.sharedBalance, currencyCode) : undefined,
       }}
       scopes={[
         { id: "family", label: t("common.family") },
         ...memberList.map((member) => ({ id: member.userId, label: member.displayName })),
       ]}
-      // Settings has nothing to scope, so the row navigates instead of pretending to filter:
-      // a member opens their spending, "Родина" goes home.
       onSelectScope={(id) => {
         setDrawerOpen(false);
         if (id === "family") {
@@ -202,7 +190,7 @@ export default function SettingsScreen() {
           onPress={() => setSheet("privacy")}
         />
 
-        {/* The canvas breaks the list here: what the household owns, then device preferences. */}
+        {}
         <View className="h-[8px]" />
 
         <SettingsRow icon="lock-key" label={t("settings.pin")} onPress={() => setSheet("pin")} />

@@ -7,20 +7,16 @@ import { shouldRetryQuery } from "./retry.ts";
 const ClientsContext = createContext<Clients | null>(null);
 
 export interface ApiProviderProps extends ClientsOptions {
-  /** Supply your own QueryClient in tests; otherwise one is created here. */
   queryClient?: QueryClient;
   children: ReactNode;
 }
 
-/** Defaults tuned for a mobile ledger: data is small, connectivity is not guaranteed. */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 30_000,
         gcTime: 24 * 60 * 60_000,
-        // Not a count: `retry: 2` retried everything, including the codes that are answers.
-        // "That email is already registered" took three round trips to reach the user.
         retry: shouldRetryQuery,
         refetchOnWindowFocus: false,
       },

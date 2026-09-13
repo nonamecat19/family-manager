@@ -11,11 +11,6 @@ import { weekRange } from "../../components/organic/week.ts";
 import { organic } from "../../components/organic/tokens.ts";
 import { DashedButton, Display, Screen } from "../../components/organic/ui.tsx";
 
-/**
- * The shopping list. It is a view of a total, not a thing of its own: whatever is in the
- * plan's basket gets summed by the service, grouped into aisles here, and ticked off
- * locally. Nothing is written back — the family's phone is the trolley.
- */
 export default function ShoppingListScreen() {
   const router = useRouter();
   const { t } = useI18n();
@@ -23,8 +18,6 @@ export default function ShoppingListScreen() {
   const { from, to } = weekRange(new Date());
 
   const basketTotals = useSumIngredients(basket.items);
-  // With an empty basket the list falls back to the week that is already planned, so the
-  // tab is useful on a Saturday morning without re-picking every recipe.
   const weekPlan = useMealPlan(from, to);
   const weekTotals = useTotalIngredients(from, to);
 
@@ -126,7 +119,6 @@ export default function ShoppingListScreen() {
   );
 }
 
-/** Totals are summed by name+unit on the server, so that pair is the row's identity. */
 function keyOf(total: IngredientTotal): string {
   return `${total.name}|${total.unit}`;
 }

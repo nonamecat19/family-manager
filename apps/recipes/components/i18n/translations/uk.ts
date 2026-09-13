@@ -1,16 +1,7 @@
 import type { en } from "./en.ts";
 import type { PluralForms } from "@fm/i18n";
 
-/**
- * Ukrainian copy. Typed against `en`'s exact key set, each mapped to the general `string` or
- * `PluralForms` shape (not `en`'s own string literals) — so TypeScript's excess/missing-
- * property checks enforce the key set (drop a key here, or add one `en` doesn't have, and it
- * is a compile error), AND, per key, `en` being a plain string forces `uk` to be a plain
- * string too (and likewise for plural forms) — a shape mismatch would otherwise type-check
- * yet throw at runtime only for Ukrainian users, the moment `t()` hits it.
- */
 export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? string : PluralForms } = {
-  // ---- common --------------------------------------------------------------------------
   "common.back": "Назад",
   "common.cancel": "Скасувати",
   "common.close": "Закрити",
@@ -25,14 +16,12 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "common.any": "Будь-який",
   "common.loadingEllipsis": "…",
 
-  // ---- tabs ------------------------------------------------------------------------------
   "tabs.home": "Дім",
   "tabs.recipes": "Рецепти",
   "tabs.plan": "План",
   "tabs.list": "Список",
   "tabs.you": "Ви",
 
-  // ---- app gate / kitchen loading states -------------------------------------------------
   "kitchen.appName": "Сімейні рецепти",
   "kitchen.warmingOven": "Розігріваємо духовку…",
   "kitchen.restoringSession": "Відновлюємо ваш сеанс…",
@@ -44,7 +33,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "kitchen.somethingBurned":
     "Застосунок несподівано зупинився. Спробуйте ще раз і розкажіть, що ви робили.",
 
-  // ---- profile screen ---------------------------------------------------------------------
   "profile.familyFallback": "Родина",
   "profile.householdFallback": "Ваша родина",
   "profile.keeperOfTheCookbook": "Хранителі кулінарної книги",
@@ -69,14 +57,12 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "profile.sending": "Надсилаємо…",
   "profile.sendTheInvitation": "Надіслати запрошення",
 
-  // ---- preferences screen -----------------------------------------------------------------
   "preferences.title": "Налаштування",
   "preferences.language": "Мова",
   "preferences.languageHint": "Кулінарна книга говоритиме з вами тією мовою, яку ви оберете.",
   "preferences.english": "English",
   "preferences.ukrainian": "Українська",
 
-  // ---- home --------------------------------------------------------------------------------
   "home.title": "Сімейна\nкулінарна книга",
   "home.yourProfile": "Ваш профіль",
   "home.searchRecipes": "Пошук рецептів",
@@ -94,7 +80,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "home.favorites": "Улюблені",
   "home.keepComingBackTo": "Ті, до яких ви повертаєтесь знову і знову",
 
-  // ---- recipes list --------------------------------------------------------------------------
   "recipesList.sortRating": "Рейтинг",
   "recipesList.sortTime": "Час",
   "recipesList.sortTitle": "А–Я",
@@ -133,18 +118,15 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
     other: "Показати {count} рецептів",
   },
 
-  // ---- search ------------------------------------------------------------------------------
   "search.placeholder": "Пошук рецептів",
   "search.recent": "Нещодавні",
   "search.searchFor": "Шукати {term}",
   "search.searching": "Шукаємо…",
   "search.noMatches": "Нічого не знайдено за запитом «{query}». Спробуйте назву інгредієнта замість страви.",
 
-  // ---- favorites ---------------------------------------------------------------------------
   "favorites.title": "Улюблені",
   "favorites.empty": "Поки нічого не збережено. Торкніться сердечка на рецепті, і він чекатиме на вас тут.",
 
-  // ---- shopping list -------------------------------------------------------------------------
   "shoppingList.title": "Список покупок",
   "shoppingList.nothingToBuyYet": "Поки що нічого купувати",
   "shoppingList.fromRecipesInBasket": "З {recipes} · {bought} із {total} у кошику",
@@ -153,7 +135,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "shoppingList.openThePlan": "+ Відкрити план",
   "shoppingList.untickEverything": "Зняти всі позначки",
 
-  // ---- meal plan -----------------------------------------------------------------------------
   "mealPlan.title": "План",
   "mealPlan.tabBasket": "Кошик",
   "mealPlan.tabWeek": "Тиждень",
@@ -188,7 +169,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "mealPlan.slotSnack": "Перекус",
   "mealPlan.slotDessert": "Десерт",
 
-  // ---- cook mode -----------------------------------------------------------------------------
   "cook.leaveCookMode": "Вийти з режиму готування",
   "cook.stepOf": "Крок {index} з {total}",
   "cook.cook": "Готуємо",
@@ -204,7 +184,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "cook.tapToPause": "торкніться, щоб призупинити",
   "cook.tapToStart": "торкніться, щоб почати",
 
-  // ---- recipe detail -------------------------------------------------------------------------
   "recipeDetail.gotAway": "Цей рецепт вислизнув",
   "recipeDetail.editRecipe": "Редагувати рецепт",
   "recipeDetail.removeFromFavourites": "Прибрати з улюблених",
@@ -233,7 +212,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "recipeDetail.deleteRecipeBody": "Це неможливо скасувати.",
   "recipeDetail.fetching": "Завантажуємо рецепт…",
 
-  // ---- recipe edit ---------------------------------------------------------------------------
   "recipeEdit.newRecipe": "Новий рецепт",
   "recipeEdit.editRecipe": "Редагувати рецепт",
   "recipeEdit.openingRecipe": "Відкриваємо рецепт…",
@@ -275,7 +253,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "recipeEdit.saveChanges": "Зберегти зміни",
   "recipeEdit.cancel": "Скасувати",
 
-  // ---- onboarding ----------------------------------------------------------------------------
   "onboarding.title": "Почніть свою\nкулінарну книгу",
   "onboarding.body": "Назвіть свою родину. Усе, що ви запишете відтепер, належатиме їй і кожному, кого ви запросите.",
   "onboarding.familyName": "Назва родини",
@@ -283,7 +260,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "onboarding.creating": "Створюємо…",
   "onboarding.create": "Створити",
 
-  // ---- login ---------------------------------------------------------------------------------
   "login.appName": "Сімейні рецепти",
   "login.signInBody": "Увійдіть у свою сімейну кулінарну книгу.",
   "login.registerBody": "Створіть акаунт і почніть записувати.",
@@ -298,7 +274,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "login.switchToRegister": "Створити акаунт",
   "login.switchToLogin": "У мене вже є акаунт",
 
-  // ---- shared organic UI -----------------------------------------------------------------------
   "ui.decrease": "Зменшити {label}",
   "ui.increase": "Збільшити {label}",
   "ui.stars": {
@@ -309,7 +284,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   },
   "ui.ratedOutOf5": "Оцінка {rating} із 5",
 
-  // ---- aisles --------------------------------------------------------------------------------
   "aisles.produce": "Овочі та фрукти",
   "aisles.dairyAndEggs": "Молочні продукти та яйця",
   "aisles.meatAndFish": "М'ясо та риба",
@@ -317,7 +291,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "aisles.pantry": "Бакалія",
   "aisles.other": "Інше",
 
-  // ---- weekdays ------------------------------------------------------------------------------
   "weekdays.sun": "Нд",
   "weekdays.mon": "Пн",
   "weekdays.tue": "Вт",
@@ -326,14 +299,12 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "weekdays.fri": "Пт",
   "weekdays.sat": "Сб",
 
-  // ---- nutrition strip -----------------------------------------------------------------------
   "nutrition.kcal": "ккал",
   "nutrition.protein": "білки",
   "nutrition.fat": "жири",
   "nutrition.carbs": "вуглеводи",
   "nutrition.grams": "{value} г",
 
-  // ---- duration formatting ---------------------------------------------------------------------
   "duration.minutes": "{count} хв",
   "duration.hours": "{count} год",
   "duration.hoursAndMinutes": "{hours} год {minutes} хв",
@@ -341,7 +312,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "duration.minutesTotal": "{count} хв усього",
   "duration.hoursTotal": "{count} год усього",
 
-  // ---- pluralized counts -----------------------------------------------------------------------
   "plurals.recipesCount": {
     one: "{count} рецепт",
     few: "{count} рецепти",

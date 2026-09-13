@@ -32,8 +32,6 @@ test("answers the server already gave are not retried", () => {
   }
 });
 
-// The token is refreshed before the request goes out, so a 401 arriving here means the refresh
-// failed. Two more attempts only delay the login screen.
 test("unauthenticated is not retried", () => {
   assert.equal(shouldRetryQuery(0, err(Code.Unauthenticated)), false);
 });
@@ -43,8 +41,6 @@ test("retries stop at the limit", () => {
   assert.equal(shouldRetryQuery(MAX_QUERY_RETRIES, err(Code.Unavailable)), false);
 });
 
-// Anything that is not a ConnectError got here from our own code, and repeating it repeats the
-// bug rather than working around a network.
 test("non-Connect errors are surfaced immediately", () => {
   assert.equal(shouldRetryQuery(0, new TypeError("x.map is not a function")), false);
   assert.equal(shouldRetryQuery(0, "not even an error"), false);

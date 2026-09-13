@@ -1,13 +1,3 @@
-/**
- * The wire half of scope.ts: the domain unions the screens speak, mapped onto
- * `finance.v1.Scope` and `finance.v1.Period`.
- *
- * It is a separate module from scope.ts on purpose. scope.ts is imported by queryKeys.ts,
- * which is unit-tested with `node --test`; the generated SDK declares TypeScript `enum`s,
- * which are not erasable syntax and therefore cannot be type-stripped. Only hooks.ts — which
- * already talks to the SDK — reaches for this file.
- */
-
 import type { MessageInitShape } from "@bufbuild/protobuf";
 import {
   PeriodGranularity,
@@ -48,7 +38,6 @@ export function toWirePeriod(period: PeriodInput): MessageInitShape<typeof Perio
   return { granularity: WIRE_GRANULARITY[period.granularity], anchor: period.anchor };
 }
 
-/** The bucket width for GetSpendingSeries — CUSTOM is not a bucket width. */
 export function toWireGranularity(granularity: PeriodGranularityInput): PeriodGranularity {
   return WIRE_GRANULARITY[granularity];
 }

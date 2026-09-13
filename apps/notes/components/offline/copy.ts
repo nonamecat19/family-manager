@@ -1,13 +1,4 @@
-/**
- * Copy for the offline queue's new states.
- *
- * It lives here rather than in components/i18n/strings.ts because that file is owned by another
- * change in flight. FOLLOW-UP for whoever owns i18n: fold `offlineCopy` into `strings` (as
- * `strings.capture.*` and `strings.settings.*`) and delete this module — the app should have one
- * copy door, and this is a second one.
- */
 export const offlineCopy = {
-  /** Shown in the sheet when a capture could not be written at all. */
   captureNotSaved: "Not saved yet — try again in a moment.",
   refusedTitle: "Could not be filed",
   refusedBody: (n: number) =>

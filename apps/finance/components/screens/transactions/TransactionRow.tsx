@@ -4,33 +4,20 @@ import { Pressable, Text, View } from "react-native";
 import { Badge, Divider, IconCircle, MemberAvatar, MoneyText } from "@/components/nocturne";
 
 export interface TransactionRowProps {
-  /** The category's name — what the design draws as the row's headline. */
   title: string;
-  /** "Mono · Дім" — the account and either the merchant or the category's group. */
   meta: string;
-  /** The stored category icon key; unknown keys fall back to the kit's default glyph. */
   icon?: string;
-  /** Series slot for the icon's tint, so a category keeps one colour across the feed. */
   iconIndex: number;
-  /** Who paid. Every row carries this avatar — it is the point of this screen. */
   memberName: string;
   memberIndex: number;
   amount: Money;
-  /** Income is drawn in the positive tone; an expense stays default. */
   income?: boolean;
-  /** Draws the "шаблон" badge on a row a quick template wrote. */
   templateLabel?: string;
   onPress?: () => void;
   onLongPress?: () => void;
   divider?: boolean;
 }
 
-/**
- * One transaction in the feed.
- *
- * Not the kit's `Row`: the design puts the payer's avatar *inside* the meta line, and `Row`
- * takes its subtitle as a string. Everything else here is kit parts.
- */
 export function TransactionRow({
   title,
   meta,

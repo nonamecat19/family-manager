@@ -1,21 +1,7 @@
 import type { en } from "./en.ts";
 import type { PluralForms } from "@fm/i18n";
 
-/**
- * Ukrainian copy — the app's actual face, lifted verbatim from the design canvas
- * `docs/design/finance/Family Money Manager.dc.html`. Where the canvas draws a string, that
- * exact string is here; the rest (errors, empty states, sign-in) is written to match its
- * register.
- *
- * Typed against `en`'s exact key set, each mapped to the general `string` or `PluralForms`
- * shape (not `en`'s own string literals) — so TypeScript's excess/missing-property checks
- * enforce the key set (drop a key here, or add one `en` doesn't have, and it is a compile
- * error), AND, per key, `en` being a plain string forces `uk` to be a plain string too (and
- * likewise for plural forms) — a shape mismatch would otherwise type-check yet throw at
- * runtime only for Ukrainian users, the moment `t()` hits it.
- */
 export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? string : PluralForms } = {
-  // ---- common ---------------------------------------------------------------------------
   "common.cancel": "Скасувати",
   "common.save": "Зберегти",
   "common.done": "Готово",
@@ -168,7 +154,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "common.weekdayShort.7": "нд",
   "common.dayHeading": "{day} {month}, {weekday}",
 
-  // ---- drawer ----------------------------------------------------------------------------
   "nav.menu": "Меню",
   "nav.home": "Головна",
   "nav.accounts": "Рахунки",
@@ -181,7 +166,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "nav.settings": "Налаштування",
   "nav.syncedAt": "Синхронізовано {time}",
 
-  // ---- app gate --------------------------------------------------------------------------
   "gate.appName": "Родинні гроші",
   "gate.restoringSession": "Відновлюємо сеанс…",
   "gate.preparing": "Рахуємо…",
@@ -192,7 +176,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "gate.errorTitle": "Щось\nпішло не так",
   "gate.renderError": "Не вдалося намалювати цей екран. Зазвичай допомагає перезапуск застосунку.",
 
-  // ---- sign in ---------------------------------------------------------------------------
   "auth.title": "Родинні гроші",
   "auth.signInBody": "Спільний бюджет. Приватні рахунки залишаються приватними.",
   "auth.registerBody": "Створіть акаунт, а потім сім'ю — або прийміть запрошення.",
@@ -207,7 +190,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "auth.loginError": "Не вдалося увійти. Перевірте пошту та пароль і спробуйте ще раз.",
   "auth.registerError": "Не вдалося створити акаунт. Спробуйте ще раз.",
 
-  // ---- 01 onboarding ---------------------------------------------------------------------
   "onboarding.title": "Створіть сім'ю",
   "onboarding.body": "Спільний бюджет, спільні категорії. Приватні рахунки залишаються приватними.",
   "onboarding.nameLabel": "Назва",
@@ -220,7 +202,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "onboarding.createError": "Не вдалося створити сім'ю. Спробуйте ще раз.",
   "onboarding.nameRequired": "Спочатку назвіть сім'ю.",
 
-  // ---- 02 home ---------------------------------------------------------------------------
   "home.title": "Головна",
   "home.scopeFamily": "Родина",
   "home.scopeAll": "Усі {count}",
@@ -231,7 +212,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "home.addTransaction": "Додати операцію",
   "home.uncategorised": "Без категорії",
 
-  // ---- 03 add transaction ----------------------------------------------------------------
   "add.title": "Нова операція",
   "add.editTitle": "Редагувати операцію",
   "add.amount": "Сума",
@@ -250,7 +230,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "add.saveError": "Не вдалося зберегти операцію. Спробуйте ще раз.",
   "add.logged": "Записано {amount}",
 
-  // ---- 04 categories & groups ------------------------------------------------------------
   "categories.title": "Категорії",
   "categories.addCategory": "Додати",
   "categories.newGroup": "Нова група",
@@ -258,7 +237,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "categories.emptyTitle": "Категорій ще немає",
   "categories.emptyBody": "Групи згортають довгий список у щось, що можна охопити оком. Почніть з однієї.",
 
-  // ---- 05 household ----------------------------------------------------------------------
   "household.title": "Родина",
   "household.sharedBalance": "Спільний баланс",
   "household.spendingIn": "Витрати · {month}",
@@ -276,7 +254,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "household.overspendNotifications": "Сповіщення про перевитрату",
   "household.inviteError": "Не вдалося надіслати запрошення. Спробуйте ще раз.",
 
-  // ---- керування родиною ----
   "family.name.heading": "НАЗВА РОДИНИ",
   "family.name.rename": "Перейменувати",
   "family.name.label": "Назва",
@@ -304,7 +281,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "family.leave.lastAdmin": "Ви єдиний адміністратор. Призначте іншого, перш ніж вийти.",
   "family.leave.error": "Не вдалося вийти з родини. Спробуйте ще раз.",
 
-  // ---- 06 per-member spending ------------------------------------------------------------
   "member.title": "Хто витрачає",
   "member.split": "Розподіл",
   "member.byGroup": "По групах",
@@ -314,7 +290,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "member.emptyTitle": "Поки нема з чим порівнювати",
   "member.emptyBody": "Коли назбирається два місяці витрат, тут буде видно, що змінилось.",
 
-  // ---- 07 transactions -------------------------------------------------------------------
   "transactions.title": "Операції",
   "transactions.dayHeading": "{date} · {amount}",
   "transactions.rowMeta": "{account} · {category}",
@@ -326,7 +301,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "transactions.emptyBody": "За цей період нічого не записано.",
   "transactions.deleteConfirm": "Видалити цю операцію?",
 
-  // ---- 08 accounts -----------------------------------------------------------------------
   "templates.title": "Шаблони",
   "templates.subtitle": "Лише ваші",
   "templates.yours": "Ваші шаблони",
@@ -429,7 +403,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "accounts.emptyTitle": "Рахунків ще немає",
   "accounts.emptyBody": "Додайте рахунки, з яких родина справді платить.",
 
-  // ---- 09 charts -------------------------------------------------------------------------
   "charts.title": "Графіки",
   "charts.granularity.year": "рік",
   "charts.granularity.month": "місяць",
@@ -440,7 +413,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "charts.emptyTitle": "Замало даних",
   "charts.emptyBody": "Графіки стають корисними після кількох тижнів операцій.",
 
-  // ---- 10 widgets ------------------------------------------------------------------------
   "widgets.title": "Віджети",
   "widgets.body":
     "Утримайте, щоб додати на робочий стіл. Кожен віджет прив'язується до учасника або до всієї родини.",
@@ -454,7 +426,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "widgets.recent": "Останні операції",
   "widgets.accounts": "Рахунки",
 
-  // ---- 11 settings -----------------------------------------------------------------------
   "settings.title": "Налаштування",
   "settings.family": "Родина",
   "settings.familyMeta": "{members} · спільний бюджет",

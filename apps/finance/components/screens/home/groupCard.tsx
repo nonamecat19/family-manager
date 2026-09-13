@@ -3,28 +3,14 @@ import { Text, View } from "react-native";
 
 import { BudgetBar, Card, Icon, IconCircle, MoneyText, nocturne } from "@/components/nocturne";
 
-/**
- * One row of Home's group list (design canvas, screen 02).
- *
- * It is not `Row` from the kit: a budgeted group draws a progress bar where `Row` draws a
- * subtitle string, and its right-hand caption ("з ₴6,000") turns `overspend` — neither of
- * which `Row` can express. Everything inside is still kit parts, so the row keeps the same
- * surface, tint ramp and money grammar as the rest of the app.
- */
 export interface HomeGroupCardProps {
   name: string;
-  /** Stored icon key; unknown keys fall back inside `IconCircle`. */
   icon?: string | null;
-  /** Series slot from the server, so the row and its donut arc share a colour. */
   colorStep: number;
   amount: Money;
-  /** "1 категорія · Сергій" — drawn when the group has no budget bar. */
   meta?: string;
-  /** The right-hand caption under the amount: "20%" without a budget, "з ₴16,000" with one. */
   caption?: string;
-  /** Present only for a group with a budget; drives the bar and the overspend colour. */
   budget?: { spentMinor: number; limitMinor: number; over: boolean };
-  /** Absent for the row that stands for spending with no category: there is nothing to open. */
   onPress?: () => void;
 }
 

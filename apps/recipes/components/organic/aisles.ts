@@ -1,17 +1,6 @@
 import type { TranslationKey } from "../i18n/index.tsx";
 import { organic } from "./tokens.ts";
 
-/**
- * Aisle grouping for the shopping list.
- *
- * The service returns flat ingredient totals — there is no aisle on the wire, and inventing
- * one would mean a contract change and a taxonomy every family would disagree with. So the
- * grouping is a client-side reading of the ingredient name, with everything unmatched
- * falling into "Other" rather than being hidden or guessed at.
- *
- * `id` is the stable, locale-independent grouping key (also the ingredient-matching's own
- * bookkeeping key); `nameKey` is what the screen renders via `t()`.
- */
 export interface Aisle {
   id: string;
   nameKey: TranslationKey;
@@ -60,7 +49,6 @@ export function aisleFor(ingredientName: string): Aisle {
   return AISLES.find((a) => a.match.test(ingredientName)) ?? OTHER;
 }
 
-/** Groups totals into aisles, keeping aisle order stable and dropping empty ones. */
 export function groupByAisle<T extends { name: string }>(items: T[]): { aisle: Aisle; items: T[] }[] {
   const buckets = new Map<string, { aisle: Aisle; items: T[] }>();
   for (const item of items) {

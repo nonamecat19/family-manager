@@ -3,7 +3,6 @@ import Svg, { Circle, G, Path } from "react-native-svg";
 
 export interface PieSlice {
   key: string;
-  /** 0..1; slices are drawn in the order given. */
   share: number;
   color: string;
   label?: string;
@@ -12,20 +11,10 @@ export interface PieSlice {
 export interface PieChartProps {
   slices: readonly PieSlice[];
   size?: number;
-  /** Ring thickness; equal to size/2 draws a full pie instead of a donut. */
   thickness?: number;
-  /** Rendered in the hole — usually the period total. */
   children?: React.ReactNode;
 }
 
-/**
- * A donut chart drawn with plain SVG arcs — no charting library, because the only thing this
- * needs to do is turn shares into arcs.
- *
- * Shares are supplied precomputed by the server so every client draws the same pie. A single
- * 100% slice is drawn as a circle: an arc from 0° to 360° is a degenerate path that renders
- * as nothing.
- */
 export function PieChart({ slices, size = 200, thickness = 28, children }: PieChartProps) {
   const radius = size / 2;
   const inner = Math.max(0, radius - thickness);
@@ -34,7 +23,7 @@ export function PieChart({ slices, size = 200, thickness = 28, children }: PieCh
   const visible = slices.filter((s) => s.share > 0);
   const single = visible.length === 1;
 
-  let angle = -Math.PI / 2; // start at 12 o'clock
+  let angle = -Math.PI / 2;
 
   return (
     <View style={{ width: size, height: size }} className="items-center justify-center">
@@ -71,7 +60,6 @@ export function PieChart({ slices, size = 200, thickness = 28, children }: PieCh
   );
 }
 
-/** One donut segment: outer arc forward, inner arc back, closed. */
 function donutArc(
   center: number,
   outer: number,

@@ -7,7 +7,6 @@ import { Text, TextInput, View } from "react-native";
 import { strings } from "../../components/i18n/index.ts";
 import { PrimaryButton, Screen, nocturne } from "../../components/nocturne/index.ts";
 
-/** Create-a-family, the same two fields apps/recipes uses, repainted in Nocturne. */
 export default function OnboardingScreen() {
   const router = useRouter();
   const { refreshNow } = useAuth();
@@ -45,8 +44,6 @@ export default function OnboardingScreen() {
           disabled={name.trim() === "" || createFamily.isPending}
           onPress={() =>
             createFamily.mutate(name.trim(), {
-              // The access token's family_id claim is baked in at issuance; refresh it before
-              // navigating back, or the family-scoped screens hit the same precondition again.
               onSuccess: () => void refreshNow().then(() => router.replace("/(app)")),
             })
           }

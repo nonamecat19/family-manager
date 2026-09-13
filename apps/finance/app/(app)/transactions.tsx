@@ -48,24 +48,10 @@ import { TransactionRow } from "@/components/screens/transactions/TransactionRow
 
 type Kind = "expense" | "income";
 
-/**
- * Screen 07 — the transaction feed.
- *
- * Day sections with their own subtotal, and the payer's avatar on every single row: the
- * household's question about a list of spending is "who?", so the answer is never a tap away.
- *
- * The feed is scoped to the family, which is what keeps private accounts out of it — the
- * service excludes them from a family scope, and this screen never re-adds them (the filter
- * sheet offers shared accounts only).
- */
 export default function TransactionsScreen() {
   const { t } = useI18n();
   const router = useRouter();
 
-  // Home taps a group row and screen 04 taps a category; both land here with the feed already
-  // narrowed. The narrowing is shown as a chip that can be cleared, so the screen is never
-  // stuck filtered by something the user cannot see. The tab and the window travel with the
-  // tap too — a group read under "Доходи" in July opens the July income feed.
   const params = useLocalSearchParams<{
     groupId?: string;
     categoryId?: string;
@@ -81,8 +67,6 @@ export default function TransactionsScreen() {
   const [tab, setTab] = useState<PeriodTab>(initialTab(params.granularity));
   const [period, setPeriod] = useState<PeriodInput>(() => {
     const granularity = initialTab(params.granularity);
-    // "custom" is a range, not an anchor, and a deep link carries only the anchor — so a link
-    // from a custom window opens the month around it rather than an unrepresentable period.
     if (typeof params.anchor !== "string" || params.anchor === "" || granularity === "custom") {
       return currentPeriod(granularity === "custom" ? "month" : granularity);
     }
@@ -114,7 +98,6 @@ export default function TransactionsScreen() {
     query: query.trim(),
   });
 
-  // One page boundary can split a day in two; the feed shows one section per date regardless.
   const days = useMemo(() => {
     const sections: DaySection[] = [];
     const byDate = new Map<string, DaySection>();
@@ -151,8 +134,6 @@ export default function TransactionsScreen() {
     return map;
   }, [accounts.data]);
 
-  // The tint follows the category's position in the tree, so one category keeps one colour
-  // across every day section (and matches the donut on screen 06).
   const categories = useMemo(() => {
     const map = new Map<string, { name: string; icon: string; group: string; index: number }>();
     let index = 0;
@@ -169,8 +150,6 @@ export default function TransactionsScreen() {
     return map;
   }, [tree.data]);
 
-  // The chip names whatever the feed was narrowed to; an id with no match (a stale deep link)
-  // leaves it empty rather than showing a raw uuid.
   const focused = focusCategoryId !== "" || focusGroupId !== "";
   const focusLabel =
     (focusCategoryId === "" ? "" : (categories.get(focusCategoryId)?.name ?? "")) ||
@@ -193,8 +172,6 @@ export default function TransactionsScreen() {
 
   const changeTab = (next: PeriodTab) => {
     setTab(next);
-    // Switching granularity keeps the day the user is looking at; "Період" freezes the window
-    // it was showing, since there is no range picker to open yet.
     setPeriod(
       next === "custom"
         ? { granularity: "custom", range }
@@ -295,7 +272,6 @@ export default function TransactionsScreen() {
               <IconButton
                 icon="caret-right"
                 label={t("common.next")}
-                // Stepping past the current period would only ever show an empty feed.
                 onPress={() => {
                   if (!atToday) step(1);
                 }}
@@ -398,7 +374,6 @@ interface FeedProps {
   renderDay: (day: DaySection, last: boolean) => React.ReactElement;
 }
 
-/** The list and the three states it can be in instead. */
 function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached, renderDay }: FeedProps) {
   const { t } = useI18n();
 
@@ -457,8 +432,6 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   );
 }
 
-/** The tab a deep link asked for. An unknown or absent value is a month, which is the design's
- * own default and the only granularity every screen agrees on. */
 function initialTab(granularity: string | undefined): PeriodTab {
   return PERIOD_TABS.includes(granularity as PeriodTab) ? (granularity as PeriodTab) : "month";
 }

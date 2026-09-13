@@ -26,22 +26,7 @@ import {
   nocturne,
 } from "@/components/nocturne";
 
-/**
- * Screen 01 — create the household.
- *
- * The only screen that runs before a family exists, so it is the one place the gate lets
- * through on `FailedPrecondition`. Two shapes, one layout:
- *
- *  - no family yet — the name is typed, invitees are collected locally, and "Далі" performs
- *    the whole sequence: CreateFamily → token refresh (the access token carries family_id, and
- *    BootstrapHousehold reads it from the claims) → InviteMember per collected address →
- *    BootstrapHousehold → home;
- *  - a family already exists (the user reopened this route) — the members come from the
- *    service, an invite goes out immediately, and "Далі" only bootstraps and leaves.
- */
 
-/** The household's base currency. The design is a UAH household; changing it is a settings
- * decision (screen 10), not an onboarding question. */
 const BASE_CURRENCY = "UAH";
 const FALLBACK_TIMEZONE = "Europe/Kyiv";
 
@@ -70,8 +55,6 @@ export default function OnboardingScreen() {
   const busy = createFamily.isPending || inviteMember.isPending || bootstrap.isPending;
   const typedName = name.trim();
 
-  /** Before the family exists an invite has nowhere to go, so it waits in local state and is
-   * sent as part of "Далі". Afterwards it goes out at once. */
   const addInvite = async () => {
     const email = inviteEmail.trim();
     if (email === "") return;
@@ -104,8 +87,6 @@ export default function OnboardingScreen() {
       if (!existing) {
         const created = await createFamily.mutateAsync(typedName);
         familyId = created.family?.id ?? "";
-        // The access token carries family_id; BootstrapHousehold reads it from the claims,
-        // so the session has to pick up the new one before the next call.
         await refreshNow();
         for (const email of invites) {
           await inviteMember.mutateAsync({ familyId, email });
@@ -239,8 +220,6 @@ export default function OnboardingScreen() {
   );
 }
 
-/** The dashed full-width invite affordance. The kit's dashed variant is a Chip — a pill sized
- * to its label — so this row is drawn here rather than bent out of one. */
 function InviteAction({ label, onPress, disabled }: { label: string; onPress: () => void; disabled: boolean }) {
   return (
     <Pressable
@@ -258,7 +237,6 @@ function InviteAction({ label, onPress, disabled }: { label: string; onPress: ()
   );
 }
 
-/** Onboarding's progress dots. Decoration — the flow's other two steps are elsewhere. */
 function StepDots({ count, active }: { count: number; active: number }) {
   return (
     <View className="mt-n4 flex-row justify-center gap-[5px]" pointerEvents="none">

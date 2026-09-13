@@ -2,10 +2,6 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 import { organic } from "./tokens.ts";
 
-/**
- * The icon set the design draws with — stroked 24×24 paths, no icon font. Kept here as
- * data so a screen never inlines an <Svg> of its own and drifts on stroke width.
- */
 const PATHS = {
   home: "M4 11l8-6.5 8 6.5v8a1.5 1.5 0 0 1-1.5 1.5H14v-5h-4v5H5.5A1.5 1.5 0 0 1 4 19z",
   book: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14.5H6.5A1.5 1.5 0 0 0 5 19zM19 17.5V21H6.5",
@@ -49,7 +45,6 @@ export function Icon({
   );
 }
 
-/** Search is two shapes, so it can't ride on the single-path Icon. */
 export function SearchIcon({ size = 19, color = organic.neutral[600] }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -68,7 +63,6 @@ export function ClockIcon({ size = 15, color = organic.neutral[700] }: { size?: 
   );
 }
 
-/** A filled star — the rating mark. `filled={false}` draws the outline used by pickers. */
 export function StarIcon({
   size = 13,
   filled = true,
@@ -91,7 +85,6 @@ export function StarIcon({
   );
 }
 
-/** The detail screen's favourite toggle: outlined when off, filled when on. */
 export function HeartIcon({
   size = 19,
   filled = false,

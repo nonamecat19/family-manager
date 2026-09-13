@@ -6,12 +6,6 @@ import { CheckIcon } from "../../components/organic/icons.tsx";
 import { organic } from "../../components/organic/tokens.ts";
 import { Display, Kicker, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
-/**
- * Settings, as distinct from the "You" tab: the profile screen is the household's colophon,
- * this is the one place the app's own behaviour is configured. Language is the only section
- * today — a screen with one row group still earns its own place rather than crowding onto
- * the profile.
- */
 export default function PreferencesScreen() {
   const router = useRouter();
   const { t, locale, setLocale } = useI18n();

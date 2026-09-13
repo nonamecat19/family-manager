@@ -34,19 +34,10 @@ import {
   useDrawerItems,
 } from "@/components/nocturne";
 
-/**
- * Screen 09 — Графіки.
- *
- * Two cards: seven buckets of spending stacked by member (the granularity strip picks the
- * bucket width), and the household's group budgets for the current month. Both read
- * family-scoped aggregates, so private accounts are already out of every total the server
- * returns — this screen never sums anything itself.
- */
 
 const GRANULARITIES = ["year", "month", "week", "day"] as const;
 type Granularity = (typeof GRANULARITIES)[number];
 
-/** The design draws seven columns; the current bucket is the seventh. */
 const BUCKET_COUNT = 7;
 
 type KindTab = "total" | "expenses" | "income";
@@ -194,8 +185,6 @@ export default function ChartsScreen() {
       <Drawer
         visible={menuOpen}
         onClose={() => setMenuOpen(false)}
-        // No RPC tells a screen who the signed-in person is (see the report): the panel names
-        // the household rather than inventing a person.
         account={{ name: family.data?.family?.name ?? "", email: "" }}
         household={{ name: family.data?.family?.name ?? "" }}
         items={drawerItems}
@@ -209,8 +198,6 @@ export default function ChartsScreen() {
   );
 }
 
-/** рік · місяць · тиждень · день — the bucket width, not the period being viewed, so this is
- * the design's own lowercase strip rather than the kit's PeriodTabs. */
 function GranularityStrip({
   value,
   onChange,
@@ -255,12 +242,6 @@ function GranularityStrip({
   );
 }
 
-/**
- * Buckets → the chart's two arrays. Members are ordered by first appearance across the whole
- * window, so a member who spent nothing in the newest bucket keeps their colour and their
- * place in the legend. A household the server did not split (one member, or a kind nobody
- * logged) falls back to a single "Родина" series drawn from the bucket totals.
- */
 function useChartData(
   buckets: readonly SeriesBucket[],
   familyLabel: string,

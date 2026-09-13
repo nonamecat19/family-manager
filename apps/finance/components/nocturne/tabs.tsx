@@ -7,7 +7,6 @@ import { Icon } from "./icons.tsx";
 import { nocturne } from "./tokens.ts";
 import { MemberAvatar, MoneyText } from "./ui.tsx";
 
-// ---- segmented control -------------------------------------------------------------------
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -21,14 +20,6 @@ export interface SegmentedTabsProps<T extends string> {
   className?: string;
 }
 
-/**
- * The ВИТРАТИ / ДОХОДИ switch (and, on Charts, the three-way with ЗАГАЛЬНЕ in front). Generic
- * over the value so a screen keeps its own union — the kit does not know what an app "kind" is.
- *
- * Labels come from the caller, already translated: `t("common.expenses")` /
- * `t("common.income")` / `t("common.total")`. They are uppercase in the copy itself, not via
- * `text-transform`, because Ukrainian and English do not uppercase identically.
- */
 export function SegmentedTabs<T extends string>({
   options,
   value,
@@ -61,10 +52,7 @@ export function SegmentedTabs<T extends string>({
   );
 }
 
-// ---- period tabs -------------------------------------------------------------------------
 
-/** День / Тиждень / Місяць / Рік / Період. Maps 1:1 onto `@fm/api`'s `PeriodKind` minus
- * `"all"`, which these screens never offer. */
 export type PeriodTab = "day" | "week" | "month" | "year" | "custom";
 
 export const PERIOD_TABS: readonly PeriodTab[] = ["day", "week", "month", "year", "custom"];
@@ -72,13 +60,10 @@ export const PERIOD_TABS: readonly PeriodTab[] = ["day", "week", "month", "year"
 export interface PeriodTabsProps {
   value: PeriodTab;
   onChange: (value: PeriodTab) => void;
-  /** Narrow the strip — Home shows all five, a widget preview shows fewer. */
   options?: readonly PeriodTab[];
   className?: string;
 }
 
-/** The underlined period strip. Translates itself: the five labels are fixed copy, and a
- * screen passing them in could only get them wrong. */
 export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className = "" }: PeriodTabsProps) {
   const { t } = useI18n();
   const LABELS: Record<PeriodTab, string> = {
@@ -115,24 +100,17 @@ export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className =
   );
 }
 
-// ---- steppers ------------------------------------------------------------------------------
 
 export interface PeriodStepperProps {
-  /** Already-formatted label — "Серпень 2026", "29 серпня", "2026". */
   label: string;
   onPrev: () => void;
   onNext: () => void;
-  /** The period's own figure, drawn under the label the way Home and Transactions do. */
   total?: Money;
-  /** A line under the total — "5 груп". */
   subtitle?: string;
-  /** Blocks stepping forward past the current period. */
   nextDisabled?: boolean;
   className?: string;
 }
 
-/** ‹ label › with the period's total under it. Generic over what the label says, so the same
- * control serves a day, a week, a month and a year. */
 export function PeriodStepper({
   label,
   onPrev,
@@ -168,7 +146,6 @@ export function PeriodStepper({
 
 export interface MonthStepperProps {
   year: number;
-  /** 1-12. */
   month: number;
   onChange: (year: number, month: number) => void;
   total?: Money;
@@ -177,7 +154,6 @@ export interface MonthStepperProps {
   className?: string;
 }
 
-/** `PeriodStepper` bound to a month: it knows how to name one and how to roll a year over. */
 export function MonthStepper({ year, month, onChange, ...rest }: MonthStepperProps) {
   const { t } = useI18n();
   const step = (delta: number) => {
@@ -194,10 +170,7 @@ export function MonthStepper({ year, month, onChange, ...rest }: MonthStepperPro
   );
 }
 
-// ---- scope switcher ---------------------------------------------------------------------------
 
-/** What the figures on a screen are counting. `family` is everyone's shared view; the other
- * two narrow it to one member or one account. */
 export type Scope =
   | { kind: "family" }
   | { kind: "member"; id: string }
@@ -211,12 +184,9 @@ export interface ScopeOption {
 export interface ScopeSwitcherProps {
   scope: Scope;
   members: readonly ScopeOption[];
-  /** Optional third rank of pills — the design offers accounts as a scope too. */
   accounts?: readonly ScopeOption[];
   onChange: (scope: Scope) => void;
-  /** The balance shown beside the scope's name. */
   balance?: Money;
-  /** Makes the title row a control (the caret next to "Родина"), for a fuller picker. */
   onExpand?: () => void;
   className?: string;
 }
@@ -225,11 +195,6 @@ export function scopeIsFamily(scope: Scope): boolean {
   return scope.kind === "family";
 }
 
-/**
- * Родина | Сергій | Олена — the switch at the top of Home. Renders the current scope's name
- * and balance, then the pill row: an "Усі N" pill that resets to the family, one pill per
- * member, and (when given) one per account.
- */
 export function ScopeSwitcher({
   scope,
   members,

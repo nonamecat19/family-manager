@@ -9,13 +9,6 @@ import {
   type QueueStorage,
 } from "./store.ts";
 
-/**
- * The queue's ownership and ordering rules, tested without React Native: store.ts takes its
- * storage as two async string methods keyed by owner, so a slow in-memory disk is enough to
- * reproduce both the races and the shared-tablet leak.
- *
- * Run with `node --test apps/notes/components/offline/store.test.ts` (Node strips the types).
- */
 
 const ALICE = "user-alice";
 const BOB = "user-bob";
@@ -29,10 +22,6 @@ function fileFor(ownerId: string, notes: QueuedNote[]): string {
   return JSON.stringify(file);
 }
 
-/**
- * A disk whose read takes `delayMs`, so a second caller can land inside the read window. It is
- * keyed by owner, exactly like the real one — the file name carries the user id.
- */
 function slowStorage(initial: Record<string, string> = {}, delayMs = 20) {
   const files: Record<string, string> = { ...initial };
   const storage: QueueStorage = {
@@ -61,7 +50,6 @@ test("an enqueue that lands inside the hydrate window keeps both notes", async (
   const disk = slowStorage({ [ALICE]: fileFor(ALICE, [note("on-disk")]) });
   const store = createQueueStore(disk.storage);
 
-  // The race: hydrate is in flight (its read has not resolved) when the capture arrives.
   const hydrating = store.hydrate(ALICE);
   await store.enqueue(ALICE, note("captured"));
   await hydrating;
@@ -110,12 +98,6 @@ test("hydrate answers nothing, so no caller can be left holding a stale queue", 
   await store.hydrate(ALICE);
   await store.enqueue(ALICE, note("captured-after-boot"));
 
-  // The regression this guards: hydrate() is memoised, and it used to RESOLVE TO the `items`
-  // array as it stood when the read finished. Every mutation publishes a NEW array, so that
-  // resolved value stayed frozen at app-start content forever — a flush that built its work
-  // list from `await hydrateQueue()` never saw a note captured after boot, and that note sat
-  // on the disk and never synced. Awaiting hydration and reading the queue are two questions,
-  // and only `snapshot()` answers the second one.
   const answer: unknown = await store.hydrate(ALICE);
   assert.equal(answer, undefined);
 
@@ -135,13 +117,10 @@ test("an enqueue whose write fails rejects instead of reporting the note as save
 
   store.hydrate(ALICE);
 
-  // Resolving here is what let CaptureSheet clear the user's text for a note that reached no
-  // disk. A rejection is the only thing that lets the sheet keep the draft.
   await assert.rejects(store.enqueue(ALICE, note("would-be-lost")), /ENOSPC/);
   assert.deepEqual(store.snapshot(), []);
   assert.equal(contents, null);
 
-  // The mutation chain survives a rejected write: the next capture still gets through.
   failing = false;
   await store.enqueue(ALICE, note("kept"));
   assert.deepEqual(ids(store.snapshot()), ["kept"]);
@@ -159,11 +138,8 @@ test("a dequeue after a capture leaves the other queued notes alone", async () =
   assert.deepEqual(ids(disk.written(ALICE)), ["captured"]);
 });
 
-/* ------------------------------------------------------- one device, two people */
 
 test("one user's queue is never adopted by the next user to sign in", async () => {
-  // The leak this replaces: a single unscoped capture-queue.json, so a note Alice wrote offline
-  // and never flushed was created in Bob's account the moment Bob signed in on the tablet.
   const disk = slowStorage({ [ALICE]: fileFor(ALICE, [note("alices-unsent-note")]) });
   const store = createQueueStore(disk.storage);
 
@@ -175,13 +151,10 @@ test("one user's queue is never adopted by the next user to sign in", async () =
 
   assert.deepEqual(store.snapshot(), []);
   assert.equal(store.owner(), BOB);
-  // And Alice's file is untouched — signing out is not "delete what I wrote".
   assert.deepEqual(ids(disk.written(ALICE)), ["alices-unsent-note"]);
 });
 
 test("a file stamped with another owner is refused even under the right name", async () => {
-  // Belt and braces for a restored backup, a reinstall, or a file copied by hand: the name says
-  // Bob, the contents say Alice, and the contents win.
   const disk = slowStorage({ [BOB]: fileFor(ALICE, [note("not-bobs")]) });
   const store = createQueueStore(disk.storage);
 
@@ -239,7 +212,6 @@ test("a read that resolves after the owner changed does not publish", async () =
   assert.deepEqual(ids(store.snapshot()), ["bobs"]);
 });
 
-/* ------------------------------------------------------------ refused captures */
 
 test("a refused note keeps its writing and steps out of the retry loop", async () => {
   const disk = slowStorage();
@@ -252,7 +224,6 @@ test("a refused note keeps its writing and steps out of the retry loop", async (
   const [refused] = store.snapshot();
   assert.equal(refused?.title, "view-only-notebook");
   assert.equal(refused?.rejection?.reason, "you can only view that");
-  // Still on the disk: the user's words are not what gets thrown away when a server says no.
   assert.equal(disk.written(ALICE).length, 1);
 
   await store.refile(ALICE, "view-only-notebook", "");

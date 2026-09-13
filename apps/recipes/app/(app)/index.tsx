@@ -10,12 +10,6 @@ import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts"
 import { Avatar, Display, Kicker, RatingMark, Screen } from "../../components/organic/ui.tsx";
 import { weekRange } from "../../components/organic/week.ts";
 
-/**
- * Home is the cookbook's front page, not a list: a way in (search), the four ways the family
- * already organises its food (categories), what it rates highest, and what it has agreed to
- * cook this week. Browsing lives one tab over — putting the flat list here as well is what
- * the design replaced.
- */
 export default function HomeScreen() {
   const router = useRouter();
   const { t, locale } = useI18n();
@@ -206,8 +200,8 @@ function TopRatedCard({
         className="h-[104px] items-center justify-center overflow-hidden rounded-xl"
         style={{ backgroundColor: tint.bg }}
       >
-        {/* "contain", not "cover": a background-removed PNG should read as the cut-out it is
-            rather than being cropped to fill the tint. */}
+        {
+}
         {recipe.imageUrl !== "" ? (
           <Image source={{ uri: recipe.imageUrl }} className="h-[92px] w-[92px]" resizeMode="contain" />
         ) : (

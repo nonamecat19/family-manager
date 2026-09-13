@@ -14,21 +14,11 @@ import {
   useShell,
 } from "./_layout.tsx";
 
-/**
- * The note list.
- *
- * On desktop this route is the THIRD pane, and the list is already drawn by the shell to its
- * left — so the screen's job there is to say "nothing is open yet". On mobile the same route
- * is the whole screen: header, list, capture FAB.
- */
 export default function NotesScreen() {
   const desktop = useIsDesktop();
   const shell = useShell();
   const router = useRouter();
   const queue = useCaptureQueue();
-  // The archive is a server-side filter now (ListNotes.archived_only), so what comes back IS
-  // the list — nothing is narrowed here. Narrowing a page the server already cut was the bug:
-  // with a page size set, the rows dropped were the only ones the request had returned.
   const notes = useNotes(filtersFor(shell.view, shell.notebookId, shell.sort));
   const rows = notes.data ?? [];
 

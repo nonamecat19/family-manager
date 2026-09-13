@@ -11,16 +11,9 @@ export interface DrawerItem {
   id: string;
   icon: IconName;
   label: string;
-  /** An expo-router href. The kit does not navigate — `onSelect` gets the whole item and the
-   * screen decides. */
   href?: Href;
 }
 
-/**
- * The nine destinations screen 11's overlay lists, already translated. A screen calls this
- * and passes the result straight to `Drawer`; it must not retype the list, because the copy
- * lives in `components/i18n` and screens do not edit translations.
- */
 export function useDrawerItems(): DrawerItem[] {
   const { t } = useI18n();
   return [
@@ -44,27 +37,17 @@ export interface DrawerScope {
 export interface DrawerProps {
   visible: boolean;
   onClose: () => void;
-  /** The signed-in person, drawn at the top. */
   account: { name: string; email: string };
-  /** The household line under it. */
   household?: { name: string; balance?: Money };
-  /** Родина | Сергій | Олена — the same scopes the Home switcher offers, as a compact row. */
   scopes?: readonly DrawerScope[];
   activeScopeId?: string;
   onSelectScope?: (id: string) => void;
   items: readonly DrawerItem[];
   activeId?: string;
   onSelect: (item: DrawerItem) => void;
-  /** "Синхронізовано 11:38". */
   footer?: string;
 }
 
-/**
- * The navigation overlay from screen 11: a scrim plus a panel over the current screen, not a
- * route of its own. Deliberately not `expo-router`'s Drawer layout — the design shows it over
- * a stack, the app's primary navigation is the Home screen itself, and a drawer navigator
- * would put a second gesture on every screen edge.
- */
 export function Drawer({
   visible,
   onClose,

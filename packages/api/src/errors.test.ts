@@ -12,7 +12,6 @@ test("a message written for a person is shown as it is", () => {
   assert.equal(toDisplayError(err, FALLBACK).message, "that email is already registered");
 });
 
-// The service deliberately says nothing in an internal error; repeating it helps nobody.
 test("an internal error shows the fallback and keeps the reference", () => {
   const err = new ConnectError("internal error (ref 3f1c8a02b7d5)", Code.Internal);
   const shown = toDisplayError(err, FALLBACK);
@@ -42,7 +41,6 @@ test("a non-Connect throw becomes the fallback", () => {
   assert.equal(shown.reference, undefined);
 });
 
-// An empty message is a service bug, not a message; the user gets the fallback either way.
 test("an empty message falls back", () => {
   assert.equal(toDisplayError(new ConnectError("", Code.NotFound), FALLBACK).message, FALLBACK);
 });
@@ -58,7 +56,6 @@ test("a rejected refresh token ends the session", () => {
   }
 });
 
-// A phone that briefly had no signal has learned nothing about its refresh token.
 test("a transport failure does not end the session", () => {
   for (const code of [Code.Unavailable, Code.DeadlineExceeded, Code.Unknown, Code.Internal]) {
     assert.equal(isRefreshRejection(new ConnectError("no", code)), false, Code[code]);

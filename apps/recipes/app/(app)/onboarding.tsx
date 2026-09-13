@@ -34,8 +34,6 @@ export default function OnboardingScreen() {
           disabled={name.trim() === "" || createFamily.isPending}
           onPress={() =>
             createFamily.mutate(name.trim(), {
-              // The access token's family_id claim is baked in at issuance; refresh it before
-              // navigating back so the family-scoped screens don't hit the same 403 again.
               onSuccess: () => void refreshNow().then(() => router.replace("/(app)")),
             })
           }

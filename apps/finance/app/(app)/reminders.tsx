@@ -29,13 +29,6 @@ import {
   type IconName,
 } from "@/components/nocturne";
 
-/**
- * Нагадування — the drawer's fourth row.
- *
- * Three kinds, and the kind is what decides when the app speaks: a budget breach, a due
- * recurring payment, or a plain one the household wrote themselves. A reminder is toggled far
- * more often than it is written, so the switch is on the row and the sheet is for the rest.
- */
 export default function RemindersScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -101,8 +94,6 @@ export default function RemindersScreen() {
                     {reminder.enabled ? t("reminders.on") : t("reminders.off")}
                   </Text>
                 }
-                // The row is the switch: one tap flips it, which is the only thing anyone
-                // does to a reminder day to day.
                 onPress={() =>
                   upsert.mutate({
                     reminderId: reminder.id,

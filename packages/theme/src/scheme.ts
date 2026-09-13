@@ -1,6 +1,5 @@
 import { colors } from "./tokens.ts";
 
-/** The subset of tokens that flips between light and dark. */
 export interface Scheme {
   bg: string;
   surface: string;
@@ -46,7 +45,6 @@ export function schemeFor(name: ColorSchemeName | null | undefined): Scheme {
   return name === "dark" ? darkScheme : lightScheme;
 }
 
-/** Stable colour for a category: its own, or a palette slot derived from its index. */
 export function categoryColor(
   ownColor: string | undefined,
   index: number,

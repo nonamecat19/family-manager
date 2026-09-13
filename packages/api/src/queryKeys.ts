@@ -8,32 +8,19 @@ import {
   type ScopeInput,
 } from "./scope.ts";
 
-/**
- * Query keys, in one place. Every key starts with a domain segment so a mutation can
- * invalidate a whole domain (`["recipes"]`, `["finance"]`) without knowing every hook that
- * reads it. Finance keys carry a second segment per entity as well, so a template tap can
- * repaint just the chips before the domain-wide invalidation lands.
- */
 
 export interface TransactionFilters {
   scope?: ScopeInput;
   period?: PeriodInput;
-  /** 0 = both (the ЗАГАЛЬНЕ tab), 1 = expense, 2 = income — finance.v1.TransactionKind. */
   kind?: number;
   memberIds?: readonly string[];
   accountIds?: readonly string[];
   groupIds?: readonly string[];
   categoryIds?: readonly string[];
-  /** Matches note and merchant, case-insensitively. */
   query?: string;
   pageSize?: number;
 }
 
-/**
- * Filters normalized to one canonical shape: arrays sorted and copied, blanks defaulted.
- * Two filter objects that mean the same thing must key the same cache entry, or the feed
- * refetches every time a screen rebuilds its filter object in a different order.
- */
 export function normalizeTransactionFilters(
   filters: TransactionFilters = {},
   opts: PeriodWindowOptions = {},
@@ -55,15 +42,6 @@ function sorted(values: readonly string[] | undefined): string[] {
   return values ? [...values].sort() : [];
 }
 
-/**
- * Filters normalized to one canonical shape, for the same reason the transaction filters are:
- * the notes list pane rebuilds its filter object on every render, and an object that differs
- * only in which optional keys were spelled out must not be a second cache entry — that is a
- * refetch of the whole list every time the sidebar re-renders.
- *
- * `sort` and `facet`-like enum fields normalize to their proto zero value rather than to
- * undefined, so "not set" and "explicitly the default" key the same entry.
- */
 export function normalizeNoteFilters(filters: NoteListFilters = {}) {
   return {
     notebookId: filters.notebookId ?? "",
@@ -79,13 +57,11 @@ export function normalizeNoteFilters(filters: NoteListFilters = {}) {
 export interface CategoryTreeFilters {
   kind?: number;
   includeArchived?: boolean;
-  /** Which budget window the group statuses are evaluated in; empty means today. */
   asOf?: string;
 }
 
 export interface BudgetFilters {
   asOf?: string;
-  /** finance.v1.BudgetTargetFilter: 0 = all, 1 = group budgets, 2 = category budgets. */
   target?: number;
   includeArchived?: boolean;
 }
@@ -109,27 +85,19 @@ export const queryKeys = {
   sumIngredients: (items: readonly { recipeId: string; servings: number }[]) =>
     ["recipes", "sumIngredients", items] as const,
 
-  /* -------------------------------------------------------------------- notes */
 
-  // The notes domain root. A note edit moves the list row, the notebook's count and the
-  // activity rail at once, so mutations invalidate this rather than naming each reader.
   notes: ["notes"] as const,
   notesList: (filters: NoteListFilters = {}) => ["notes", "list", normalizeNoteFilters(filters)] as const,
   note: (id: string) => ["notes", "detail", id] as const,
   notebooks: (includeArchived = false) => ["notes", "notebooks", includeArchived] as const,
-  // The query is trimmed and lowercased here: the palette fires a key at a time and two
-  // spellings of the same search must not be two round trips.
   noteSearch: (query: string, facet = 0) =>
     ["notes", "search", query.trim().toLowerCase(), facet] as const,
-  // Shares hang off either a note or a notebook, and the two id spaces are separate — the
-  // kind is part of the key so a notebook id can never read a note's share list.
   noteShares: (id: string, kind: "note" | "notebook" = "note") => ["notes", "shares", kind, id] as const,
   noteComments: (id: string, includeResolved = false) =>
     ["notes", "comments", id, includeResolved] as const,
   noteActivity: (id: string) => ["notes", "activity", id] as const,
   sharedWithMe: () => ["notes", "sharedWithMe"] as const,
 
-  /* ------------------------------------------------------------------ finance */
 
   finance: ["finance"] as const,
 
@@ -210,8 +178,6 @@ export const queryKeys = {
 
   financeWidgets: ["finance", "widgets"] as const,
   financeWidgetsList: () => ["finance", "widgets", "list"] as const,
-  // Widget ids are sorted: the same placement set requested in a different order is the same
-  // refresh, and a home-screen widget process rebuilds that array on every wake.
   financeWidgetData: (widgetIds: readonly string[] = []) =>
     ["finance", "widgets", "data", [...widgetIds].sort()] as const,
 } as const;

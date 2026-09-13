@@ -15,7 +15,6 @@ import { Icon, StarIcon, type IconName } from "./icons.tsx";
 import { organic, type Tint } from "./tokens.ts";
 import { useI18n } from "../i18n/index.tsx";
 
-/** Every screen sits on the same warm ground; no screen paints its own background. */
 export function Screen({
   children,
   edges,
@@ -32,7 +31,6 @@ export function Screen({
   );
 }
 
-/** The small uppercase label above a group. Organic's `h6`. */
 export function Kicker({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <Text className={`font-fig-bold text-[12px] uppercase tracking-[1.2px] text-neutral-600 ${className}`}>
@@ -41,7 +39,6 @@ export function Kicker({ children, className = "" }: { children: ReactNode; clas
   );
 }
 
-/** Display type is always Alegreya — never a bold body face. */
 export function Display({
   children,
   size = 28,
@@ -61,7 +58,6 @@ export function Display({
   );
 }
 
-/** A 40px circular control — back, close, favourite. */
 export function RoundButton({
   icon,
   label,
@@ -89,10 +85,6 @@ export function RoundButton({
   );
 }
 
-/**
- * A filter/facet pill. Inactive is an outline so a row of them reads as one control group;
- * active fills with the accent (or the olive secondary for the softer facets).
- */
 export function Chip({
   label,
   active,
@@ -128,7 +120,6 @@ export function Chip({
   );
 }
 
-/** A static category/subcategory label. Not pressable — that's a Chip. */
 export function Tag({ label, tone = "accent" }: { label: string; tone?: "accent" | "accent2" }) {
   return (
     <View
@@ -143,11 +134,6 @@ export function Tag({ label, tone = "accent" }: { label: string; tone?: "accent"
   );
 }
 
-/**
- * The inset segmented control used for detail tabs and the plan's Basket/Week switch. `options`
- * stay the screen's own literal ids (they double as the `value` type); `labels` is what actually
- * gets drawn, so a screen can translate the tab titles without touching its own state type.
- */
 export function SegTabs<T extends string>({
   options,
   value,
@@ -228,7 +214,6 @@ export function OutlineButton({
   );
 }
 
-/** The "+ Add another…" affordance: a dashed outline, never a filled button. */
 export function DashedButton({
   title,
   onPress,
@@ -250,7 +235,6 @@ export function DashedButton({
   );
 }
 
-/** − ×n + — batches on the detail screen, servings in the plan. */
 export function Stepper({
   value,
   onChange,
@@ -295,7 +279,6 @@ export function Stepper({
   );
 }
 
-/** The circle a recipe or person is represented by when there is no photo. */
 export function Avatar({
   initial,
   tint,
@@ -317,7 +300,6 @@ export function Avatar({
   );
 }
 
-/** Read-only rating: the star plus the number, as the cards show it. */
 export function RatingMark({ rating, size = 13 }: { rating: number; size?: number }) {
   const { t } = useI18n();
   if (rating <= 0) return null;
@@ -333,10 +315,6 @@ export function RatingMark({ rating, size = 13 }: { rating: number; size?: numbe
   );
 }
 
-/**
- * Tapping the already-selected star clears the rating — the 0-means-unrated convention the
- * service uses needs a way back, and a separate "clear" control for one field is worse.
- */
 export function StarPicker({
   rating,
   onChange,
@@ -364,7 +342,6 @@ export function StarPicker({
   );
 }
 
-/** A bottom sheet with a scrim. Used for the list screen's filters. */
 export function Sheet({
   visible,
   onClose,
@@ -399,10 +376,6 @@ export function Sheet({
   );
 }
 
-/**
- * A labelled text input. Organic's `.field` + `.input`: pill-shaped, on the light neutral,
- * with the label above rather than a placeholder standing in for it.
- */
 export function Field({
   label,
   value,
@@ -456,14 +429,10 @@ export function Field({
   );
 }
 
-/** A white-ish panel: list groups, cards, rows. */
 export function Panel({ className = "", ...props }: ViewProps & { className?: string }) {
   return <View className={`rounded-2xl bg-neutral-100 ${className}`} {...props} />;
 }
 
-/** Per-serving macros, as a four-cell strip. Renders nothing when the recipe carries no
- * figures — every field is 0 for a recipe nobody recorded them for, and four zeroes read as
- * a claim rather than as an absence. */
 export function NutritionStrip({
   kcal,
   proteinG,

@@ -9,38 +9,20 @@ import { FinanceService } from "@fm/sdk/finance/v1/finance_pb";
 import { NotesService } from "@fm/sdk/notes/v1/notes_pb";
 import { RecipesService } from "@fm/sdk/recipes/v1/recipes_pb";
 
-/**
- * Procedures that must go out without a token, or login could never happen. Keyed by
- * "<service>/<method>" — the same identity the Go interceptor's exemption list uses.
- */
 const PUBLIC_PROCEDURES = new Set([
   `${AuthService.typeName}/${AuthService.method.login.name}`,
   `${AuthService.typeName}/${AuthService.method.register.name}`,
   `${AuthService.typeName}/${AuthService.method.refresh.name}`,
 ]);
 
-/** The services this package can reach. One transport, and one dev port, per name. */
 export type ServiceName = "auth" | "family" | "finance" | "recipes" | "notes";
 
 export interface ClientsOptions {
-  /**
-   * Base URL for every service. Correct behind a gateway that routes by procedure path,
-   * which is the deployed shape (Caddy — docs/adr/0004-compose-vps.md).
-   */
   baseUrl: string;
-  /**
-   * Per-service overrides. In development each service listens on its own port and there is
-   * no gateway, so without these every call would land on whichever service baseUrl names.
-   */
   serviceUrls?: Partial<Record<ServiceName, string>>;
-  /** Resolves a fresh access token, or null when anonymous. Supplied by @fm/auth. */
   getAccessToken: () => Promise<string | null>;
 }
 
-/**
- * The Connect transport used by every hook. JSON over HTTP/1.1 (see docs/adr/0001-connectrpc.md)
- * so responses stay readable in a proxy and React Native needs no HTTP/2 shims.
- */
 function createTransport(url: string, getAccessToken: ClientsOptions["getAccessToken"]) {
   const auth: Interceptor = (next) => async (req) => {
     if (!PUBLIC_PROCEDURES.has(`${req.service.typeName}/${req.method.name}`)) {
@@ -50,7 +32,6 @@ function createTransport(url: string, getAccessToken: ClientsOptions["getAccessT
     return next(req);
   };
 
-  // requestId first, so the id is on the request before anything else can fail with it.
   return createConnectTransport({
     baseUrl: url,
     useBinaryFormat: false,
@@ -66,7 +47,6 @@ export interface Clients {
   notes: Client<typeof NotesService>;
 }
 
-/** Builds one client per service. Call once per app and put the result in a context. */
 export function createClients(opts: ClientsOptions): Clients {
   const urlFor = (service: ServiceName) =>
     opts.serviceUrls?.[service] ?? opts.baseUrl;

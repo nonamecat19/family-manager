@@ -47,14 +47,6 @@ import {
 
 type Kind = "expense" | "income";
 
-/**
- * Шаблони — the management screen behind the drawer's "Шаблони" row.
- *
- * The design draws templates as chips on Home and at the top of the add sheet; both of those
- * log or prefill. This screen is the other half: the place a template is created, repriced or
- * thrown away. Tapping a row opens it for editing rather than logging it — a screen whose rows
- * silently spend money is not a screen anyone can browse.
- */
 export default function TemplatesScreen() {
   const { t } = useI18n();
   const router = useRouter();
@@ -158,7 +150,6 @@ export default function TemplatesScreen() {
       <Drawer
         visible={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        // No RPC names the signed-in person, so the panel names the household instead.
         account={{ name: family.data?.family?.name ?? "", email: "" }}
         household={{ name: family.data?.family?.name ?? "" }}
         items={drawerItems}
@@ -172,7 +163,6 @@ export default function TemplatesScreen() {
   );
 }
 
-/** Create and edit are the same form: an edit is a create whose fields arrive filled in. */
 function TemplateSheet({
   visible,
   template,
@@ -193,8 +183,6 @@ function TemplateSheet({
   const [categoryId, setCategoryId] = useState("");
   const [picker, setPicker] = useState<"account" | "category" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // The form is seeded once per opening, keyed by the row it was opened from: re-seeding on
-  // every render would undo the typing in progress.
   const [seededFor, setSeededFor] = useState<string | null>(null);
 
   const accounts = useAccounts();

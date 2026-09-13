@@ -1,15 +1,8 @@
-/**
- * Design tokens. These mirror `@fm/config/tailwind.preset.cjs`; `tokens.test.ts` asserts the
- * two never drift. Tailwind config must stay CommonJS, which is why the values exist twice
- * instead of being imported.
- */
-
 export const colors = {
   primary: "#2F855A",
   primaryFg: "#FFFFFF",
   primaryMuted: "#C6F6D5",
 
-  /** Income is green, expense is red, transfer is blue — fixed, never themed away. */
   income: "#2F855A",
   expense: "#C53030",
   transfer: "#2B6CB0",
@@ -51,11 +44,6 @@ export const fontSize = {
   amount: 28,
 } as const;
 
-/**
- * The palette assigned to categories in charts, in order. A category with no colour of its
- * own gets `categoryPalette[index % categoryPalette.length]`, so the same category keeps the
- * same slice colour across renders.
- */
 export const categoryPalette = [
   "#2F855A",
   "#C53030",

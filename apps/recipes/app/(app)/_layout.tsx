@@ -29,8 +29,6 @@ function Gate() {
   if (family.isError) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      // The onboarding screen lives under this same gate, so without this branch pushing to
-      // it just changes the URL — this component still short-circuits before any outlet renders.
       if (isOnboarding) return <Slot />;
       return (
         <Screen>
@@ -94,16 +92,16 @@ function Gate() {
         <Tabs.Screen name="meal-plan" options={{ title: t("tabs.plan"), tabBarIcon: tabIcon("plan") }} />
         <Tabs.Screen name="basket" options={{ title: t("tabs.list"), tabBarIcon: tabIcon("cart") }} />
         <Tabs.Screen name="settings" options={{ title: t("tabs.you"), tabBarIcon: tabIcon("user") }} />
-        {/* Reachable from Home and the profile, but not a tab of its own — the design gives
-            favourites a card, not a fifth of the bar. */}
+        {
+}
         <Tabs.Screen name="favorites" options={{ href: null }} />
         <Tabs.Screen name="preferences" options={{ href: null }} />
         <Tabs.Screen name="search" options={{ href: null }} />
         <Tabs.Screen name="onboarding" options={{ href: null }} />
         <Tabs.Screen name="recipe/[id]" options={{ href: null }} />
         <Tabs.Screen name="recipe-edit/[id]" options={{ href: null }} />
-        {/* Cook mode is full-bleed: the tab bar would sit on top of a dark screen you are
-            meant to read from across the kitchen. */}
+        {
+}
         <Tabs.Screen name="cook/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
       </Tabs>
     </BasketProvider>
@@ -111,14 +109,11 @@ function Gate() {
 }
 
 function tabIcon(name: IconName) {
-  // React Navigation hands the tint down as ColorValue. The opaque half of that union only
-  // turns up for PlatformColor, which this bar never sets, so narrowing back to a string is safe.
   return function TabIcon({ color }: { color: ColorValue }) {
     return <Icon name={name} size={25} color={color as string} width={2.4} />;
   };
 }
 
-/** The gate's own loading state, so the app never flashes a blue-grey spinner screen. */
 function Kitchen({ label }: { label: string }) {
   const { t } = useI18n();
   return (

@@ -4,32 +4,22 @@ import { View } from "react-native";
 import { useI18n } from "@/components/i18n";
 import { IconCircle, MoneyText, Row, iconOr, nocturne, tintFor, type IconName } from "@/components/nocturne";
 
-/**
- * Screen 08's account card. The design draws every account as its own rounded surface with a
- * hairline outline — not a joined list — and gives the private ones a darker, quieter card, so
- * "this is not part of the family total" is legible before the caption is read.
- */
 
-/** The glyph an account falls back to when it carries no stored icon. Kind, not name: a family
- * renaming "Mono" to "картка" must not change the picture. */
 const KIND_ICON: Record<number, IconName> = {
-  0: "wallet", // UNSPECIFIED
-  1: "money", // CASH
-  2: "credit-card", // CARD
-  3: "credit-card", // BANK
-  4: "piggy-bank", // SAVINGS
-  5: "currency-btc", // CRYPTO
-  6: "receipt", // DEBT
+  0: "wallet",
+  1: "money",
+  2: "credit-card",
+  3: "credit-card",
+  4: "piggy-bank",
+  5: "currency-btc",
+  6: "receipt",
 };
 
-/** The private card's palette. Both values are Nocturne tokens, so the muted pass stays inside
- * the system rather than becoming a second set of greys. */
 const PRIVATE_TINT = { bg: nocturne.neutral[800], fg: nocturne.neutral[400] } as const;
 const HIDDEN_TINT = { bg: nocturne.neutral[900], fg: nocturne.neutral[600] } as const;
 
 export interface AccountRowProps {
   account: Account;
-  /** `private` is the caller's OWN private account: darker card plus the excluded caption. */
   tone?: "shared" | "private";
   onPress?: () => void;
 }
@@ -50,8 +40,6 @@ export function AccountRow({ account, tone = "shared", onPress }: AccountRowProp
     >
       <Row
         title={account.name}
-        // The design captions every private account with why its money is missing from the
-        // headline. It is the whole point of the section, so it is not left to the kicker.
         subtitle={isPrivate ? t("accounts.excluded") : undefined}
         divider={false}
         onPress={onPress}
@@ -66,8 +54,6 @@ export function AccountRow({ account, tone = "shared", onPress }: AccountRowProp
           <MoneyText
             value={balance}
             size={14}
-            // A negative balance is a debt, and the design draws it in the overspend hue —
-            // the only place on this screen that colour is allowed.
             tone={balance.amountMinor < 0 ? "overspend" : "default"}
           />
         }
@@ -76,10 +62,6 @@ export function AccountRow({ account, tone = "shared", onPress }: AccountRowProp
   );
 }
 
-/**
- * Another member's private accounts: a count and nothing else. The server never sends their
- * balances, and this row exists so the total is visibly incomplete rather than silently wrong.
- */
 export function HiddenPrivateRow({ summary }: { summary: HiddenPrivateSummary }) {
   const { t } = useI18n();
   return (

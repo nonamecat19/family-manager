@@ -1,6 +1,5 @@
 import type { TranslationKey } from "../i18n/index.tsx";
 
-/** ISO calendar day (YYYY-MM-DD) — the meal plan's own date format, not a timestamp. */
 export function toISODate(d: Date): string {
   const year = d.getFullYear();
   const month = `${d.getMonth() + 1}`.padStart(2, "0");
@@ -8,11 +7,6 @@ export function toISODate(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * The Sunday-to-Saturday week `date` falls in. Built from local date parts rather than
- * `toISOString()`, which would shift the day for anyone east or west of UTC and quietly plan
- * meals for the wrong Sunday.
- */
 export function weekRange(date: Date): { from: string; to: string } {
   const start = new Date(date);
   start.setDate(date.getDate() - date.getDay());
@@ -23,9 +17,7 @@ export function weekRange(date: Date): { from: string; to: string } {
 
 export interface WeekDay {
   iso: string;
-  /** The translation key for the uppercase label under the date number — "Mon"/"Пн". */
   dayKey: TranslationKey;
-  /** The day of the month. */
   num: number;
   isToday: boolean;
 }
