@@ -324,9 +324,6 @@ type MoveCategoriesToGroupParams struct {
 	GroupID_2 pgtype.UUID
 }
 
-// MoveCategoriesToGroup is the reassignment DeleteCategoryGroup requires: a group holding
-// categories that hold transactions cannot silently vanish, so its categories are re-parented
-// first and the delete is refused if that did not happen.
 func (q *Queries) MoveCategoriesToGroup(ctx context.Context, arg MoveCategoriesToGroupParams) (int64, error) {
 	result, err := q.db.Exec(ctx, moveCategoriesToGroup, arg.GroupID, arg.FamilyID, arg.GroupID_2)
 	if err != nil {
@@ -399,9 +396,6 @@ type ReorderCategoryParams struct {
 	GroupID   pgtype.UUID
 }
 
-// ReorderCategory renumbers one category inside the group the client named. The group is part
-// of the predicate rather than a thing the handler trusts the list to agree with: a batch that
-// mixed in an id from another group would otherwise renumber a grid nobody was looking at.
 func (q *Queries) ReorderCategory(ctx context.Context, arg ReorderCategoryParams) (int64, error) {
 	result, err := q.db.Exec(ctx, reorderCategory,
 		arg.ID,

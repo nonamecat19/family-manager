@@ -10,8 +10,6 @@ func testParams() Params {
 	return Params{Threshold: 3, Base: time.Second, Max: 4 * time.Second, Forget: time.Minute}
 }
 
-// A person mistyping their own password must not be locked out, which is the failure mode a
-// throttle most easily creates.
 func TestUnderTheThresholdNothingIsLocked(t *testing.T) {
 	th := New(testParams(), time.Now)
 	for i := 0; i < testParams().Threshold-1; i++ {
@@ -57,7 +55,6 @@ func TestLockoutExpires(t *testing.T) {
 	}
 }
 
-// A correct password is the strongest evidence the attempts before it were the owner.
 func TestSuccessClearsTheKey(t *testing.T) {
 	p := testParams()
 	th := New(p, time.Now)
@@ -74,8 +71,6 @@ func TestSuccessClearsTheKey(t *testing.T) {
 	}
 }
 
-// One account's failures must not lock another out — otherwise the throttle is a way to lock
-// anyone out of their own household.
 func TestKeysAreIndependent(t *testing.T) {
 	p := testParams()
 	th := New(p, time.Now)
@@ -96,7 +91,7 @@ func TestIdleEntriesAreForgotten(t *testing.T) {
 		th.Failed("old@example.test")
 	}
 	now = now.Add(p.Forget + time.Minute)
-	th.Failed("someone.else@example.test") // the write path is where the sweep runs
+	th.Failed("someone.else@example.test")
 
 	th.mu.Lock()
 	_, still := th.entries["old@example.test"]
@@ -138,8 +133,6 @@ func TestConcurrentUse(t *testing.T) {
 	wg.Wait()
 }
 
-// Setting one field must not silently reset the others: a whole-struct fallback would have
-// done exactly that the first time someone configured only the threshold.
 func TestPartialParamsFallBackFieldByField(t *testing.T) {
 	d := DefaultParams()
 	th := New(Params{Threshold: 2}, time.Now)

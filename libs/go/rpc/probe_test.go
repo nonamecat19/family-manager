@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// listenerOn starts srv on loopback and returns the port, so the probe is exercised through a
-// real socket rather than a handler call.
 func listenerOn(t *testing.T, h http.Handler) string {
 	t.Helper()
 	srv := httptest.NewServer(h)
@@ -47,14 +45,11 @@ func TestProbeFailsOnUnhealthy(t *testing.T) {
 }
 
 func TestProbeFailsWhenNothingIsListening(t *testing.T) {
-	// Port 1 is privileged and nothing in a container binds it.
 	if err := Probe("1", 200*time.Millisecond); err == nil {
 		t.Fatal("Probe() = nil, want an error when the port is closed")
 	}
 }
 
-// A probe that outlives the health handler's own database timeout reports "timeout" for
-// something the service would have answered.
 func TestProbeGivesUp(t *testing.T) {
 	port := listenerOn(t, http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		time.Sleep(2 * time.Second)

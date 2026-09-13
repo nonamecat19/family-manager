@@ -60,8 +60,6 @@ func TestRecoverKeepsAnOrdinaryErrorIntact(t *testing.T) {
 	}
 }
 
-// ErrAbortHandler means "drop the connection without a word". Converting it to a response
-// would undo the only thing it is for, so it must keep unwinding.
 func TestRecoverRepanicsOnErrAbortHandler(t *testing.T) {
 	defer func() {
 		err, _ := recover().(error)

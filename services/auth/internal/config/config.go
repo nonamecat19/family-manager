@@ -1,6 +1,3 @@
-// Package config loads the auth service's settings from the environment, AUTH_-prefixed.
-// Secrets have no defaults: a missing one crashes at boot, because an auth service that
-// silently invents a signing key is worse than one that does not start.
 package config
 
 import (
@@ -17,29 +14,16 @@ type Config struct {
 	HTTPPort    string
 	GRPCPort    string
 
-	// SigningKeyPEM is the ES256 private key. Supplied inline (AUTH_SIGNING_KEY) or via a
-	// file path (AUTH_SIGNING_KEY_FILE), which is how a Docker or Kubernetes secret arrives.
 	SigningKeyPEM string
 	Issuer        string
 	Audience      string
 	AccessTTL     time.Duration
 	RefreshTTL    time.Duration
 
-	// FamilyAddr is services/family's internal listener, used to resolve the family_id claim
-	// while minting a token. Empty disables the lookup: tokens are then minted without a
-	// family_id and the apps show onboarding.
 	FamilyAddr string
 
-	// HashConcurrency caps how many argon2id hashes run at once. Each holds ~19 MiB for its
-	// duration and both Register and Login are unauthenticated, so this is the setting that
-	// decides whether a burst of sign-ins queues or exhausts the box. Zero means GOMAXPROCS.
 	HashConcurrency int
 
-	// LoginFailureThreshold is how many consecutive failed sign-ins one address is allowed
-	// before the next attempt is refused, and LoginLockoutBase/Max bound the wait that
-	// follows. Exposed because the right numbers depend on who is using the deployment: a
-	// household of four wants a low threshold, and a demo instance being poked at by five
-	// people sharing a password does not. Zero means the package defaults.
 	LoginFailureThreshold int
 	LoginLockoutBase      time.Duration
 	LoginLockoutMax       time.Duration
@@ -89,7 +73,6 @@ func Load() (*Config, error) {
 		}
 		cfg.SigningKeyPEM = string(body)
 	}
-	// Env vars cannot hold real newlines conveniently, so accept the escaped form too.
 	cfg.SigningKeyPEM = strings.ReplaceAll(cfg.SigningKeyPEM, `\n`, "\n")
 
 	if cfg.DatabaseURL == "" {

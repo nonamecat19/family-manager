@@ -30,7 +30,6 @@ func (q *Queries) CountTransactionsForRecurringOccurrence(ctx context.Context, a
 }
 
 const createTransaction = `-- name: CreateTransaction :one
-
 INSERT INTO transactions (family_id, type, account_id, counter_account_id, category_id,
     amount_minor, currency_code, received_amount_minor, received_currency_code,
     note, merchant, occurred_on, member_id, created_by_user_id, template_id, recurring_id)
@@ -57,17 +56,6 @@ type CreateTransactionParams struct {
 	RecurringID          pgtype.UUID
 }
 
-// The visibility boundary again, this time on the ledger: a transaction is readable when the
-// account it was paid from is readable. Every read in this file joins accounts and carries
-// @viewer_member_id, so "shared accounts plus my own private ones" is one predicate written
-// once rather than a filter each handler could forget.
-//
-// Aggregates therefore include the caller's own private spend and no one else's — the design
-// excludes private BALANCES from the family headline (SumFamilyBalances does that), not the
-// caller's own spending from their own donut.
-//
-// Transfers are excluded from every income/expense total: moving money between two of your
-// own accounts is not spending, and a report that counted it would double the month.
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
 	row := q.db.QueryRow(ctx, createTransaction,
 		arg.FamilyID,
@@ -213,7 +201,6 @@ WHERE t.family_id = $1
   AND (cardinality($9::uuid[]) = 0 OR t.category_id = ANY($9::uuid[]))
   AND (cardinality($10::uuid[]) = 0 OR c.group_id = ANY($10::uuid[]))
   AND ($11::text IS NULL
-       -- The escape makes % and _ literal: a search for "50%" must not match every row.
        OR lower(t.note) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\'
        OR lower(t.merchant) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\')
   AND ($12::date IS NULL
@@ -263,11 +250,6 @@ type ListVisibleTransactionsRow struct {
 	GroupID              pgtype.UUID
 }
 
-// ListVisibleTransactions is the feed. Every filter is a no-op sentinel when unset — NULL for
-// the text and uuid ones, an empty array for the repeated ones — so the app sends one shape of
-// request whether it is browsing a month or searching one merchant across a member's cards.
-// The cursor is (occurred_on, id), matching idx_transactions_feed, because an OFFSET moves
-// under a feed that is being written to.
 func (q *Queries) ListVisibleTransactions(ctx context.Context, arg ListVisibleTransactionsParams) ([]ListVisibleTransactionsRow, error) {
 	rows, err := q.db.Query(ctx, listVisibleTransactions,
 		arg.FamilyID,
@@ -351,9 +333,6 @@ type SumBudgetSpendParams struct {
 	MemberID       pgtype.UUID
 }
 
-// SumBudgetSpend is one budget's window, evaluated against either its group or its single
-// category and optionally narrowed to one member. It is deliberately its own query rather
-// than a filter on SumByGroup: a budget's window is not the screen's period.
 func (q *Queries) SumBudgetSpend(ctx context.Context, arg SumBudgetSpendParams) (int64, error) {
 	row := q.db.QueryRow(ctx, sumBudgetSpend,
 		arg.FamilyID,
@@ -471,9 +450,6 @@ type SumByGroupRow struct {
 	TransactionCount int32
 }
 
-// SumByGroup backs the donut and the Home group rows in one pass. The join to categories is a
-// LEFT one: a transaction with no category still spent money, and dropping it here would make
-// the sum of the group rows smaller than the period total the same period reports.
 func (q *Queries) SumByGroup(ctx context.Context, arg SumByGroupParams) ([]SumByGroupRow, error) {
 	rows, err := q.db.Query(ctx, sumByGroup,
 		arg.FamilyID,
@@ -538,9 +514,6 @@ type SumByMemberRow struct {
 	TransactionCount int32
 }
 
-// SumByMember is the split bar on the member screen and the stacked series on the charts
-// screen; group_id is carried so one pass fills both the per-member totals and the per-group
-// member segments.
 func (q *Queries) SumByMember(ctx context.Context, arg SumByMemberParams) ([]SumByMemberRow, error) {
 	rows, err := q.db.Query(ctx, sumByMember,
 		arg.FamilyID,
@@ -612,8 +585,6 @@ type SumDailyTotalsRow struct {
 	TotalMinor int64
 }
 
-// SumDailyTotals feeds the bucketed series: one row per calendar day, bucketed in Go so the
-// week/month/year switch does not need three queries.
 func (q *Queries) SumDailyTotals(ctx context.Context, arg SumDailyTotalsParams) ([]SumDailyTotalsRow, error) {
 	rows, err := q.db.Query(ctx, sumDailyTotals,
 		arg.FamilyID,
@@ -667,7 +638,6 @@ WHERE t.family_id = $1
   AND (cardinality($9::uuid[]) = 0 OR t.category_id = ANY($9::uuid[]))
   AND (cardinality($10::uuid[]) = 0 OR c.group_id = ANY($10::uuid[]))
   AND ($11::text IS NULL
-       -- The escape makes % and _ literal: a search for "50%" must not match every row.
        OR lower(t.note) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\'
        OR lower(t.merchant) LIKE '%' || replace(replace(replace(lower($11), '\', '\\'), '%', '\%'), '_', '\_') || '%' ESCAPE '\')
 `
@@ -691,12 +661,6 @@ type SumVisibleTransactionsRow struct {
 	TransactionCount int32
 }
 
-// SumVisibleTransactions is the period total behind the feed header and the Home headline. It
-// covers the whole period, not the page the feed happens to be showing.
-//
-// With a kind filter every row is on the same side of the ledger and the sum is a magnitude.
-// Without one the two sides are netted — expenses minus income — because adding "spent 5,000"
-// to "earned 20,000" produces a number that describes nothing.
 func (q *Queries) SumVisibleTransactions(ctx context.Context, arg SumVisibleTransactionsParams) (SumVisibleTransactionsRow, error) {
 	row := q.db.QueryRow(ctx, sumVisibleTransactions,
 		arg.FamilyID,

@@ -34,7 +34,7 @@ func TestResolvePeriod(t *testing.T) {
 		}, "2026-08-15", "2026-08-15"},
 		{"week starts on the household's weekday", &financev1.Period{
 			Granularity: financev1.PeriodGranularity_PERIOD_GRANULARITY_WEEK,
-			Anchor:      "2026-08-29", // a Saturday
+			Anchor:      "2026-08-29",
 		}, "2026-08-24", "2026-08-30"},
 		{"month", &financev1.Period{
 			Granularity: financev1.PeriodGranularity_PERIOD_GRANULARITY_MONTH,
@@ -81,9 +81,6 @@ func TestResolvePeriodRejectsAnUnusableCustomRange(t *testing.T) {
 	}
 }
 
-// The rolling window is what lets a household budget from the 5th without being pushed onto
-// calendar months, and the clamped month arithmetic is what stops an anchor on the 31st from
-// skipping February.
 func TestBudgetWindow(t *testing.T) {
 	cases := []struct {
 		name             string
@@ -129,8 +126,6 @@ func TestSeriesBucketsEndOnTheCurrentBucket(t *testing.T) {
 	}
 }
 
-// advanceDue is the whole recurrence engine; the day anchor is the part that has an edge case
-// in every month with fewer than 31 days.
 func TestAdvanceDue(t *testing.T) {
 	cases := []struct {
 		name       string
@@ -185,14 +180,12 @@ func TestBudgetStatusArithmetic(t *testing.T) {
 		if status.Remaining.AmountMinor != want.left {
 			t.Errorf("spent %d: remaining = %d, want %d", spent, status.Remaining.AmountMinor, want.left)
 		}
-		// 30 August in a window ending 31 August is two days including today.
 		if status.DaysRemaining != 2 {
 			t.Errorf("spent %d: days_remaining = %d, want 2", spent, status.DaysRemaining)
 		}
 	}
 }
 
-// budgetFixture is a group budget with only the fields the arithmetic reads.
 func budgetFixture(limit int64) db.Budget {
 	return db.Budget{
 		TargetKind: targetGroup, LimitMinor: limit, CurrencyCode: "UAH",

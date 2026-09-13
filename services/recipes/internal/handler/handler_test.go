@@ -13,8 +13,6 @@ import (
 	"github.com/nnc/family-manager/services/recipes/db"
 )
 
-// withClaims stamps a context with test claims — the auth interceptor is not in the call path
-// for unit tests, so the handler reads claims from context directly.
 func withClaims(ctx context.Context, userID, familyID string) context.Context {
 	return fmauth.WithClaims(ctx, &fmauth.Claims{UserID: userID, FamilyID: familyID})
 }
@@ -61,7 +59,6 @@ func TestCreateRecipe(t *testing.T) {
 		t.Errorf("steps = %d, want 2", len(resp.Msg.Recipe.Steps))
 	}
 
-	// Verify it was stored.
 	recipeID := resp.Msg.Recipe.Id
 	if _, ok := store.recipes[recipeID]; !ok {
 		t.Error("recipe not stored")
@@ -70,7 +67,6 @@ func TestCreateRecipe(t *testing.T) {
 		t.Errorf("stored ingredients = %d, want 2", len(store.ingredients[recipeID]))
 	}
 
-	// Verify event was published.
 	if !rec.sawSubject("recipes.recipe.created") {
 		t.Error("RecipeCreatedEvent not published")
 	}
@@ -78,7 +74,7 @@ func TestCreateRecipe(t *testing.T) {
 
 func TestCreateRecipeNoFamily(t *testing.T) {
 	h, _, _ := newTestHandler()
-	ctx := withClaims(context.Background(), testUser, "") // no family
+	ctx := withClaims(context.Background(), testUser, "")
 
 	_, err := h.CreateRecipe(ctx, connect.NewRequest(&recipesv1.CreateRecipeRequest{
 		Title: "Test",
@@ -91,7 +87,6 @@ func TestCreateRecipeNoFamily(t *testing.T) {
 func TestGetRecipeFamilyScoping(t *testing.T) {
 	h, store, _ := newTestHandler()
 
-	// Create a recipe in the test family.
 	r := db.Recipe{
 		ID:       pgconv.MustUUID(newUUID()),
 		FamilyID: pgconv.MustUUID(testFamily),
@@ -99,7 +94,6 @@ func TestGetRecipeFamilyScoping(t *testing.T) {
 	}
 	store.recipes[pgconv.UUIDString(r.ID)] = r
 
-	// A different family should get NotFound.
 	ctx := withClaims(context.Background(), testUser, "00000000-0000-4000-8000-000000000099")
 	_, err := h.GetRecipe(ctx, connect.NewRequest(&recipesv1.GetRecipeRequest{
 		RecipeId: pgconv.UUIDString(r.ID),
@@ -112,7 +106,6 @@ func TestGetRecipeFamilyScoping(t *testing.T) {
 func TestToggleFavorite(t *testing.T) {
 	h, store, _ := newTestHandler()
 
-	// Create a recipe directly in the store.
 	r := db.Recipe{
 		ID:       pgconv.MustUUID(newUUID()),
 		FamilyID: pgconv.MustUUID(testFamily),
@@ -121,7 +114,6 @@ func TestToggleFavorite(t *testing.T) {
 	store.recipes[pgconv.UUIDString(r.ID)] = r
 	ctx := withClaims(context.Background(), testUser, testFamily)
 
-	// Toggle on.
 	resp, err := h.ToggleFavorite(ctx, connect.NewRequest(&recipesv1.ToggleFavoriteRequest{
 		RecipeId: pgconv.UUIDString(r.ID),
 	}))
@@ -132,7 +124,6 @@ func TestToggleFavorite(t *testing.T) {
 		t.Error("expected is_favorite=true after first toggle")
 	}
 
-	// Toggle off.
 	resp, err = h.ToggleFavorite(ctx, connect.NewRequest(&recipesv1.ToggleFavoriteRequest{
 		RecipeId: pgconv.UUIDString(r.ID),
 	}))
@@ -166,7 +157,6 @@ func TestAddComment(t *testing.T) {
 		t.Errorf("body = %q", resp.Msg.Comment.Body)
 	}
 
-	// Comment count should be incremented.
 	if store.recipes[pgconv.UUIDString(r.ID)].CommentCount != 1 {
 		t.Errorf("comment_count = %d, want 1", store.recipes[pgconv.UUIDString(r.ID)].CommentCount)
 	}
@@ -246,10 +236,6 @@ func TestCreateCategory(t *testing.T) {
 	}
 }
 
-// --- rating, filtering, sorting, ad-hoc basket -----------------------------
-
-// seedRecipe creates a recipe through the handler so ingredients and steps land in the fake
-// exactly as the real write path would leave them.
 func seedRecipe(t *testing.T, h *Handler, ctx context.Context, req *recipesv1.CreateRecipeRequest) *recipesv1.Recipe {
 	t.Helper()
 	resp, err := h.CreateRecipe(ctx, connect.NewRequest(req))
@@ -274,7 +260,6 @@ func TestRateRecipe(t *testing.T) {
 		t.Errorf("rating = %d, want 5", got)
 	}
 
-	// 0 clears the rating rather than being rejected as out of range.
 	resp, err = h.RateRecipe(ctx, connect.NewRequest(&recipesv1.RateRecipeRequest{
 		RecipeId: r.GetId(), Rating: 0,
 	}))
@@ -383,7 +368,6 @@ func TestSumIngredientsBasket(t *testing.T) {
 
 	resp, err := h.SumIngredients(ctx, connect.NewRequest(&recipesv1.SumIngredientsRequest{
 		Items: []*recipesv1.RecipeQuantity{
-			// 4 servings of a 2-serving recipe doubles it; 0 means "as written".
 			{RecipeId: wok.GetId(), Servings: 4},
 			{RecipeId: pilaf.GetId(), Servings: 0},
 		},
@@ -398,7 +382,6 @@ func TestSumIngredientsBasket(t *testing.T) {
 	if got["chicken"] != "600.00" {
 		t.Errorf("chicken = %q, want 600.00", got["chicken"])
 	}
-	// 200 * 2 (scaled) + 400 (as written) — the two recipes collapse onto one line.
 	if got["rice"] != "800.00" {
 		t.Errorf("rice = %q, want 800.00", got["rice"])
 	}
@@ -481,10 +464,6 @@ func equalStrings(a, b []string) bool {
 	return true
 }
 
-// Nutrition round-trips on create, and — the part that is easy to get wrong — survives an
-// update that does not mention it. The edit screen predates these fields; if UpdateRecipe
-// treated an absent Nutrition the way it treats an absent title, every save from that screen
-// would silently erase the macros the recipe was imported with.
 func TestNutritionCreateAndPreserveOnUpdate(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -501,7 +480,6 @@ func TestNutritionCreateAndPreserveOnUpdate(t *testing.T) {
 		t.Fatalf("nutrition not stored on create: %+v", got)
 	}
 
-	// An update carrying no Nutrition at all must leave the figures untouched.
 	upd, err := h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
 		RecipeId: r.GetId(), Title: "Кіноа з куркою", Servings: 2,
 	}))
@@ -515,7 +493,6 @@ func TestNutritionCreateAndPreserveOnUpdate(t *testing.T) {
 		t.Fatalf("servings = %d, want the update to have applied", got)
 	}
 
-	// An update that does carry Nutrition overwrites it.
 	upd, err = h.UpdateRecipe(ctx, connect.NewRequest(&recipesv1.UpdateRecipeRequest{
 		RecipeId: r.GetId(), Title: "Кіноа з куркою", Servings: 2,
 		Nutrition: &recipesv1.Nutrition{Kcal: 600, ProteinG: 50, FatG: 20, CarbsG: 45},
@@ -528,8 +505,6 @@ func TestNutritionCreateAndPreserveOnUpdate(t *testing.T) {
 	}
 }
 
-// Negative macros are floored rather than rejected: the CHECK constraint would otherwise turn
-// a bad client value into a 500.
 func TestNutritionNegativeValuesFloored(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -544,8 +519,6 @@ func TestNutritionNegativeValuesFloored(t *testing.T) {
 	}
 }
 
-// A recipe created without nutrition still reports a non-nil all-zero message, so the app can
-// read the fields without a nil check.
 func TestNutritionAlwaysPresentOnRead(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -559,8 +532,6 @@ func TestNutritionAlwaysPresentOnRead(t *testing.T) {
 	}
 }
 
-// A store failure is the caller's problem only to the extent of "try again". The pgx error
-// behind it names tables and constraints and must not travel with the response.
 func TestStoreFailureIsInternalAndOpaque(t *testing.T) {
 	h, store, _ := newTestHandler()
 	store.failOn["CreateRecipe"] = errBoom
@@ -577,8 +548,6 @@ func TestStoreFailureIsInternalAndOpaque(t *testing.T) {
 	}
 }
 
-// A category id the client got wrong used to be discarded and stored as NULL, so the recipe
-// was created uncategorised and the caller was told it worked. It is an argument error.
 func TestCreateRecipeRejectsAMalformedCategoryID(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -594,7 +563,6 @@ func TestCreateRecipeRejectsAMalformedCategoryID(t *testing.T) {
 	}
 }
 
-// Uncategorised stays a legitimate state; only an unparseable id is refused.
 func TestCreateRecipeStillAcceptsNoCategory(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -606,8 +574,6 @@ func TestCreateRecipeStillAcceptsNoCategory(t *testing.T) {
 	}
 }
 
-// saveIngredientsAndSteps does one INSERT per element, and the 16 MiB body cap admits hundreds
-// of thousands of them. The bound is what stops one request holding a connection for minutes.
 func TestCreateRecipeRejectsOversizeContent(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -644,7 +610,6 @@ func TestCreateRecipeRejectsOversizeContent(t *testing.T) {
 	}
 }
 
-// The bounds are in runes: a Ukrainian recipe must not be worth half the text of an English one.
 func TestCreateRecipeAcceptsAMaxLengthCyrillicTitle(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -669,8 +634,6 @@ func TestAddCommentRejectsAnOversizeBody(t *testing.T) {
 	}
 }
 
-// Replacing ingredients means deleting them and reinserting. Before the transaction, the
-// delete stood on its own: an edit that failed halfway left the recipe with nothing in it.
 func TestUpdateRecipeKeepsIngredientsWhenTheWriteFails(t *testing.T) {
 	h, store, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -707,8 +670,6 @@ func TestUpdateRecipeKeepsIngredientsWhenTheWriteFails(t *testing.T) {
 	}
 }
 
-// A failing counter update used to leave the comment behind and report failure, so the count
-// drifted and nothing could reconcile it.
 func TestAddCommentLeavesNothingBehindWhenTheCounterFails(t *testing.T) {
 	h, store, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -733,8 +694,6 @@ func TestAddCommentLeavesNothingBehindWhenTheCounterFails(t *testing.T) {
 	}
 }
 
-// The recipe row and its children are one write: a failure in the children must not leave the
-// row behind.
 func TestCreateRecipeLeavesNoRowWhenIngredientsFail(t *testing.T) {
 	h, store, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)
@@ -755,8 +714,6 @@ func TestCreateRecipeLeavesNoRowWhenIngredientsFail(t *testing.T) {
 	}
 }
 
-// Create floored the serving count and update did not, so a recipe could be edited into
-// "Serves 0" with per-serving nutrition beside it.
 func TestUpdateRecipeFloorsServingsAtOne(t *testing.T) {
 	h, _, _ := newTestHandler()
 	ctx := withClaims(context.Background(), testUser, testFamily)

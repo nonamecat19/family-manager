@@ -43,8 +43,6 @@ WHERE lower(email) = lower($1)
 LIMIT 1
 `
 
-// Lookups are case-insensitive to match idx_users_email_lower: the address a user typed with
-// a capital must find the account they registered without one.
 func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, lower)
 	var i User

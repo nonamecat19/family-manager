@@ -14,8 +14,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// The auth interceptor is not in the unit-test call path, so claims are stamped onto the
-// context directly — the same shape the interceptor would have produced.
 func withClaims(ctx context.Context, userID, familyID string) context.Context {
 	return fmauth.WithClaims(ctx, &fmauth.Claims{UserID: userID, FamilyID: familyID})
 }
@@ -27,8 +25,6 @@ const (
 	otherFam   = "00000000-0000-4000-8000-000000000009"
 )
 
-// testNow is fixed so budget windows, "today" and the series buckets are the same on every
-// run and in every timezone the test machine happens to sit in.
 var testNow = time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
 
 func newTestHandler(t *testing.T) (*Handler, *fakeStore, *recorder) {
@@ -43,7 +39,6 @@ func newTestHandler(t *testing.T) (*Handler, *fakeStore, *recorder) {
 	return h, store, rec
 }
 
-// seedHousehold gives the store the settings row and the two members every screen assumes.
 func seedHousehold(s *fakeStore) {
 	family := pgconv.MustUUID(testFamily)
 	s.settings[testFamily] = db.FinanceSetting{
@@ -65,8 +60,6 @@ func ctxOf(user string) context.Context {
 	return withClaims(context.Background(), user, testFamily)
 }
 
-// seedAccount writes an account straight into the store, bypassing the handler, so a test can
-// set up state the handler would refuse to create (another member's private account).
 func seedAccount(s *fakeStore, name, kind, visibility, owner string, opening int64) db.Account {
 	a := db.Account{
 		ID: s.newUUID(), FamilyID: pgconv.MustUUID(testFamily), Name: name, Kind: kind,
@@ -119,12 +112,6 @@ func codeOf(t *testing.T, err error) connect.Code {
 	return connect.CodeOf(err)
 }
 
-/* ============================ the private-account boundary ================= */
-//
-// These are the tests the schema comment and the query comments both point at. Everything else
-// in this service is a ledger; this is the part where getting it wrong shows another member's
-// money on someone's phone.
-
 func TestListAccountsHidesAnotherMembersPrivateAccounts(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 1_000_00)
@@ -148,7 +135,6 @@ func TestListAccountsHidesAnotherMembersPrivateAccounts(t *testing.T) {
 	if got := resp.Msg.Hidden[0]; got.MemberId != olena || got.AccountCount != 1 {
 		t.Errorf("hidden = %+v, want olena with 1 account", got)
 	}
-	// The count is the whole of what may cross the wire. Nothing else about hers may appear.
 	for _, a := range append(resp.Msg.Shared, resp.Msg.PrivateOwn...) {
 		if a.Id == id(hers.ID) {
 			t.Fatal("another member's private account was serialised in full")
@@ -181,14 +167,11 @@ func TestGetAccountOnAnotherMembersPrivateAccountIsNotFound(t *testing.T) {
 	_, err := h.GetAccount(ctxOf(sergiy), connect.NewRequest(&financev1.GetAccountRequest{
 		AccountId: id(hers.ID),
 	}))
-	// NotFound, not PermissionDenied: "this exists but is not yours" is itself the leak.
 	if got := codeOf(t, err); got != connect.CodeNotFound {
 		t.Errorf("code = %v, want NotFound", got)
 	}
 }
 
-// Reordering writes to the list the caller can see. An account they may not see does not move,
-// which is what an id that does not exist already did.
 func TestReorderAccountsLeavesAnotherMembersPrivateAccountWhereItWas(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
@@ -221,8 +204,6 @@ func TestPrivateAccountIsAlwaysOwnedByTheCaller(t *testing.T) {
 	if got := resp.Msg.Account.OwnerMemberId; got != sergiy {
 		t.Errorf("owner_member_id = %q, want the caller %q", got, sergiy)
 	}
-	// A private account is out of the family headline by construction, not by the client
-	// remembering to say so.
 	if !resp.Msg.Account.ExcludedFromFamilyTotal {
 		t.Error("a private account must be excluded from the family total")
 	}
@@ -252,8 +233,6 @@ func TestAnotherMembersPrivateSpendIsInvisible(t *testing.T) {
 		t.Errorf("period_total = %d, want 10000 — private spend must not be summed for others", got)
 	}
 
-	// The same transaction is visible to its own owner, which is what makes the exclusion a
-	// privacy rule rather than a bug.
 	hers, err := h.GetTransaction(ctxOf(olena), connect.NewRequest(&financev1.GetTransactionRequest{
 		TransactionId: id(hidden.ID),
 	}))
@@ -314,14 +293,10 @@ func TestCrossFamilyAccessIsNotFound(t *testing.T) {
 	_, err := h.GetAccount(ctx, connect.NewRequest(&financev1.GetAccountRequest{
 		AccountId: id(shared.ID),
 	}))
-	// The other family has no settings row, so the household precondition fires before the
-	// account read — either way, nothing about the account crosses.
 	if got := codeOf(t, err); got != connect.CodeNotFound && got != connect.CodeFailedPrecondition {
 		t.Errorf("code = %v, want NotFound or FailedPrecondition", got)
 	}
 }
-
-/* ================================ identity ================================= */
 
 func TestCallerWithoutFamilyIsRefused(t *testing.T) {
 	h, _, _ := newTestHandler(t)
@@ -342,15 +317,11 @@ func TestUnauthenticatedCallerIsRefused(t *testing.T) {
 	}
 }
 
-/* ============================== transactions =============================== */
-
 func TestCreateTransactionAttributesThreePeopleSeparately(t *testing.T) {
 	h, store, rec := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
 	account := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
 
-	// Сергій types it, Олена spent it, the account belongs to the household. All three are
-	// different facts and the row has to keep them apart.
 	resp, err := h.CreateTransaction(ctxOf(sergiy), connect.NewRequest(&financev1.CreateTransactionRequest{
 		Type:       financev1.TransactionType_TRANSACTION_TYPE_EXPENSE,
 		AccountId:  id(account.ID),
@@ -438,8 +409,6 @@ func TestCreateTransactionValidation(t *testing.T) {
 	}
 }
 
-// A transaction is stored in the account's currency, so an amount labelled with another one is
-// refused rather than silently relabelled — 50 USD into a UAH account is not 50 UAH.
 func TestCreateTransactionRefusesForeignCurrency(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -455,8 +424,6 @@ func TestCreateTransactionRefusesForeignCurrency(t *testing.T) {
 	}
 }
 
-// An empty currency code means "whatever the account holds" and stays accepted: the field is
-// informational on the way in, and clients that omit it are not sending a mismatch.
 func TestCreateTransactionAcceptsAnEmptyCurrency(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -492,7 +459,6 @@ func TestListTransactionsGroupsByDayWithSubtotals(t *testing.T) {
 	if len(resp.Msg.Days) != 2 {
 		t.Fatalf("days = %d, want 2", len(resp.Msg.Days))
 	}
-	// Newest first, and the subtotal is the sum of exactly the rows in the section.
 	if resp.Msg.Days[0].Date != "2026-08-29" {
 		t.Errorf("first section = %q, want 2026-08-29", resp.Msg.Days[0].Date)
 	}
@@ -530,7 +496,6 @@ func TestListTransactionsPagesWithACursor(t *testing.T) {
 	if len(second.Msg.Days) != 1 || len(second.Msg.Days[0].Transactions) != 1 {
 		t.Errorf("page 2 = %v, want the single remaining row", second.Msg.Days)
 	}
-	// A short page cannot have more, so it must not hand back a cursor that returns nothing.
 	if second.Msg.NextCursor != "" {
 		t.Errorf("next_cursor = %q, want empty on a short page", second.Msg.NextCursor)
 	}
@@ -630,8 +595,6 @@ func TestCrossCurrencyTransferNeedsAReceivedAmount(t *testing.T) {
 	}
 }
 
-/* ================================= budgets ================================= */
-
 func TestBudgetStatusReportsOverspendUnclamped(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	group, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -652,8 +615,6 @@ func TestBudgetStatusReportsOverspendUnclamped(t *testing.T) {
 		t.Fatalf("budgets = %d, want 1", len(resp.Msg.Budgets))
 	}
 	status := resp.Msg.Budgets[0]
-	// 256%: the design clamps the bar and switches the colour, which it cannot do if the
-	// server clamps the number first.
 	if status.Share != 2.56 {
 		t.Errorf("share = %v, want 2.56", status.Share)
 	}
@@ -718,8 +679,6 @@ func TestCreateTransactionAnnouncesOverspendOnce(t *testing.T) {
 		t.Errorf("budget.exceeded published %d times, want 1", exceeded)
 	}
 
-	// A third transaction on an already-blown budget must not re-announce: the edge is the
-	// event, and republishing it is how a notification service ends up sending duplicates.
 	spend(10_00)
 	exceeded = 0
 	for _, s := range rec.subjects {
@@ -784,8 +743,6 @@ func TestBudgetAppliesToBothItsCategoryAndItsGroup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateTransaction: %v", err)
 	}
-	// Spend in a category counts toward the category's budget and its group's, which is why
-	// both bars have to repaint from one response.
 	if len(resp.Msg.AffectedBudgets) != 2 {
 		t.Fatalf("affected_budgets = %d, want 2", len(resp.Msg.AffectedBudgets))
 	}
@@ -810,8 +767,6 @@ func TestCreateBudgetNeedsExactlyOneTarget(t *testing.T) {
 		t.Errorf("code = %v, want InvalidArgument", got)
 	}
 }
-
-/* =============================== categories ================================ */
 
 func TestDeleteCategoryGroupNeedsAReassignmentTarget(t *testing.T) {
 	h, store, _ := newTestHandler(t)
@@ -878,8 +833,6 @@ func TestCategoryMustMatchItsGroupsKind(t *testing.T) {
 	}
 }
 
-/* ================================ templates ================================ */
-
 func TestTemplatesArePrivateToTheirOwner(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	account := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
@@ -891,8 +844,6 @@ func TestTemplatesArePrivateToTheirOwner(t *testing.T) {
 		t.Fatalf("CreateTemplate: %v", err)
 	}
 
-	// Олена sees none of Сергій's templates, and asking for them is an empty list rather than
-	// an error: an error would confirm that he has some.
 	hers, err := h.ListTemplates(ctxOf(olena), connect.NewRequest(&financev1.ListTemplatesRequest{
 		OwnerUserId: sergiy,
 	}))
@@ -926,7 +877,6 @@ func TestLogTemplateWritesATransactionAndBumpsUsage(t *testing.T) {
 	if resp.Msg.Transaction.Amount.AmountMinor != 50_00 {
 		t.Errorf("amount = %d, want 5000", resp.Msg.Transaction.Amount.AmountMinor)
 	}
-	// The provenance badge on the feed row depends on this being set.
 	if resp.Msg.Transaction.TemplateId != created.Msg.Template.Id {
 		t.Errorf("template_id = %q, want the template's id", resp.Msg.Transaction.TemplateId)
 	}
@@ -960,8 +910,6 @@ func TestLogTemplateHonoursAnAmountOverride(t *testing.T) {
 	}
 }
 
-/* ================================ accounts ================================= */
-
 func TestDeleteAccountWithHistoryIsRefused(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -971,7 +919,6 @@ func TestDeleteAccountWithHistoryIsRefused(t *testing.T) {
 	_, err := h.DeleteAccount(ctxOf(sergiy), connect.NewRequest(&financev1.DeleteAccountRequest{
 		AccountId: id(account.ID),
 	}))
-	// A balance that silently loses its rows is a corrupt ledger.
 	if got := codeOf(t, err); got != connect.CodeFailedPrecondition {
 		t.Errorf("code = %v, want FailedPrecondition", got)
 	}
@@ -992,8 +939,6 @@ func TestReorderAccountsAssignsPositionsInOrder(t *testing.T) {
 		t.Error("sort order does not follow the requested order")
 	}
 }
-
-/* =============================== settings ================================== */
 
 func TestBootstrapHouseholdIsIdempotent(t *testing.T) {
 	store := newFakeStore()
@@ -1057,8 +1002,6 @@ func TestSetOverspendNotifications(t *testing.T) {
 	}
 }
 
-/* ============================= internal errors ============================= */
-
 func TestInfrastructureFailureIsOpaque(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	store.failOn["ListVisibleAccounts"] = errBoom
@@ -1067,7 +1010,6 @@ func TestInfrastructureFailureIsOpaque(t *testing.T) {
 	if got := codeOf(t, err); got != connect.CodeInternal {
 		t.Fatalf("code = %v, want Internal", got)
 	}
-	// The pgx error must not reach the caller — only the reference that finds the log line.
 	if msg := err.Error(); contains(msg, "boom") {
 		t.Errorf("error %q leaks the underlying failure", msg)
 	}
@@ -1086,8 +1028,6 @@ func indexOf(haystack, needle string) int {
 	}
 	return -1
 }
-
-/* ================================= widgets ================================= */
 
 func TestGetWidgetDataAppliesTheVisibilityBoundary(t *testing.T) {
 	h, store, _ := newTestHandler(t)
@@ -1110,8 +1050,6 @@ func TestGetWidgetDataAppliesTheVisibilityBoundary(t *testing.T) {
 	if len(resp.Msg.Payloads) != 1 {
 		t.Fatalf("payloads = %d, want 1", len(resp.Msg.Payloads))
 	}
-	// A home-screen widget is not a reason to skip the boundary: a locked phone showing
-	// another member's private balance is the same leak with a smaller font.
 	for _, a := range resp.Msg.Payloads[0].GetAccounts().GetAccounts() {
 		if a.Id == id(hers.ID) {
 			t.Fatal("the accounts widget carried another member's private account")
@@ -1135,8 +1073,6 @@ func TestWidgetsAreScopedToTheirPlacingUser(t *testing.T) {
 		t.Errorf("widgets = %d, want 0 — placements are per-user", len(hers.Msg.Widgets))
 	}
 }
-
-/* ================================ recurring ================================ */
 
 func TestPostRecurringOccurrenceIsIdempotentPerDueDate(t *testing.T) {
 	h, store, rec := newTestHandler(t)
@@ -1168,7 +1104,6 @@ func TestPostRecurringOccurrenceIsIdempotentPerDueDate(t *testing.T) {
 		t.Errorf("subjects = %v, want finance.recurring.posted", rec.subjects)
 	}
 
-	// A widget that retried on a flaky connection must not invent a second rent payment.
 	if _, err := h.PostRecurringOccurrence(ctxOf(sergiy),
 		connect.NewRequest(&financev1.PostRecurringOccurrenceRequest{
 			RecurringId: id(payment.ID), DueOn: "2026-08-05",
@@ -1206,8 +1141,6 @@ func TestSkipRecurringOccurrenceWritesNoTransaction(t *testing.T) {
 	}
 }
 
-// seedRecurring writes a schedule straight into the store, bypassing the handler, so a test
-// can set up one attached to an account the caller may not see.
 func seedRecurring(s *fakeStore, name string, account db.Account, amount int64) db.RecurringPayment {
 	r := db.RecurringPayment{
 		ID: s.newUUID(), FamilyID: pgconv.MustUUID(testFamily), Name: name,
@@ -1219,8 +1152,6 @@ func seedRecurring(s *fakeStore, name string, account db.Account, amount int64) 
 	return r
 }
 
-// A schedule inherits the visibility of the account it is attached to: its name, amount and
-// cadence describe a private account as plainly as a transaction does.
 func TestListRecurringPaymentsHidesSchedulesOnAnotherMembersPrivateAccount(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
@@ -1247,8 +1178,6 @@ func TestListRecurringPaymentsHidesSchedulesOnAnotherMembersPrivateAccount(t *te
 	}
 }
 
-// Every write path answers NotFound for a schedule the caller may not read — the same answer
-// as an id that never existed, so none of them can be used as an existence oracle either.
 func TestRecurringWritesOnAnotherMembersPrivateAccountAreNotFound(t *testing.T) {
 	cases := []struct {
 		name string
@@ -1305,8 +1234,6 @@ func TestRecurringWritesOnAnotherMembersPrivateAccountAreNotFound(t *testing.T) 
 	}
 }
 
-/* =============================== analytics ================================= */
-
 func TestGetHouseholdOverviewCountsPrivateAccountsWithoutRevealingThem(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1322,8 +1249,6 @@ func TestGetHouseholdOverviewCountsPrivateAccountsWithoutRevealingThem(t *testin
 	if err != nil {
 		t.Fatalf("GetHouseholdOverview: %v", err)
 	}
-	// The opening balance less the two shared expenses: the balance is derived on every read,
-	// never stored, so a spend moves the headline without anything writing to the account row.
 	if got := resp.Msg.SharedBalance.AmountMinor; got != 17_234_00 {
 		t.Errorf("shared_balance = %d, want 1723400 — private and savings are not in it", got)
 	}
@@ -1340,8 +1265,6 @@ func TestGetHouseholdOverviewCountsPrivateAccountsWithoutRevealingThem(t *testin
 		counts[m.GetMember().GetUserId()] = m.PrivateAccountCount
 		spent[m.GetMember().GetUserId()] = m.GetSpent().GetAmountMinor()
 	}
-	// Both cards carry a count. The caller's comes from their own list, the other member's from
-	// the hidden summary — and in neither case does a balance travel with it.
 	if counts[sergiy] != 1 || counts[olena] != 1 {
 		t.Errorf("private counts = %v, want one each", counts)
 	}
@@ -1377,8 +1300,6 @@ func TestListCategoryTreeCarriesEachGroupsBudget(t *testing.T) {
 	for _, node := range resp.Msg.Groups {
 		byName[node.GetGroup().GetName()] = node
 	}
-	// "бюджет ₴6,000" on one row and "без бюджету" on the other: the absent budget is a nil
-	// message, not a zeroed one, so the app can tell the two rows apart.
 	food := byName["Їжа"]
 	if food.GetBudget() == nil {
 		t.Fatal("the budgeted group carries no budget")
@@ -1425,7 +1346,6 @@ func TestGetSpendingSeriesBucketsAndStacks(t *testing.T) {
 	if len(current.Segments) != 2 {
 		t.Fatalf("segments = %d, want 2 (one per spending member)", len(current.Segments))
 	}
-	// The legend labels come with the series so a widget does not need the member list.
 	for _, seg := range current.Segments {
 		if seg.Label == "" {
 			t.Errorf("segment %q has no label", seg.Key)
@@ -1480,7 +1400,6 @@ func TestGetMemberBreakdownSplitsEachGroupByMember(t *testing.T) {
 		t.Errorf("per-member amounts = %v, want 169000/341000", amounts)
 	}
 
-	// share is a ratio of the household total, so the split bar's two segments add up to 1.
 	var shares float64
 	for _, m := range resp.Msg.Members {
 		shares += m.Share
@@ -1490,8 +1409,6 @@ func TestGetMemberBreakdownSplitsEachGroupByMember(t *testing.T) {
 	}
 }
 
-// A category grid is reordered inside one group. An id belonging to another group is refused
-// rather than renumbered, which would silently reshuffle a grid nobody was looking at.
 func TestReorderCategoriesRefusesAnotherGroupsCategory(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	groupA, catA := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1506,9 +1423,6 @@ func TestReorderCategoriesRefusesAnotherGroupsCategory(t *testing.T) {
 	}
 }
 
-// The roster is projected from family's events, and with no broker none arrive. A caller who
-// has no member row still has to appear in the switcher, so the first read makes one from the
-// only human-readable fact in the token.
 func TestListMembersGivesTheCallerARow(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	newcomer := "00000000-0000-4000-8000-00000000000a"
@@ -1535,14 +1449,11 @@ func TestListMembersGivesTheCallerARow(t *testing.T) {
 	if _, ok := store.members[memberKey(pgconv.MustUUID(testFamily), pgconv.MustUUID(newcomer))]; !ok {
 		t.Error("the row was not persisted")
 	}
-	// A second read must not write a second row or reset the first.
 	if _, err := h.ListMembers(ctx, connect.NewRequest(&financev1.ListMembersRequest{})); err != nil {
 		t.Fatalf("ListMembers (again): %v", err)
 	}
 }
 
-// A category belongs to one side of the taxonomy. An income logged under an expense category
-// would be invisible in both trees while still moving a balance, so it is refused.
 func TestCreateTransactionRefusesACategoryOfTheOtherKind(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, expenseCategory := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1558,8 +1469,6 @@ func TestCreateTransactionRefusesACategoryOfTheOtherKind(t *testing.T) {
 	}
 }
 
-// A currency code is uppercased at the door, because every aggregate compares it byte for byte:
-// a "uah" account in a UAH household would otherwise be shown in the feed and in no total.
 func TestCreateAccountNormalisesTheCurrencyCase(t *testing.T) {
 	h, _, _ := newTestHandler(t)
 
@@ -1574,8 +1483,6 @@ func TestCreateAccountNormalisesTheCurrencyCase(t *testing.T) {
 	}
 }
 
-// An opening balance is money like any other, so it cannot arrive in a currency the account
-// does not hold — it feeds the shared headline directly.
 func TestCreateAccountRefusesAForeignOpeningBalance(t *testing.T) {
 	h, _, _ := newTestHandler(t)
 
@@ -1588,8 +1495,6 @@ func TestCreateAccountRefusesAForeignOpeningBalance(t *testing.T) {
 	}
 }
 
-// The header total carries every predicate the page carries. Filtering the feed by group must
-// move the total with it, or the number above the list describes a wider set than the list.
 func TestListTransactionsTotalFollowsTheGroupFilter(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	food, groceries := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1609,8 +1514,6 @@ func TestListTransactionsTotalFollowsTheGroupFilter(t *testing.T) {
 	}
 }
 
-// A budget is spent against in the household's own currency, so one kept in another currency
-// could never be exceeded and could never be corrected — UpdateBudget has no currency field.
 func TestCreateBudgetRefusesAForeignCurrency(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	group, _ := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1625,9 +1528,6 @@ func TestCreateBudgetRefusesAForeignCurrency(t *testing.T) {
 	}
 }
 
-// A template moved to an account in another currency has to bring a new amount, and the row's
-// currency has to move with it — otherwise every tap of its chip books the new amount under the
-// old code and it lands in a total it does not belong to.
 func TestUpdateTemplateFollowsItsAccountCurrency(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Кава")
@@ -1647,7 +1547,6 @@ func TestUpdateTemplateFollowsItsAccountCurrency(t *testing.T) {
 	}
 	templateID := created.Msg.Template.Id
 
-	// The move alone is refused: relabelling ₴50 as $50 is not a conversion.
 	_, err = h.UpdateTemplate(ctxOf(sergiy), connect.NewRequest(&financev1.UpdateTemplateRequest{
 		TemplateId: templateID, AccountId: strPtr(id(usd.ID)),
 	}))
@@ -1667,8 +1566,6 @@ func TestUpdateTemplateFollowsItsAccountCurrency(t *testing.T) {
 	}
 }
 
-// The same rule on a transaction: moving it to an account in another currency without a new
-// amount would turn 500,00 UAH into 500,00 USD.
 func TestUpdateTransactionRefusesABareCurrencyMove(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1687,8 +1584,6 @@ func TestUpdateTransactionRefusesABareCurrencyMove(t *testing.T) {
 	}
 }
 
-// Spending with no category is real spending: it is counted in the period total and given a row
-// of its own, so the group shares still add up to the headline.
 func TestHomeSummaryAccountsForUncategorisedSpending(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	group, category := seedGroupAndCategory(store, "Їжа", "Продукти")
@@ -1724,14 +1619,11 @@ func TestHomeSummaryAccountsForUncategorisedSpending(t *testing.T) {
 	if uncategorised.GetAmount().GetAmountMinor() != 300_00 {
 		t.Errorf("uncategorised = %d, want 30000", uncategorised.GetAmount().GetAmountMinor())
 	}
-	// The count names groups, and the bucket is not one.
 	if resp.Msg.GroupCount != 1 {
 		t.Errorf("group count = %d, want 1 (%q)", resp.Msg.GroupCount, group.Name)
 	}
 }
 
-// With no kind filter the two sides of the ledger net, and every period total that answers for
-// the same window has to net the same way — the feed header and the Home headline included.
 func TestPeriodTotalsNetIncomeAgainstExpense(t *testing.T) {
 	h, store, _ := newTestHandler(t)
 	_, category := seedGroupAndCategory(store, "Їжа", "Продукти")

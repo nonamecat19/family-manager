@@ -115,7 +115,6 @@ func (q *Queries) GetWidget(ctx context.Context, arg GetWidgetParams) (WidgetIns
 }
 
 const listWidgets = `-- name: ListWidgets :many
-
 SELECT id, family_id, user_id, type, size, scope_kind, scope_member_id, scope_account_id, target_ref, target_account_ids, sort_order, created_at, updated_at FROM widget_instances
 WHERE family_id = $1 AND user_id = $2
 ORDER BY sort_order, created_at
@@ -126,8 +125,6 @@ type ListWidgetsParams struct {
 	UserID   pgtype.UUID
 }
 
-// Widgets are per-user placements, not household state: two members place the same type and
-// each sees their own scope, so every read is keyed by user_id as well as family_id.
 func (q *Queries) ListWidgets(ctx context.Context, arg ListWidgetsParams) ([]WidgetInstance, error) {
 	rows, err := q.db.Query(ctx, listWidgets, arg.FamilyID, arg.UserID)
 	if err != nil {

@@ -1,5 +1,3 @@
-// Package config loads the finance service's settings from the environment, FINANCE_-prefixed.
-// Secrets have no defaults: a missing one crashes at boot rather than silently degrading.
 package config
 
 import (
@@ -14,15 +12,10 @@ type Config struct {
 	GRPCPort    string
 	NATSURL     string
 
-	// JWKSURL is services/auth's public key set, used to verify access tokens.
 	JWKSURL  string
 	Issuer   string
 	Audience string
 
-	// BaseCurrency and Timezone are only defaults for BootstrapHousehold: once a household
-	// exists, finance_settings is the authority and these are never read again. They have
-	// defaults because a household created without an explicit currency is a household, not a
-	// boot failure.
 	BaseCurrency string
 	Timezone     string
 

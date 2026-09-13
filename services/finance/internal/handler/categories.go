@@ -12,9 +12,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// ListCategoryTree is the whole categories screen and the add sheet's picker in one call: the
-// groups, their categories, and the budget status drawn under each group heading. Three
-// round trips would let the app render a group whose budget bar came from a different moment.
 func (h *Handler) ListCategoryTree(
 	ctx context.Context, req *connect.Request[financev1.ListCategoryTreeRequest],
 ) (*connect.Response[financev1.ListCategoryTreeResponse], error) {
@@ -173,8 +170,6 @@ func (h *Handler) UpdateCategoryGroup(
 	}), nil
 }
 
-// DeleteCategoryGroup refuses to make orphans: a group holding categories that hold
-// transactions cannot silently vanish, so the request has to name where its categories go.
 func (h *Handler) DeleteCategoryGroup(
 	ctx context.Context, req *connect.Request[financev1.DeleteCategoryGroupRequest],
 ) (*connect.Response[financev1.DeleteCategoryGroupResponse], error) {
@@ -315,8 +310,6 @@ func (h *Handler) CreateCategory(
 	if err != nil {
 		return nil, h.internal(ctx, err, "get category group")
 	}
-	// A category inherits its group's kind unless the request states one: an income category
-	// inside an expense group would appear on neither tab.
 	kind := group.Kind
 	if msg.GetKind() != financev1.TransactionKind_TRANSACTION_KIND_UNSPECIFIED {
 		kind = taxonomyKindFromProto(msg.GetKind())
@@ -422,9 +415,6 @@ func (h *Handler) MoveCategory(
 	}), nil
 }
 
-// DeleteCategory reassigns its transactions rather than orphaning them; a category with
-// history and no reassignment target is refused, because a deleted category that takes a
-// month of spend with it is data loss the user did not ask for.
 func (h *Handler) DeleteCategory(
 	ctx context.Context, req *connect.Request[financev1.DeleteCategoryRequest],
 ) (*connect.Response[financev1.DeleteCategoryResponse], error) {
@@ -513,8 +503,6 @@ func (h *Handler) ReorderCategories(
 	if err != nil {
 		return nil, err
 	}
-	// The grid being reordered belongs to one group, and the renumbering is confined to it:
-	// an id from another group is refused rather than quietly renumbering that group too.
 	groupID, err := requireUUID("group_id", req.Msg.GetGroupId())
 	if err != nil {
 		return nil, err
@@ -534,8 +522,6 @@ func (h *Handler) ReorderCategories(
 		return nil
 	})
 	if err != nil {
-		// A category from another group is the caller's mistake, not the server's: let the
-		// NotFound out of the transaction instead of flattening it to Internal.
 		var connectErr *connect.Error
 		if errors.As(err, &connectErr) {
 			return nil, connectErr

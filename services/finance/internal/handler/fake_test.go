@@ -16,11 +16,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// fakeStore is an in-memory db.Querier. What is under test here is the handler's rules —
-// family scoping, the private-account boundary, budget arithmetic, transfer shape — not
-// Postgres, so the queries are reimplemented in Go with the same predicates the .sql files
-// carry. The visibility predicate in particular is copied deliberately: a fake that were more
-// permissive than the SQL would make the security tests prove nothing.
 type fakeStore struct {
 	settings     map[string]db.FinanceSetting
 	members      map[string]db.FinanceMember
@@ -55,19 +50,13 @@ func newFakeStore() *fakeStore {
 	}
 }
 
-// fail injects a failure for one operation, so a handler's error path can be reached without
-// a database that can be made to misbehave.
 func (s *fakeStore) fail(op string) error { return s.failOn[op] }
 
-// newUUID is per-store, not package-level: `go test -shuffle=on` reorders tests, and a shared
-// counter would make ids depend on which test ran first.
 func (s *fakeStore) newUUID() pgtype.UUID {
 	s.seq++
 	return pgconv.MustUUID(fmt.Sprintf("%08x-0000-4000-8000-%012x", s.seq, s.seq))
 }
 
-// InTx runs the callback against this same store: the fake has no transaction, and a test that
-// needed one would be testing pgx rather than the handler.
 func (s *fakeStore) InTx(_ context.Context, fn func(q db.Querier) error) error { return fn(s) }
 
 func id(u pgtype.UUID) string { return pgconv.UUIDString(u) }
@@ -76,13 +65,10 @@ func same(a, b pgtype.UUID) bool { return a.Valid && b.Valid && id(a) == id(b) }
 
 func now() pgtype.Timestamptz { return pgtype.Timestamptz{Valid: true} }
 
-// visible mirrors `(a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)`.
 func (s *fakeStore) visible(a db.Account, viewer pgtype.UUID) bool {
 	return a.Visibility == visibilityShared || same(a.OwnerMemberID, viewer)
 }
 
-// balanceOf mirrors the derived balance expression: opening, plus income, minus expense and
-// every transfer leaving the account, plus what arrived on every transfer into it.
 func (s *fakeStore) balanceOf(a db.Account) int64 {
 	balance := a.OpeningBalanceMinor
 	for _, t := range s.transactions {
@@ -103,8 +89,6 @@ func (s *fakeStore) balanceOf(a db.Account) int64 {
 	}
 	return balance
 }
-
-/* ------------------------------------------------------------------ settings */
 
 func (s *fakeStore) GetFinanceSettings(_ context.Context, familyID pgtype.UUID) (db.FinanceSetting, error) {
 	if err := s.fail("GetFinanceSettings"); err != nil {
@@ -168,8 +152,6 @@ func (s *fakeStore) SetOverspendNotifications(_ context.Context, arg db.SetOvers
 	return row, nil
 }
 
-/* ------------------------------------------------------------------- members */
-
 func memberKey(family, user pgtype.UUID) string { return id(family) + "|" + id(user) }
 
 func (s *fakeStore) ListMembers(_ context.Context, arg db.ListMembersParams) ([]db.FinanceMember, error) {
@@ -226,8 +208,6 @@ func (s *fakeStore) CountMembers(_ context.Context, familyID pgtype.UUID) (int64
 	}
 	return n, nil
 }
-
-/* ------------------------------------------------------------------ accounts */
 
 func (s *fakeStore) ListVisibleAccounts(_ context.Context, arg db.ListVisibleAccountsParams) ([]db.ListVisibleAccountsRow, error) {
 	if err := s.fail("ListVisibleAccounts"); err != nil {
@@ -306,7 +286,6 @@ func (s *fakeStore) CountHiddenPrivateAccounts(_ context.Context, arg db.CountHi
 func (s *fakeStore) SumFamilyBalances(_ context.Context, arg db.SumFamilyBalancesParams) (db.SumFamilyBalancesRow, error) {
 	var out db.SumFamilyBalancesRow
 	for _, a := range s.accounts {
-		// Private accounts never reach this sum: the headline is the household's shared money.
 		if !same(a.FamilyID, arg.FamilyID) || a.Visibility != visibilityShared || a.Archived {
 			continue
 		}
@@ -422,8 +401,6 @@ func (s *fakeStore) CountAccountTransactions(_ context.Context, arg db.CountAcco
 	}
 	return n, nil
 }
-
-/* ---------------------------------------------------------------- categories */
 
 func (s *fakeStore) ListCategoryGroups(_ context.Context, arg db.ListCategoryGroupsParams) ([]db.CategoryGroup, error) {
 	var out []db.CategoryGroup
@@ -647,8 +624,6 @@ func (s *fakeStore) CountCategoryTransactions(_ context.Context, arg db.CountCat
 	return n, nil
 }
 
-/* -------------------------------------------------------------- transactions */
-
 func (s *fakeStore) groupOf(categoryID pgtype.UUID) pgtype.UUID {
 	if !categoryID.Valid {
 		return pgtype.UUID{}
@@ -659,8 +634,6 @@ func (s *fakeStore) groupOf(categoryID pgtype.UUID) pgtype.UUID {
 	return pgtype.UUID{}
 }
 
-// txVisible mirrors the JOIN on accounts every read in transactions.sql carries: a transaction
-// is readable when the account it was paid from is readable.
 func (s *fakeStore) txVisible(t db.Transaction, viewer pgtype.UUID) bool {
 	a, ok := s.accounts[id(t.AccountID)]
 	return ok && s.visible(a, viewer)
@@ -745,8 +718,6 @@ func (s *fakeStore) DeleteTransaction(_ context.Context, arg db.DeleteTransactio
 	return 1, nil
 }
 
-// matchesIDs is the `cardinality(...) = 0 OR col = ANY(...)` sentinel: an empty list is no
-// filter at all, which is what lets the app send one request shape.
 func matchesIDs(value pgtype.UUID, list []pgtype.UUID) bool {
 	if len(list) == 0 {
 		return true
@@ -832,8 +803,6 @@ func (s *fakeStore) ListVisibleTransactions(_ context.Context, arg db.ListVisibl
 	return out, nil
 }
 
-// aggregable is the predicate shared by every Sum* query: visible, inside the window, in the
-// household's currency, and never a transfer.
 func (s *fakeStore) aggregable(t db.Transaction, familyID, viewer pgtype.UUID, from, to pgtype.Date, currency string, kind *string) bool {
 	if !same(t.FamilyID, familyID) || !s.txVisible(t, viewer) {
 		return false
@@ -877,8 +846,6 @@ func (s *fakeStore) SumByGroup(_ context.Context, arg db.SumByGroupParams) ([]db
 		if !matchesIDs(t.MemberID, arg.MemberIds) || !matchesIDs(t.AccountID, arg.AccountIds) {
 			continue
 		}
-		// LEFT JOIN semantics: a transaction with no category is summed under a NULL group
-		// rather than dropped, which is what puts it in the period total.
 		group := s.groupOf(t.CategoryID)
 		row := totals[id(group)]
 		if row == nil {
@@ -958,9 +925,6 @@ func (s *fakeStore) SumDailyTotals(_ context.Context, arg db.SumDailyTotalsParam
 	return sortedRows(totals), nil
 }
 
-// signed mirrors the CASE every aggregate query carries: with no kind filter the two sides of
-// the ledger net, so "the period cost 3,000" rather than "5,000 and 2,000 summed as
-// magnitudes". With a filter every row is on one side and the sum is a plain magnitude.
 func signed(t db.Transaction, kind *string) int64 {
 	if kind == nil && t.Type == kindIncome {
 		return -t.AmountMinor
@@ -968,9 +932,6 @@ func signed(t db.Transaction, kind *string) int64 {
 	return t.AmountMinor
 }
 
-// sortedRows makes every aggregate deterministic: it returns the rows in map-key order. Map
-// iteration order is random, and a fake that returned rows in a different order each run would
-// make `go test -shuffle=on` flake for a reason that has nothing to do with the handler.
 func sortedRows[T any](m map[string]*T) []T {
 	keys := make([]string, 0, len(m))
 	for k := range m {
@@ -1019,8 +980,6 @@ func (s *fakeStore) CountTransactionsForRecurringOccurrence(_ context.Context, a
 	return n, nil
 }
 
-/* -------------------------------------------------------------------- budgets */
-
 func (s *fakeStore) ListBudgets(_ context.Context, arg db.ListBudgetsParams) ([]db.Budget, error) {
 	var out []db.Budget
 	for _, b := range s.budgets {
@@ -1054,8 +1013,6 @@ func (s *fakeStore) ListBudgetsForCategory(_ context.Context, arg db.ListBudgets
 		if !same(b.FamilyID, arg.FamilyID) || b.Archived {
 			continue
 		}
-		// Both the category's own budget and its group's: spend in a category counts toward
-		// both, which is the rule the app's overspend toast depends on.
 		if (b.TargetKind == targetCategory && same(b.CategoryID, arg.CategoryID)) ||
 			(b.TargetKind == targetGroup && same(b.GroupID, group)) {
 			out = append(out, b)
@@ -1112,8 +1069,6 @@ func (s *fakeStore) DeleteBudget(_ context.Context, arg db.DeleteBudgetParams) (
 	delete(s.budgets, id(arg.ID))
 	return 1, nil
 }
-
-/* ------------------------------------------------------------------ templates */
 
 func (s *fakeStore) ListTemplates(_ context.Context, arg db.ListTemplatesParams) ([]db.QuickTemplate, error) {
 	var out []db.QuickTemplate
@@ -1211,10 +1166,6 @@ func (s *fakeStore) RecordTemplateUse(_ context.Context, arg db.RecordTemplateUs
 	return t, nil
 }
 
-/* ------------------------------------------------------------------ recurring */
-
-// recurringVisible mirrors the JOIN in recurring.sql: a schedule is readable when the account
-// it is attached to is readable.
 func (s *fakeStore) recurringVisible(r db.RecurringPayment, viewer pgtype.UUID) bool {
 	a, ok := s.accounts[id(r.AccountID)]
 	return ok && s.visible(a, viewer)
@@ -1327,8 +1278,6 @@ func (s *fakeStore) DeleteRecurringPayment(_ context.Context, arg db.DeleteRecur
 	return 1, nil
 }
 
-/* ------------------------------------------------------------------ reminders */
-
 func (s *fakeStore) ListReminders(_ context.Context, arg db.ListRemindersParams) ([]db.Reminder, error) {
 	var out []db.Reminder
 	for _, r := range s.reminders {
@@ -1385,8 +1334,6 @@ func (s *fakeStore) DeleteReminder(_ context.Context, arg db.DeleteReminderParam
 	delete(s.reminders, id(arg.ID))
 	return 1, nil
 }
-
-/* -------------------------------------------------------------------- widgets */
 
 func (s *fakeStore) ListWidgets(_ context.Context, arg db.ListWidgetsParams) ([]db.WidgetInstance, error) {
 	var out []db.WidgetInstance
@@ -1466,10 +1413,6 @@ func (s *fakeStore) DeleteWidget(_ context.Context, arg db.DeleteWidgetParams) (
 	return 1, nil
 }
 
-/* ------------------------------------------------------------------- recorder */
-
-// recorder captures published events so a test can assert on the subject rather than on a
-// NATS server.
 type recorder struct {
 	subjects []string
 	messages []proto.Message
@@ -1490,9 +1433,6 @@ func (r *recorder) sawSubject(want string) bool {
 	return false
 }
 
-// errBoom is the injected failure used to reach a handler's internal-error path.
 var errBoom = errors.New("boom")
 
-// The fake is the Querier the handler is built against; this line is what fails the build if a
-// query is added to a .sql file and not reflected here.
 var _ db.Querier = (*fakeStore)(nil)

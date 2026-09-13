@@ -28,9 +28,6 @@ type CreateRefreshTokenParams struct {
 	ExpiresAt pgtype.Timestamptz
 }
 
-// The WHERE NOT EXISTS closes a race: a refresh that passed the "is this chain alive?" check
-// can otherwise insert its successor a moment after a concurrent replay revoked the chain,
-// resurrecting it. Inserting nothing returns no rows, which the handler treats as a refusal.
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error) {
 	row := q.db.QueryRow(ctx, createRefreshToken,
 		arg.UserID,
@@ -92,8 +89,6 @@ SET used_at = NOW()
 WHERE id = $1 AND used_at IS NULL AND revoked_at IS NULL
 `
 
-// Marks the token spent. The WHERE clause is the concurrency guard: two refreshes racing on
-// the same token, only one updates a row, and the loser is treated as a replay.
 func (q *Queries) MarkRefreshTokenUsed(ctx context.Context, id pgtype.UUID) (int64, error) {
 	result, err := q.db.Exec(ctx, markRefreshTokenUsed, id)
 	if err != nil {
@@ -122,8 +117,6 @@ SET revoked_at = NOW()
 WHERE chain_id = $1 AND revoked_at IS NULL
 `
 
-// Reuse of a spent token means it leaked: kill the whole rotation chain, not just this token,
-// because the thief and the victim both hold descendants of it.
 func (q *Queries) RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error) {
 	result, err := q.db.Exec(ctx, revokeChain, chainID)
 	if err != nil {

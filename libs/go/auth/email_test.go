@@ -18,8 +18,6 @@ func TestNormalizeEmail(t *testing.T) {
 	}
 }
 
-// The whole point of sharing this: an invitation addressed in one case must match an account
-// registered in another, or the invitation is for a person who does not exist.
 func TestNormalizeEmailMakesTheTwoSidesAgree(t *testing.T) {
 	invited := NormalizeEmail("Ada.Lovelace@Example.Test")
 	registered := NormalizeEmail("ada.lovelace@example.test  ")

@@ -1,9 +1,3 @@
-// Package token mints the access tokens every other service verifies, and publishes the
-// public half as a JWKS.
-//
-// ES256 (docs/adr/0005-auth.md): the private key lives only here, and siblings verify with a
-// public key they fetch. A shared HMAC secret would mean every service could mint tokens, and
-// a single leaked config would compromise the whole system.
 package token
 
 import (
@@ -20,16 +14,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims carried by an access token. Everything a sibling service needs to authorize a
-// request must be here, or it will have to make a network call per request to find out.
 type Claims struct {
-	UserID string
-	Email  string
-	// FamilyID is empty for a user who has not created or joined a household yet.
+	UserID   string
+	Email    string
 	FamilyID string
 }
 
-// Signer mints access tokens and exposes the matching JWKS.
 type Signer struct {
 	key      *ecdsa.PrivateKey
 	kid      string
@@ -40,16 +30,11 @@ type Signer struct {
 }
 
 type Config struct {
-	// PrivateKeyPEM is a PKCS#8 or SEC1 EC private key on the P-256 curve.
 	PrivateKeyPEM string
 	Issuer        string
 	Audience      string
-	// TTL is the access-token lifetime. Short by design: revocation is handled by the
-	// refresh chain, so an access token only has to be short enough that a stolen one
-	// expires before it is worth much.
-	TTL time.Duration
-	// Now is injected by tests.
-	Now func() time.Time
+	TTL           time.Duration
+	Now           func() time.Time
 }
 
 var ErrNotP256 = errors.New("token: signing key must be an ECDSA P-256 key")
@@ -76,10 +61,8 @@ func NewSigner(cfg Config) (*Signer, error) {
 	}, nil
 }
 
-// TTL is the access-token lifetime, which the response reports as expires_in.
 func (s *Signer) TTL() time.Duration { return s.ttl }
 
-// Sign returns a signed ES256 access token.
 func (s *Signer) Sign(c Claims) (string, error) {
 	now := s.now()
 
@@ -89,13 +72,11 @@ func (s *Signer) Sign(c Claims) (string, error) {
 		"aud": s.audience,
 		"iat": now.Unix(),
 		"exp": now.Add(s.ttl).Unix(),
-		// nbf guards against clock skew making a fresh token invalid on a sibling host.
 		"nbf": now.Add(-30 * time.Second).Unix(),
 	}
 	if c.Email != "" {
 		claims["email"] = c.Email
 	}
-	// Absent rather than empty: a family-less user has no family, and "" would read as one.
 	if c.FamilyID != "" {
 		claims["family_id"] = c.FamilyID
 	}
@@ -110,7 +91,6 @@ func (s *Signer) Sign(c Claims) (string, error) {
 	return signed, nil
 }
 
-// JWKS is the public key set siblings fetch, in the shape libs/go/auth parses.
 type JWKS struct {
 	Keys []JWK `json:"keys"`
 }
@@ -125,11 +105,8 @@ type JWK struct {
 	Y   string `json:"y"`
 }
 
-// JWKS returns the public half. The private key is never reachable from this type.
 func (s *Signer) JWKS() JWKS {
 	pub := s.key.PublicKey
-	// Coordinates are fixed-width for P-256: left-padding matters, since a coordinate with a
-	// leading zero byte would otherwise decode to the wrong number.
 	return JWKS{Keys: []JWK{{
 		Kty: "EC",
 		Crv: "P-256",
@@ -141,8 +118,6 @@ func (s *Signer) JWKS() JWKS {
 	}}}
 }
 
-// keyID is a stable thumbprint of the public key, so a rotated key gets a new kid and
-// verifiers can hold both during the overlap.
 func keyID(pub *ecdsa.PublicKey) string {
 	sum := sha256.Sum256(elliptic.MarshalCompressed(elliptic.P256(), pub.X, pub.Y))
 	return base64.RawURLEncoding.EncodeToString(sum[:8])

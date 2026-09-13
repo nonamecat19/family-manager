@@ -1,7 +1,3 @@
-// Package handler implements recipes.v1.RecipesService over Connect (and gRPC, from the same
-// type). Authorization lives here: the caller's identity and family_id come from the verified
-// access token, never from the request body. A recipe belongs to the caller's family; the
-// service never calls services/family to check — it trusts the family_id claim.
 package handler
 
 import (
@@ -26,16 +22,12 @@ import (
 	"github.com/nnc/family-manager/services/recipes/db"
 )
 
-// pgtypeUUID is the uuid type sqlc generates; aliased so saveIngredientsAndSteps is readable.
 type pgtypeUUID = pgtype.UUID
 
-// ImageStore is the slice of libs/go/storage this service uses. Narrow on purpose, same as
-// EventBus: tests pass a fake instead of standing up MinIO.
 type ImageStore interface {
 	Put(ctx context.Context, bucket, key string, r io.Reader, size int64, contentType string) (string, error)
 }
 
-// Handler serves recipes.v1.RecipesService.
 type Handler struct {
 	q           db.Querier
 	tx          Tx
@@ -46,31 +38,18 @@ type Handler struct {
 	now         func() time.Time
 }
 
-// Tx is the transaction boundary. Implemented by internal/store over a pgx pool, and by the
-// fake store in tests.
-//
-// It takes a callback rather than returning a transaction handle so that there is no way to
-// begin one and forget to finish it, and so the Querier bound to the transaction is the only
-// one in scope while it is open.
 type Tx interface {
 	InTx(ctx context.Context, fn func(q db.Querier) error) error
 }
 
-// Options configures a Handler. Only Queries is required.
 type Options struct {
-	Queries db.Querier
-	// Tx groups the writes that must not half-apply. Nil means every write runs on its own,
-	// which is what a zero-valued Options in a test gets.
-	Tx  Tx
-	Bus EventBus
-	// Images and ImageBucket back UploadRecipeImage. Leaving Images nil makes that one RPC
-	// fail with Unimplemented instead of every other procedure refusing to start — a MinIO
-	// outage shouldn't take down recipe reads and writes any more than a NATS outage does.
+	Queries     db.Querier
+	Tx          Tx
+	Bus         EventBus
 	Images      ImageStore
 	ImageBucket string
 	Log         *slog.Logger
-	// Now is injected by tests so expiry is deterministic.
-	Now func() time.Time
+	Now         func() time.Time
 }
 
 func New(opts Options) *Handler {
@@ -101,15 +80,12 @@ func New(opts Options) *Handler {
 	return h
 }
 
-// noopImages lets the service run (and every non-image test pass) with no MinIO attached.
 type noopImages struct{}
 
 func (noopImages) Put(context.Context, string, string, io.Reader, int64, string) (string, error) {
 	return "", errors.New("image storage not configured")
 }
 
-// familyOf resolves the caller's family_id from the access token claim. Every recipe is
-// family-scoped; a caller without a family cannot create one.
 func (h *Handler) familyOf(ctx context.Context) (string, error) {
 	claims, err := fmauth.Require(ctx)
 	if err != nil {
@@ -122,7 +98,6 @@ func (h *Handler) familyOf(ctx context.Context) (string, error) {
 	return claims.FamilyID, nil
 }
 
-// userOf resolves the caller's user id from the token.
 func (h *Handler) userOf(ctx context.Context) (string, error) {
 	claims, err := fmauth.Require(ctx)
 	if err != nil {
@@ -133,8 +108,6 @@ func (h *Handler) userOf(ctx context.Context) (string, error) {
 	}
 	return claims.UserID, nil
 }
-
-/* ------------------------------------------------------------------ categories */
 
 func (h *Handler) CreateCategory(
 	ctx context.Context, req *connect.Request[recipesv1.CreateCategoryRequest],
@@ -225,8 +198,6 @@ func (h *Handler) ListSubcategories(
 	return connect.NewResponse(&recipesv1.ListSubcategoriesResponse{Subcategories: out}), nil
 }
 
-/* ------------------------------------------------------------------ recipes */
-
 func (h *Handler) CreateRecipe(
 	ctx context.Context, req *connect.Request[recipesv1.CreateRecipeRequest],
 ) (*connect.Response[recipesv1.CreateRecipeResponse], error) {
@@ -261,10 +232,6 @@ func (h *Handler) CreateRecipe(
 		return nil, err
 	}
 
-	// The recipe row and its ingredients and steps are one thing. Written separately, a
-	// failure partway through the inserts left a recipe with the first four of its nine
-	// ingredients and no indication that the rest were missing — and the response the caller
-	// got was an error, so nobody went looking for a recipe they thought had not been created.
 	var r db.Recipe
 	if err := h.tx.InTx(ctx, func(q db.Querier) error {
 		var err error
@@ -330,7 +297,6 @@ func (h *Handler) GetRecipe(
 		return nil, h.internal(ctx, err, "get recipe")
 	}
 	if pgconv.UUIDString(r.FamilyID) != familyID {
-		// Don't leak that the recipe exists in another family — return NotFound.
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 	}
 
@@ -351,9 +317,6 @@ func (h *Handler) ListRecipes(
 		return nil, err
 	}
 
-	// favorite_only used to take a separate query path, which meant favorites could not be
-	// sorted or filtered like the rest of the cookbook. It is now one more predicate on the
-	// single ListRecipes query; the caller's user id is only resolved when it is needed.
 	var userUUID pgtype.UUID
 	if req.Msg.GetFavoriteOnly() {
 		userID, err := h.userOf(ctx)
@@ -390,7 +353,6 @@ func (h *Handler) ListRecipes(
 	return connect.NewResponse(&recipesv1.ListRecipesResponse{Recipes: out}), nil
 }
 
-// RateRecipe sets the family's verdict, 1..5, or 0 to clear it.
 func (h *Handler) RateRecipe(
 	ctx context.Context, req *connect.Request[recipesv1.RateRecipeRequest],
 ) (*connect.Response[recipesv1.RateRecipeResponse], error) {
@@ -476,10 +438,6 @@ func (h *Handler) UpdateRecipe(
 
 	n := nutritionUpdate(req.Msg.GetNutrition())
 
-	// Ingredients and steps are replaced by deleting and reinserting, which is the write in
-	// this service that most needed a transaction: the delete committed on its own, so a
-	// failure during the reinsert left the recipe with no ingredients at all. The user's
-	// edit failed and their recipe lost its contents.
 	if err := h.tx.InTx(ctx, func(q db.Querier) error {
 		var err error
 		r, err = q.UpdateRecipe(ctx, db.UpdateRecipeParams{
@@ -568,9 +526,7 @@ func (h *Handler) DeleteRecipe(
 	return connect.NewResponse(&recipesv1.DeleteRecipeResponse{}), nil
 }
 
-// maxImageBytes caps an upload well below MinIO/Postgres limits — recipe photos are phone
-// camera shots the client should already be compressing, not raw sensor dumps.
-const maxImageBytes = 8 << 20 // 8 MiB
+const maxImageBytes = 8 << 20
 
 func (h *Handler) UploadRecipeImage(
 	ctx context.Context, req *connect.Request[recipesv1.UploadRecipeImageRequest],
@@ -608,8 +564,6 @@ func (h *Handler) UploadRecipeImage(
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 	}
 
-	// Keyed by family+recipe with no timestamp: re-uploading a photo overwrites the same
-	// object instead of leaking the previous one in the bucket forever.
 	key := fmt.Sprintf("%s/%s%s", familyID, pgconv.UUIDString(recipeID), ext)
 	url, err := h.images.Put(ctx, h.imageBucket, key, bytes.NewReader(data), int64(len(data)), contentType)
 	if err != nil {
@@ -642,8 +596,6 @@ var imageExtensions = map[string]string{
 	"image/png":  ".png",
 	"image/webp": ".webp",
 }
-
-/* ------------------------------------------------------------------ favorites & comments */
 
 func (h *Handler) ToggleFavorite(
 	ctx context.Context, req *connect.Request[recipesv1.ToggleFavoriteRequest],
@@ -756,10 +708,6 @@ func (h *Handler) AddComment(
 
 	userUUID := pgconv.MustUUID(userID)
 
-	// comment_count is denormalised onto the recipe. Written outside a transaction, a failed
-	// increment left a comment that exists and a count that does not know about it, and the
-	// caller was told the whole thing failed — so the drift accumulated silently, and every
-	// list view showed a number that was wrong and could never correct itself.
 	var c db.RecipeComment
 	if err := h.tx.InTx(ctx, func(q db.Querier) error {
 		var err error
@@ -812,8 +760,6 @@ func (h *Handler) ListComments(
 	}
 	return connect.NewResponse(&recipesv1.ListCommentsResponse{Comments: out}), nil
 }
-
-/* ------------------------------------------------------------------ meal planning */
 
 func (h *Handler) PlanMeal(
 	ctx context.Context, req *connect.Request[recipesv1.PlanMealRequest],
@@ -960,8 +906,6 @@ func (h *Handler) TotalIngredients(
 	return connect.NewResponse(&recipesv1.TotalIngredientsResponse{Totals: out}), nil
 }
 
-// maxBasketItems bounds an ad-hoc basket. The array is unnested into a join server-side, so
-// an unbounded list is an unbounded query; nobody cooks 200 recipes off one shopping trip.
 const maxBasketItems = 200
 
 func (h *Handler) SumIngredients(
@@ -1006,30 +950,15 @@ func (h *Handler) SumIngredients(
 	return connect.NewResponse(&recipesv1.SumIngredientsResponse{Totals: out}), nil
 }
 
-/* ------------------------------------------------------------------ internals */
-
-// saveIngredientsAndSteps inserts ingredients and steps in order. Position is 1-based.
-// Upper bounds on a recipe. None of these is a limit anyone will meet by cooking; they exist
-// because a recipe is written by an authenticated household member into rows nobody prunes,
-// and because saveIngredientsAndSteps does one INSERT per element. maxRequestBytes admits a
-// 16 MiB body, which is room for hundreds of thousands of one-character ingredients — a single
-// request that holds a pool connection for minutes and leaves the table that size afterwards.
-//
-// Runes, not bytes, throughout: a recipe written in Ukrainian must not be worth half as much
-// text as the same recipe in English.
 const (
 	maxTitleRunes       = 200
 	maxDescriptionRunes = 4000
 	maxNotesRunes       = 4000
 	maxIngredients      = 200
 	maxSteps            = 200
-	// A comment is a cooking note — "halve the sugar", "needs 10 more minutes" — not an
-	// essay, and comments are the one thing here that grows without bound per recipe.
-	maxCommentRunes = 2000
+	maxCommentRunes     = 2000
 )
 
-// checkRecipeSize enforces those bounds. It reports the first field that is too long rather
-// than a list, because a client that has exceeded one of these has a bug, not a form to fix.
 func checkRecipeSize(title, description, notes string, ingredients, steps int) error {
 	tooLong := func(field string, value string, limit int) error {
 		if len([]rune(value)) <= limit {
@@ -1058,16 +987,6 @@ func checkRecipeSize(title, description, notes string, ingredients, steps int) e
 	return nil
 }
 
-// atLeastOneServing floors a serving count at one.
-//
-// CreateRecipe has always done this; UpdateRecipe and PlanMeal did not, so a recipe created
-// with four servings could be edited to zero and stored that way. Nothing crashes — the app
-// multiplies by a batch count rather than dividing — but the recipe then reads "Serves 0" with
-// per-serving nutrition beside it, and a meal planned for zero servings contributes nothing to
-// the shopping basket while still appearing on the plan.
-//
-// Zero is not a serving count anyone means. Rejecting it would fail an edit over a field the
-// user very likely did not touch, so it is floored, the same as on create.
 func atLeastOneServing(n int32) int32 {
 	if n <= 0 {
 		return 1
@@ -1075,16 +994,6 @@ func atLeastOneServing(n int32) int32 {
 	return n
 }
 
-// taxonomyIDs parses the optional category and subcategory ids.
-//
-// Both were parsed with the error discarded, which turns "cat-1" — a client bug, a stale id
-// after a category is deleted, a hand-written request — into an invalid pgtype.UUID. That is
-// written as NULL, so the recipe is created or updated as uncategorised and the caller is told
-// it succeeded. The recipe then does not appear under the category the user picked, and
-// nothing anywhere recorded why.
-//
-// Empty stays empty: uncategorised is a legitimate state, just not one an unparseable id
-// should reach by accident.
 func taxonomyIDs(categoryID, subcategoryID string) (cat, sub pgtypeUUID, err error) {
 	cat, err = pgconv.UUID(categoryID)
 	if err != nil {
@@ -1099,16 +1008,10 @@ func taxonomyIDs(categoryID, subcategoryID string) (cat, sub pgtypeUUID, err err
 	return cat, sub, nil
 }
 
-// withoutTx is the fallback when no Tx is supplied: it runs the callback against the plain
-// querier, so each statement commits on its own. It keeps a zero-valued Options working; it is
-// not a transaction and does not pretend to be one.
 type withoutTx struct{ q db.Querier }
 
 func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
-// saveIngredientsAndSteps writes through the querier it is given, not through h.q: inside
-// InTx that is the transaction-bound one, and using the handler's would silently run these
-// inserts on a different connection outside the transaction.
 func (h *Handler) saveIngredientsAndSteps(
 	ctx context.Context, q db.Querier, recipeID pgtypeUUID,
 	ingredients []*recipesv1.Ingredient, steps []*recipesv1.Step,
@@ -1159,9 +1062,6 @@ func (h *Handler) loadIngredientsAndSteps(
 	return ingredients, steps, nil
 }
 
-// internal hides driver detail from clients while keeping the cause in the log.
-// internal hands the cause to the log and an opaque reference to the caller, so a pgx error
-// never becomes part of a response body.
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)
 }

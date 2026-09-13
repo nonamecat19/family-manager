@@ -20,8 +20,6 @@ const (
 	testUser   = "00000000-0000-4000-8000-000000000002"
 )
 
-// fakeQuerier implements the three member queries the projection uses and panics on the rest,
-// so a query added to the projection without a test is a failure rather than a silent nil.
 type fakeQuerier struct {
 	db.Querier
 	rows map[string]db.FinanceMember
@@ -96,8 +94,6 @@ func TestJoinedCreatesTheMember(t *testing.T) {
 	}
 }
 
-// JetStream redelivers; a second copy of the same join must not blank the name the member
-// filled in by signing in.
 func TestJoinedTwiceKeepsTheName(t *testing.T) {
 	q := newFake()
 	m := NewMembers(q, nil)
@@ -144,8 +140,6 @@ func TestRemovedDeletesTheMember(t *testing.T) {
 	}
 }
 
-// A payload this service cannot parse will not parse on redelivery either: it is recorded and
-// acked, never nacked into an endless loop.
 func TestUnparseablePayloadIsAcked(t *testing.T) {
 	q := newFake()
 	m := NewMembers(q, nil)
@@ -158,7 +152,6 @@ func TestUnparseablePayloadIsAcked(t *testing.T) {
 	}
 }
 
-// A database failure nacks, so JetStream redelivers rather than losing the member.
 func TestWriteFailureNacks(t *testing.T) {
 	q := &failingQuerier{}
 	m := NewMembers(q, nil)

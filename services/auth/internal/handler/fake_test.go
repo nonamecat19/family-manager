@@ -13,12 +13,10 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
-// fakeStore is an in-memory db.Querier. Rotation and replay are handler behaviour, so they
-// are what these tests exercise; Postgres is not under test.
 type fakeStore struct {
-	users  map[string]db.User         // keyed by lowercased email
-	byID   map[string]db.User         // keyed by uuid string
-	tokens map[string]db.RefreshToken // keyed by token hash
+	users  map[string]db.User
+	byID   map[string]db.User
+	tokens map[string]db.RefreshToken
 
 	failOn map[string]error
 }
@@ -34,7 +32,6 @@ func newFakeStore() *fakeStore {
 
 func (s *fakeStore) fail(op string) error { return s.failOn[op] }
 
-// uniqueViolation mimics Postgres SQLSTATE 23505 so the handler's mapping is exercised.
 type uniqueViolation struct{}
 
 func (uniqueViolation) Error() string    { return "duplicate key value violates unique constraint" }
@@ -82,7 +79,6 @@ func (s *fakeStore) CreateRefreshToken(
 	if err := s.fail("CreateRefreshToken"); err != nil {
 		return db.RefreshToken{}, err
 	}
-	// Mirrors the query's WHERE NOT EXISTS: a revoked chain accepts no successor.
 	for _, existing := range s.tokens {
 		if pgconv.UUIDString(existing.ChainID) == pgconv.UUIDString(arg.ChainID) &&
 			existing.RevokedAt.Valid {
@@ -114,7 +110,6 @@ func (s *fakeStore) MarkRefreshTokenUsed(_ context.Context, id pgtype.UUID) (int
 		if pgconv.UUIDString(t.ID) != pgconv.UUIDString(id) {
 			continue
 		}
-		// Mirrors the query's WHERE: only an unused, unrevoked row updates.
 		if t.UsedAt.Valid || t.RevokedAt.Valid {
 			return 0, nil
 		}
@@ -151,8 +146,6 @@ func (s *fakeStore) RevokeAllForUser(_ context.Context, userID pgtype.UUID) (int
 
 func (s *fakeStore) DeleteExpiredRefreshTokens(context.Context) (int64, error) { return 0, nil }
 
-// stubSigner records what it was asked to sign, so tests can assert on the claims without
-// parsing a JWT — token_test.go already covers the real signing path.
 type stubSigner struct {
 	signed []token.Claims
 	err    error
@@ -177,7 +170,6 @@ func (s *stubSigner) last() token.Claims {
 	return s.signed[len(s.signed)-1]
 }
 
-// stubFamily stands in for services/family's internal listener.
 type stubFamily struct {
 	familyID string
 	err      error
@@ -191,8 +183,6 @@ func (f *stubFamily) FamilyOf(context.Context, string) (string, error) {
 
 var errBoom = errors.New("boom")
 
-// mustChainID is newChainID for tests, where a CSPRNG failure is not a case worth threading
-// through every fake.
 func mustChainID() pgtype.UUID {
 	id, err := newChainID()
 	if err != nil {

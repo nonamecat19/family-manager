@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-// Cheap parameters: these tests exercise the encoding and comparison, not the KDF's cost.
 func testParams() Params {
 	p := DefaultParams()
 	p.Memory = 64
@@ -40,7 +39,6 @@ func TestHashIsSaltedPerCall(t *testing.T) {
 	if a == b {
 		t.Fatal("two hashes of the same password are identical — the salt is not random")
 	}
-	// Both must still verify.
 	if err := Verify("same", a); err != nil {
 		t.Errorf("first hash: %v", err)
 	}
@@ -66,10 +64,10 @@ func TestVerifyRejectsGarbage(t *testing.T) {
 	for _, bad := range []string{
 		"",
 		"not-a-hash",
-		"$argon2i$v=19$m=64,t=1,p=1$c2FsdA$aGFzaA",  // wrong algorithm
-		"$argon2id$v=18$m=64,t=1,p=1$c2FsdA$aGFzaA", // wrong version
-		"$argon2id$v=19$m=64,t=1$c2FsdA$aGFzaA",     // missing parallelism
-		"$argon2id$v=19$m=64,t=1,p=1$!!!!$aGFzaA",   // salt is not base64
+		"$argon2i$v=19$m=64,t=1,p=1$c2FsdA$aGFzaA",
+		"$argon2id$v=18$m=64,t=1,p=1$c2FsdA$aGFzaA",
+		"$argon2id$v=19$m=64,t=1$c2FsdA$aGFzaA",
+		"$argon2id$v=19$m=64,t=1,p=1$!!!!$aGFzaA",
 	} {
 		if err := Verify("x", bad); !errors.Is(err, ErrBadHash) {
 			t.Errorf("Verify(%q) = %v, want ErrBadHash", bad, err)
@@ -94,7 +92,6 @@ func TestNeedsRehashDetectsWeakerParameters(t *testing.T) {
 		t.Error("a hash written with less memory should need a rehash")
 	}
 
-	// An unreadable hash always needs replacing.
 	if !NeedsRehash("garbage", weak) {
 		t.Error("an unparseable hash should need a rehash")
 	}

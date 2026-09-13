@@ -1,5 +1,3 @@
-// Package config loads the family service's settings from the environment, FAMILY_-prefixed.
-// Secrets have no defaults: a missing one crashes at boot rather than silently degrading.
 package config
 
 import (
@@ -15,7 +13,6 @@ type Config struct {
 	GRPCPort    string
 	NATSURL     string
 
-	// JWKSURL is services/auth's public key set, used to verify access tokens.
 	JWKSURL  string
 	Issuer   string
 	Audience string
@@ -23,7 +20,6 @@ type Config struct {
 	LogLevel string
 	LogJSON  bool
 
-	// InvitationTTL bounds how long an invite link stays usable.
 	InvitationTTL time.Duration
 }
 

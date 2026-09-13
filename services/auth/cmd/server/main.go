@@ -1,5 +1,3 @@
-// Command server runs the auth service: auth.v1.AuthService over Connect, plus the JWKS
-// endpoint every other service fetches to verify the tokens minted here.
 package main
 
 import (
@@ -31,16 +29,10 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
-// maxRequestBytes bounds a decoded request body. Nothing this service accepts is large — the
-// biggest message is a household with its members — so the cap is small enough that an
-// oversize body is refused during the read rather than after it is buffered.
-const maxRequestBytes = 1 << 20 // 1 MiB
+const maxRequestBytes = 1 << 20
 
-// sweepInterval is how often expired refresh tokens are deleted.
 const sweepInterval = time.Hour
 
-// healthcheck makes the service binary its own container healthcheck. The distroless image
-// ships no shell and no wget, so this is the only executable available to probe with.
 var healthcheck = flag.Bool("healthcheck", false,
 	"probe this container's own /healthz over loopback and exit")
 
@@ -49,8 +41,6 @@ func main() {
 
 	if *healthcheck {
 		if err := probe(); err != nil {
-			// stderr, not the service logger: this process is a probe, and its output is read
-			// by `docker inspect`, not collected as service logs.
 			fmt.Fprintln(os.Stderr, "healthcheck:", err)
 			os.Exit(1)
 		}
@@ -63,7 +53,6 @@ func main() {
 	}
 }
 
-// probe reads the port from the same config the server binds, so the two cannot disagree.
 func probe() error {
 	cfg, err := config.Load()
 	if err != nil {
@@ -129,8 +118,6 @@ func run() error {
 		RefreshTTL: cfg.RefreshTTL,
 	})
 
-	// Expired refresh tokens are rows nobody will ever read again; sweeping them keeps the
-	// unique index on token_hash from growing without bound.
 	go sweepExpiredTokens(ctx, db.New(pool), log, sweepInterval)
 
 	srv := &http.Server{
@@ -138,12 +125,7 @@ func run() error {
 		Handler:           newMux(h, signer, pool, log),
 		Protocols:         h1AndUnencryptedH2(),
 		ReadHeaderTimeout: 10 * time.Second,
-		// No ReadTimeout or WriteTimeout on purpose. Both would have to be sized for the
-		// slowest legitimate request — an 8 MiB recipe photo from a phone on a bad
-		// connection — which makes them useless as a defence. ReadHeaderTimeout stops the
-		// slowloris that matters, connect.WithReadMaxBytes bounds the body, and IdleTimeout
-		// reclaims connections nobody is using.
-		IdleTimeout: 120 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	errc := make(chan error, 1)
@@ -165,7 +147,6 @@ func run() error {
 	}
 }
 
-// jwksProvider is the public half of the signer, narrowed so the mux cannot reach the key.
 type jwksProvider interface {
 	JWKS() token.JWKS
 }
@@ -173,8 +154,6 @@ type jwksProvider interface {
 func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	// Every procedure on this service is public by definition: they are how a caller gets a
-	// token in the first place, so there is no interceptor to apply.
 	path, svc := authv1connect.NewAuthServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
 		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
@@ -183,8 +162,6 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 
 	mux.HandleFunc("GET /.well-known/jwks.json", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/jwk-set+json")
-		// Cached, but briefly: verifiers refetch on an unknown kid, so a short TTL is all a
-		// key rotation needs to propagate.
 		w.Header().Set("Cache-Control", "public, max-age=300")
 		if err := json.NewEncoder(w).Encode(keys.JWKS()); err != nil {
 			slog.Error("encode jwks", slog.String("error", err.Error()))
@@ -196,17 +173,10 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 	return mux
 }
 
-// sweeper is the one query the sweep needs, named so the loop can be tested without a
-// database behind it.
 type sweeper interface {
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 }
 
-// sweepExpiredTokens deletes expired refresh tokens every interval, and once on entry.
-//
-// The immediate pass is the point of the change: the loop used to wait a full interval before
-// its first run, so a service that restarts more often than that — a deploy, a crash loop, a
-// VPS reboot — never swept at all, and the backlog it was written to prevent grew anyway.
 func sweepExpiredTokens(ctx context.Context, q sweeper, log *slog.Logger, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -233,14 +203,6 @@ func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
 	}
 }
 
-// h1AndUnencryptedH2 is the protocol set every listener here uses: HTTP/1.1 for Connect/JSON
-// from the apps, and cleartext HTTP/2 for gRPC from sibling services, on one port.
-//
-// This replaces golang.org/x/net/http2/h2c, which is deprecated in favour of this field.
-// Beyond the deprecation, the wrapper had a real cost: it ran its own http2.Server whose
-// timeouts the http.Server fields did not reach, so every setting had to be written twice and
-// the two could silently disagree. net/http's own HTTP/2 honours IdleTimeout and
-// ReadHeaderTimeout directly.
 func h1AndUnencryptedH2() *http.Protocols {
 	p := new(http.Protocols)
 	p.SetHTTP1(true)

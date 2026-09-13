@@ -36,7 +36,6 @@ func TestGateLimitsConcurrency(t *testing.T) {
 		}()
 	}
 
-	// Give the goroutines time to pile up against the gate before letting any finish.
 	time.Sleep(50 * time.Millisecond)
 	close(release)
 	wg.Wait()
@@ -83,8 +82,6 @@ func TestGateReturnsTheFunctionsError(t *testing.T) {
 	}
 }
 
-// A nil gate is the zero value an Options with no gate produces; it must not be a nil
-// dereference, and it must not silently skip the work.
 func TestNilGateRunsUnbounded(t *testing.T) {
 	var g *Gate
 	ran := false

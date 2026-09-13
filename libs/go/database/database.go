@@ -1,5 +1,3 @@
-// Package database owns the Postgres connection pool and the migration runner shared by
-// every Go service. Services never build their own pgxpool config.
 package database
 
 import (
@@ -10,20 +8,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Config describes a pool. Only URL is required.
 type Config struct {
-	// URL is a libpq connection string, e.g. postgres://user:pass@host:5432/db?sslmode=disable.
-	URL string
-	// MaxConns caps the pool. Zero means pgx's default (max(4, NumCPU)).
-	MaxConns int32
-	// MaxConnLifetime recycles connections. Zero means one hour.
+	URL             string
+	MaxConns        int32
 	MaxConnLifetime time.Duration
-	// ConnectTimeout bounds the initial ping. Zero means five seconds.
-	ConnectTimeout time.Duration
+	ConnectTimeout  time.Duration
 }
 
-// Connect opens the pool and verifies it with a ping, so a bad DSN fails at boot rather
-// than on the first request.
 func Connect(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 	if cfg.URL == "" {
 		return nil, fmt.Errorf("database: empty URL")

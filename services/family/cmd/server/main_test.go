@@ -16,9 +16,6 @@ type okPinger struct{}
 
 func (okPinger) Ping(context.Context) error { return nil }
 
-// The public listener must refuse the procedures that take a subject id as an argument.
-// Serving them behind a token would let any signed-in user read anyone's household — the
-// interceptor proves *who* is calling, not *whose* data they asked for.
 func TestPublicMuxRefusesInternalProcedures(t *testing.T) {
 	verifier, err := fmauth.NewVerifier(fmauth.VerifierConfig{JWKSURL: "http://example.invalid/jwks"})
 	if err != nil {
@@ -38,8 +35,6 @@ func TestPublicMuxRefusesInternalProcedures(t *testing.T) {
 	}
 }
 
-// The same procedures must be reachable on the internal listener, or services/auth cannot
-// resolve a family_id at token-mint time.
 func TestInternalMuxServesInternalProcedures(t *testing.T) {
 	mux := internalMux(handler.New(handler.Options{}), okPinger{}, nil)
 
@@ -49,15 +44,12 @@ func TestInternalMuxServesInternalProcedures(t *testing.T) {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
 
-		// The handler rejects the empty body as invalid_argument, which Connect maps to 400.
-		// Anything other than 404 proves the route exists, which is what is under test.
 		if rec.Code == http.StatusNotFound {
 			t.Errorf("%s is not served on the internal listener", procedure)
 		}
 	}
 }
 
-// A public procedure with no token must be refused by the interceptor, not silently served.
 func TestPublicMuxRequiresAToken(t *testing.T) {
 	verifier, err := fmauth.NewVerifier(fmauth.VerifierConfig{JWKSURL: "http://example.invalid/jwks"})
 	if err != nil {

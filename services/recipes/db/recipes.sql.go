@@ -321,11 +321,6 @@ type ListRecipesParams struct {
 	Sort            string
 }
 
-// ListRecipes is the one filtered/sorted read behind the browse screen. Every filter is a
-// no-op sentinel when unset (NULL for the text/uuid ones, 0 for the numeric ones) so the app
-// sends one shape of request whether it is browsing a subcategory or searching the whole
-// cookbook. Sorting is a text discriminator rather than string-built SQL: the set of orders
-// is closed (see RecipeSort in the proto), so it belongs in the query, not in Go.
 func (q *Queries) ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Recipe, error) {
 	rows, err := q.db.Query(ctx, listRecipes,
 		arg.FamilyID,
@@ -481,9 +476,6 @@ type UpdateRecipeParams struct {
 	CarbsG        *float32
 }
 
-// Nutrition is COALESCEd against the stored value instead of overwritten like every other
-// column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
-// that does not render the macros would otherwise wipe them on every save.
 func (q *Queries) UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error) {
 	row := q.db.QueryRow(ctx, updateRecipe,
 		arg.ID,

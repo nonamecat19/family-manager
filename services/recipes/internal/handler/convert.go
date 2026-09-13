@@ -14,7 +14,6 @@ import (
 	"github.com/nnc/family-manager/services/recipes/db"
 )
 
-// Slot values as stored. The CHECK constraint in 000001_init.up.sql is the other half.
 const (
 	slotBreakfast = "breakfast"
 	slotLunch     = "lunch"
@@ -23,19 +22,14 @@ const (
 	slotDessert   = "dessert"
 )
 
-// EventBus is the slice of libs/go/events this service uses. Narrow on purpose: tests pass a
-// recorder instead of standing up NATS.
 type EventBus interface {
 	Publish(ctx context.Context, subject events.Subject, msg proto.Message) error
 }
 
-// noopBus lets the service run (and tests pass) with no broker attached.
 type noopBus struct{}
 
 func (noopBus) Publish(context.Context, events.Subject, proto.Message) error { return nil }
 
-// publish is fire-and-forget by design: a recipe change that succeeded must not be reported
-// as failed because the broker hiccuped. The failure is logged, not returned.
 func (h *Handler) publish(ctx context.Context, subject events.Subject, msg proto.Message) {
 	if err := h.bus.Publish(ctx, subject, msg); err != nil {
 		h.log.WarnContext(ctx, "publish failed", slog.String("subject", string(subject)),
@@ -66,8 +60,6 @@ func slotToProto(s string) recipesv1.MealSlot {
 	}
 }
 
-// slotFromProto defaults to lunch (the most common meal-plan slot). An unspecified slot must
-// not silently become dessert.
 func slotFromProto(s recipesv1.MealSlot) string {
 	switch s {
 	case recipesv1.MealSlot_MEAL_SLOT_BREAKFAST:
@@ -120,9 +112,6 @@ func toProtoStep(s db.RecipeStep) *recipesv1.Step {
 	}
 }
 
-// Nutrition is never nil on the wire: the columns are NOT NULL, so an all-zero message is
-// the honest representation of "not recorded" and the app can read the fields without a nil
-// check on every one.
 func toProtoNutrition(r db.Recipe) *recipesv1.Nutrition {
 	return &recipesv1.Nutrition{
 		Kcal:     r.Kcal,
@@ -132,8 +121,6 @@ func toProtoNutrition(r db.Recipe) *recipesv1.Nutrition {
 	}
 }
 
-// nonNegative floors a client-supplied macro at 0 to match the CHECK constraint, so bad input
-// is an ignored value rather than a 500 from the database.
 func nonNegative(v float32) float32 {
 	if v < 0 {
 		return 0
@@ -206,8 +193,6 @@ func toProtoIngredientTotal(t db.TotalIngredientsRow) *recipesv1.IngredientTotal
 	}
 }
 
-// toProtoBasketTotal is the same shape as toProtoIngredientTotal over a different sqlc row
-// type: the calendar and the ad-hoc basket run different queries but return one line format.
 func toProtoBasketTotal(t db.SumIngredientsForBasketRow) *recipesv1.IngredientTotal {
 	return &recipesv1.IngredientTotal{
 		Name:        t.Name,
@@ -216,9 +201,6 @@ func toProtoBasketTotal(t db.SumIngredientsForBasketRow) *recipesv1.IngredientTo
 	}
 }
 
-// sortKey maps the closed RecipeSort enum onto the discriminator string the ListRecipes
-// query switches on. An unknown value falls through to newest-first rather than erroring —
-// a client on a newer contract should get a list, not a 400.
 func sortKey(s recipesv1.RecipeSort) string {
 	switch s {
 	case recipesv1.RecipeSort_RECIPE_SORT_TITLE:
@@ -234,8 +216,6 @@ func sortKey(s recipesv1.RecipeSort) string {
 	}
 }
 
-// optionalText turns an empty (or whitespace) filter into SQL NULL — the queries treat NULL
-// as "filter not applied", so an empty search box must not become LIKE '%%'.
 func optionalText(v string) *string {
 	t := trimmed(v)
 	if t == "" {
@@ -254,8 +234,6 @@ func clampInt32(v, lo, hi int32) int32 {
 	return v
 }
 
-// max0 floors a value at zero: negative servings or a negative time cap are client bugs, and
-// zero is already the "unset" sentinel for both.
 func max0(v int32) int32 {
 	if v < 0 {
 		return 0
@@ -263,13 +241,10 @@ func max0(v int32) int32 {
 	return v
 }
 
-// clampRating keeps a write inside the CHECK constraint instead of letting Postgres reject
-// the whole recipe over a stray star count.
 func clampRating(v int32) int16 {
 	return int16(clampInt32(v, 0, 5))
 }
 
-// maxInt32 floors a client-supplied integer, mirroring nonNegative for kcal.
 func maxInt32(v, lo int32) int32 {
 	if v < lo {
 		return lo
@@ -277,10 +252,6 @@ func maxInt32(v, lo int32) int32 {
 	return v
 }
 
-// nutritionParams carries UpdateRecipe's nullable nutrition arguments. nil means "leave the
-// stored value" — the query COALESCEs each one — which is what a caller that sent no
-// nutrition at all wants. This is deliberately different from every other field on
-// UpdateRecipeRequest, all of which overwrite.
 type nutritionParams struct {
 	kcal     *int32
 	proteinG *float32

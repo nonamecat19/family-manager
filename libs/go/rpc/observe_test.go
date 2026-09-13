@@ -13,8 +13,6 @@ import (
 	"github.com/nnc/family-manager/libs/go/logger"
 )
 
-// The logger under test is the repo's own, over a buffer: the point of routing ids through
-// logger is that its handler stamps them, and a plain slog handler would not show that.
 func debugLogger() (*slog.Logger, *bytes.Buffer) {
 	var buf bytes.Buffer
 	h := slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug})
@@ -43,7 +41,6 @@ func TestObserveMintsAnIDAndLogsTheCall(t *testing.T) {
 	}
 }
 
-// A trace that starts in the app or in Caddy has to survive the hop, or it is not a trace.
 func TestObserveKeepsTheCallersID(t *testing.T) {
 	log, _ := debugLogger()
 	req := connect.NewRequest(&struct{}{})
@@ -64,8 +61,6 @@ func TestObserveKeepsTheCallersID(t *testing.T) {
 	}
 }
 
-// The id is written verbatim into every log line for the request, so a caller must not be able
-// to put a newline, a control character or a kilobyte of text there.
 func TestObserveRejectsAHostileCallerID(t *testing.T) {
 	hostile := []string{
 		"abc\nlevel=ERROR msg=\"forged line\"",
@@ -109,7 +104,6 @@ func TestObserveLogsTheCodeOfAFailure(t *testing.T) {
 	}
 }
 
-// A handler's own log lines must carry the id without the handler doing anything.
 func TestObserveCorrelatesAHandlersOwnLogLines(t *testing.T) {
 	log, buf := debugLogger()
 	req := connect.NewRequest(&struct{}{})
@@ -129,7 +123,6 @@ func TestObserveCorrelatesAHandlersOwnLogLines(t *testing.T) {
 	}
 }
 
-// The reference in an opaque error is only useful if it names the same trace as the logs.
 func TestInternalReusesTheRequestID(t *testing.T) {
 	log, _ := debugLogger()
 	ctx := WithRequestID(context.Background(), "abc123")
@@ -153,8 +146,6 @@ func TestForwardRequestIDSetsTheHeader(t *testing.T) {
 	}
 }
 
-// A call made outside a request — a startup probe, a background job — is not part of anyone's
-// trace and must not claim to be.
 func TestForwardRequestIDSetsNothingWithoutOne(t *testing.T) {
 	req := connect.NewRequest(&struct{}{})
 	next := ForwardRequestID()(func(_ context.Context, r connect.AnyRequest) (connect.AnyResponse, error) {

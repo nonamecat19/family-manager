@@ -14,9 +14,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// budgetStatus derives a budget's state in the window containing asOf. Nothing here is
-// stored: a persisted total drifts the moment a transaction is edited, and the drift is
-// invisible until someone reconciles by hand.
 func (h *Handler) budgetStatus(
 	ctx context.Context, c caller, hh household, b db.Budget, asOf time.Time,
 ) (*financev1.BudgetStatus, error) {
@@ -34,11 +31,6 @@ func (h *Handler) budgetStatus(
 	return budgetStatusFrom(b, window, spent, h.today(hh)), nil
 }
 
-// budgetStatusFrom is the arithmetic half, kept separate from the query so the ratio and the
-// day count are testable without a store.
-//
-// share is deliberately unclamped: the design draws 256% by clamping the bar and switching
-// the colour, which it cannot do if the server has already clamped the number.
 func budgetStatusFrom(b db.Budget, window dayRange, spent int64, today time.Time) *financev1.BudgetStatus {
 	share := 0.0
 	if b.LimitMinor > 0 {
@@ -117,10 +109,6 @@ func (h *Handler) CreateBudget(
 	if limit <= 0 {
 		return nil, invalid("limit must be greater than zero")
 	}
-	// The budget is spent against by SumBudgetSpend, which filters transactions by the budget's
-	// own currency. One in a currency the household does not use would therefore report zero
-	// spent forever, never exceed and never notify — so it is refused rather than accepted and
-	// left inert. UpdateBudget has no currency field, which would make it uncorrectable too.
 	currency := hh.currency()
 	if code := trimmed(msg.GetLimit().GetCurrencyCode()); code != "" {
 		given, err := checkCurrency(code)
@@ -137,8 +125,6 @@ func (h *Handler) CreateBudget(
 		Period: budgetPeriodFromProto(msg.GetPeriod()), NotifyOnExceed: msg.GetNotifyOnExceed(),
 	}
 
-	// Exactly one attach point. The oneof makes "both" unrepresentable; "neither" is still a
-	// request a client can send, and it has no meaning.
 	switch target := msg.GetTarget().(type) {
 	case *financev1.CreateBudgetRequest_GroupId:
 		groupID, err := requireUUID("group_id", target.GroupId)
@@ -285,9 +271,6 @@ func (h *Handler) UpdateBudget(
 	if err != nil {
 		return nil, err
 	}
-	// Raising a limit can pull a budget back under it. Without the recovery event a sent
-	// overspend alert could never be retracted, and the same window would alert again on the
-	// next breach.
 	if wasExceeded.GetExceeded() && !status.GetExceeded() {
 		h.publish(ctx, subjectBudgetRecovered, &financev1.BudgetRecoveredEvent{
 			FamilyId: c.family, BudgetId: pgconv.UUIDString(row.ID),
@@ -318,12 +301,6 @@ func (h *Handler) DeleteBudget(
 	return connect.NewResponse(&financev1.DeleteBudgetResponse{}), nil
 }
 
-// affectedBudgets is what every transaction write returns: the budgets whose window contains
-// the transaction, so the app repaints its bars and can raise an overspend toast without a
-// refetch. Both the category's own budget and its group's are included, because spend in a
-// category counts toward both.
-//
-// A transaction with no category (a transfer) moves no budget, and asks nothing.
 func (h *Handler) affectedBudgets(
 	ctx context.Context, c caller, hh household, categoryID pgtype.UUID, occurredOn time.Time,
 ) ([]*financev1.BudgetStatus, error) {
@@ -338,8 +315,6 @@ func (h *Handler) affectedBudgets(
 	}
 	out := make([]*financev1.BudgetStatus, 0, len(rows))
 	for _, b := range rows {
-		// The window the transaction landed in, not today's: editing last month's grocery bill
-		// has to report last month's bar.
 		status, err := h.budgetStatus(ctx, c, hh, b, occurredOn)
 		if err != nil {
 			return nil, err
@@ -349,10 +324,6 @@ func (h *Handler) affectedBudgets(
 	return out, nil
 }
 
-// announceBudgetChanges compares a write's before and after state and publishes the
-// exceeded/recovered edges. Only edges: republishing "exceeded" on every subsequent
-// transaction in an already-blown budget would make the notification service the one deciding
-// what is new, which is exactly the state that produces duplicate pushes.
 func (h *Handler) announceBudgetChanges(
 	ctx context.Context, c caller, before, after []*financev1.BudgetStatus, triggeringTxID string,
 ) {

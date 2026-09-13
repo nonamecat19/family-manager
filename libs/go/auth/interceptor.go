@@ -9,17 +9,10 @@ import (
 	"github.com/nnc/family-manager/libs/go/logger"
 )
 
-// TokenVerifier is what an interceptor needs; *Verifier satisfies it, and tests substitute
-// a stub instead of standing up a JWKS server.
 type TokenVerifier interface {
 	Verify(ctx context.Context, token string) (*Claims, error)
 }
 
-// Interceptor verifies the Authorization header on every Connect/gRPC call and puts the
-// claims on the context.
-//
-// public lists fully-qualified procedure names that skip verification, e.g.
-// "/auth.v1.AuthService/Login". Anything not listed requires a valid token.
 func Interceptor(v TokenVerifier, public ...string) connect.UnaryInterceptorFunc {
 	skip := make(map[string]struct{}, len(public))
 	for _, p := range public {
@@ -41,18 +34,12 @@ func Interceptor(v TokenVerifier, public ...string) connect.UnaryInterceptorFunc
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}
-			// user_id goes on the context as well as the claims: logger's handler copies it
-			// onto every record made downstream, so a handler's log lines say who the caller
-			// was without any handler passing it. Nothing was doing this before, which meant
-			// an access log could tell you a call failed but never for whom.
 			ctx = logger.WithUserID(WithClaims(ctx, claims), claims.UserID)
 			return next(ctx, req)
 		}
 	}
 }
 
-// BearerToken extracts the token from an Authorization header value, "" when the header is
-// missing or not a bearer.
 func BearerToken(header string) string {
 	const prefix = "bearer "
 	if len(header) < len(prefix) || !strings.EqualFold(header[:len(prefix)], prefix) {
@@ -61,8 +48,6 @@ func BearerToken(header string) string {
 	return strings.TrimSpace(header[len(prefix):])
 }
 
-// Require is the handler-side guard: it returns the caller's claims or a Connect
-// Unauthenticated error, so handlers never repeat the error mapping.
 func Require(ctx context.Context) (*Claims, error) {
 	c, err := FromContext(ctx)
 	if err != nil {
@@ -71,8 +56,6 @@ func Require(ctx context.Context) (*Claims, error) {
 	return c, nil
 }
 
-// RequireFamily is Require plus the check that the caller actually belongs to a family —
-// every family-scoped resource in this repo needs it.
 func RequireFamily(ctx context.Context) (*Claims, error) {
 	c, err := Require(ctx)
 	if err != nil {

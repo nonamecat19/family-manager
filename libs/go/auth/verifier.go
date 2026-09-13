@@ -15,22 +15,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// VerifierConfig configures token verification.
 type VerifierConfig struct {
-	// JWKSURL is services/auth's public key set, e.g. http://auth:8080/.well-known/jwks.json.
-	JWKSURL string
-	// Issuer, when set, must match the token's iss claim.
-	Issuer string
-	// Audience, when set, must match the token's aud claim.
-	Audience string
-	// CacheTTL bounds how long a fetched key set is trusted. Zero means 10 minutes.
-	CacheTTL time.Duration
-	// HTTPClient overrides the default client (tests, mTLS).
+	JWKSURL    string
+	Issuer     string
+	Audience   string
+	CacheTTL   time.Duration
 	HTTPClient *http.Client
 }
 
-// Verifier parses and validates access tokens against a cached JWKS. It is safe for
-// concurrent use.
 type Verifier struct {
 	cfg    VerifierConfig
 	client *http.Client
@@ -41,7 +33,6 @@ type Verifier struct {
 	fetchedAt time.Time
 }
 
-// NewVerifier builds a verifier. The key set is fetched lazily on the first token.
 func NewVerifier(cfg VerifierConfig) (*Verifier, error) {
 	if cfg.JWKSURL == "" {
 		return nil, fmt.Errorf("auth: empty JWKSURL")
@@ -54,7 +45,6 @@ func NewVerifier(cfg VerifierConfig) (*Verifier, error) {
 		client = &http.Client{Timeout: 5 * time.Second}
 	}
 
-	// ES256 only: accepting more algorithms is how "alg: none" bugs get in.
 	opts := []jwt.ParserOption{jwt.WithValidMethods([]string{"ES256"}), jwt.WithExpirationRequired()}
 	if cfg.Issuer != "" {
 		opts = append(opts, jwt.WithIssuer(cfg.Issuer))
@@ -66,7 +56,6 @@ func NewVerifier(cfg VerifierConfig) (*Verifier, error) {
 	return &Verifier{cfg: cfg, client: client, parser: jwt.NewParser(opts...), keys: map[string]*ecdsa.PublicKey{}}, nil
 }
 
-// Verify parses the token and returns its claims, or ErrInvalidToken.
 func (v *Verifier) Verify(ctx context.Context, token string) (*Claims, error) {
 	if token == "" {
 		return nil, ErrNoToken
@@ -78,15 +67,11 @@ func (v *Verifier) Verify(ctx context.Context, token string) (*Claims, error) {
 		return v.keyForKID(ctx, kid)
 	})
 	if err != nil {
-		// Both verbs wrap: a caller matching on ErrInvalidToken keeps working, and one
-		// matching on jwt.ErrTokenExpired — which is the interesting half — now can.
 		return nil, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}
 	return claimsFromJWT(mc)
 }
 
-// keyForKID serves the key from cache, refetching once when the kid is unknown — that is
-// what a key rotation looks like from here.
 func (v *Verifier) keyForKID(ctx context.Context, kid string) (*ecdsa.PublicKey, error) {
 	if key, ok := v.cachedKey(kid); ok {
 		return key, nil
@@ -106,7 +91,6 @@ func (v *Verifier) cachedKey(kid string) (*ecdsa.PublicKey, bool) {
 	if time.Since(v.fetchedAt) > v.cfg.CacheTTL {
 		return nil, false
 	}
-	// A single-key JWKS may omit kid; fall back to the only key we hold.
 	if kid == "" && len(v.keys) == 1 {
 		for _, k := range v.keys {
 			return k, true
@@ -163,7 +147,7 @@ func (s jwks) ecdsaKeys() (map[string]*ecdsa.PublicKey, error) {
 	out := map[string]*ecdsa.PublicKey{}
 	for _, k := range s.Keys {
 		if k.Kty != "EC" || k.Crv != "P-256" {
-			continue // ES256 only; anything else is not ours to trust
+			continue
 		}
 		x, err := base64.RawURLEncoding.DecodeString(k.X)
 		if err != nil {

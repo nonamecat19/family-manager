@@ -18,8 +18,6 @@ func TestReadPasswordTakesTheFirstLine(t *testing.T) {
 	}
 }
 
-// A password may legitimately begin or end with a space. Trimming it would hash something the
-// user did not type, and they would find out at the sign-in that fails.
 func TestReadPasswordKeepsSurroundingSpaces(t *testing.T) {
 	got, err := readPassword(strings.NewReader("  spaced  \n"), io.Discard)
 	if err != nil {
@@ -48,7 +46,6 @@ func TestReadPasswordRejectsEmptyInput(t *testing.T) {
 	}
 }
 
-// The whole point of the tool: what it prints must verify against what the service checks.
 func TestHashOutputVerifies(t *testing.T) {
 	hash, err := password.Hash("correct horse", password.DefaultParams())
 	if err != nil {
