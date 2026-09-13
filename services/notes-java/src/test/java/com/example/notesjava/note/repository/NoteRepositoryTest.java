@@ -1,8 +1,11 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.repository;
 
 import com.example.notesjava.common.persistence.JpaAuditingConfig;
-import com.example.notesjava.group.Group;
-import com.example.notesjava.group.GroupRepository;
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.group.repository.GroupRepository;
+import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NotePriority;
+import com.example.notesjava.note.domain.NoteStatus;
 import com.example.notesjava.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

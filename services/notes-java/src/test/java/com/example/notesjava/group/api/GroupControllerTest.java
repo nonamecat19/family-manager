@@ -1,6 +1,11 @@
-package com.example.notesjava.group;
+package com.example.notesjava.group.api;
 
 import com.example.notesjava.common.error.ResourceNotFoundException;
+import com.example.notesjava.group.api.dto.CreateGroupRequest;
+import com.example.notesjava.group.api.dto.GroupResponse;
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.group.domain.GroupColor;
+import com.example.notesjava.group.service.GroupService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

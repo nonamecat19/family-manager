@@ -1,4 +1,4 @@
-package com.example.notesjava.group;
+package com.example.notesjava.group.domain;
 
 public enum GroupColor {
     RED,

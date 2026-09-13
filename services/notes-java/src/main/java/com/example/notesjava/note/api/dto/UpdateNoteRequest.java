@@ -1,5 +1,7 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.api.dto;
 
+import com.example.notesjava.note.domain.NotePriority;
+import com.example.notesjava.note.domain.NoteStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
