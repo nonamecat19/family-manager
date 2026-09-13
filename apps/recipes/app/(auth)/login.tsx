@@ -1,10 +1,12 @@
 import { toDisplayError, useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
+
+import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Display, Field, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
+import { Display } from "../../components/organic/ui.tsx";
 
 export default function LoginScreen() {
   const { auth } = useClients();
@@ -55,10 +57,12 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-[18px] px-[24px]"
       >
         <View>
+          {/* Display stays app-local: Alegreya at 36px is this cookbook's brand voice, not a
+              role a shared component should decide. Everything below it is @fm/ui. */}
           <Display size={36}>{t("login.appName")}</Display>
-          <Text className="mt-[10px] font-fig text-[15.5px] leading-[23px] text-neutral-700">
-            {mode === "login" ? t("login.signInBody") : t("login.registerBody")}
-          </Text>
+          <View className="mt-[10px]">
+            <Body>{mode === "login" ? t("login.signInBody") : t("login.registerBody")}</Body>
+          </View>
         </View>
 
         {mode === "register" ? (
@@ -82,30 +86,22 @@ export default function LoginScreen() {
           error={error ?? undefined}
         />
 
-        {errorRef ? (
-          <Text className="font-fig text-[13px] leading-[19px] text-neutral-600">
-            {t("common.errorReference", { ref: errorRef })}
-          </Text>
-        ) : null}
+        {errorRef ? <Caption>{t("common.errorReference", { ref: errorRef })}</Caption> : null}
 
-        <PrimaryButton
-          title={busy ? t("login.oneMoment") : mode === "login" ? t("login.signIn") : t("login.createAccount")}
+        <Button
+          title={mode === "login" ? t("login.signIn") : t("login.createAccount")}
           disabled={!canSubmit}
+          busy={busy}
           onPress={() => void submit()}
         />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={mode === "login" ? t("login.switchToRegister") : t("login.switchToLogin")}
+        <TextLink
+          label={mode === "login" ? t("login.switchToRegister") : t("login.switchToLogin")}
           onPress={() => {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
-        >
-          <Text className="text-center font-fig-bold text-[14.5px] text-accent-700">
-            {mode === "login" ? t("login.switchToRegister") : t("login.switchToLogin")}
-          </Text>
-        </Pressable>
+        />
       </KeyboardAvoidingView>
     </Screen>
   );
