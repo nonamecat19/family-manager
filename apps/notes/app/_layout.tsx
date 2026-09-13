@@ -9,7 +9,8 @@ import { createConnectTransport } from "@connectrpc/connect-web";
 import { ApiProvider, createQueryClient, isRefreshRejection } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
-import { ErrorBoundary } from "@fm/ui";
+import { ErrorBoundary, ThemeProvider } from "@fm/ui";
+import { nocturneTheme, type Theme } from "@fm/theme";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
@@ -41,6 +42,27 @@ async function refresh(refreshToken: string): Promise<Tokens> {
   return tokensFromResponse(res, Date.now());
 }
 
+/** Ends the session server-side: Logout revokes the whole refresh-token chain, so the token
+ * this device is about to forget cannot go on minting access tokens. */
+async function revoke(refreshToken: string): Promise<void> {
+  await refreshClient.logout({ refreshToken });
+}
+
+/**
+ * Nocturne, in Inter. The palette is shared with apps/finance; the faces are not — finance
+ * ships no font file and draws in the platform sans. That is exactly why fonts live on the
+ * theme rather than on the design system.
+ */
+const theme: Theme = {
+  ...nocturneTheme,
+  fonts: {
+    body: "Inter_400Regular",
+    medium: "Inter_500Medium",
+    semibold: "Inter_600SemiBold",
+    display: "Inter_600SemiBold",
+  },
+};
+
 export default function RootLayout() {
   // Nocturne is one face in four weights, each its own TTF. Loaded up front rather than per
   // screen: a weight that arrives late reflows the note the user is already reading.
@@ -60,14 +82,19 @@ export default function RootLayout() {
       message={strings.app.crashed}
       onError={(error) => console.error("[notes] unhandled render error", error)}
     >
-      <AuthProvider
-        store={secureTokenStore}
-        refresh={refresh}
-        isRefreshRejection={isRefreshRejection}
-      >
-        <ApiGate />
-        <StatusBar style="light" />
-      </AuthProvider>
+      {/* Nocturne is this app's theme; the same shared components render in Organic over in
+          apps/recipes without either screen knowing which. */}
+      <ThemeProvider theme={theme}>
+        <AuthProvider
+          store={secureTokenStore}
+          refresh={refresh}
+          revoke={revoke}
+          isRefreshRejection={isRefreshRejection}
+        >
+          <ApiGate />
+          <StatusBar style="light" />
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
