@@ -1,0 +1,118 @@
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    environment:
+      AUTH_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/auth?sslmode=disable
+      AUTH_SIGNING_KEY_FILE: /run/secrets/auth-signing-key
+      AUTH_FAMILY_ADDR: http://family:9090
+      AUTH_HTTP_PORT: "8080"
+      AUTH_LOG_JSON: "true"
+    secrets:
+      - auth-signing-key
+    ports:
+      - "${AUTH_PORT:-8081}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  family:
+    build:
+      context: .
+      dockerfile: services/family/Dockerfile
+    environment:
+      FAMILY_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/family?sslmode=disable
+      FAMILY_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      FAMILY_NATS_URL: nats://nats:4222
+      FAMILY_HTTP_PORT: "8080"
+      FAMILY_GRPC_PORT: "9090"
+      FAMILY_LOG_JSON: "true"
+    ports:
+      - "${FAMILY_PORT:-8082}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  finance:
+    build:
+      context: .
+      dockerfile: services/finance/Dockerfile
+    environment:
+      FINANCE_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/finance?sslmode=disable
+      FINANCE_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      FINANCE_NATS_URL: nats://nats:4222
+      FINANCE_HTTP_PORT: "8080"
+      FINANCE_GRPC_PORT: "9090"
+      FINANCE_BASE_CURRENCY: UAH
+      FINANCE_TIMEZONE: Europe/Kyiv
+      FINANCE_LOG_JSON: "true"
+    ports:
+      - "${FINANCE_PORT:-8083}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  recipes:
+    build:
+      context: .
+      dockerfile: services/recipes/Dockerfile
+    environment:
+      RECIPES_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/recipes?sslmode=disable
+      RECIPES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      RECIPES_NATS_URL: nats://nats:4222
+      RECIPES_HTTP_PORT: "8080"
+      RECIPES_STORAGE_PROVIDER: minio
+      RECIPES_STORAGE_ENDPOINT: minio:9000
+      RECIPES_STORAGE_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      RECIPES_STORAGE_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      RECIPES_STORAGE_BUCKET: recipes
+      RECIPES_STORAGE_PUBLIC_URL: http://localhost:${MINIO_PORT:-9000}
+      RECIPES_LOG_JSON: "true"
+    ports:
+      - "${RECIPES_PORT:-8084}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+secrets:
+  auth-signing-key:
+    file: ./infra/secrets/auth-signing-key.pem

@@ -40,7 +40,7 @@ const PATH_RULES = [
   [/(^|\/)\.env($|\.)(?!example)/, "environment/credential file"],
   [/^infra\//, "deploy surface"],
   [/^\.github\/workflows\//, "CI surface"],
-  [/^docker-compose\.yml$/, "runtime topology"],
+  [/^docker-compose(\.services)?\.yml$/, "runtime topology"],
   [/^packages\/config\//, "repo-wide blast radius"],
   [/^(package\.json|pnpm-lock\.yaml|go\.work)$/, "workspace-wide dependency change"],
 ];

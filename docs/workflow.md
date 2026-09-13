@@ -13,7 +13,7 @@ The 9-stage pipeline, instantiated here (`tools/repo-graph/extract.mjs` implemen
 | 1 scope & value test | queries are multi-hop ("change this rpc → which apps rebuild") → graph earns its keep |
 | 2 representation | property graph, JSON on disk (`docs/graph/graph.json`), no DB to run |
 | 3 ontology | `docs/ontology.yaml` — 12 entity types, 10 relation types, precise verbs |
-| 4 entity extraction | package.json / go.mod / .proto / .sql / docker-compose.yml |
+| 4 entity extraction | package.json / go.mod / .proto / .sql / docker-compose*.yml |
 | 5 relation extraction | workspace deps, direct go deps, rpc declarations, table reads/writes |
 | 6 event extraction | not used — this domain is structural, not temporal (commits are in git) |
 | 7 quality gate | domain/range validation drops bad edges into `graph.json.dropped`; sample 30 edges, open the cited `source:line` |
@@ -135,7 +135,7 @@ edit libs/proto/<d>/v1/*.proto
 
 ```
 scaffold (skill: new-service)
-  → register in go.work, docker-compose, justfile
+  → register in go.work, docker-compose.services.yml, justfile
   → just graph                      # the service must appear as a node
   ├─ migrations + sqlc              ┐
   ├─ grpc handlers                  ├─ parallel, disjoint files
