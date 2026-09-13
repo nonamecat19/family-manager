@@ -211,39 +211,20 @@ const (
 
 // FinanceServiceClient is a client for the finance.v1.FinanceService service.
 type FinanceServiceClient interface {
-	// --- household & settings ------------------------------------------------
-	// BootstrapHousehold seeds finance for a family that services/family has just created:
-	// settings plus the default group/category taxonomy, in one transaction. Idempotent per
-	// family — calling it twice returns the existing rows rather than a second taxonomy.
 	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
-	// GetHouseholdOverview is the household screen in one round trip: balances, period spend,
-	// the per-member cards, and the shared-resource counters.
 	GetHouseholdOverview(context.Context, *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error)
 	GetFinanceSettings(context.Context, *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error)
 	UpdateFinanceSettings(context.Context, *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error)
-	// SetOverspendNotifications is its own RPC because it is a single switch on the household
-	// screen; routing it through UpdateFinanceSettings would make an accidental currency change
-	// one mistyped field away from a toggle.
 	SetOverspendNotifications(context.Context, *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error)
-	// ListMembers reads the member projection maintained from family.v1 events, so the "who
-	// spent" picker and the avatar chips render without a synchronous call to services/family.
 	ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error)
-	// --- accounts ------------------------------------------------------------
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
 	GetAccount(context.Context, *connect.Request[v1.GetAccountRequest]) (*connect.Response[v1.GetAccountResponse], error)
 	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	UpdateAccount(context.Context, *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error)
-	// ArchiveAccount hides an account that still has history. DeleteAccount is refused while
-	// transactions reference it — a balance that silently loses its rows is a corrupt ledger.
 	ArchiveAccount(context.Context, *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
 	ReorderAccounts(context.Context, *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error)
-	// TransferBetweenAccounts writes both legs in one transaction so a transfer can never
-	// half-commit, and is excluded from expense and income totals.
 	TransferBetweenAccounts(context.Context, *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error)
-	// --- categories ----------------------------------------------------------
-	// ListCategoryTree is the whole categories screen and the add-sheet picker: groups, their
-	// categories, and each group's budget status.
 	ListCategoryTree(context.Context, *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error)
 	CreateCategoryGroup(context.Context, *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error)
 	UpdateCategoryGroup(context.Context, *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error)
@@ -254,65 +235,39 @@ type FinanceServiceClient interface {
 	MoveCategory(context.Context, *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error)
 	DeleteCategory(context.Context, *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error)
 	ReorderCategories(context.Context, *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error)
-	// --- transactions --------------------------------------------------------
-	// CreateTransaction returns the budgets it moved, so the app can repaint the Home bars and
-	// raise an overspend toast without a refetch.
 	CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error)
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
-	// ListTransactions is grouped into day sections server-side: the per-day subtotal and the
-	// period total have to agree with the page boundary, and only the server knows both.
 	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
-	// --- quick templates -----------------------------------------------------
 	ListTemplates(context.Context, *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error)
 	CreateTemplate(context.Context, *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error)
 	UpdateTemplate(context.Context, *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error)
 	DeleteTemplate(context.Context, *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error)
 	ReorderTemplates(context.Context, *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error)
-	// LogTemplate is one round trip from a home-screen widget that may have no app process
-	// alive: it writes the transaction and returns the budgets it moved.
 	LogTemplate(context.Context, *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error)
-	// --- budgets -------------------------------------------------------------
 	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
 	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
 	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
 	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
-	// --- analytics -----------------------------------------------------------
-	// GetHomeSummary is the home screen in a single call — headline, donut, group rows with
-	// their budget bars, member chips and template chips all move together when the scope or
-	// the period changes, so they are fetched together.
 	GetHomeSummary(context.Context, *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error)
 	GetGroupBreakdown(context.Context, *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error)
 	GetMemberBreakdown(context.Context, *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error)
-	// GetSpendingSeries backs the stacked bar chart. Stacking is a parameter rather than a
-	// second RPC so flipping the total/expense/income tab is one request.
 	GetSpendingSeries(context.Context, *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error)
-	// ListInsights is computed server-side so the same wording reaches app, widget and
-	// notification instead of three nearly identical sentences.
 	ListInsights(context.Context, *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error)
-	// --- recurring payments --------------------------------------------------
 	ListRecurringPayments(context.Context, *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error)
 	CreateRecurringPayment(context.Context, *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error)
 	UpdateRecurringPayment(context.Context, *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error)
 	DeleteRecurringPayment(context.Context, *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error)
-	// Confirm-or-skip is the default for a payment that may not have actually happened; a
-	// payment with auto_post set writes its occurrence without this step.
 	PostRecurringOccurrence(context.Context, *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error)
 	SkipRecurringOccurrence(context.Context, *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error)
-	// --- reminders -----------------------------------------------------------
-	// finance stores the subscription; delivery is services/notifications' job, driven by the
-	// events below.
 	ListReminders(context.Context, *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error)
 	UpsertReminder(context.Context, *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error)
 	DeleteReminder(context.Context, *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error)
-	// --- widgets -------------------------------------------------------------
 	ListWidgets(context.Context, *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error)
 	AddWidget(context.Context, *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error)
 	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
 	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
-	// GetWidgetData refreshes every placed widget in one request: one call per widget would
-	// make the Android update pass N round trips on a cold process.
 	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
 }
 
@@ -1032,39 +987,20 @@ func (c *financeServiceClient) GetWidgetData(ctx context.Context, req *connect.R
 
 // FinanceServiceHandler is an implementation of the finance.v1.FinanceService service.
 type FinanceServiceHandler interface {
-	// --- household & settings ------------------------------------------------
-	// BootstrapHousehold seeds finance for a family that services/family has just created:
-	// settings plus the default group/category taxonomy, in one transaction. Idempotent per
-	// family — calling it twice returns the existing rows rather than a second taxonomy.
 	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
-	// GetHouseholdOverview is the household screen in one round trip: balances, period spend,
-	// the per-member cards, and the shared-resource counters.
 	GetHouseholdOverview(context.Context, *connect.Request[v1.GetHouseholdOverviewRequest]) (*connect.Response[v1.GetHouseholdOverviewResponse], error)
 	GetFinanceSettings(context.Context, *connect.Request[v1.GetFinanceSettingsRequest]) (*connect.Response[v1.GetFinanceSettingsResponse], error)
 	UpdateFinanceSettings(context.Context, *connect.Request[v1.UpdateFinanceSettingsRequest]) (*connect.Response[v1.UpdateFinanceSettingsResponse], error)
-	// SetOverspendNotifications is its own RPC because it is a single switch on the household
-	// screen; routing it through UpdateFinanceSettings would make an accidental currency change
-	// one mistyped field away from a toggle.
 	SetOverspendNotifications(context.Context, *connect.Request[v1.SetOverspendNotificationsRequest]) (*connect.Response[v1.SetOverspendNotificationsResponse], error)
-	// ListMembers reads the member projection maintained from family.v1 events, so the "who
-	// spent" picker and the avatar chips render without a synchronous call to services/family.
 	ListMembers(context.Context, *connect.Request[v1.ListMembersRequest]) (*connect.Response[v1.ListMembersResponse], error)
-	// --- accounts ------------------------------------------------------------
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
 	GetAccount(context.Context, *connect.Request[v1.GetAccountRequest]) (*connect.Response[v1.GetAccountResponse], error)
 	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	UpdateAccount(context.Context, *connect.Request[v1.UpdateAccountRequest]) (*connect.Response[v1.UpdateAccountResponse], error)
-	// ArchiveAccount hides an account that still has history. DeleteAccount is refused while
-	// transactions reference it — a balance that silently loses its rows is a corrupt ledger.
 	ArchiveAccount(context.Context, *connect.Request[v1.ArchiveAccountRequest]) (*connect.Response[v1.ArchiveAccountResponse], error)
 	DeleteAccount(context.Context, *connect.Request[v1.DeleteAccountRequest]) (*connect.Response[v1.DeleteAccountResponse], error)
 	ReorderAccounts(context.Context, *connect.Request[v1.ReorderAccountsRequest]) (*connect.Response[v1.ReorderAccountsResponse], error)
-	// TransferBetweenAccounts writes both legs in one transaction so a transfer can never
-	// half-commit, and is excluded from expense and income totals.
 	TransferBetweenAccounts(context.Context, *connect.Request[v1.TransferBetweenAccountsRequest]) (*connect.Response[v1.TransferBetweenAccountsResponse], error)
-	// --- categories ----------------------------------------------------------
-	// ListCategoryTree is the whole categories screen and the add-sheet picker: groups, their
-	// categories, and each group's budget status.
 	ListCategoryTree(context.Context, *connect.Request[v1.ListCategoryTreeRequest]) (*connect.Response[v1.ListCategoryTreeResponse], error)
 	CreateCategoryGroup(context.Context, *connect.Request[v1.CreateCategoryGroupRequest]) (*connect.Response[v1.CreateCategoryGroupResponse], error)
 	UpdateCategoryGroup(context.Context, *connect.Request[v1.UpdateCategoryGroupRequest]) (*connect.Response[v1.UpdateCategoryGroupResponse], error)
@@ -1075,65 +1011,39 @@ type FinanceServiceHandler interface {
 	MoveCategory(context.Context, *connect.Request[v1.MoveCategoryRequest]) (*connect.Response[v1.MoveCategoryResponse], error)
 	DeleteCategory(context.Context, *connect.Request[v1.DeleteCategoryRequest]) (*connect.Response[v1.DeleteCategoryResponse], error)
 	ReorderCategories(context.Context, *connect.Request[v1.ReorderCategoriesRequest]) (*connect.Response[v1.ReorderCategoriesResponse], error)
-	// --- transactions --------------------------------------------------------
-	// CreateTransaction returns the budgets it moved, so the app can repaint the Home bars and
-	// raise an overspend toast without a refetch.
 	CreateTransaction(context.Context, *connect.Request[v1.CreateTransactionRequest]) (*connect.Response[v1.CreateTransactionResponse], error)
 	GetTransaction(context.Context, *connect.Request[v1.GetTransactionRequest]) (*connect.Response[v1.GetTransactionResponse], error)
 	UpdateTransaction(context.Context, *connect.Request[v1.UpdateTransactionRequest]) (*connect.Response[v1.UpdateTransactionResponse], error)
 	DeleteTransaction(context.Context, *connect.Request[v1.DeleteTransactionRequest]) (*connect.Response[v1.DeleteTransactionResponse], error)
-	// ListTransactions is grouped into day sections server-side: the per-day subtotal and the
-	// period total have to agree with the page boundary, and only the server knows both.
 	ListTransactions(context.Context, *connect.Request[v1.ListTransactionsRequest]) (*connect.Response[v1.ListTransactionsResponse], error)
-	// --- quick templates -----------------------------------------------------
 	ListTemplates(context.Context, *connect.Request[v1.ListTemplatesRequest]) (*connect.Response[v1.ListTemplatesResponse], error)
 	CreateTemplate(context.Context, *connect.Request[v1.CreateTemplateRequest]) (*connect.Response[v1.CreateTemplateResponse], error)
 	UpdateTemplate(context.Context, *connect.Request[v1.UpdateTemplateRequest]) (*connect.Response[v1.UpdateTemplateResponse], error)
 	DeleteTemplate(context.Context, *connect.Request[v1.DeleteTemplateRequest]) (*connect.Response[v1.DeleteTemplateResponse], error)
 	ReorderTemplates(context.Context, *connect.Request[v1.ReorderTemplatesRequest]) (*connect.Response[v1.ReorderTemplatesResponse], error)
-	// LogTemplate is one round trip from a home-screen widget that may have no app process
-	// alive: it writes the transaction and returns the budgets it moved.
 	LogTemplate(context.Context, *connect.Request[v1.LogTemplateRequest]) (*connect.Response[v1.LogTemplateResponse], error)
-	// --- budgets -------------------------------------------------------------
 	ListBudgets(context.Context, *connect.Request[v1.ListBudgetsRequest]) (*connect.Response[v1.ListBudgetsResponse], error)
 	CreateBudget(context.Context, *connect.Request[v1.CreateBudgetRequest]) (*connect.Response[v1.CreateBudgetResponse], error)
 	UpdateBudget(context.Context, *connect.Request[v1.UpdateBudgetRequest]) (*connect.Response[v1.UpdateBudgetResponse], error)
 	DeleteBudget(context.Context, *connect.Request[v1.DeleteBudgetRequest]) (*connect.Response[v1.DeleteBudgetResponse], error)
-	// --- analytics -----------------------------------------------------------
-	// GetHomeSummary is the home screen in a single call — headline, donut, group rows with
-	// their budget bars, member chips and template chips all move together when the scope or
-	// the period changes, so they are fetched together.
 	GetHomeSummary(context.Context, *connect.Request[v1.GetHomeSummaryRequest]) (*connect.Response[v1.GetHomeSummaryResponse], error)
 	GetGroupBreakdown(context.Context, *connect.Request[v1.GetGroupBreakdownRequest]) (*connect.Response[v1.GetGroupBreakdownResponse], error)
 	GetMemberBreakdown(context.Context, *connect.Request[v1.GetMemberBreakdownRequest]) (*connect.Response[v1.GetMemberBreakdownResponse], error)
-	// GetSpendingSeries backs the stacked bar chart. Stacking is a parameter rather than a
-	// second RPC so flipping the total/expense/income tab is one request.
 	GetSpendingSeries(context.Context, *connect.Request[v1.GetSpendingSeriesRequest]) (*connect.Response[v1.GetSpendingSeriesResponse], error)
-	// ListInsights is computed server-side so the same wording reaches app, widget and
-	// notification instead of three nearly identical sentences.
 	ListInsights(context.Context, *connect.Request[v1.ListInsightsRequest]) (*connect.Response[v1.ListInsightsResponse], error)
-	// --- recurring payments --------------------------------------------------
 	ListRecurringPayments(context.Context, *connect.Request[v1.ListRecurringPaymentsRequest]) (*connect.Response[v1.ListRecurringPaymentsResponse], error)
 	CreateRecurringPayment(context.Context, *connect.Request[v1.CreateRecurringPaymentRequest]) (*connect.Response[v1.CreateRecurringPaymentResponse], error)
 	UpdateRecurringPayment(context.Context, *connect.Request[v1.UpdateRecurringPaymentRequest]) (*connect.Response[v1.UpdateRecurringPaymentResponse], error)
 	DeleteRecurringPayment(context.Context, *connect.Request[v1.DeleteRecurringPaymentRequest]) (*connect.Response[v1.DeleteRecurringPaymentResponse], error)
-	// Confirm-or-skip is the default for a payment that may not have actually happened; a
-	// payment with auto_post set writes its occurrence without this step.
 	PostRecurringOccurrence(context.Context, *connect.Request[v1.PostRecurringOccurrenceRequest]) (*connect.Response[v1.PostRecurringOccurrenceResponse], error)
 	SkipRecurringOccurrence(context.Context, *connect.Request[v1.SkipRecurringOccurrenceRequest]) (*connect.Response[v1.SkipRecurringOccurrenceResponse], error)
-	// --- reminders -----------------------------------------------------------
-	// finance stores the subscription; delivery is services/notifications' job, driven by the
-	// events below.
 	ListReminders(context.Context, *connect.Request[v1.ListRemindersRequest]) (*connect.Response[v1.ListRemindersResponse], error)
 	UpsertReminder(context.Context, *connect.Request[v1.UpsertReminderRequest]) (*connect.Response[v1.UpsertReminderResponse], error)
 	DeleteReminder(context.Context, *connect.Request[v1.DeleteReminderRequest]) (*connect.Response[v1.DeleteReminderResponse], error)
-	// --- widgets -------------------------------------------------------------
 	ListWidgets(context.Context, *connect.Request[v1.ListWidgetsRequest]) (*connect.Response[v1.ListWidgetsResponse], error)
 	AddWidget(context.Context, *connect.Request[v1.AddWidgetRequest]) (*connect.Response[v1.AddWidgetResponse], error)
 	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
 	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
-	// GetWidgetData refreshes every placed widget in one request: one call per widget would
-	// make the Android update pass N round trips on a cold process.
 	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
 }
 

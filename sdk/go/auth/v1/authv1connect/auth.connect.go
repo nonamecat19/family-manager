@@ -47,8 +47,6 @@ const (
 type AuthServiceClient interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Register(context.Context, *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error)
-	// Exchanges a refresh token for a new access/refresh pair. The old refresh
-	// token is revoked on use (rotation) — see docs/adr/0005-auth.md.
 	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 }
@@ -123,8 +121,6 @@ func (c *authServiceClient) Logout(ctx context.Context, req *connect.Request[v1.
 type AuthServiceHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Register(context.Context, *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error)
-	// Exchanges a refresh token for a new access/refresh pair. The old refresh
-	// token is revoked on use (rotation) — see docs/adr/0005-auth.md.
 	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 }

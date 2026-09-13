@@ -82,13 +82,7 @@ type FamilyServiceClient interface {
 	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
 	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
 	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
-	// CheckMembership is the service-to-service call: a sibling service asks whether a user
-	// may act inside a family before it touches family-scoped rows.
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
-	// GetUserMembership answers "which family is this user in", which is what services/auth
-	// needs to stamp the family_id claim when it mints a token. It is served on the internal
-	// gRPC listener only: it takes a user_id from the caller rather than from a token, so it
-	// must never be reachable by an app.
 	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
 }
 
@@ -266,13 +260,7 @@ type FamilyServiceHandler interface {
 	AcceptInvitation(context.Context, *connect.Request[v1.AcceptInvitationRequest]) (*connect.Response[v1.AcceptInvitationResponse], error)
 	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
 	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
-	// CheckMembership is the service-to-service call: a sibling service asks whether a user
-	// may act inside a family before it touches family-scoped rows.
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
-	// GetUserMembership answers "which family is this user in", which is what services/auth
-	// needs to stamp the family_id claim when it mints a token. It is served on the internal
-	// gRPC listener only: it takes a user_id from the caller rather than from a token, so it
-	// must never be reachable by an app.
 	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
 }
 
