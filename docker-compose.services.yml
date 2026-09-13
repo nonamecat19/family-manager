@@ -115,7 +115,8 @@ services:
 
   notes:
     build:
-      context: ./services/notes
+      context: .
+      dockerfile: services/notes/Dockerfile
     environment:
       NOTES_DB_URL: jdbc:postgresql://postgres:5432/notes
       NOTES_DB_USER: ${POSTGRES_USER:-admin}
