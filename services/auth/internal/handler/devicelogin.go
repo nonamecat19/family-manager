@@ -230,7 +230,7 @@ func (h *Handler) ApproveDeviceLogin(
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
 		row, err = h.q.GetLoginGrantByUserCode(ctx, hashToken(code))
-		if errors.Is(err, pgx.ErrNoRows) || err == nil && !(row.ApprovedAt.Valid && row.UserID == userID) {
+		if errors.Is(err, pgx.ErrNoRows) || err == nil && (!row.ApprovedAt.Valid || row.UserID != userID) {
 			h.decisions.Failed(key)
 			return nil, errInvalidUserCode()
 		}
@@ -274,7 +274,7 @@ func (h *Handler) DenyDeviceLogin(
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return nil, h.internal(ctx, err, "get login grant")
 		}
-		if err != nil || !(row.DeniedAt.Valid && row.UserID == userID) {
+		if err != nil || !row.DeniedAt.Valid || row.UserID != userID {
 			h.decisions.Failed(key)
 			return nil, errInvalidUserCode()
 		}
