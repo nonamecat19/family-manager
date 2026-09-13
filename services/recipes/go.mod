@@ -1,6 +1,6 @@
 module github.com/nnc/family-manager/services/recipes
 
-go 1.25.0
+go 1.26.0
 
 // The monorepo's modules are never published: go.work covers builds inside the repo, and
 // these replaces keep `go mod tidy` and single-module builds working too.
@@ -62,10 +62,10 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 )
 
