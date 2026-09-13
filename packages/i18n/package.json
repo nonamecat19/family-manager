@@ -29,7 +29,7 @@
     "expo-secure-store": "~57.0.1",
     "react": "19.2.8",
     "react-native": "0.86.3",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.3"
   },
   "type": "module"
 }
