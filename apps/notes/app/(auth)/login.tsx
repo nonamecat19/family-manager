@@ -1,10 +1,11 @@
 import { toDisplayError, useClients } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+
+import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
 
 import { strings } from "../../components/i18n/index.ts";
-import { PrimaryButton, Screen, nocturne } from "../../components/nocturne/index.ts";
 
 /** Sign in / register. The recipes screen's flow, drawn in Nocturne. */
 export default function LoginScreen() {
@@ -59,9 +60,7 @@ export default function LoginScreen() {
               {strings.app.name}
             </Text>
           </View>
-          <Text className="font-sans text-[15px] leading-[23px] text-neutral-400">
-            {mode === "login" ? strings.login.signInBody : strings.login.registerBody}
-          </Text>
+          <Body>{mode === "login" ? strings.login.signInBody : strings.login.registerBody}</Body>
         </View>
 
         {mode === "register" ? (
@@ -85,63 +84,24 @@ export default function LoginScreen() {
           error={error ?? undefined}
         />
 
-        {errorRef ? (
-          <Text className="font-sans text-[13px] text-neutral-600">
-            {strings.common.errorReference(errorRef)}
-          </Text>
-        ) : null}
+        {errorRef ? <Caption>{strings.common.errorReference(errorRef)}</Caption> : null}
 
-        <PrimaryButton
-          title={
-            busy
-              ? strings.common.oneMoment
-              : mode === "login"
-                ? strings.login.signIn
-                : strings.login.createAccount
-          }
+        <Button
+          title={mode === "login" ? strings.login.signIn : strings.login.createAccount}
           disabled={!canSubmit}
+          busy={busy}
           onPress={() => void submit()}
         />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            mode === "login" ? strings.login.switchToRegister : strings.login.switchToLogin
-          }
+        <TextLink
+          label={mode === "login" ? strings.login.switchToRegister : strings.login.switchToLogin}
           onPress={() => {
             setMode(mode === "login" ? "register" : "login");
             setError(null);
           }}
-        >
-          <Text className="text-center font-med text-[14px] text-accent">
-            {mode === "login" ? strings.login.switchToRegister : strings.login.switchToLogin}
-          </Text>
-        </Pressable>
+        />
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
-type FieldProps = React.ComponentProps<typeof TextInput> & { label: string; error?: string };
-
-/**
- * @fm/ui's Field is drawn for the shared blue-grey system; Nocturne's input is a dark surface
- * with a token border. Local rather than a change to the shared primitive, which four apps
- * render.
- */
-function Field({ label, error, ...props }: FieldProps) {
-  return (
-    <View className="gap-[6px]">
-      <Text className="font-med text-[12px] text-neutral-500">{label}</Text>
-      <TextInput
-        accessibilityLabel={label}
-        placeholderTextColor={nocturne.neutral[600]}
-        {...props}
-        className={`h-[46px] rounded-md border bg-surface px-[14px] font-sans text-[15px] text-fg ${
-          error ? "border-error" : "border-neutral-800"
-        }`}
-      />
-      {error ? <Text className="font-sans text-[12.5px] text-error">{error}</Text> : null}
-    </View>
-  );
-}
