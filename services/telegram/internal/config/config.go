@@ -38,17 +38,19 @@ type Config struct {
 	FinanceAddr string
 	NotesAddr   string
 	RecipesAddr string
+	TasksAddr   string
 
 	Bots []Bot
 
 	PollTimeout time.Duration
+	TasksTick   time.Duration
 	CallTimeout time.Duration
 
 	LogLevel string
 	LogJSON  bool
 }
 
-var botNames = []string{"finance", "recipes", "notes", "family"}
+var botNames = []string{"finance", "recipes", "notes", "family", "tasks"}
 
 func Load() (*Config, error) {
 	v := viper.New()
@@ -59,6 +61,7 @@ func Load() (*Config, error) {
 	v.SetDefault("MODE", string(ModePolling))
 	v.SetDefault("POLL_TIMEOUT", 30*time.Second)
 	v.SetDefault("CALL_TIMEOUT", 10*time.Second)
+	v.SetDefault("TASKS_TICK", time.Minute)
 	v.SetDefault("LOG_LEVEL", "info")
 	v.SetDefault("LOG_JSON", false)
 
@@ -75,6 +78,8 @@ func Load() (*Config, error) {
 		FinanceAddr:   v.GetString("FINANCE_ADDR"),
 		NotesAddr:     v.GetString("NOTES_ADDR"),
 		RecipesAddr:   v.GetString("RECIPES_ADDR"),
+		TasksAddr:     v.GetString("TASKS_ADDR"),
+		TasksTick:     v.GetDuration("TASKS_TICK"),
 		PollTimeout:   v.GetDuration("POLL_TIMEOUT"),
 		CallTimeout:   v.GetDuration("CALL_TIMEOUT"),
 		LogLevel:      v.GetString("LOG_LEVEL"),
@@ -127,6 +132,11 @@ func (c *Config) validate() error {
 		return fmt.Errorf("config: no bot tokens set; expected at least one of %s",
 			strings.Join(tokenVars(), ", "))
 	}
+	for _, b := range c.Bots {
+		if b.Name == "tasks" && c.TasksTick <= 0 {
+			return fmt.Errorf("config: TELEGRAM_TASKS_TICK must be a positive duration such as 1m")
+		}
+	}
 	switch c.Mode {
 	case ModePolling:
 	case ModeWebhook:
@@ -161,6 +171,8 @@ func (c *Config) AddrFor(bot string) string {
 		return c.NotesAddr
 	case "family":
 		return c.FamilyAddr
+	case "tasks":
+		return c.TasksAddr
 	default:
 		return ""
 	}

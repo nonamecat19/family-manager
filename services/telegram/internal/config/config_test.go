@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func env(t *testing.T, pairs map[string]string) {
@@ -98,6 +99,7 @@ func TestAddrForMapsEachBot(t *testing.T) {
 		RecipesAddr: "recipes",
 		NotesAddr:   "notes",
 		FamilyAddr:  "family",
+		TasksAddr:   "tasks",
 	}
 	for _, name := range botNames {
 		if cfg.AddrFor(name) != name {
@@ -116,5 +118,37 @@ func TestLoadRequiresAFamilyAddress(t *testing.T) {
 	_, err := Load()
 	if err == nil || !strings.Contains(err.Error(), "TELEGRAM_FAMILY_ADDR") {
 		t.Fatalf("err = %v, want a complaint about TELEGRAM_FAMILY_ADDR", err)
+	}
+}
+
+func TestTasksBotConfig(t *testing.T) {
+	env(t, map[string]string{
+		"TELEGRAM_TASKS_TOKEN": "456:def",
+		"TELEGRAM_TASKS_ADDR":  "http://tasks:8080",
+	})
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.AddrFor("tasks") != "http://tasks:8080" || cfg.TasksTick != time.Minute {
+		t.Fatalf("tasks addr %q tick %v", cfg.AddrFor("tasks"), cfg.TasksTick)
+	}
+	found := false
+	for _, b := range cfg.Bots {
+		found = found || (b.Name == "tasks" && b.Token == "456:def")
+	}
+	if !found {
+		t.Fatal("tasks bot not loaded")
+	}
+}
+
+func TestTasksTickMustBePositive(t *testing.T) {
+	env(t, map[string]string{"TELEGRAM_TASKS_TICK": "0s"})
+	if _, err := Load(); err != nil {
+		t.Fatalf("a bad tick must not matter without a tasks bot: %v", err)
+	}
+	env(t, map[string]string{"TELEGRAM_TASKS_TICK": "0s", "TELEGRAM_TASKS_TOKEN": "456:def", "TELEGRAM_TASKS_ADDR": "http://tasks:8080"})
+	if _, err := Load(); err == nil {
+		t.Fatal("expected an error for a zero tick with a tasks bot")
 	}
 }
