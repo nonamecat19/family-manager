@@ -82,8 +82,15 @@ public final class BlockCodec {
     }
 
     public static String preview(List<Block> blocks) {
-        String text = toPlainText(blocks).replace('\n', ' ').trim();
-        return text.length() <= 120 ? text : text.substring(0, 119) + "…";
+        return preview(toPlainText(blocks));
+    }
+
+    public static String preview(String raw) {
+        String text = raw.replace('\n', ' ').trim();
+        if (text.codePointCount(0, text.length()) <= 120) {
+            return text;
+        }
+        return text.substring(0, text.offsetByCodePoints(0, 119)) + "…";
     }
 
     public static int taskTotal(List<Block> blocks) {

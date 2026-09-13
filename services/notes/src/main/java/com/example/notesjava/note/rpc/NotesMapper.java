@@ -2,8 +2,13 @@ package com.example.notesjava.note.rpc;
 
 import com.example.notesjava.group.domain.Group;
 import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NoteActivity;
+import com.example.notesjava.note.domain.NoteComment;
 import com.google.protobuf.Timestamp;
+import com.nnc.familymanager.notes.v1.Activity;
+import com.nnc.familymanager.notes.v1.ActivityKind;
 import com.nnc.familymanager.notes.v1.Block;
+import com.nnc.familymanager.notes.v1.Comment;
 import com.nnc.familymanager.notes.v1.Notebook;
 
 import java.time.Instant;
@@ -58,6 +63,33 @@ public final class NotesMapper {
         }
         if (group.getUpdatedAt() != null) {
             builder.setUpdatedAt(timestamp(group.getUpdatedAt()));
+        }
+        return builder.build();
+    }
+
+    public static Comment toProto(NoteComment comment) {
+        Comment.Builder builder = Comment.newBuilder()
+                .setId(String.valueOf(comment.getId()))
+                .setNoteId(String.valueOf(comment.getNoteId()))
+                .setAuthorUserId(text(comment.getAuthorUserId()))
+                .setBody(comment.getBody())
+                .setResolved(comment.isResolved());
+        if (comment.getCreatedAt() != null) {
+            builder.setCreatedAt(timestamp(comment.getCreatedAt()));
+        }
+        return builder.build();
+    }
+
+    public static Activity toProto(NoteActivity activity) {
+        ActivityKind kind = ActivityKind.forNumber(activity.getKind());
+        Activity.Builder builder = Activity.newBuilder()
+                .setId(String.valueOf(activity.getId()))
+                .setNoteId(String.valueOf(activity.getNoteId()))
+                .setActorUserId(text(activity.getActorUserId()))
+                .setKind(kind == null ? ActivityKind.ACTIVITY_KIND_UNSPECIFIED : kind)
+                .setDetail(activity.getDetail());
+        if (activity.getCreatedAt() != null) {
+            builder.setCreatedAt(timestamp(activity.getCreatedAt()));
         }
         return builder.build();
     }
