@@ -1,6 +1,3 @@
--- Widgets are per-user placements, not household state: two members place the same type and
--- each sees their own scope, so every read is keyed by user_id as well as family_id.
-
 -- name: ListWidgets :many
 SELECT * FROM widget_instances
 WHERE family_id = $1 AND user_id = $2

@@ -1,10 +1,3 @@
--- services/recipes owns the family cookbook. Every row is scoped by family_id, which comes
--- from the access token's family_id claim (stamped by services/auth from services/family) —
--- there is NO foreign key to the family service's tables, by design: crossing a service
--- boundary in SQL is what the contract in libs/proto exists to prevent.
---
--- user_id columns likewise reference users in services/auth and carry no FK.
-
 CREATE TABLE IF NOT EXISTS recipe_categories (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     family_id   UUID NOT NULL,
@@ -55,8 +48,6 @@ CREATE INDEX IF NOT EXISTS idx_recipes_family_cat   ON recipes (family_id, categ
 CREATE INDEX IF NOT EXISTS idx_recipes_family_subcat ON recipes (family_id, subcategory_id);
 CREATE INDEX IF NOT EXISTS idx_recipes_family_title ON recipes (family_id, lower(btrim(title)));
 
--- Ingredients and steps are owned by the recipe and cascade with it. They are stored as rows,
--- not a JSON column, so TotalIngredients can SUM them server-side across the meal plan.
 CREATE TABLE IF NOT EXISTS recipe_ingredients (
     recipe_id   UUID NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
     position    INT  NOT NULL DEFAULT 0,
@@ -97,18 +88,14 @@ CREATE TABLE IF NOT EXISTS recipe_comments (
 CREATE INDEX IF NOT EXISTS idx_recipe_comments_recipe
     ON recipe_comments (recipe_id, created_at);
 
--- Meal plan: a family assigns recipes to calendar days + slots.
 CREATE TABLE IF NOT EXISTS meal_plan_entries (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     family_id   UUID NOT NULL,
     recipe_id   UUID NOT NULL REFERENCES recipes (id) ON DELETE CASCADE,
-    -- date is a calendar day, not a timestamptz: a meal plan is about days, not instants.
     plan_date   DATE NOT NULL,
     slot        TEXT NOT NULL CHECK (slot IN ('breakfast','lunch','dinner','snack','dessert')),
     servings    INT  NOT NULL DEFAULT 0 CHECK (servings >= 0),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- One recipe per slot per day per family — adding the same soup to lunch twice is a UI
-    -- mistake, not a second helping.
     UNIQUE (family_id, plan_date, slot)
 );
 

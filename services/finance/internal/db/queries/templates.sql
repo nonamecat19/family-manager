@@ -1,7 +1,3 @@
--- Templates are private to their owner: every read is keyed by owner_user_id, so asking for
--- another member's templates returns an empty list rather than an error. They are private,
--- not secret.
-
 -- name: ListTemplates :many
 SELECT * FROM quick_templates
 WHERE family_id = $1 AND owner_user_id = $2
@@ -24,8 +20,6 @@ UPDATE quick_templates
 SET label        = COALESCE(sqlc.narg('label')::text, label),
     icon         = COALESCE(sqlc.narg('icon')::text, icon),
     amount_minor = COALESCE(sqlc.narg('amount_minor')::bigint, amount_minor),
-    -- The currency follows the account: a template moved onto a USD card is a USD template,
-    -- and without this column the row would keep a code its account no longer holds.
     currency_code = COALESCE(sqlc.narg('currency_code')::text, currency_code),
     category_id  = COALESCE(sqlc.narg('category_id')::uuid, category_id),
     account_id   = COALESCE(sqlc.narg('account_id')::uuid, account_id),

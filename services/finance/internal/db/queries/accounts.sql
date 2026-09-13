@@ -1,17 +1,3 @@
--- PRIVATE ACCOUNT VISIBILITY IS A SECURITY BOUNDARY, and it is enforced here rather than in
--- Go: every read that can return an account, a balance or a total carries the viewer's member
--- id and the same predicate
---
---     (a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
---
--- so a handler cannot forget it by forgetting a filter. The only fact about someone else's
--- private accounts that leaves this file is CountHiddenPrivateAccounts' count.
---
--- balance_minor is derived on every read and never stored: a persisted total drifts the
--- moment a transaction is edited. It is the opening balance, plus income, minus expense,
--- minus every transfer leaving the account, plus what arrived on every transfer into it
--- (received_amount_minor when the transfer crossed currencies, the sent amount otherwise).
-
 -- name: ListVisibleAccounts :many
 SELECT a.*,
     (a.opening_balance_minor
@@ -26,8 +12,6 @@ WHERE a.family_id = $1
   AND (sqlc.arg('include_archived')::bool OR NOT a.archived)
 ORDER BY a.sort_order, a.created_at;
 
--- CountHiddenPrivateAccounts is the whole of what another member's private accounts become on
--- the wire: an owner and a count. No balance, no name, no currency.
 -- name: CountHiddenPrivateAccounts :many
 SELECT a.owner_member_id, COUNT(*)::int AS account_count
 FROM accounts a
@@ -38,10 +22,6 @@ WHERE a.family_id = $1
 GROUP BY a.owner_member_id
 ORDER BY a.owner_member_id;
 
--- GetVisibleAccount is GetAccount with the boundary applied. A row that exists but belongs to
--- another member's private set returns no rows, so the handler answers NotFound — the same
--- answer as an id that never existed, because "this id exists but is not yours" is itself a
--- leak.
 -- name: GetVisibleAccount :one
 SELECT a.*,
     (a.opening_balance_minor
@@ -55,10 +35,6 @@ WHERE a.id = $1
   AND a.family_id = $2
   AND (a.visibility = 'shared' OR a.owner_member_id = sqlc.arg('viewer_member_id')::uuid);
 
--- SumFamilyBalances is the "Спільно доступно" headline and the savings line beside it.
--- Private accounts are excluded outright, as is anything the household took out of the
--- headline deliberately; SAVINGS is reported on its own line, and DEBT counts toward the
--- headline because money owed is money you do not have.
 -- name: SumFamilyBalances :one
 SELECT
     COALESCE(SUM(b.balance_minor) FILTER (
@@ -101,8 +77,6 @@ SET name       = COALESCE(sqlc.narg('name')::text, name),
 WHERE id = $1 AND family_id = $2
 RETURNING *;
 
--- Visibility moves with its owner in one statement: turning an account private without
--- stamping the owner, or shared without clearing it, violates accounts_private_has_owner.
 -- name: SetAccountVisibility :one
 UPDATE accounts
 SET visibility = $3,
@@ -122,9 +96,6 @@ RETURNING *;
 DELETE FROM accounts
 WHERE id = $1 AND family_id = $2;
 
--- The boundary is a write rule too: a member may not push another member's private account
--- around in a list they cannot see. An id that is not visible simply does not move, which is
--- what an id that does not exist already did.
 -- name: ReorderAccount :exec
 UPDATE accounts
 SET sort_order = $3, updated_at = NOW()

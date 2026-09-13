@@ -16,11 +16,6 @@ ORDER BY plan_date, slot;
 DELETE FROM meal_plan_entries
 WHERE id = $1 AND family_id = $2;
 
--- TotalIngredients: aggregates every ingredient across the meal plan range, scaled by each
--- entry's servings relative to its recipe's servings. Sums by name+unit so "flour / g" from
--- two recipes adds to one line on the shopping list. The amount is summed as numeric text
--- (recipes store free-form amounts); non-numeric amounts are summed as count (1 per row) so
--- "2 cloves" + "3 cloves" becomes "2" — the app shows the breakdown for non-numeric totals.
 -- name: TotalIngredients :many
 WITH scaled AS (
     SELECT
@@ -53,14 +48,7 @@ FROM scaled
 GROUP BY name, unit
 ORDER BY name, unit;
 
--- SumIngredientsForBasket answers the ad-hoc question ("I plan to cook these, what do I
--- buy") without persisting anything: the basket arrives as two parallel arrays and is
--- unnested into rows. Same scaling and same name+unit grouping as TotalIngredients, so the
--- calendar and the basket produce identical lines for identical input. The family_id join
--- condition is what stops a caller totalling another family's recipes by id.
 -- name: SumIngredientsForBasket :many
--- The two arrays are unnested separately and re-joined on ordinality rather than with the
--- two-argument unnest(a, b) form, which sqlc's query analyser cannot type.
 WITH ids AS (
     SELECT t.recipe_id, t.ord
     FROM unnest(@recipe_ids::uuid[]) WITH ORDINALITY AS t(recipe_id, ord)

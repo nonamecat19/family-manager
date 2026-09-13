@@ -1,14 +1,3 @@
--- A recurring payment is attached to an account, so it inherits that account's visibility:
--- the schedule's name, amount and cadence say as much about a private account as a
--- transaction does. Every read therefore joins accounts and carries the same predicate the
--- rest of this directory carries
---
---     (a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
---
--- and is named Visible* so a handler reaching for an unscoped read has to notice there isn't
--- one. Writes are gated by reading the row through GetVisibleRecurringPayment first — the
--- same "the read is the guard" rule accounts.sql states.
-
 -- name: ListVisibleRecurringPayments :many
 SELECT r.*
 FROM recurring_payments r
@@ -18,10 +7,6 @@ WHERE r.family_id = $1
   AND (sqlc.arg('include_inactive')::bool OR r.active)
 ORDER BY r.next_due_on, r.created_at;
 
--- GetVisibleRecurringPayment answers NotFound for a schedule on another member's private
--- account, the same answer as an id that never existed: "this id exists but is not yours" is
--- itself a leak, and a write RPC that skipped this read would be a read of exactly what the
--- boundary hides.
 -- name: GetVisibleRecurringPayment :one
 SELECT r.*
 FROM recurring_payments r
@@ -41,8 +26,6 @@ RETURNING *;
 UPDATE recurring_payments
 SET name           = COALESCE(sqlc.narg('name')::text, name),
     amount_minor   = COALESCE(sqlc.narg('amount_minor')::bigint, amount_minor),
-    -- Same rule as quick_templates: the schedule is denominated in its account's currency, so
-    -- moving it to another account moves the currency with it.
     currency_code  = COALESCE(sqlc.narg('currency_code')::text, currency_code),
     category_id    = COALESCE(sqlc.narg('category_id')::uuid, category_id),
     account_id     = COALESCE(sqlc.narg('account_id')::uuid, account_id),
