@@ -1,7 +1,10 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.api.dto;
 
-import com.example.notesjava.group.Group;
 
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NotePriority;
+import com.example.notesjava.note.domain.NoteStatus;
 import java.time.Instant;
 
 public record NoteResponse(
@@ -16,7 +19,7 @@ public record NoteResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
-    static NoteResponse from(Note note) {
+    public static NoteResponse from(Note note) {
         Note parent = note.getParent();
         Group group = note.getGroup();
         return new NoteResponse(

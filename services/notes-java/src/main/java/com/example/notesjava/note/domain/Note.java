@@ -1,7 +1,7 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.domain;
 
 import com.example.notesjava.common.persistence.BaseEntity;
-import com.example.notesjava.group.Group;
+import com.example.notesjava.group.domain.Group;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -100,10 +100,11 @@ public class Note extends BaseEntity {
     }
 
     /**
-     * Package-private: reparenting is only safe after the cycle check in
-     * {@link NoteService#resolveParent}, which is the one caller.
+     * Only safe once the caller has checked that {@code parent} is not this note or one of its
+     * descendants — {@code NoteService} does that before calling, and nothing else should call
+     * this. A loop closed here would make every later walk of the tree non-terminating.
      */
-    void reparent(Note parent) {
+    public void reparent(Note parent) {
         this.parent = parent;
     }
 }
