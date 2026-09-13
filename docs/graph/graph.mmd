@@ -17,7 +17,6 @@ graph LR
     service_auth["service:auth"]
     service_family["service:family"]
     service_finance["service:finance"]
-    service_notes["service:notes"]
     service_recipes["service:recipes"]
   end
   subgraph golibs
@@ -47,12 +46,6 @@ graph LR
     table_finance_members["table:finance_members"]
     table_finance_settings["table:finance_settings"]
     table_meal_plan_entries["table:meal_plan_entries"]
-    table_note_activity["table:note_activity"]
-    table_note_comments["table:note_comments"]
-    table_note_shares["table:note_shares"]
-    table_notebook_shares["table:notebook_shares"]
-    table_notebooks["table:notebooks"]
-    table_notes["table:notes"]
     table_quick_templates["table:quick_templates"]
     table_recipe_categories["table:recipe_categories"]
     table_recipe_comments["table:recipe_comments"]
@@ -69,15 +62,9 @@ graph LR
     table_widget_instances["table:widget_instances"]
   end
   subgraph infras
-    infra_auth["infra:auth"]
-    infra_auth_signing_key["infra:auth-signing-key"]
-    infra_family["infra:family"]
-    infra_finance["infra:finance"]
     infra_minio["infra:minio"]
     infra_nats["infra:nats"]
-    infra_notes["infra:notes"]
     infra_postgres["infra:postgres"]
-    infra_recipes["infra:recipes"]
   end
   app_finance -->|DEPENDS_ON| pkg__fm_api
   app_finance -->|DEPENDS_ON| pkg__fm_auth
@@ -118,9 +105,6 @@ graph LR
   service_auth -->|IMPLEMENTS| proto_libs_proto_auth_v1_auth_proto
   service_auth -->|PERSISTS_TO| table_refresh_tokens
   service_auth -->|PERSISTS_TO| table_users
-  service_auth -->|RUNS_ON| infra_auth
-  service_auth -->|RUNS_ON| infra_auth_signing_key
-  service_auth -->|RUNS_ON| infra_family
   service_auth -->|RUNS_ON| infra_postgres
   service_family -->|DEPENDS_ON| golib_auth
   service_family -->|DEPENDS_ON| golib_database
@@ -132,7 +116,6 @@ graph LR
   service_family -->|PERSISTS_TO| table_families
   service_family -->|PERSISTS_TO| table_family_invitations
   service_family -->|PERSISTS_TO| table_family_members
-  service_family -->|RUNS_ON| infra_family
   service_family -->|RUNS_ON| infra_nats
   service_family -->|RUNS_ON| infra_postgres
   service_finance -->|DEPENDS_ON| golib_auth
@@ -153,20 +136,8 @@ graph LR
   service_finance -->|PERSISTS_TO| table_reminders
   service_finance -->|PERSISTS_TO| table_transactions
   service_finance -->|PERSISTS_TO| table_widget_instances
-  service_finance -->|RUNS_ON| infra_finance
   service_finance -->|RUNS_ON| infra_nats
   service_finance -->|RUNS_ON| infra_postgres
-  service_notes -->|IMPLEMENTS| proto_libs_proto_notes_v1_notes_proto
-  service_notes -->|PERSISTS_TO| table_note_activity
-  service_notes -->|PERSISTS_TO| table_note_comments
-  service_notes -->|PERSISTS_TO| table_note_shares
-  service_notes -->|PERSISTS_TO| table_notebook_shares
-  service_notes -->|PERSISTS_TO| table_notebooks
-  service_notes -->|PERSISTS_TO| table_notes
-  service_notes -->|RUNS_ON| infra_minio
-  service_notes -->|RUNS_ON| infra_nats
-  service_notes -->|RUNS_ON| infra_notes
-  service_notes -->|RUNS_ON| infra_postgres
   service_recipes -->|DEPENDS_ON| golib_auth
   service_recipes -->|DEPENDS_ON| golib_database
   service_recipes -->|DEPENDS_ON| golib_events
@@ -185,7 +156,6 @@ graph LR
   service_recipes -->|PERSISTS_TO| table_recipes
   service_recipes -->|RUNS_ON| infra_nats
   service_recipes -->|RUNS_ON| infra_postgres
-  service_recipes -->|RUNS_ON| infra_recipes
   table_accounts -->|OWNED_BY| service_finance
   table_budgets -->|OWNED_BY| service_finance
   table_categories -->|OWNED_BY| service_finance
@@ -196,12 +166,6 @@ graph LR
   table_finance_members -->|OWNED_BY| service_finance
   table_finance_settings -->|OWNED_BY| service_finance
   table_meal_plan_entries -->|OWNED_BY| service_recipes
-  table_note_activity -->|OWNED_BY| service_notes
-  table_note_comments -->|OWNED_BY| service_notes
-  table_note_shares -->|OWNED_BY| service_notes
-  table_notebook_shares -->|OWNED_BY| service_notes
-  table_notebooks -->|OWNED_BY| service_notes
-  table_notes -->|OWNED_BY| service_notes
   table_quick_templates -->|OWNED_BY| service_finance
   table_recipe_categories -->|OWNED_BY| service_recipes
   table_recipe_comments -->|OWNED_BY| service_recipes
