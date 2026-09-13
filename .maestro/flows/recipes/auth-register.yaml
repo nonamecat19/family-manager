@@ -1,5 +1,3 @@
-# Login flow: register a new account, then verify the app navigates past the auth screen.
-# Requires a running backend (auth + family services via `just up`).
 appId: dev.familymanager.recipes
 name: "Auth: register and sign in"
 tags:
@@ -9,7 +7,6 @@ tags:
     clearState: true
 - assertVisible: "Family Recipes"
 
-# Switch to register mode
 - tapOn: "Create an account"
 
 - tapOn: "Name"
@@ -21,7 +18,6 @@ tags:
 
 - tapOn: "Create account"
 
-# Either the household onboarding screen or Home, depending on whether a family exists.
 - extendedWaitUntil:
     visible: "Start your"
     timeout: 10000

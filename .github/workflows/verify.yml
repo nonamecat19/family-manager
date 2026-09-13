@@ -1,5 +1,3 @@
-# The verify node of the task graph (docs/workflow.md), enforced in CI.
-# Jobs are independent — no fake edges between them.
 name: verify
 
 on:
@@ -7,16 +5,9 @@ on:
     branches: [master]
   pull_request:
 
-# Read-only. Nothing here publishes anything: the six jobs build, lint and compare. The
-# workflow-level default would otherwise be whatever the repository setting happens to be,
-# which is a property of a settings page rather than of this file.
 permissions:
   contents: read
 
-# One verify per ref. A second push to a PR makes the first run's answer irrelevant, and
-# cancelling it returns six runners instead of paying for a result nobody will read.
-# master is excluded from the cancellation: its runs are the record of whether each commit on
-# the branch was green, and cancelling one leaves a gap in that record.
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
@@ -43,8 +34,6 @@ jobs:
         with:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
-      # Each module in go.work is linted separately: golangci-lint takes one module at a time,
-      # and a workspace-wide invocation silently lints only the first.
       - name: golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh |
@@ -64,8 +53,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      # --frozen-lockfile fails rather than resolving: a package.json edited without a
-      # regenerated lockfile is a build CI must refuse, not silently paper over.
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint typecheck test
 
@@ -75,21 +62,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # buf breaking needs the base branch
+          fetch-depth: 0
       - uses: bufbuild/buf-action@v1
         with:
           input: libs/proto
-          # The input is 'breaking_against', not 'against' — the latter is silently ignored,
-          # which left this job comparing against whatever the action defaulted to.
           breaking_against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.repository.default_branch }},subdir=libs/proto"
-          # The action posts its findings as a PR comment by default, which needs
-          # pull-requests: write. The default token does not have it (and a fork's never
-          # will), so the job failed on the comment even when every buf check passed.
-          # The checks themselves are the signal; the comment is not worth the permission.
           pr_comment: false
 
   graph:
-    # Keeps the knowledge graph honest: a structural change without `just graph` fails here.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -100,32 +80,10 @@ jobs:
       - run: node tools/repo-graph/extract.mjs --check
 
   desktop:
-    # apps/notes/desktop is the only Rust in the repo (ADR 0009). It is not in `just verify` —
-    # a Rust-less machine skips it locally — so this job is the only thing that can turn red
-    # when the Tauri shell or its capabilities file breaks. CI=true is what makes the target
-    # refuse to skip.
-    #
-    # Deliberately NOT path-filtered, so a TypeScript-only PR does pay for the apt install and
-    # the toolchain. Three reasons, in order:
-    #   - Actions has no per-job `paths:`. The only ways to get one are a `dorny/paths-filter`
-    #     gate job every other job would then `needs:` — the "fake edges between jobs" line 2
-    #     rules out — or splitting this into its own workflow file, which gives it a separate
-    #     concurrency group and a separate required check.
-    #   - Nothing else in this repo filters: no job here does, and deploy.yml rejects the idea
-    #     outright, on the grounds that a subtly wrong filter skips the check and leaves a
-    #     green tick next to a commit nobody verified.
-    #   - The filter would have to list apps/notes/desktop/**, the justfile target, and this
-    #     file — and the Tauri config reads apps/notes/dist, so a web-side change can break the
-    #     bundle without touching src-tauri at all.
-    # Swatinem/rust-cache below already takes the repeat cost down to the apt install and a
-    # cache restore; if that stops being acceptable, split this into its own workflow rather
-    # than growing a gate job here.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      # webkit2gtk-4.1 and gtk3 are build-time pkg-config dependencies of tauri/wry, not just
-      # runtime ones: without them the *-sys crates fail to configure and nothing compiles.
       - name: Linux webview dependencies
         run: |
           sudo apt-get update
@@ -139,6 +97,4 @@ jobs:
         with:
           workspaces: apps/notes/desktop/src-tauri
       - run: just --version || (curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin)
-      # No pnpm install and no `expo export` here: the checks run against the Rust crate, and
-      # apps/notes/dist is only read when `cargo tauri build` bundles the web assets.
       - run: just check-desktop

@@ -1,16 +1,4 @@
 #!/usr/bin/env bash
-# Pushes the dish photos named by import.mjs's image manifest into the recipes bucket.
-#
-#   R2_ENDPOINT=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=... \
-#     tools/recipe-import/upload-images.sh out/images.tsv
-#
-# Or point it at the deployment's env file, which already holds all four:
-#
-#   tools/recipe-import/upload-images.sh --env-file /opt/family-manager/.env out/images.tsv
-#
-# The manifest is "<local file>\t<object key>" per line. Keys are <family_id>/<recipe_id>.webp
-# — the same shape services/recipes writes when the app uploads a photo — so a later in-app
-# upload replaces the seeded object rather than leaving it orphaned in the bucket.
 set -euo pipefail
 
 if [ "${1:-}" = "--env-file" ]; then
@@ -31,10 +19,6 @@ for v in R2_ENDPOINT R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
 done
 command -v aws >/dev/null || { echo "aws cli not found" >&2; exit 2; }
 
-# R2_ENDPOINT is written for libs/go/storage, whose client wants a bare host and takes TLS
-# from a separate flag. The aws CLI wants a URL. It may also carry a /<bucket> suffix, which is
-# the form Cloudflare's dashboard copies out, while the S3 API wants the bucket named
-# separately — so normalise both ends.
 ENDPOINT="${R2_ENDPOINT%/}"
 ENDPOINT="${ENDPOINT%/$R2_BUCKET}"
 case "$ENDPOINT" in
@@ -44,9 +28,7 @@ esac
 
 export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
-# R2 ignores the region but the SDK refuses to sign without one.
 export AWS_DEFAULT_REGION=auto
-# R2 does not implement the trailing checksum the newer CLI adds by default.
 export AWS_REQUEST_CHECKSUM_CALCULATION=when_required
 export AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
 
@@ -67,7 +49,6 @@ while IFS=$'\t' read -r src key; do
     --body "$src" \
     --content-type image/webp \
     --output text --query 'ETag' >/dev/null
-  # One line per 25 so a 457-image run shows progress without 457 lines of noise.
   if [ $((n % 25)) -eq 0 ] || [ "$n" -eq "$total" ]; then
     echo "  uploaded $n/$total"
   fi

@@ -1,7 +1,3 @@
-# Every unexpected failure now reaches the user as "internal error (ref 3f1c8a02b7d5)" and
-# nothing else (ADR 0008). That was the right trade — the alternative was pgx's message, table
-# names included, in the response body — but it moved the only handle on a failure into a string
-# the reporter has to copy. This form exists to ask for it.
 name: Bug report
 description: Something in an app or a service did not work
 labels: [bug]

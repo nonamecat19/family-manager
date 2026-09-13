@@ -1,5 +1,3 @@
-# Recipe list: the Recipes tab shows the cookbook, the filter sheet opens, add is reachable.
-# Requires an authenticated session (run after auth-login).
 appId: dev.familymanager.recipes
 name: "Recipes: list screen"
 tags:
@@ -11,7 +9,6 @@ tags:
 - tapOn: "Recipes"
 - assertVisible: "All recipes"
 
-# The filter sheet is where every facet lives
 - tapOn: "Filter"
 - assertVisible: "Max time"
 - tapOn: "Close"
