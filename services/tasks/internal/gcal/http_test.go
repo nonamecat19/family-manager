@@ -140,7 +140,10 @@ func TestInsertAllDayEventEscapesCalendarID(t *testing.T) {
 	if g.lastPath != "/calendar/v3/calendars/family%23b@group.calendar.google.com/events" {
 		t.Fatalf("path %s", g.lastPath)
 	}
-	start := g.lastBody["start"].(map[string]any)
+	start, ok := g.lastBody["start"].(map[string]any)
+	if !ok {
+		t.Fatalf("body start %v", g.lastBody["start"])
+	}
 	if start["date"] != "2026-10-05" || start["dateTime"] != nil {
 		t.Fatalf("body start %v", start)
 	}
@@ -160,7 +163,10 @@ func TestUpdateSwitchingToAllDaySendsExplicitNulls(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	st := g.lastBody["start"].(map[string]any)
+	st, ok := g.lastBody["start"].(map[string]any)
+	if !ok {
+		t.Fatalf("body start %v", g.lastBody["start"])
+	}
 	if v, ok := st["dateTime"]; !ok || v != nil {
 		t.Fatalf("dateTime must be sent as explicit null, got %v (present %v)", v, ok)
 	}
@@ -179,7 +185,10 @@ func TestUpdateTimedEventSendsRFC3339AndZone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	st := g.lastBody["start"].(map[string]any)
+	st, ok := g.lastBody["start"].(map[string]any)
+	if !ok {
+		t.Fatalf("body start %v", g.lastBody["start"])
+	}
 	if st["dateTime"] != "2026-10-05T18:00:00+03:00" || st["timeZone"] != "Europe/Kyiv" || st["date"] != nil {
 		t.Fatalf("start %v", st)
 	}

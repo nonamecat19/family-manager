@@ -95,7 +95,7 @@ func (c *HTTPClient) token(ctx context.Context, form url.Values) (Token, error) 
 	if err != nil {
 		return Token{}, err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	var body tokenResponse
 	if err := json.NewDecoder(io.LimitReader(res.Body, maxBody)).Decode(&body); err != nil {
 		return Token{}, fmt.Errorf("%w: token status %d", ErrUnexpectedResponse, res.StatusCode)
@@ -182,7 +182,7 @@ func (c *HTTPClient) Revoke(ctx context.Context, token string) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	_, _ = io.Copy(io.Discard, io.LimitReader(res.Body, maxBody))
 	if res.StatusCode == http.StatusOK || res.StatusCode == http.StatusBadRequest {
 		return nil
@@ -240,7 +240,7 @@ func (c *HTTPClient) do(ctx context.Context, method, path, accessToken string, q
 	if err != nil {
 		return transportError(method+" "+path, err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	switch {
 	case res.StatusCode == http.StatusUnauthorized:
 		return ErrUnauthorized
