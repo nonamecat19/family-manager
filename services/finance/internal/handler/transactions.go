@@ -54,9 +54,6 @@ func (h *Handler) CreateTransaction(
 		return nil, err
 	}
 
-	// The account is read through the visibility predicate, so a transaction cannot be written
-	// against an account the caller may not see — which would otherwise be a way to discover
-	// that one exists.
 	account, err := h.visibleAccount(ctx, c, accountID)
 	if err != nil {
 		return nil, err
@@ -72,9 +69,6 @@ func (h *Handler) CreateTransaction(
 		return nil, err
 	}
 
-	// member_id is who spent, and defaults to the caller: the "Хто" picker opens on them.
-	// It is deliberately allowed to name someone else — one member logging a shared purchase
-	// on another's behalf is the flow screen 03 draws.
 	memberID := c.memberID()
 	if trimmed(msg.GetMemberId()) != "" {
 		if memberID, err = requireUUID("member_id", msg.GetMemberId()); err != nil {
@@ -140,9 +134,6 @@ func (h *Handler) announceTransactionCreated(ctx context.Context, c caller, v tr
 	})
 }
 
-// attachGroup fills in the category's group for a row that came back from a write, where no
-// join ran. The group id is on the wire because every feed row and every event consumer needs
-// it, and re-deriving it client-side would need the whole taxonomy.
 func (h *Handler) attachGroup(ctx context.Context, c caller, row db.Transaction) (transactionView, error) {
 	v := transactionView{row: row}
 	if !row.CategoryID.Valid {
@@ -173,8 +164,6 @@ func (h *Handler) GetTransaction(
 	row, err := h.q.GetVisibleTransaction(ctx, db.GetVisibleTransactionParams{
 		ID: id, FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 	})
-	// A transaction paid from another member's private account is invisible, and gets the same
-	// answer as one that never existed.
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, notFound("transaction")
 	}
@@ -218,7 +207,6 @@ func (h *Handler) UpdateTransaction(
 	}
 
 	params := db.UpdateTransactionParams{ID: id, FamilyID: c.familyID}
-	// The row keeps its currency unless the edit moves it to an account that holds another one.
 	currency := existing.CurrencyCode
 	if msg.Type != nil {
 		newType := txTypeFromProto(msg.GetType())
@@ -237,9 +225,6 @@ func (h *Handler) UpdateTransaction(
 			return nil, err
 		}
 		params.AccountID = accountID
-		// Moving a transaction to an account in another currency has to bring a new amount:
-		// relabelling 500,00 UAH as 500,00 USD is not a conversion, and this service has no
-		// rate it could defend doing one with.
 		if account.CurrencyCode != currency && msg.Amount == nil {
 			return nil, invalid(
 				"this account is in %s: send the amount in %s as well",
@@ -249,8 +234,6 @@ func (h *Handler) UpdateTransaction(
 		currency = account.CurrencyCode
 	}
 	if msg.CategoryId == nil && params.Type != nil {
-		// Only the type is changing, so the category being re-checked is the one already on
-		// the row: turning an expense into an income leaves it under an expense category.
 		if err := h.checkCategoryKind(ctx, c, existing.CategoryID, *params.Type); err != nil {
 			return nil, err
 		}
@@ -260,8 +243,6 @@ func (h *Handler) UpdateTransaction(
 		if err != nil {
 			return nil, err
 		}
-		// The kind is the edit's own if it is changing one, and the row's otherwise: an edit
-		// that moves an expense under an income category is refused either way.
 		kind := existing.Type
 		if params.Type != nil {
 			kind = *params.Type
@@ -313,8 +294,6 @@ func (h *Handler) UpdateTransaction(
 		params.MemberID = memberID
 	}
 
-	// The budgets the transaction was in before the edit, and the ones it is in after: an edit
-	// that moves a purchase from Їжа to Розваги changes two bars, not one.
 	beforeOld, err := h.affectedBudgets(ctx, c, hh, existing.CategoryID, existing.OccurredOn.Time)
 	if err != nil {
 		return nil, err
@@ -372,8 +351,6 @@ func (h *Handler) UpdateTransaction(
 	}), nil
 }
 
-// occurredOnOf answers "which day will this transaction sit on after the update", which is the
-// day the post-edit budget window has to be evaluated in.
 func occurredOnOf(params db.UpdateTransactionParams, existing db.GetVisibleTransactionRow) time.Time {
 	if params.OccurredOn.Valid {
 		return params.OccurredOn.Time
@@ -433,15 +410,11 @@ func (h *Handler) DeleteTransaction(
 		ActorUserId:   c.user,
 		OccurredAt:    h.timestamp(),
 	})
-	// A delete can pull a budget back under its limit, which announceBudgetChanges turns into
-	// the recovery event the notifications service needs to retract its alert.
 	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(existing.ID))
 
 	return connect.NewResponse(&financev1.DeleteTransactionResponse{AffectedBudgets: after}), nil
 }
 
-// ListTransactions is the feed, grouped into day sections server-side: the per-day subtotal
-// and the period header have to agree with the page boundary, and only the server knows both.
 func (h *Handler) ListTransactions(
 	ctx context.Context, req *connect.Request[financev1.ListTransactionsRequest],
 ) (*connect.Response[financev1.ListTransactionsResponse], error) {
@@ -481,10 +454,7 @@ func (h *Handler) ListTransactions(
 		Kind:      kindFilter(msg.GetKind()),
 		MemberIds: filters.members, AccountIds: filters.accounts,
 		CategoryIds: categoryIDs, GroupIds: groupIDs,
-		PageSize: pageSize(msg.GetPageSize()),
-		// Transfers belong in the feed on the ЗАГАЛЬНЕ tab — "where did the money go" includes
-		// moving it — but never under an expense or income tab, where they would double the
-		// month.
+		PageSize:         pageSize(msg.GetPageSize()),
 		IncludeTransfers: msg.GetKind() == financev1.TransactionKind_TRANSACTION_KIND_UNSPECIFIED,
 	}
 	if q := trimmed(msg.GetQuery()); q != "" {
@@ -504,8 +474,6 @@ func (h *Handler) ListTransactions(
 		return nil, h.internal(ctx, err, "list transactions")
 	}
 
-	// The header total carries EVERY predicate the page carries — group and search included —
-	// or the number above the list describes a wider set of transactions than the list itself.
 	totalParams := db.SumVisibleTransactionsParams{
 		FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 		FromDate: pgDate(window.from), ToDate: pgDate(window.to),
@@ -522,8 +490,6 @@ func (h *Handler) ListTransactions(
 		Days:        daySections(rows, hh.currency(), totalParams.Kind == nil),
 		PeriodTotal: money(total.TotalMinor, hh.currency()),
 	}
-	// A full page means there may be more. A short page cannot have more, so the cursor is
-	// cleared rather than handing the app a request that returns nothing.
 	if int32(len(rows)) == params.PageSize && len(rows) > 0 {
 		last := rows[len(rows)-1]
 		out.NextCursor = encodeCursor(pgconv.DateString(last.OccurredOn), pgconv.UUIDString(last.ID))
@@ -531,14 +497,6 @@ func (h *Handler) ListTransactions(
 	return connect.NewResponse(out), nil
 }
 
-// daySections groups an already-ordered page by calendar day. Each subtotal is scoped the same
-// way the period total is — no transfers, household currency only, the two sides netted when
-// no kind filter is set — so a day subtotal and the header mean the same thing.
-//
-// It sees one PAGE, not the period: a day with more transactions than fit on a page is emitted
-// as one section per page, each subtotalling the rows it carries. The app merges sections by
-// date as it scrolls, so what the user sees adds up; a single section is not, on its own, a
-// promise that the day is complete.
 func daySections(
 	rows []db.ListVisibleTransactionsRow, currency string, netIncome bool,
 ) []*financev1.DaySection {
@@ -562,9 +520,6 @@ func daySections(
 				WeekdayLabel: r.OccurredOn.Time.Weekday().String(),
 			}
 		}
-		// The subtotal is in the household currency, so a row booked in another one is shown
-		// but not added: minor units of two currencies are not the same unit, and summing them
-		// would put a number on the section that means nothing.
 		if r.Type != kindTransfer && r.CurrencyCode == currency {
 			if netIncome && r.Type == kindIncome {
 				dayTotal -= r.AmountMinor
@@ -578,9 +533,6 @@ func daySections(
 	return out
 }
 
-// scopeFilter is the resolved (member, account) pair every aggregate query takes. The Scope
-// switcher and the explicit filter lists are the same thing to SQL, so they are merged once
-// here rather than in each RPC.
 type scopeFilter struct {
 	members  []pgtype.UUID
 	accounts []pgtype.UUID
@@ -619,8 +571,6 @@ func (h *Handler) scopeFilters(scope *financev1.Scope, memberIDs, accountIDs []s
 	return scopeFilter{members: members, accounts: accounts}, nil
 }
 
-// The cursor is the feed's sort key, not an offset: an OFFSET moves under a feed that is
-// being written to, and a page boundary that shifts shows a row twice or not at all.
 func encodeCursor(date, id string) string { return date + "|" + id }
 
 func decodeCursor(cursor string, loc *time.Location) (time.Time, pgtype.UUID, error) {
@@ -639,12 +589,6 @@ func decodeCursor(cursor string, loc *time.Location) (time.Time, pgtype.UUID, er
 	return day, u, nil
 }
 
-// checkCategoryKind refuses a category from the other half of the taxonomy. Categories are
-// created under an expense or an income group and the app only ever offers the matching tree,
-// so a mismatch is either a stale screen or a client bug — and the row it would write is
-// invisible in every breakdown while still moving a balance.
-//
-// An unset category is allowed: "не вказано" is a real answer on screen 03.
 func (h *Handler) checkCategoryKind(
 	ctx context.Context, c caller, categoryID pgtype.UUID, txType string,
 ) error {

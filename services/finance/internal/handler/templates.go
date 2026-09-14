@@ -12,9 +12,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// ListTemplates answers for the caller's own templates only. Asking for another member's
-// returns an empty list rather than PermissionDenied: templates are private, not secret, and
-// an error would confirm that the other member has some.
 func (h *Handler) ListTemplates(
 	ctx context.Context, req *connect.Request[financev1.ListTemplatesRequest],
 ) (*connect.Response[financev1.ListTemplatesResponse], error) {
@@ -77,8 +74,6 @@ func (h *Handler) CreateTemplate(
 	if err != nil {
 		return nil, err
 	}
-	// The template writes this (type, category) pair onto a transaction every time its chip is
-	// tapped, so the pair is checked once here rather than failing on every tap.
 	if err := h.checkCategoryKind(ctx, c, categoryID, txTypeFromProto(msg.GetType())); err != nil {
 		return nil, err
 	}
@@ -141,8 +136,6 @@ func (h *Handler) UpdateTemplate(
 		}
 		params.Icon = &icon
 	}
-	// The account is resolved before the amount: it is what decides which currency the amount
-	// has to be in, and a patch may be moving the template to an account holding another one.
 	tpl, err := h.q.GetTemplate(ctx, db.GetTemplateParams{
 		ID: id, FamilyID: c.familyID, OwnerUserID: c.userID,
 	})
@@ -163,9 +156,6 @@ func (h *Handler) UpdateTemplate(
 			return nil, err
 		}
 		params.AccountID = accountID
-		// Moving the template to an account in another currency moves the template with it —
-		// and it has to bring a new amount, because 500 UAH is not 500 USD and this service
-		// has no rate it could defend converting with.
 		if account.CurrencyCode != currency {
 			if msg.Amount == nil {
 				return nil, invalid(
@@ -193,7 +183,6 @@ func (h *Handler) UpdateTemplate(
 		if params.CategoryID, err = optionalUUID("category_id", msg.GetCategoryId()); err != nil {
 			return nil, err
 		}
-		// The type is not patchable, so the pair is judged against the template's own type.
 		if err := h.checkCategoryKind(ctx, c, params.CategoryID, tpl.Type); err != nil {
 			return nil, err
 		}
@@ -269,8 +258,6 @@ func (h *Handler) ReorderTemplates(
 	return connect.NewResponse(&financev1.ReorderTemplatesResponse{}), nil
 }
 
-// LogTemplate is one round trip from a home-screen widget that may have no app process alive:
-// it writes the transaction, bumps the template's usage and returns the budgets it moved.
 func (h *Handler) LogTemplate(
 	ctx context.Context, req *connect.Request[financev1.LogTemplateRequest],
 ) (*connect.Response[financev1.LogTemplateResponse], error) {
@@ -323,8 +310,6 @@ func (h *Handler) LogTemplate(
 		return nil, err
 	}
 
-	// One transaction: a logged template that wrote the ledger row but not the usage bump
-	// would reorder the chip row on the next read for a reason nobody can see.
 	var row db.Transaction
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
 		created, err := q.CreateTransaction(ctx, db.CreateTransactionParams{

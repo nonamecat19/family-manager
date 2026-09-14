@@ -13,24 +13,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// migrationsTable is deliberately golang-migrate's layout, so the `migrate` CLI in
-// `just tools` stays usable against a database this runner has touched.
 const migrationsTable = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
 	version BIGINT  NOT NULL PRIMARY KEY,
 	dirty   BOOLEAN NOT NULL DEFAULT FALSE
 )`
 
-// Migration is one numbered up-migration read off disk.
 type Migration struct {
 	Version int64
 	Name    string
 	SQL     string
 }
 
-// Migrate applies every not-yet-applied `NNNNNN_name.up.sql` in dir, in version order.
-// Each migration runs in its own transaction together with its schema_migrations row, so a
-// failure leaves the database on the last complete version rather than half-applied.
 func Migrate(ctx context.Context, pool *pgxpool.Pool, fsys fs.FS, dir string) ([]int64, error) {
 	migrations, err := LoadMigrations(fsys, dir)
 	if err != nil {
@@ -59,7 +53,6 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool, fsys fs.FS, dir string) ([
 	return ran, nil
 }
 
-// LoadMigrations parses the up-migrations in dir without touching a database.
 func LoadMigrations(fsys fs.FS, dir string) ([]Migration, error) {
 	entries, err := fs.ReadDir(fsys, dir)
 	if err != nil {

@@ -15,13 +15,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// Subjects this service publishes.
-//
-// CONVENTION DEBT, deliberate and reported: every other subject in the repo is a constant in
-// libs/go/events/events.go, and these belong there too. libs/go is outside this task's file
-// assignment (one writer per file), so they are declared here — as constants rather than
-// string literals at the call sites, which is the half of the rule this file can keep — and
-// the move is called out in the task's return value.
 const (
 	subjectTransactionCreated events.Subject = "finance.transaction.created"
 	subjectTransactionUpdated events.Subject = "finance.transaction.updated"
@@ -37,8 +30,6 @@ const (
 	subjectRecurringPosted    events.Subject = "finance.recurring.posted"
 )
 
-// Stored enum values. The CHECK constraints in 000001_init.up.sql are the other half of each
-// of these sets; a value that is not here cannot reach the database.
 const (
 	kindExpense  = "expense"
 	kindIncome   = "income"
@@ -57,19 +48,14 @@ const (
 	budgetPeriodYear  = "year"
 )
 
-// EventBus is the slice of libs/go/events this service uses. Narrow on purpose: tests pass a
-// recorder instead of standing up NATS.
 type EventBus interface {
 	Publish(ctx context.Context, subject events.Subject, msg proto.Message) error
 }
 
-// noopBus lets the service run (and tests pass) with no broker attached.
 type noopBus struct{}
 
 func (noopBus) Publish(context.Context, events.Subject, proto.Message) error { return nil }
 
-// publish is fire-and-forget by design: a transaction that was written must not be reported
-// as failed because the broker hiccuped. The failure is logged, not returned.
 func (h *Handler) publish(ctx context.Context, subject events.Subject, msg proto.Message) {
 	if err := h.bus.Publish(ctx, subject, msg); err != nil {
 		h.log.WarnContext(ctx, "publish failed", slog.String("subject", string(subject)),
@@ -81,17 +67,11 @@ func (h *Handler) timestamp() *timestamppb.Timestamp { return timestamppb.New(h.
 
 func trimmed(s string) string { return strings.TrimSpace(s) }
 
-/* --------------------------------------------------------------------- money */
-
-// money is the one place a stored (minor, code) pair becomes the wire type. Floating point
-// never enters: the minor unit is an int64 from the column to the app's number.
 func money(minor int64, code string) *financev1.Money {
 	return &financev1.Money{AmountMinor: minor, CurrencyCode: code}
 }
 
 func moneyMinor(m *financev1.Money) int64 { return m.GetAmountMinor() }
-
-/* --------------------------------------------------------------------- enums */
 
 func accountKindToProto(s string) financev1.AccountKind {
 	switch s {
@@ -112,8 +92,6 @@ func accountKindToProto(s string) financev1.AccountKind {
 	}
 }
 
-// accountKindFromProto defaults an unspecified kind to cash rather than rejecting it: the
-// picker starts on a kind, and "no kind" from an older client is a cash account, not an error.
 func accountKindFromProto(k financev1.AccountKind) string {
 	switch k {
 	case financev1.AccountKind_ACCOUNT_KIND_CARD:
@@ -138,9 +116,6 @@ func visibilityToProto(s string) financev1.AccountVisibility {
 	return financev1.AccountVisibility_ACCOUNT_VISIBILITY_SHARED
 }
 
-// visibilityFromProto defaults to shared. An account whose visibility a client forgot to set
-// must not silently become private: private is the state with a security consequence, so it
-// has to be asked for.
 func visibilityFromProto(v financev1.AccountVisibility) string {
 	if v == financev1.AccountVisibility_ACCOUNT_VISIBILITY_PRIVATE {
 		return visibilityPrivate
@@ -161,7 +136,6 @@ func txTypeToProto(s string) financev1.TransactionType {
 	}
 }
 
-// txTypeFromProto defaults to expense, which is what the add sheet opens on.
 func txTypeFromProto(t financev1.TransactionType) string {
 	switch t {
 	case financev1.TransactionType_TRANSACTION_TYPE_INCOME:
@@ -184,8 +158,6 @@ func txKindToProto(s string) financev1.TransactionKind {
 	}
 }
 
-// taxonomyKindFromProto is the expense/income discriminator on a group or category. Unlike a
-// filter, a stored kind must be one or the other, so UNSPECIFIED becomes expense.
 func taxonomyKindFromProto(k financev1.TransactionKind) string {
 	if k == financev1.TransactionKind_TRANSACTION_KIND_INCOME {
 		return kindIncome
@@ -193,8 +165,6 @@ func taxonomyKindFromProto(k financev1.TransactionKind) string {
 	return kindExpense
 }
 
-// kindFilter is the nullable filter form: UNSPECIFIED means "both", so it maps to a NULL
-// sentinel rather than to a value. This is the ЗАГАЛЬНЕ tab.
 func kindFilter(k financev1.TransactionKind) *string {
 	switch k {
 	case financev1.TransactionKind_TRANSACTION_KIND_EXPENSE:
@@ -219,7 +189,6 @@ func budgetPeriodToProto(s string) financev1.BudgetPeriod {
 	}
 }
 
-// budgetPeriodFromProto defaults to month: every budget the design draws is monthly.
 func budgetPeriodFromProto(p financev1.BudgetPeriod) string {
 	switch p {
 	case financev1.BudgetPeriod_BUDGET_PERIOD_WEEK:
@@ -238,8 +207,6 @@ func budgetTargetToProto(s string) financev1.BudgetTargetKind {
 	return financev1.BudgetTargetKind_BUDGET_TARGET_KIND_GROUP
 }
 
-// budgetTargetFilter maps the list filter to the nullable column sentinel; UNSPECIFIED is
-// every budget, which is what the household counter needs.
 func budgetTargetFilter(f financev1.BudgetTargetFilter) *string {
 	switch f {
 	case financev1.BudgetTargetFilter_BUDGET_TARGET_FILTER_GROUP:
@@ -280,8 +247,6 @@ func weekdayToProto(s string) financev1.Weekday {
 	return financev1.Weekday_WEEKDAY_UNSPECIFIED
 }
 
-// weekdayFromProto returns "" for UNSPECIFIED so a caller can tell "leave it alone" from a
-// chosen day; the recurring-payment column stores "" for "no weekday anchor".
 func weekdayFromProto(w financev1.Weekday) string {
 	i := int(w)
 	if i <= 0 || i >= len(weekdayNames) {
@@ -363,7 +328,6 @@ func widgetSizeToProto(s string) financev1.WidgetSize {
 	return financev1.WidgetSize_WIDGET_SIZE_UNSPECIFIED
 }
 
-// widgetSizeFromProto defaults to the 4×2 cell, the size the gallery opens on.
 func widgetSizeFromProto(s financev1.WidgetSize) string {
 	i := int(s)
 	if i <= 0 || i >= len(widgetSizeNames) {
@@ -390,8 +354,6 @@ func scopeKindFromProto(k financev1.ScopeKind) string {
 	}
 	return scopeKindNames[i]
 }
-
-/* --------------------------------------------------------------- to-proto */
 
 func toProtoSettings(s db.FinanceSetting) *financev1.HouseholdFinanceSettings {
 	return &financev1.HouseholdFinanceSettings{
@@ -420,9 +382,6 @@ func toProtoMember(m db.FinanceMember) *financev1.Member {
 	}
 }
 
-// accountView is the shape every account read produces: the row plus its derived balance.
-// ListVisibleAccounts and GetVisibleAccount generate two structurally identical row types, so
-// this is where they converge instead of duplicating the converter.
 type accountView struct {
 	row     db.Account
 	balance int64
@@ -448,9 +407,6 @@ func viewFromGet(r db.GetVisibleAccountRow) accountView {
 	}, balance: r.BalanceMinor}
 }
 
-// viewFromWrite wraps a row that came back from an INSERT/UPDATE, where no balance was
-// computed. The opening balance is the honest answer for a just-created account and the app
-// refetches the list after an edit.
 func viewFromWrite(a db.Account) accountView {
 	return accountView{row: a, balance: a.OpeningBalanceMinor}
 }
@@ -526,9 +482,6 @@ func toProtoBudget(b db.Budget) *financev1.Budget {
 	}
 }
 
-// transactionView is a transaction plus the group its category belongs to. The feed reads it
-// from a join; a write path fills GroupID separately, because the row an INSERT returns has
-// no join.
 type transactionView struct {
 	row     db.Transaction
 	groupID pgtype.UUID
@@ -579,8 +532,6 @@ func toProtoTransaction(v transactionView) *financev1.Transaction {
 		CreatedAt:        pgconv.Timestamp(t.CreatedAt),
 		UpdatedAt:        pgconv.Timestamp(t.UpdatedAt),
 	}
-	// received_amount exists only on a cross-currency transfer; a zeroed Money on every other
-	// row would make the app draw a second amount of 0.
 	if t.ReceivedAmountMinor != nil {
 		out.ReceivedAmount = money(*t.ReceivedAmountMinor, t.ReceivedCurrencyCode)
 	}

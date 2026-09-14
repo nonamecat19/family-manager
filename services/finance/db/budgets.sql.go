@@ -182,9 +182,6 @@ type ListBudgetsForCategoryParams struct {
 	CategoryID pgtype.UUID
 }
 
-// ListBudgetsForCategory is what CreateTransaction/UpdateTransaction/DeleteTransaction use to
-// answer affected_budgets: both the category's own budget and its group's, because spend in a
-// category counts toward both.
 func (q *Queries) ListBudgetsForCategory(ctx context.Context, arg ListBudgetsForCategoryParams) ([]Budget, error) {
 	rows, err := q.db.Query(ctx, listBudgetsForCategory, arg.FamilyID, arg.CategoryID)
 	if err != nil {

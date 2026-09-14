@@ -44,8 +44,6 @@ func testSigner(t *testing.T) *token.Signer {
 	return signer
 }
 
-// Every sibling service fetches this endpoint at boot; if its shape drifts, the whole system
-// stops verifying tokens.
 func TestJWKSEndpointServesThePublicKey(t *testing.T) {
 	signer := testSigner(t)
 	mux := newMux(handler.New(handler.Options{}), signer, okPinger{}, nil)
@@ -73,7 +71,6 @@ func TestJWKSEndpointServesThePublicKey(t *testing.T) {
 	}
 }
 
-// The endpoint is the one place a private key could leak by accident.
 func TestJWKSEndpointNeverLeaksThePrivateKey(t *testing.T) {
 	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
@@ -99,7 +96,6 @@ func TestJWKSEndpointIsReadOnly(t *testing.T) {
 	}
 }
 
-// Auth's own procedures must stay reachable without a token — they are how a caller gets one.
 func TestAuthProceduresAreRegistered(t *testing.T) {
 	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
@@ -125,9 +121,6 @@ func TestHealthzReportsOK(t *testing.T) {
 	}
 }
 
-// An oversize body must be refused while it is being read, not after it has been buffered
-// into memory. Register is unauthenticated, so without the cap anyone who can reach the port
-// can make the process allocate as much as they care to send.
 func TestOversizeRequestIsRejected(t *testing.T) {
 	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
 
@@ -140,7 +133,6 @@ func TestOversizeRequestIsRejected(t *testing.T) {
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
-	// Connect maps CodeResourceExhausted to 429.
 	if rec.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, want 429 (body=%s)", rec.Code, rec.Body.String())
 	}
@@ -156,8 +148,6 @@ func (c *countingSweeper) DeleteExpiredRefreshTokens(context.Context) (int64, er
 	return 3, c.err
 }
 
-// The sweep used to wait a full interval before its first pass, so a service restarting more
-// often than the interval never swept at all.
 func TestSweepRunsBeforeTheFirstTick(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -191,7 +181,6 @@ func TestSweepStopsWithTheContext(t *testing.T) {
 	}
 }
 
-// A failing sweep is a warning, not a reason to give up on every later pass.
 func TestSweepKeepsGoingAfterAnError(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

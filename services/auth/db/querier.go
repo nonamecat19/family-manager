@@ -11,27 +11,14 @@ import (
 )
 
 type Querier interface {
-	// The WHERE NOT EXISTS closes a race: a refresh that passed the "is this chain alive?" check
-	// can otherwise insert its successor a moment after a concurrent replay revoked the chain,
-	// resurrecting it. Inserting nothing returns no rows, which the handler treats as a refusal.
-	//
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
-	// Lookups are case-insensitive to match idx_users_email_lower: the address a user typed with
-	// a capital must find the account they registered without one.
-	//
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
-	// Marks the token spent. The WHERE clause is the concurrency guard: two refreshes racing on
-	// the same token, only one updates a row, and the loser is treated as a replay.
-	//
 	MarkRefreshTokenUsed(ctx context.Context, id pgtype.UUID) (int64, error)
 	RevokeAllForUser(ctx context.Context, userID pgtype.UUID) (int64, error)
-	// Reuse of a spent token means it leaked: kill the whole rotation chain, not just this token,
-	// because the thief and the victim both hold descendants of it.
-	//
 	RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error)
 }
 

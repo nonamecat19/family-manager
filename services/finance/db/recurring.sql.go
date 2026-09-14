@@ -161,10 +161,6 @@ type GetVisibleRecurringPaymentParams struct {
 	ViewerMemberID pgtype.UUID
 }
 
-// GetVisibleRecurringPayment answers NotFound for a schedule on another member's private
-// account, the same answer as an id that never existed: "this id exists but is not yours" is
-// itself a leak, and a write RPC that skipped this read would be a read of exactly what the
-// boundary hides.
 func (q *Queries) GetVisibleRecurringPayment(ctx context.Context, arg GetVisibleRecurringPaymentParams) (RecurringPayment, error) {
 	row := q.db.QueryRow(ctx, getVisibleRecurringPayment, arg.ID, arg.FamilyID, arg.ViewerMemberID)
 	var i RecurringPayment
@@ -194,7 +190,6 @@ func (q *Queries) GetVisibleRecurringPayment(ctx context.Context, arg GetVisible
 }
 
 const listVisibleRecurringPayments = `-- name: ListVisibleRecurringPayments :many
-
 SELECT r.id, r.family_id, r.name, r.amount_minor, r.currency_code, r.type, r.category_id, r.account_id, r.member_id, r.interval_count, r.interval_unit, r.day_of_month, r.day_of_week, r.next_due_on, r.end_on, r.auto_post, r.active, r.last_posted_on, r.created_at, r.updated_at
 FROM recurring_payments r
 JOIN accounts a ON a.id = r.account_id
@@ -210,16 +205,6 @@ type ListVisibleRecurringPaymentsParams struct {
 	IncludeInactive bool
 }
 
-// A recurring payment is attached to an account, so it inherits that account's visibility:
-// the schedule's name, amount and cadence say as much about a private account as a
-// transaction does. Every read therefore joins accounts and carries the same predicate the
-// rest of this directory carries
-//
-//	(a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
-//
-// and is named Visible* so a handler reaching for an unscoped read has to notice there isn't
-// one. Writes are gated by reading the row through GetVisibleRecurringPayment first — the
-// same "the read is the guard" rule accounts.sql states.
 func (q *Queries) ListVisibleRecurringPayments(ctx context.Context, arg ListVisibleRecurringPaymentsParams) ([]RecurringPayment, error) {
 	rows, err := q.db.Query(ctx, listVisibleRecurringPayments, arg.FamilyID, arg.ViewerMemberID, arg.IncludeInactive)
 	if err != nil {
@@ -265,8 +250,6 @@ const updateRecurringPayment = `-- name: UpdateRecurringPayment :one
 UPDATE recurring_payments
 SET name           = COALESCE($3::text, name),
     amount_minor   = COALESCE($4::bigint, amount_minor),
-    -- Same rule as quick_templates: the schedule is denominated in its account's currency, so
-    -- moving it to another account moves the currency with it.
     currency_code  = COALESCE($5::text, currency_code),
     category_id    = COALESCE($6::uuid, category_id),
     account_id     = COALESCE($7::uuid, account_id),

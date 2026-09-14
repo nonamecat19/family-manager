@@ -116,8 +116,6 @@ func TestRequireFamily(t *testing.T) {
 	}
 }
 
-// The interceptor is the only place that knows who the caller is. If it does not put the id on
-// the context, every log line downstream is anonymous.
 func TestInterceptorStampsTheUserIDForLogging(t *testing.T) {
 	v := &stubVerifier{claims: &Claims{UserID: "u1", FamilyID: "f1"}}
 	req := connect.NewRequest(&struct{}{})

@@ -35,8 +35,6 @@ func newFixture(t *testing.T) *fixture {
 	return &fixture{h: h, store: store, bus: bus}
 }
 
-// asUser builds a context carrying verified claims, which is what the interceptor does in
-// production.
 func asUser(userID string) context.Context {
 	return fmauth.WithClaims(context.Background(), &fmauth.Claims{
 		UserID: userID,
@@ -50,7 +48,6 @@ const (
 	carol = "33333333-3333-4333-8333-333333333333"
 )
 
-// createFamilyAs is the setup most tests need: a family with one admin.
 func (f *fixture) createFamilyAs(t *testing.T, userID, name string) *familyv1.Family {
 	t.Helper()
 	res, err := f.h.CreateFamily(asUser(userID), connect.NewRequest(&familyv1.CreateFamilyRequest{
@@ -141,7 +138,6 @@ func TestInviteRequiresAdmin(t *testing.T) {
 	f := newFixture(t)
 	fam := f.createFamilyAs(t, alice, "Household")
 
-	// Bob joins as a plain member, then tries to invite.
 	inv := f.invite(t, alice, fam.GetId(), "bob@example.test")
 	f.accept(t, bob, inv)
 
@@ -177,7 +173,6 @@ func TestInviteReturnsTokenOnceAndStoresOnlyItsHash(t *testing.T) {
 			t.Error("stored hash does not match the issued token")
 		}
 	}
-	// The invitation in the response must never carry the hash back out.
 	if !f.bus.sawSubject(events.SubjectFamilyMemberInvited) {
 		t.Error("expected family.member.invited")
 	}
@@ -187,7 +182,6 @@ func TestInviteDefaultsToMemberRole(t *testing.T) {
 	f := newFixture(t)
 	fam := f.createFamilyAs(t, alice, "Household")
 
-	// ROLE_UNSPECIFIED must not be read as admin.
 	inv := f.invite(t, alice, fam.GetId(), "bob@example.test")
 	f.accept(t, bob, inv)
 
@@ -207,7 +201,6 @@ func TestAcceptExpiredInvitationFails(t *testing.T) {
 	fam := f.createFamilyAs(t, alice, "Household")
 	token := f.invite(t, alice, fam.GetId(), "bob@example.test")
 
-	// Move the clock past the 48h TTL.
 	f.h.now = func() time.Time { return fixedNow.Add(72 * time.Hour) }
 
 	_, err := f.h.AcceptInvitation(asUser(bob),
@@ -232,7 +225,6 @@ func TestAcceptTwiceFails(t *testing.T) {
 	token := f.invite(t, alice, fam.GetId(), "bob@example.test")
 	f.accept(t, bob, token)
 
-	// Carol replaying the same link must not join.
 	_, err := f.h.AcceptInvitation(asUser(carol),
 		connect.NewRequest(&familyv1.AcceptInvitationRequest{Token: token}))
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
@@ -311,7 +303,6 @@ func TestLastAdminCannotLeave(t *testing.T) {
 		t.Fatalf("code = %v, want failed_precondition", connect.CodeOf(err))
 	}
 
-	// A plain member may leave freely.
 	if _, err := f.h.LeaveFamily(asUser(bob),
 		connect.NewRequest(&familyv1.LeaveFamilyRequest{FamilyId: fam.GetId()})); err != nil {
 		t.Fatalf("member LeaveFamily: %v", err)
@@ -354,7 +345,6 @@ func TestPublishFailureDoesNotFailTheWrite(t *testing.T) {
 	f := newFixture(t)
 	f.bus.err = errBoom
 
-	// The family is still created even though the broker rejected the event.
 	fam := f.createFamilyAs(t, alice, "Household")
 	if fam.GetId() == "" {
 		t.Fatal("expected the family to be created despite the publish failure")
@@ -374,8 +364,6 @@ func TestStoreFailureBecomesInternal(t *testing.T) {
 		t.Fatalf("wire message leaked the cause: %q", err.Error())
 	}
 }
-
-/* -------------------------------------------------------------------- helpers */
 
 func (f *fixture) invite(t *testing.T, adminID, familyID, email string) string {
 	t.Helper()
@@ -400,7 +388,6 @@ func TestGetUserMembershipAnswersForAuth(t *testing.T) {
 	f := newFixture(t)
 	fam := f.createFamilyAs(t, alice, "Household")
 
-	// The claim services/auth stamps on a token comes from here.
 	res, err := f.h.GetUserMembership(context.Background(),
 		connect.NewRequest(&familyv1.GetUserMembershipRequest{UserId: alice}))
 	if err != nil {
@@ -420,8 +407,6 @@ func TestGetUserMembershipAnswersForAuth(t *testing.T) {
 func TestGetUserMembershipTreatsNoFamilyAsNormal(t *testing.T) {
 	f := newFixture(t)
 
-	// A user who has not joined one yet is not an error: the token is minted without a
-	// family_id and the app shows onboarding.
 	res, err := f.h.GetUserMembership(context.Background(),
 		connect.NewRequest(&familyv1.GetUserMembershipRequest{UserId: carol}))
 	if err != nil {
@@ -442,8 +427,6 @@ func TestGetUserMembershipValidatesTheUserID(t *testing.T) {
 	}
 }
 
-// The address on an invitation is compared with what services/auth stored at registration,
-// which is lowercased. Storing it as typed makes the invitation one nothing will ever match.
 func TestInviteMemberNormalizesTheAddress(t *testing.T) {
 	f := newFixture(t)
 	fam := f.createFamilyAs(t, alice, "Test Household")
@@ -483,7 +466,6 @@ func TestCreateFamilyRejectsAnOversizeName(t *testing.T) {
 	}
 }
 
-// Runes, not bytes: a Ukrainian household name must not be worth half an English one.
 func TestCreateFamilyAcceptsAMaxLengthCyrillicName(t *testing.T) {
 	f := newFixture(t)
 	if _, err := f.h.CreateFamily(asUser(alice), connect.NewRequest(&familyv1.CreateFamilyRequest{
@@ -493,8 +475,6 @@ func TestCreateFamilyAcceptsAMaxLengthCyrillicName(t *testing.T) {
 	}
 }
 
-// A household with no members is invisible to its owner — they have no membership to find it
-// through — and permanent, because nothing deletes it.
 func TestCreateFamilyLeavesNoEmptyHouseholdWhenAddingTheOwnerFails(t *testing.T) {
 	f := newFixture(t)
 	f.store.failOn["AddMember"] = errBoom
@@ -508,8 +488,6 @@ func TestCreateFamilyLeavesNoEmptyHouseholdWhenAddingTheOwnerFails(t *testing.T)
 	}
 }
 
-// A used invitation that stays pending is a token that can be used again, which is the whole
-// reason it is marked accepted.
 func TestAcceptInvitationLeavesNoMemberWhenTheInvitationCannotBeSpent(t *testing.T) {
 	f := newFixture(t)
 	fam := f.createFamilyAs(t, alice, "Test Household")
@@ -522,7 +500,6 @@ func TestAcceptInvitationLeavesNoMemberWhenTheInvitationCannotBeSpent(t *testing
 	}
 	delete(f.store.failOn, "MarkInvitationAccepted")
 
-	// One member: alice. bob must not have been added by the half that succeeded.
 	if n := len(f.store.members); n != 1 {
 		t.Fatalf("%d member(s) after a failed accept, want 1", n)
 	}

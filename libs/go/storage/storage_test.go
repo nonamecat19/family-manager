@@ -17,9 +17,6 @@ func TestNewRequiresEndpointAndCredentials(t *testing.T) {
 	}
 	for name, cfg := range cases {
 		t.Run(name, func(t *testing.T) {
-			// A client built with a blank credential fails on first upload instead of at
-			// boot, which turns a misconfigured deploy into a broken feature nobody notices
-			// until someone tries to add a photo.
 			if _, err := New(cfg); err == nil {
 				t.Fatal("New() = nil error, want a refusal")
 			}
@@ -45,8 +42,6 @@ func TestNewRejectsAnUnknownProvider(t *testing.T) {
 	}
 }
 
-// R2's S3 endpoint serves no public reads at all, so a missing PublicURL there produces image
-// URLs that are guaranteed to 404 — the failure appears in the app, far from the config.
 func TestR2RequiresAPublicURL(t *testing.T) {
 	cfg := validMinIO()
 	cfg.Provider = ProviderR2
@@ -87,8 +82,6 @@ func TestPublicURLLosesItsTrailingSlash(t *testing.T) {
 	}
 }
 
-// The two providers disagree about the bucket, and getting it wrong produces a 404 for every
-// image rather than an error anything logs.
 func TestObjectURLShapePerProvider(t *testing.T) {
 	minio, err := New(Config{
 		Endpoint: "minio:9000", AccessKey: "k", SecretKey: "s",
@@ -109,7 +102,6 @@ func TestObjectURLShapePerProvider(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New(r2): %v", err)
 	}
-	// An R2 public domain is bound to one bucket, so repeating the bucket is a 404.
 	if got, want := r2.objectURL("recipes", "fam/rec.jpg"),
 		"https://images.example.test/fam/rec.jpg"; got != want {
 		t.Errorf("r2 objectURL = %q, want %q", got, want)

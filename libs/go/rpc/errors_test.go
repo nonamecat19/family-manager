@@ -36,8 +36,6 @@ func TestInternalReferenceLinksResponseToLog(t *testing.T) {
 
 	err := Internal(context.Background(), log, errors.New("boom"), "do thing")
 
-	// The reference is the only shared token between the two; if it does not appear in both,
-	// the response is untraceable and the whole trade is a loss.
 	_, ref, ok := strings.Cut(err.Error(), "ref ")
 	if !ok {
 		t.Fatalf("no reference in %q", err.Error())

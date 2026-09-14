@@ -14,9 +14,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// advanceDue is the whole recurrence engine: step the due date forward by one interval, then
-// re-apply the day anchor. Deliberately not rrule — a rent payment does not need it, and the
-// home-screen widget would have to reimplement whatever rrule subset the server chose.
 func advanceDue(from time.Time, interval int32, unit string, dayOfMonth int32) time.Time {
 	if interval <= 0 {
 		interval = 1
@@ -29,11 +26,9 @@ func advanceDue(from time.Time, interval int32, unit string, dayOfMonth int32) t
 		next = from.AddDate(0, 0, 7*int(interval))
 	case "year":
 		next = addMonthsClamped(from, 12*int(interval))
-	default: // month
+	default:
 		next = addMonthsClamped(from, int(interval))
 	}
-	// A payment anchored on the 31st must land on the 31st of the months that have one and on
-	// the last day of the months that do not — never skip a month, and never drift earlier.
 	if dayOfMonth > 0 && (unit == "month" || unit == "year") {
 		first := time.Date(next.Year(), next.Month(), 1, 0, 0, 0, 0, next.Location())
 		last := first.AddDate(0, 1, -1).Day()
@@ -46,9 +41,6 @@ func advanceDue(from time.Time, interval int32, unit string, dayOfMonth int32) t
 	return next
 }
 
-// visibleRecurring is to a schedule what visibleAccount is to an account: the one read every
-// path takes before touching a recurring payment, so "which schedules exist" is answered by
-// the same predicate as "which schedules I may list".
 func (h *Handler) visibleRecurring(ctx context.Context, c caller, id pgtype.UUID) (db.RecurringPayment, error) {
 	row, err := h.q.GetVisibleRecurringPayment(ctx, db.GetVisibleRecurringPaymentParams{
 		ID: id, FamilyID: c.familyID, ViewerMemberID: c.memberID(),
@@ -138,7 +130,6 @@ func (h *Handler) CreateRecurringPayment(
 	if err != nil {
 		return nil, err
 	}
-	// Same rule as a template: the schedule posts this pair onto a transaction every occurrence.
 	if err := h.checkCategoryKind(ctx, c, categoryID, txTypeFromProto(msg.GetType())); err != nil {
 		return nil, err
 	}
@@ -210,9 +201,6 @@ func (h *Handler) UpdateRecurringPayment(
 		return nil, err
 	}
 
-	// The read is the guard: without it a no-op patch against a schedule on another member's
-	// private account would answer with the whole row, turning a write RPC into the read the
-	// boundary exists to refuse — and would let one member retarget or reprice that schedule.
 	payment, err := h.visibleRecurring(ctx, c, id)
 	if err != nil {
 		return nil, err
@@ -229,8 +217,6 @@ func (h *Handler) UpdateRecurringPayment(
 		}
 		params.Name = &name
 	}
-	// The account is resolved before the amount: moving the schedule to an account in another
-	// currency is what decides which currency the new amount has to be in.
 	currency := payment.CurrencyCode
 	if msg.AccountId != nil {
 		accountID, err := requireUUID("account_id", msg.GetAccountId())
@@ -242,8 +228,6 @@ func (h *Handler) UpdateRecurringPayment(
 			return nil, err
 		}
 		params.AccountID = accountID
-		// Same rule as a template: the schedule follows its account's currency, and the move
-		// has to carry a new amount rather than relabelling the old one.
 		if account.CurrencyCode != currency {
 			if msg.Amount == nil {
 				return nil, invalid(
@@ -340,8 +324,6 @@ func (h *Handler) DeleteRecurringPayment(
 	if err != nil {
 		return nil, err
 	}
-	// A delete that is refused with NotFound for an invisible id and accepted for a visible
-	// one answers the same way as a delete of an id that never existed.
 	if _, err := h.visibleRecurring(ctx, c, id); err != nil {
 		return nil, err
 	}
@@ -357,9 +339,6 @@ func (h *Handler) DeleteRecurringPayment(
 	return connect.NewResponse(&financev1.DeleteRecurringPaymentResponse{}), nil
 }
 
-// PostRecurringOccurrence confirms one due date. Posting the same occurrence twice is a no-op
-// rather than a duplicate row: a widget that retried on a flaky connection must not invent a
-// second rent payment.
 func (h *Handler) PostRecurringOccurrence(
 	ctx context.Context, req *connect.Request[financev1.PostRecurringOccurrenceRequest],
 ) (*connect.Response[financev1.PostRecurringOccurrenceResponse], error) {
@@ -455,9 +434,6 @@ func (h *Handler) PostRecurringOccurrence(
 	}), nil
 }
 
-// SkipRecurringOccurrence moves the due date on without writing a row: a subscription that was
-// cancelled this month is not a transaction, and confirm-or-skip is the only safe default for
-// a payment that may not have happened.
 func (h *Handler) SkipRecurringOccurrence(
 	ctx context.Context, req *connect.Request[financev1.SkipRecurringOccurrenceRequest],
 ) (*connect.Response[financev1.SkipRecurringOccurrenceResponse], error) {

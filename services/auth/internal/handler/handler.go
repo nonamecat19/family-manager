@@ -1,15 +1,3 @@
-// Package handler implements auth.v1.AuthService over Connect.
-//
-// The shape of a session, in one place:
-//
-//   - Register creates the account. It does not sign anyone in — the client calls Login next,
-//     so there is exactly one code path that mints a session.
-//   - Login verifies the password with argon2id and mints an access token plus a refresh token.
-//   - Refresh rotates: the presented token is marked used and a successor is issued. Presenting
-//     an already-used token means it leaked, so the entire chain is revoked.
-//   - Logout revokes the presented token's chain.
-//
-// Only the SHA-256 of a refresh token is ever stored.
 package handler
 
 import (
@@ -38,14 +26,11 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
-// Signer is the token-minting surface the handler needs.
 type Signer interface {
 	Sign(c token.Claims) (string, error)
 	TTL() time.Duration
 }
 
-// FamilyLookup resolves which household a user belongs to. Implemented by a client of
-// services/family; nil disables the lookup and every token is minted without a family_id.
 type FamilyLookup interface {
 	FamilyOf(ctx context.Context, userID string) (familyID string, err error)
 }
@@ -68,10 +53,7 @@ type Options struct {
 	Family     FamilyLookup
 	Log        *slog.Logger
 	HashParams password.Params
-	// HashGate bounds concurrent argon2id work. Nil admits everything, which is what tests
-	// want and what a single-user deployment can live with.
-	HashGate *password.Gate
-	// Throttle limits repeated failed sign-ins for one account. Nil disables it.
+	HashGate   *password.Gate
 	Throttle   *throttle.Throttle
 	RefreshTTL time.Duration
 	Now        func() time.Time
@@ -104,21 +86,11 @@ func New(opts Options) *Handler {
 	return h
 }
 
-// minPasswordLength is a floor, not a policy. Composition rules ("one symbol, one digit")
-// push users toward predictable substitutions; length is what actually costs an attacker.
 const minPasswordLength = 8
 
-// Upper bounds. None of these is a policy either — they exist because every one of these
-// fields arrives unauthenticated and goes somewhere that costs something: the password into
-// argon2id, the email into a UNIQUE index, the name into a TEXT column with no width.
 const (
-	// maxPasswordBytes is far above any real passphrase. argon2id's cost does not grow with
-	// input length, so this is not about hashing time; it is about not accepting a megabyte
-	// of body per attempt and not storing what we refuse to bound.
 	maxPasswordBytes = 1024
-	// maxNameLength is in runes, not bytes: a Ukrainian name must not be worth half as much
-	// as an English one.
-	maxNameLength = 100
+	maxNameLength    = 100
 )
 
 func (h *Handler) Register(
@@ -158,9 +130,6 @@ func (h *Handler) Register(
 	})
 	if err != nil {
 		if isUniqueViolation(err) {
-			// AlreadyExists on a public endpoint does confirm the address is registered. That
-			// is unavoidable for a self-service signup form — the alternative is a flow that
-			// emails the address instead, which is a product decision, not a handler one.
 			return nil, connect.NewError(connect.CodeAlreadyExists,
 				errors.New("that email is already registered"))
 		}
@@ -176,16 +145,10 @@ func (h *Handler) Login(
 	ctx context.Context, req *connect.Request[authv1.LoginRequest],
 ) (*connect.Response[authv1.LoginResponse], error) {
 	email := fmauth.NormalizeEmail(req.Msg.GetEmail())
-	// Refused before the lookup and before the gate. A password no account could have is not
-	// worth a database round trip, let alone 19 MiB of argon2id — and rejecting it says
-	// nothing about whether the address exists, so the enumeration guarantee holds.
 	if len(email) > fmauth.MaxEmailLength || len(req.Msg.GetPassword()) > maxPasswordBytes {
 		return nil, errInvalidCredentials()
 	}
 
-	// Checked before the lookup and before the hash: a locked account must cost an attacker a
-	// round trip and nothing else. The wait is reported so a person who has genuinely mistyped
-	// their password knows to come back rather than assuming the app is broken.
 	if wait := h.throttle.Retry(email); wait > 0 {
 		return nil, errTooManyAttempts(wait)
 	}
@@ -193,17 +156,10 @@ func (h *Handler) Login(
 	user, err := h.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			// Hash anyway. Returning early here would make "no such user" measurably faster
-			// than "wrong password", which is an account-enumeration oracle even though the
-			// error text is identical. It goes through the gate for the same reason a real
-			// verify does: an unknown address must not be the cheap path to hold a slot.
 			_ = h.hashGate.Do(ctx, func() error {
 				_, err := password.Hash(req.Msg.GetPassword(), h.hashParams)
 				return err
 			})
-			// Counted like any other failure. Not counting it would make an unregistered
-			// address the unthrottled way to probe, and would leak which addresses exist by
-			// which ones start refusing.
 			h.throttle.Failed(email)
 			return nil, errInvalidCredentials()
 		}
@@ -258,8 +214,6 @@ func (h *Handler) Refresh(
 		return nil, errInvalidRefresh()
 	}
 	if row.UsedAt.Valid {
-		// Replay. Either the client raced itself or the token was stolen; we cannot tell, so
-		// we assume the worse case and kill every descendant of this chain.
 		if _, err := h.q.RevokeChain(ctx, row.ChainID); err != nil {
 			h.log.ErrorContext(ctx, "revoke chain after replay",
 				slog.String("error", err.Error()))
@@ -272,8 +226,6 @@ func (h *Handler) Refresh(
 		return nil, errInvalidRefresh()
 	}
 
-	// Marking used is the concurrency guard: two refreshes racing on one token, only one
-	// updates a row, and the loser is treated as a replay on its next attempt.
 	spent, err := h.q.MarkRefreshTokenUsed(ctx, row.ID)
 	if err != nil {
 		return nil, h.internal(ctx, err, "mark refresh token used")
@@ -290,7 +242,6 @@ func (h *Handler) Refresh(
 		return nil, h.internal(ctx, err, "get user")
 	}
 
-	// Same chain: rotation replaces a token, it does not start a new session.
 	tokens, err := h.mintSession(ctx, user, row.ChainID)
 	if err != nil {
 		return nil, err
@@ -314,9 +265,6 @@ func (h *Handler) Logout(
 	row, err := h.q.GetRefreshToken(ctx, hashToken(presented))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			// Logging out with a token we do not recognise ends in the same place the caller
-			// wanted: no session. Reporting an error would only tell an attacker which
-			// tokens exist.
 			return connect.NewResponse(&authv1.LogoutResponse{}), nil
 		}
 		return nil, h.internal(ctx, err, "get refresh token")
@@ -328,15 +276,12 @@ func (h *Handler) Logout(
 	return connect.NewResponse(&authv1.LogoutResponse{}), nil
 }
 
-/* ----------------------------------------------------------------- internals */
-
 type session struct {
 	access    string
 	refresh   string
 	expiresIn int64
 }
 
-// mintSession issues an access token and a refresh token belonging to chainID.
 func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.UUID) (session, error) {
 	familyID := h.familyOf(ctx, pgconv.UUIDString(user.ID))
 
@@ -360,9 +305,6 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 		ChainID:   chainID,
 		ExpiresAt: pgconv.TimestampFrom(h.now().Add(h.refreshTTL)),
 	}); err != nil {
-		// No rows means the query's guard fired: the chain was revoked between this
-		// refresh's check and its insert. Refusing is the whole point — resurrecting a
-		// chain a replay just killed would undo the theft response.
 		if errors.Is(err, pgx.ErrNoRows) {
 			return session{}, errInvalidRefresh()
 		}
@@ -376,9 +318,6 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 	}, nil
 }
 
-// familyOf resolves the family_id claim. A failure is logged and swallowed: a household
-// lookup outage must not stop people signing in, and a token without the claim degrades to
-// "show onboarding" rather than to wrong authorization.
 func (h *Handler) familyOf(ctx context.Context, userID string) string {
 	if h.family == nil {
 		return ""
@@ -405,37 +344,25 @@ func hashToken(t string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// newChainID mints the v4 UUID that identifies one refresh chain.
-//
-// It returns the error rather than a zero value on purpose. The previous version fell back to
-// "", which pgconv turns into an invalid (NULL) pgtype.UUID — the insert would then succeed
-// with chain_id NULL, and RevokeChain(NULL) matches no rows. A CSPRNG failure would have
-// quietly produced sessions that survive the replay response instead of being killed by it.
 func newChainID() (pgtype.UUID, error) {
 	var buf [16]byte
 	if _, err := rand.Read(buf[:]); err != nil {
 		return pgtype.UUID{}, fmt.Errorf("read random bytes: %w", err)
 	}
-	buf[6] = (buf[6] & 0x0f) | 0x40 // version 4
-	buf[8] = (buf[8] & 0x3f) | 0x80 // variant 10
+	buf[6] = (buf[6] & 0x0f) | 0x40
+	buf[8] = (buf[8] & 0x3f) | 0x80
 	return pgtype.UUID{Bytes: buf, Valid: true}, nil
 }
 
-// errInvalidCredentials is the single answer to a bad email and a bad password alike:
-// distinguishing them tells an attacker which addresses are registered.
 func errInvalidCredentials() error {
 	return connect.NewError(connect.CodeUnauthenticated, errors.New("invalid email or password"))
 }
 
-// errTooManyAttempts reports the lockout. ResourceExhausted rather than Unauthenticated: the
-// caller has not failed to authenticate this time, they have been refused the chance to try.
 func errTooManyAttempts(wait time.Duration) error {
 	return connect.NewError(connect.CodeResourceExhausted,
 		fmt.Errorf("too many failed sign-in attempts; try again in %s", wait.Round(time.Second)))
 }
 
-// errBusy is Unavailable rather than ResourceExhausted: the caller did nothing wrong and
-// should retry, which is exactly what Unavailable tells a Connect client.
 func errBusy() error {
 	return connect.NewError(connect.CodeUnavailable,
 		errors.New("too many sign-in attempts in flight; try again"))
@@ -449,14 +376,10 @@ func invalid(msg string) error {
 	return connect.NewError(connect.CodeInvalidArgument, errors.New(msg))
 }
 
-// internal hands the cause to the log and an opaque reference to the caller. Register, Login
-// and Refresh are unauthenticated, so a pgx error rendered into the response body is readable
-// by anyone who can reach the port.
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)
 }
 
-// isUniqueViolation reports whether err is Postgres SQLSTATE 23505.
 func isUniqueViolation(err error) bool {
 	var pgErr interface{ SQLState() string }
 	return errors.As(err, &pgErr) && pgErr.SQLState() == "23505"

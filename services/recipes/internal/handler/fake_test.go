@@ -19,15 +19,13 @@ import (
 	"github.com/nnc/family-manager/services/recipes/db"
 )
 
-// fakeStore is an in-memory db.Querier. The handler's rules (family scoping, favorite toggle,
-// ingredient totals) are what these tests exercise; Postgres itself is not under test here.
 type fakeStore struct {
 	categories    map[string]db.RecipeCategory
 	subcategories map[string]db.RecipeSubcategory
 	recipes       map[string]db.Recipe
-	ingredients   map[string][]db.RecipeIngredient // keyed by recipe_id
+	ingredients   map[string][]db.RecipeIngredient
 	steps         map[string][]db.RecipeStep
-	favorites     map[string]bool // keyed recipe|user
+	favorites     map[string]bool
 	comments      map[string]db.RecipeComment
 	mealPlan      map[string]db.MealPlanEntry
 
@@ -53,8 +51,6 @@ func favKey(recipeID, userID pgtype.UUID) string {
 }
 
 func (s *fakeStore) fail(op string) error { return s.failOn[op] }
-
-// --- categories ---
 
 func (s *fakeStore) CreateCategory(_ context.Context, arg db.CreateCategoryParams) (db.RecipeCategory, error) {
 	if err := s.fail("CreateCategory"); err != nil {
@@ -109,8 +105,6 @@ func (s *fakeStore) GetSubcategory(_ context.Context, id pgtype.UUID) (db.Recipe
 	}
 	return sub, nil
 }
-
-// --- recipes ---
 
 func (s *fakeStore) CreateRecipe(_ context.Context, arg db.CreateRecipeParams) (db.Recipe, error) {
 	if err := s.fail("CreateRecipe"); err != nil {
@@ -191,8 +185,6 @@ func (s *fakeStore) hasIngredientLike(recipeID pgtype.UUID, needle string) bool 
 	return false
 }
 
-// sortRecipes mirrors the ORDER BY in the ListRecipes query. Map iteration above is random,
-// so without this the fake would make sort assertions pass or fail by luck.
 func sortRecipes(rs []db.Recipe, key string) {
 	sort.SliceStable(rs, func(i, j int) bool {
 		a, b := rs[i], rs[j]
@@ -217,7 +209,6 @@ func (s *fakeStore) ListFavoriteRecipes(_ context.Context, userID pgtype.UUID) (
 		if !fav {
 			continue
 		}
-		// key is recipeID|userID
 		rid, uid := splitKey(key)
 		if uid != pgconv.UUIDString(userID) {
 			continue
@@ -243,7 +234,6 @@ func (s *fakeStore) UpdateRecipe(_ context.Context, arg db.UpdateRecipeParams) (
 	r.CookSeconds = arg.CookSeconds
 	r.Notes = arg.Notes
 	r.Rating = arg.Rating
-	// COALESCE in the real query: a nil pointer leaves the stored figure alone.
 	if arg.Kcal != nil {
 		r.Kcal = *arg.Kcal
 	}
@@ -343,8 +333,6 @@ func (s *fakeStore) DeleteSteps(_ context.Context, recipeID pgtype.UUID) error {
 	return nil
 }
 
-// --- favorites & comments ---
-
 func (s *fakeStore) AddFavorite(_ context.Context, arg db.AddFavoriteParams) error {
 	s.favorites[favKey(arg.RecipeID, arg.UserID)] = true
 	return nil
@@ -399,8 +387,6 @@ func (s *fakeStore) ListComments(_ context.Context, recipeID pgtype.UUID) ([]db.
 	return out, nil
 }
 
-// --- meal plan ---
-
 func (s *fakeStore) PlanMeal(_ context.Context, arg db.PlanMealParams) (db.MealPlanEntry, error) {
 	e := db.MealPlanEntry{
 		ID:        pgconv.MustUUID(newUUID()),
@@ -421,7 +407,6 @@ func (s *fakeStore) ListMealPlan(_ context.Context, arg db.ListMealPlanParams) (
 		if pgconv.UUIDString(e.FamilyID) != pgconv.UUIDString(arg.FamilyID) {
 			continue
 		}
-		// Simplified date comparison for tests
 		out = append(out, e)
 	}
 	return out, nil
@@ -440,7 +425,6 @@ func (s *fakeStore) RemoveMealPlanEntry(_ context.Context, arg db.RemoveMealPlan
 }
 
 func (s *fakeStore) TotalIngredients(_ context.Context, arg db.TotalIngredientsParams) ([]db.TotalIngredientsRow, error) {
-	// Simplified: sum ingredients across all meal plan entries in the family.
 	totals := map[string]db.TotalIngredientsRow{}
 	for _, e := range s.mealPlan {
 		if pgconv.UUIDString(e.FamilyID) != pgconv.UUIDString(arg.FamilyID) {
@@ -501,8 +485,6 @@ func (s *fakeStore) SumIngredientsForBasket(
 	return out, nil
 }
 
-// --- helpers ---
-
 type recorder struct {
 	published []events.Subject
 	err       error
@@ -543,9 +525,6 @@ func splitKey(key string) (string, string) {
 	return key, ""
 }
 
-// parseFloat reads a numeric string from a fake row. An unparseable value is zero, which is
-// what the real column would give for an empty amount — but the error is no longer discarded
-// silently, because a test comparing 0 to 0 passes for the wrong reason.
 func parseFloat(s string) float64 {
 	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
 	if err != nil {
@@ -554,13 +533,6 @@ func parseFloat(s string) float64 {
 	return f
 }
 
-// InTx makes the fake store satisfy Tx, and rolls back for real.
-//
-// A fake that ran the callback and kept whatever it wrote would let every atomicity test pass
-// whether or not the handler used a transaction at all, which makes the test worthless exactly
-// where it is needed. Instead it snapshots the maps, and restores them if the callback returns
-// an error — the observable half of what Postgres does, which is what the handler's behaviour
-// depends on.
 func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
 	undo := s.snapshot()
 	if err := fn(s); err != nil {
@@ -570,9 +542,6 @@ func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
 	return nil
 }
 
-// snapshot copies every map one level deep and returns a function restoring them. One level is
-// enough: the values are structs and the slices are replaced wholesale, never appended to in
-// place by a query.
 func (s *fakeStore) snapshot() func() {
 	categories := maps.Clone(s.categories)
 	subcategories := maps.Clone(s.subcategories)

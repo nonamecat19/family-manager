@@ -25,10 +25,6 @@ type BootstrapFinanceSettingsParams struct {
 	WeekStartsOn     string
 }
 
-// BootstrapFinanceSettings is idempotent per family: a second call returns the existing row
-// rather than a second household. The no-op UPDATE is what makes RETURNING * give a row on
-// conflict — DO NOTHING returns none, which would make the caller unable to tell "already
-// bootstrapped" from "insert failed".
 func (q *Queries) BootstrapFinanceSettings(ctx context.Context, arg BootstrapFinanceSettingsParams) (FinanceSetting, error) {
 	row := q.db.QueryRow(ctx, bootstrapFinanceSettings,
 		arg.FamilyID,
@@ -121,8 +117,6 @@ type UpdateFinanceSettingsParams struct {
 	PinLockEnabled                *bool
 }
 
-// Every column COALESCEs against the stored value: the app's settings screen sends only the
-// row the user touched, so an absent field means "leave it", not "clear it".
 func (q *Queries) UpdateFinanceSettings(ctx context.Context, arg UpdateFinanceSettingsParams) (FinanceSetting, error) {
 	row := q.db.QueryRow(ctx, updateFinanceSettings,
 		arg.FamilyID,

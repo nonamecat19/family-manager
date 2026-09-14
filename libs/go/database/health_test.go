@@ -36,8 +36,6 @@ func TestHealthHandlerReportsUnavailable(t *testing.T) {
 	}
 }
 
-// The point of the timeout: a wedged database must produce a 503, not a handler that never
-// returns. A check that hangs is one an orchestrator cannot act on.
 func TestHealthHandlerBoundsAHangingPing(t *testing.T) {
 	ping := pingFunc(func(ctx context.Context) error {
 		<-ctx.Done()
@@ -62,8 +60,6 @@ func TestHealthHandlerBoundsAHangingPing(t *testing.T) {
 	}
 }
 
-// A client that hangs up must release the check, not leave it pinning a pool connection until
-// the timeout expires.
 func TestHealthHandlerFollowsTheRequestContext(t *testing.T) {
 	released := make(chan struct{})
 	ping := pingFunc(func(ctx context.Context) error {

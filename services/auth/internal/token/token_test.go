@@ -44,8 +44,6 @@ func testSigner(t *testing.T) *Signer {
 	return s
 }
 
-// The contract that matters: a token this package mints must verify with the library every
-// other service uses. If these two ever drift, every request in the system fails.
 func TestTokenVerifiesWithLibsGoAuth(t *testing.T) {
 	signer := testSigner(t)
 
@@ -179,7 +177,6 @@ func TestJWKSCarriesOnlyPublicMaterial(t *testing.T) {
 		t.Error("kid is empty; verifiers cannot select a key during rotation")
 	}
 
-	// Serialised, the set must not contain the private scalar under any field name.
 	raw, err := json.Marshal(set)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
@@ -210,13 +207,11 @@ func TestNewSignerRejectsUnusableKeys(t *testing.T) {
 		t.Error("expected an error for non-PEM input")
 	}
 
-	// RSA is a perfectly good key and completely wrong here.
 	rsaPEM := string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: []byte("nonsense")}))
 	if _, err := NewSigner(Config{PrivateKeyPEM: rsaPEM}); err == nil {
 		t.Error("expected an error for a non-EC key")
 	}
 
-	// P-384 is stronger and still wrong: ES256 means P-256.
 	key, _ := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 	der, _ := x509.MarshalPKCS8PrivateKey(key)
 	p384 := string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der}))
@@ -226,7 +221,6 @@ func TestNewSignerRejectsUnusableKeys(t *testing.T) {
 }
 
 func TestSEC1KeysAreAccepted(t *testing.T) {
-	// `openssl ecparam -genkey` emits SEC1, which is what an operator is most likely to have.
 	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	der, err := x509.MarshalECPrivateKey(key)
 	if err != nil {

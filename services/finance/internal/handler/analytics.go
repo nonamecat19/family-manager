@@ -15,8 +15,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// share is spent/total as a ratio, guarding the empty period. Unclamped on purpose: a budget
-// share above 1 is what the overspend colour is for.
 func share(part, whole int64) float64 {
 	if whole == 0 {
 		return 0
@@ -24,9 +22,6 @@ func share(part, whole int64) float64 {
 	return float64(part) / float64(whole)
 }
 
-// memberSpending is the per-member split behind the household cards, the member screen and the
-// group drill-down. It reads through the same visibility predicate as everything else, so a
-// member's private spend appears on their own device and nowhere else.
 func (h *Handler) memberSpending(
 	ctx context.Context, c caller, hh household, window dayRange, kind *string, accounts []pgtype.UUID,
 ) ([]*financev1.MemberSpending, error) {
@@ -68,9 +63,6 @@ func (h *Handler) memberSpending(
 	return out, nil
 }
 
-// GetHomeSummary is the home screen in a single call. Headline, donut, group rows with their
-// budget bars, member chips and template chips all move together when the scope or the period
-// changes, so fetching them apart is what lets two of them disagree on screen.
 func (h *Handler) GetHomeSummary(
 	ctx context.Context, req *connect.Request[financev1.GetHomeSummaryRequest],
 ) (*connect.Response[financev1.GetHomeSummaryResponse], error) {
@@ -93,9 +85,6 @@ func (h *Handler) GetHomeSummary(
 	}
 	kind := kindFilter(msg.GetKind())
 
-	// The headline is the household's shared money regardless of scope: switching the donut to
-	// one member does not change what the family has, and a headline that moved with the
-	// filter would read as "Олена's balance".
 	balances, err := h.q.SumFamilyBalances(ctx, db.SumFamilyBalancesParams{
 		FamilyID: c.familyID, CurrencyCode: hh.currency(),
 	})
@@ -112,9 +101,6 @@ func (h *Handler) GetHomeSummary(
 	if err != nil {
 		return nil, h.internal(ctx, err, "sum by group")
 	}
-	// A transaction with no category still spent money, so SumByGroup returns it under a NULL
-	// group. It is counted in the period total AND given a row of its own below: a total the
-	// rows do not add up to is the disagreement this bucket exists to prevent.
 	sums := map[string]int64{}
 	var periodTotal, uncategorised int64
 	for _, r := range groupSums {
@@ -181,8 +167,6 @@ func (h *Handler) GetHomeSummary(
 			row.Budget = status
 		}
 		out.Groups = append(out.Groups, row)
-		// A group with nothing spent in it is a row but not a slice: a zero-width wedge is
-		// noise in a donut and a legend entry the user cannot tap.
 		if amount > 0 {
 			out.Slices = append(out.Slices, &financev1.DonutSlice{
 				GroupId: id, Name: g.Name, Icon: g.Icon, ColorStep: g.ColorStep,
@@ -191,9 +175,6 @@ func (h *Handler) GetHomeSummary(
 		}
 	}
 
-	// The uncategorised bucket is last, and only when there is something in it. Its group id is
-	// empty, which is what tells the app to name it "Без категорії" — the server has no name to
-	// give a group that does not exist.
 	if uncategorised > 0 {
 		out.Groups = append(out.Groups, &financev1.GroupRow{
 			Amount: money(uncategorised, hh.currency()),
@@ -230,8 +211,6 @@ func (h *Handler) GetHomeSummary(
 	return connect.NewResponse(out), nil
 }
 
-// contributorsByGroup answers the "· Сергій" caption: who spent in this group this period. It
-// is not an ownership claim on the group — nothing in the model attributes a group to a member.
 func (h *Handler) contributorsByGroup(
 	ctx context.Context, c caller, hh household, window dayRange, kind *string, filters scopeFilter,
 ) (map[string][]string, error) {
@@ -260,7 +239,6 @@ func (h *Handler) contributorsByGroup(
 		for id := range members {
 			ids = append(ids, id)
 		}
-		// Sorted so the caption is stable between reads; map iteration order is not.
 		sort.Strings(ids)
 		out[group] = ids
 	}
@@ -451,9 +429,6 @@ func (h *Handler) GetMemberBreakdown(
 	return connect.NewResponse(out), nil
 }
 
-// GetSpendingSeries buckets in Go from one daily-totals query rather than issuing one query
-// per bucket: seven round trips to draw seven bars is the shape that makes the charts screen
-// feel slow on a phone.
 func (h *Handler) GetSpendingSeries(
 	ctx context.Context, req *connect.Request[financev1.GetSpendingSeriesRequest],
 ) (*connect.Response[financev1.GetSpendingSeriesResponse], error) {
@@ -522,8 +497,6 @@ func (h *Handler) GetSpendingSeries(
 	}
 
 	out := &financev1.GetSpendingSeriesResponse{
-		// The current bucket is always the last: seriesBuckets counts back from today, so the
-		// chart can outline it without a second request.
 		CurrentBucketIndex: int32(len(buckets) - 1),
 	}
 	for i, b := range buckets {
@@ -548,12 +521,8 @@ func (h *Handler) GetSpendingSeries(
 	return connect.NewResponse(out), nil
 }
 
-// maxSeriesBuckets bounds the chart's x-axis. The design draws 7; anything past a couple of
-// years of daily buckets is a scan of the whole table dressed as a chart.
 const maxSeriesBuckets = 60
 
-// segmentLabels resolves a stacked series' keys to the names and ramp steps the legend draws,
-// so the client does not have to hold the member list and the taxonomy to render a chart.
 func (h *Handler) segmentLabels(
 	ctx context.Context, c caller, stacking financev1.SeriesStacking,
 ) (map[string]string, map[string]int32, error) {
@@ -615,16 +584,10 @@ func (h *Handler) ListInsights(
 
 const (
 	maxInsights = 5
-	// spikeRatio and spikeFloor are the thresholds an insight has to clear. The floor exists
-	// because a doubling from ₴20 to ₴40 is arithmetically identical to one from ₴2,000 to
-	// ₴4,000 and worth telling nobody. Both are guesses that the design never specified.
-	spikeRatio = 1.5
-	spikeFloor = 50_000
+	spikeRatio  = 1.5
+	spikeFloor  = 50_000
 )
 
-// insights compares this window's per-member, per-group spend with the same-length window
-// immediately before it, and composes the sentence server-side so app, widget and any future
-// notification say the same thing rather than three nearly identical ones.
 func (h *Handler) insights(
 	ctx context.Context, c caller, hh household, window dayRange, kind *string, limit int,
 ) ([]*financev1.Insight, error) {
@@ -675,8 +638,6 @@ func (h *Handler) insights(
 	}
 
 	var out []*financev1.Insight
-	// Sorted by key so the same window always produces the same list: an insight card that
-	// reshuffles between two identical reads reads as a bug.
 	sort.Slice(current, func(i, j int) bool {
 		return key(current[i].MemberID, current[i].GroupID) < key(current[j].MemberID, current[j].GroupID)
 	})

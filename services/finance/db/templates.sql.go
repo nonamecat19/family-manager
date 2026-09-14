@@ -123,7 +123,6 @@ func (q *Queries) GetTemplate(ctx context.Context, arg GetTemplateParams) (Quick
 }
 
 const listTemplates = `-- name: ListTemplates :many
-
 SELECT id, family_id, owner_user_id, label, icon, amount_minor, currency_code, type, category_id, account_id, member_id, sort_order, usage_count, last_used_at, created_at, updated_at FROM quick_templates
 WHERE family_id = $1 AND owner_user_id = $2
 ORDER BY sort_order, created_at
@@ -134,9 +133,6 @@ type ListTemplatesParams struct {
 	OwnerUserID pgtype.UUID
 }
 
-// Templates are private to their owner: every read is keyed by owner_user_id, so asking for
-// another member's templates returns an empty list rather than an error. They are private,
-// not secret.
 func (q *Queries) ListTemplates(ctx context.Context, arg ListTemplatesParams) ([]QuickTemplate, error) {
 	rows, err := q.db.Query(ctx, listTemplates, arg.FamilyID, arg.OwnerUserID)
 	if err != nil {
@@ -239,8 +235,6 @@ UPDATE quick_templates
 SET label        = COALESCE($4::text, label),
     icon         = COALESCE($5::text, icon),
     amount_minor = COALESCE($6::bigint, amount_minor),
-    -- The currency follows the account: a template moved onto a USD card is a USD template,
-    -- and without this column the row would keep a code its account no longer holds.
     currency_code = COALESCE($7::text, currency_code),
     category_id  = COALESCE($8::uuid, category_id),
     account_id   = COALESCE($9::uuid, account_id),

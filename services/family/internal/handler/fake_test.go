@@ -15,11 +15,9 @@ import (
 	"github.com/nnc/family-manager/services/family/db"
 )
 
-// fakeStore is an in-memory db.Querier. The handler's rules (who may invite, who may leave)
-// are what these tests exercise; Postgres itself is not under test here.
 type fakeStore struct {
 	families    map[string]db.Family
-	members     map[string]db.FamilyMember // keyed family|user
+	members     map[string]db.FamilyMember
 	invitations map[string]db.FamilyInvitation
 
 	failOn map[string]error
@@ -220,7 +218,6 @@ func (s *fakeStore) MarkInvitationRevoked(_ context.Context, id pgtype.UUID) (in
 
 func (s *fakeStore) ExpireStaleInvitations(context.Context) (int64, error) { return 0, nil }
 
-// recorder captures published events so tests can assert on them without NATS.
 type recorder struct {
 	published []events.Subject
 	err       error
@@ -245,7 +242,6 @@ func (r *recorder) sawSubject(s events.Subject) bool {
 
 var errBoom = errors.New("boom")
 
-// newUUID hands out deterministic, valid v4-shaped ids so failures are reproducible.
 var uuidCounter int
 
 func newUUID() string {
@@ -253,9 +249,6 @@ func newUUID() string {
 	return fmt.Sprintf("00000000-0000-4000-8000-%012d", uuidCounter)
 }
 
-// InTx makes the fake store satisfy Tx, and rolls back for real: a fake that kept whatever the
-// callback wrote would let an atomicity test pass against a handler that used no transaction
-// at all.
 func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
 	families := maps.Clone(s.families)
 	members := maps.Clone(s.members)

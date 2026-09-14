@@ -49,8 +49,6 @@ type CountHiddenPrivateAccountsRow struct {
 	AccountCount  int32
 }
 
-// CountHiddenPrivateAccounts is the whole of what another member's private accounts become on
-// the wire: an owner and a count. No balance, no name, no currency.
 func (q *Queries) CountHiddenPrivateAccounts(ctx context.Context, arg CountHiddenPrivateAccountsParams) ([]CountHiddenPrivateAccountsRow, error) {
 	rows, err := q.db.Query(ctx, countHiddenPrivateAccounts, arg.FamilyID, arg.ViewerMemberID)
 	if err != nil {
@@ -183,10 +181,6 @@ type GetVisibleAccountRow struct {
 	BalanceMinor            int64
 }
 
-// GetVisibleAccount is GetAccount with the boundary applied. A row that exists but belongs to
-// another member's private set returns no rows, so the handler answers NotFound — the same
-// answer as an id that never existed, because "this id exists but is not yours" is itself a
-// leak.
 func (q *Queries) GetVisibleAccount(ctx context.Context, arg GetVisibleAccountParams) (GetVisibleAccountRow, error) {
 	row := q.db.QueryRow(ctx, getVisibleAccount, arg.ID, arg.FamilyID, arg.ViewerMemberID)
 	var i GetVisibleAccountRow
@@ -212,7 +206,6 @@ func (q *Queries) GetVisibleAccount(ctx context.Context, arg GetVisibleAccountPa
 }
 
 const listVisibleAccounts = `-- name: ListVisibleAccounts :many
-
 SELECT a.id, a.family_id, a.name, a.kind, a.visibility, a.owner_member_id, a.currency_code, a.opening_balance_minor, a.icon, a.color_step, a.excluded_from_family_total, a.archived, a.sort_order, a.created_at, a.updated_at,
     (a.opening_balance_minor
     + COALESCE((SELECT SUM(CASE t.type WHEN 'income' THEN t.amount_minor ELSE -t.amount_minor END)
@@ -252,19 +245,6 @@ type ListVisibleAccountsRow struct {
 	BalanceMinor            int64
 }
 
-// PRIVATE ACCOUNT VISIBILITY IS A SECURITY BOUNDARY, and it is enforced here rather than in
-// Go: every read that can return an account, a balance or a total carries the viewer's member
-// id and the same predicate
-//
-//	(a.visibility = 'shared' OR a.owner_member_id = @viewer_member_id)
-//
-// so a handler cannot forget it by forgetting a filter. The only fact about someone else's
-// private accounts that leaves this file is CountHiddenPrivateAccounts' count.
-//
-// balance_minor is derived on every read and never stored: a persisted total drifts the
-// moment a transaction is edited. It is the opening balance, plus income, minus expense,
-// minus every transfer leaving the account, plus what arrived on every transfer into it
-// (received_amount_minor when the transfer crossed currencies, the sent amount otherwise).
 func (q *Queries) ListVisibleAccounts(ctx context.Context, arg ListVisibleAccountsParams) ([]ListVisibleAccountsRow, error) {
 	rows, err := q.db.Query(ctx, listVisibleAccounts, arg.FamilyID, arg.ViewerMemberID, arg.IncludeArchived)
 	if err != nil {
@@ -316,9 +296,6 @@ type ReorderAccountParams struct {
 	ViewerMemberID pgtype.UUID
 }
 
-// The boundary is a write rule too: a member may not push another member's private account
-// around in a list they cannot see. An id that is not visible simply does not move, which is
-// what an id that does not exist already did.
 func (q *Queries) ReorderAccount(ctx context.Context, arg ReorderAccountParams) error {
 	_, err := q.db.Exec(ctx, reorderAccount,
 		arg.ID,
@@ -382,8 +359,6 @@ type SetAccountVisibilityParams struct {
 	OwnerMemberID pgtype.UUID
 }
 
-// Visibility moves with its owner in one statement: turning an account private without
-// stamping the owner, or shared without clearing it, violates accounts_private_has_owner.
 func (q *Queries) SetAccountVisibility(ctx context.Context, arg SetAccountVisibilityParams) (Account, error) {
 	row := q.db.QueryRow(ctx, setAccountVisibility,
 		arg.ID,
@@ -446,10 +421,6 @@ type SumFamilyBalancesRow struct {
 	SharedAccountCount int32
 }
 
-// SumFamilyBalances is the "Спільно доступно" headline and the savings line beside it.
-// Private accounts are excluded outright, as is anything the household took out of the
-// headline deliberately; SAVINGS is reported on its own line, and DEBT counts toward the
-// headline because money owed is money you do not have.
 func (q *Queries) SumFamilyBalances(ctx context.Context, arg SumFamilyBalancesParams) (SumFamilyBalancesRow, error) {
 	row := q.db.QueryRow(ctx, sumFamilyBalances, arg.FamilyID, arg.CurrencyCode)
 	var i SumFamilyBalancesRow

@@ -69,7 +69,6 @@ func (q *Queries) GetMember(ctx context.Context, arg GetMemberParams) (FinanceMe
 }
 
 const listMembers = `-- name: ListMembers :many
-
 SELECT family_id, user_id, display_name, initial, avatar_color_step, role, status, email, joined_at FROM finance_members
 WHERE family_id = $1
   AND ($2::bool OR status = 'active')
@@ -81,8 +80,6 @@ type ListMembersParams struct {
 	IncludePending bool
 }
 
-// The member projection, maintained from family.member.* events. finance never writes it from
-// a client request: a member row appears because services/family said so.
 func (q *Queries) ListMembers(ctx context.Context, arg ListMembersParams) ([]FinanceMember, error) {
 	rows, err := q.db.Query(ctx, listMembers, arg.FamilyID, arg.IncludePending)
 	if err != nil {

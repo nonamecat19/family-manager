@@ -31,7 +31,6 @@ func newFixture(t *testing.T) *fixture {
 	signer := &stubSigner{}
 	fam := &stubFamily{}
 
-	// Cheap KDF parameters: these tests exercise the session rules, not argon2's cost.
 	params := password.DefaultParams()
 	params.Memory = 64
 	params.Iterations = 1
@@ -70,8 +69,6 @@ func (f *fixture) login(t *testing.T, email, pw string) *authv1.LoginResponse {
 	return res.Msg
 }
 
-/* ----------------------------------------------------------------- register */
-
 func TestRegisterThenLogin(t *testing.T) {
 	f := newFixture(t)
 	userID := f.register(t, "ada@example.test", "correct horse")
@@ -109,7 +106,6 @@ func TestRegisterNormalisesTheEmail(t *testing.T) {
 	if _, ok := f.store.users["ada@example.test"]; !ok {
 		t.Fatalf("email was not normalised: %v", keysOf(f.store.users))
 	}
-	// And the normalised address is what logs in, whatever case the user types.
 	f.login(t, "ADA@example.test", "correct horse")
 }
 
@@ -145,8 +141,6 @@ func TestRegisterValidatesInput(t *testing.T) {
 	}
 }
 
-/* -------------------------------------------------------------------- login */
-
 func TestLoginRejectsTheWrongPassword(t *testing.T) {
 	f := newFixture(t)
 	f.register(t, "ada@example.test", "correct horse")
@@ -158,8 +152,6 @@ func TestLoginRejectsTheWrongPassword(t *testing.T) {
 	}
 }
 
-// The error for an unknown account and a wrong password must be indistinguishable, or the
-// endpoint tells an attacker which addresses are registered.
 func TestLoginDoesNotRevealWhetherAnAccountExists(t *testing.T) {
 	f := newFixture(t)
 	f.register(t, "ada@example.test", "correct horse")
@@ -191,8 +183,6 @@ func TestLoginStampsTheFamilyClaim(t *testing.T) {
 	}
 }
 
-// A household lookup outage must not stop people signing in: the token is minted without the
-// claim and the app shows onboarding.
 func TestLoginSucceedsWhenTheFamilyLookupFails(t *testing.T) {
 	f := newFixture(t)
 	f.family.err = errBoom
@@ -236,8 +226,6 @@ func TestEachLoginStartsItsOwnChain(t *testing.T) {
 	}
 }
 
-/* ------------------------------------------------------------------ refresh */
-
 func TestRefreshRotatesTheToken(t *testing.T) {
 	f := newFixture(t)
 	f.family.familyID = "fam-1"
@@ -257,7 +245,6 @@ func TestRefreshRotatesTheToken(t *testing.T) {
 		t.Fatal("Refresh returned no access token")
 	}
 
-	// The successor belongs to the same session.
 	old := f.store.tokens[hashToken(first.GetRefreshToken())]
 	fresh := f.store.tokens[hashToken(res.Msg.GetRefreshToken())]
 	if pgUUID(old.ChainID) != pgUUID(fresh.ChainID) {
@@ -267,14 +254,11 @@ func TestRefreshRotatesTheToken(t *testing.T) {
 		t.Error("the presented token was not marked used")
 	}
 
-	// Claims are re-resolved on rotation, so joining a household takes effect on refresh.
 	if f.family.calls != 2 {
 		t.Errorf("family lookups = %d, want 2 (login and refresh)", f.family.calls)
 	}
 }
 
-// Replay is the case that matters: a stolen token used after the victim's client rotated
-// must invalidate the whole chain, not just the stolen copy.
 func TestReplayRevokesTheWholeChain(t *testing.T) {
 	f := newFixture(t)
 	f.register(t, "ada@example.test", "correct horse")
@@ -286,14 +270,12 @@ func TestReplayRevokesTheWholeChain(t *testing.T) {
 		t.Fatalf("first Refresh: %v", err)
 	}
 
-	// The thief presents the original again.
 	_, replay := f.h.Refresh(context.Background(),
 		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: first.GetRefreshToken()}))
 	if connect.CodeOf(replay) != connect.CodeUnauthenticated {
 		t.Fatalf("replay code = %v, want unauthenticated", connect.CodeOf(replay))
 	}
 
-	// And the victim's freshly rotated token is dead too.
 	_, victim := f.h.Refresh(context.Background(),
 		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: rotated.Msg.GetRefreshToken()}))
 	if connect.CodeOf(victim) != connect.CodeUnauthenticated {
@@ -305,21 +287,18 @@ func TestRefreshRejectsUnknownExpiredAndRevokedTokens(t *testing.T) {
 	f := newFixture(t)
 	f.register(t, "ada@example.test", "correct horse")
 
-	// Unknown.
 	_, err := f.h.Refresh(context.Background(),
 		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: "never-issued"}))
 	if connect.CodeOf(err) != connect.CodeUnauthenticated {
 		t.Errorf("unknown token: code = %v", connect.CodeOf(err))
 	}
 
-	// Empty.
 	_, err = f.h.Refresh(context.Background(),
 		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: "   "}))
 	if connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Errorf("empty token: code = %v, want invalid_argument", connect.CodeOf(err))
 	}
 
-	// Expired: mint with the clock a year back.
 	f.h.now = func() time.Time { return time.Now().Add(-365 * 24 * time.Hour) }
 	stale := f.login(t, "ada@example.test", "correct horse")
 	f.h.now = time.Now
@@ -330,8 +309,6 @@ func TestRefreshRejectsUnknownExpiredAndRevokedTokens(t *testing.T) {
 		t.Errorf("expired token: code = %v", connect.CodeOf(err))
 	}
 }
-
-/* ------------------------------------------------------------------- logout */
 
 func TestLogoutRevokesTheChain(t *testing.T) {
 	f := newFixture(t)
@@ -367,8 +344,6 @@ func TestLogoutOfOneSessionLeavesTheOtherAlive(t *testing.T) {
 	}
 }
 
-// An unknown token ends where the caller wanted — no session — and reporting an error would
-// only tell an attacker which tokens exist.
 func TestLogoutWithAnUnknownTokenSucceeds(t *testing.T) {
 	f := newFixture(t)
 	if _, err := f.h.Logout(context.Background(),
@@ -376,8 +351,6 @@ func TestLogoutWithAnUnknownTokenSucceeds(t *testing.T) {
 		t.Fatalf("Logout: %v", err)
 	}
 }
-
-/* --------------------------------------------------------------------- misc */
 
 func TestStoreFailureBecomesInternal(t *testing.T) {
 	f := newFixture(t)
@@ -389,8 +362,6 @@ func TestStoreFailureBecomesInternal(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodeInternal {
 		t.Fatalf("code = %v, want internal", connect.CodeOf(err))
 	}
-	// Register is unauthenticated: whatever ends up in this message is readable by anyone who
-	// can reach the port, so the cause must not be in it.
 	if strings.Contains(err.Error(), errBoom.Error()) {
 		t.Fatalf("wire message leaked the cause: %q", err.Error())
 	}
@@ -403,8 +374,6 @@ func TestNewChainIDIsValidVersion4AndUnique(t *testing.T) {
 		if err != nil {
 			t.Fatalf("newChainID() error = %v", err)
 		}
-		// Valid matters as much as the version: an invalid pgtype.UUID is written as NULL,
-		// and a NULL chain_id is a chain RevokeChain can never revoke.
 		if !id.Valid {
 			t.Fatal("newChainID() returned an invalid (NULL) uuid")
 		}
@@ -419,7 +388,6 @@ func TestNewChainIDIsValidVersion4AndUnique(t *testing.T) {
 	}
 }
 
-// keysOf renders the store's email keys for a failure message.
 func keysOf(m map[string]db.User) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
@@ -428,18 +396,13 @@ func keysOf(m map[string]db.User) []string {
 	return out
 }
 
-// pgUUID renders a uuid for comparison in assertions.
 func pgUUID(u pgtype.UUID) string { return pgconv.UUIDString(u) }
 
-// The race the guarded insert closes: a refresh that already passed the "chain alive?"
-// check must not resurrect a chain a concurrent replay revoked in the meantime.
 func TestRefreshCannotResurrectARevokedChain(t *testing.T) {
 	f := newFixture(t)
 	f.register(t, "ada@example.test", "correct horse")
 	session := f.login(t, "ada@example.test", "correct horse")
 
-	// Rotate once so the chain holds more than one row — the shape a real chain has when a
-	// replay and a legitimate refresh race.
 	rotated, err := f.h.Refresh(context.Background(),
 		connect.NewRequest(&authv1.RefreshRequest{RefreshToken: session.GetRefreshToken()}))
 	if err != nil {
@@ -449,12 +412,9 @@ func TestRefreshCannotResurrectARevokedChain(t *testing.T) {
 	newest := hashToken(rotated.Msg.GetRefreshToken())
 	row := f.store.tokens[newest]
 
-	// The replay handler has just revoked the chain.
 	if _, err := f.store.RevokeChain(context.Background(), row.ChainID); err != nil {
 		t.Fatalf("RevokeChain: %v", err)
 	}
-	// Stand where the loser of the race stands: it read its own row before the revocation,
-	// so its early checks pass and the insert is what has to refuse.
 	row.RevokedAt = pgtype.Timestamptz{}
 	row.UsedAt = pgtype.Timestamptz{}
 	f.store.tokens[newest] = row
@@ -494,8 +454,6 @@ func TestRegisterRejectsOversizeFields(t *testing.T) {
 	}
 }
 
-// The name bound is in runes: a Cyrillic name of the same length as a Latin one must be
-// equally acceptable, even though it is twice the bytes.
 func TestRegisterAcceptsAMaxLengthCyrillicName(t *testing.T) {
 	f := newFixture(t)
 	_, err := f.h.Register(context.Background(), connect.NewRequest(&authv1.RegisterRequest{
@@ -508,8 +466,6 @@ func TestRegisterAcceptsAMaxLengthCyrillicName(t *testing.T) {
 	}
 }
 
-// An oversize password must not reach the store or the hasher, and must be indistinguishable
-// from any other failed sign-in.
 func TestLoginRejectsAnOversizePasswordWithoutALookup(t *testing.T) {
 	f := newFixture(t)
 	f.store.failOn["GetUserByEmail"] = errBoom
@@ -518,14 +474,11 @@ func TestLoginRejectsAnOversizePasswordWithoutALookup(t *testing.T) {
 		Email:    "ada@example.test",
 		Password: strings.Repeat("x", maxPasswordBytes+1),
 	}))
-	// errBoom would surface as internal if the lookup had run.
 	if connect.CodeOf(err) != connect.CodeUnauthenticated {
 		t.Fatalf("code = %v, want unauthenticated (err=%v)", connect.CodeOf(err), err)
 	}
 }
 
-// Eight characters is the right floor and is not, on its own, a defence against someone trying
-// passwords as fast as the service will answer.
 func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 	f := newFixture(t)
 	th := throttle.New(throttle.Params{
@@ -549,7 +502,6 @@ func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 		t.Fatalf("code = %v, want resource_exhausted (err=%v)", connect.CodeOf(err), err)
 	}
 
-	// Locked means locked: the correct password is refused too, or the lockout is no defence.
 	_, err = f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
 		Email: "ada@example.test", Password: "correct horse",
 	}))
@@ -558,7 +510,6 @@ func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 	}
 }
 
-// A person mistyping twice and then getting it right must not be counting down to a lockout.
 func TestLoginSuccessClearsTheFailureCount(t *testing.T) {
 	f := newFixture(t)
 	f.h.throttle = throttle.New(throttle.Params{
@@ -578,7 +529,6 @@ func TestLoginSuccessClearsTheFailureCount(t *testing.T) {
 		t.Fatalf("Login with the right password: %v", err)
 	}
 
-	// The counter is back to zero, so two more failures are still under the threshold.
 	for i := 0; i < 2; i++ {
 		_, err := f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
 			Email: "ada@example.test", Password: "wrong",
@@ -589,8 +539,6 @@ func TestLoginSuccessClearsTheFailureCount(t *testing.T) {
 	}
 }
 
-// An address nobody registered must be throttled too: otherwise it is the unthrottled way to
-// probe, and which addresses start refusing leaks which ones exist.
 func TestLoginThrottlesUnknownAddressesToo(t *testing.T) {
 	f := newFixture(t)
 	f.h.throttle = throttle.New(throttle.Params{

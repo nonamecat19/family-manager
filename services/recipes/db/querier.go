@@ -32,11 +32,6 @@ type Querier interface {
 	ListFavoriteRecipes(ctx context.Context, userID pgtype.UUID) ([]Recipe, error)
 	ListIngredients(ctx context.Context, recipeID pgtype.UUID) ([]RecipeIngredient, error)
 	ListMealPlan(ctx context.Context, arg ListMealPlanParams) ([]MealPlanEntry, error)
-	// ListRecipes is the one filtered/sorted read behind the browse screen. Every filter is a
-	// no-op sentinel when unset (NULL for the text/uuid ones, 0 for the numeric ones) so the app
-	// sends one shape of request whether it is browsing a subcategory or searching the whole
-	// cookbook. Sorting is a text discriminator rather than string-built SQL: the set of orders
-	// is closed (see RecipeSort in the proto), so it belongs in the query, not in Go.
 	ListRecipes(ctx context.Context, arg ListRecipesParams) ([]Recipe, error)
 	ListSteps(ctx context.Context, recipeID pgtype.UUID) ([]RecipeStep, error)
 	ListSubcategories(ctx context.Context, categoryID pgtype.UUID) ([]RecipeSubcategory, error)
@@ -44,23 +39,8 @@ type Querier interface {
 	RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error
 	RemoveMealPlanEntry(ctx context.Context, arg RemoveMealPlanEntryParams) (int64, error)
 	SetRecipeRating(ctx context.Context, arg SetRecipeRatingParams) (Recipe, error)
-	// SumIngredientsForBasket answers the ad-hoc question ("I plan to cook these, what do I
-	// buy") without persisting anything: the basket arrives as two parallel arrays and is
-	// unnested into rows. Same scaling and same name+unit grouping as TotalIngredients, so the
-	// calendar and the basket produce identical lines for identical input. The family_id join
-	// condition is what stops a caller totalling another family's recipes by id.
-	// The two arrays are unnested separately and re-joined on ordinality rather than with the
-	// two-argument unnest(a, b) form, which sqlc's query analyser cannot type.
 	SumIngredientsForBasket(ctx context.Context, arg SumIngredientsForBasketParams) ([]SumIngredientsForBasketRow, error)
-	// TotalIngredients: aggregates every ingredient across the meal plan range, scaled by each
-	// entry's servings relative to its recipe's servings. Sums by name+unit so "flour / g" from
-	// two recipes adds to one line on the shopping list. The amount is summed as numeric text
-	// (recipes store free-form amounts); non-numeric amounts are summed as count (1 per row) so
-	// "2 cloves" + "3 cloves" becomes "2" — the app shows the breakdown for non-numeric totals.
 	TotalIngredients(ctx context.Context, arg TotalIngredientsParams) ([]TotalIngredientsRow, error)
-	// Nutrition is COALESCEd against the stored value instead of overwritten like every other
-	// column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
-	// that does not render the macros would otherwise wipe them on every save.
 	UpdateRecipe(ctx context.Context, arg UpdateRecipeParams) (Recipe, error)
 	UpdateRecipeImage(ctx context.Context, arg UpdateRecipeImageParams) (Recipe, error)
 }

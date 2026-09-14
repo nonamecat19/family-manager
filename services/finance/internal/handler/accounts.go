@@ -13,10 +13,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// ListAccounts answers in the three sections the accounts screen draws, decided server-side:
-// what everyone may see, what the caller alone may see, and — for everyone else's private
-// accounts — a count and nothing more. The split is here, not in the app, because a balance
-// the client was sent is a balance that leaked whether or not it was rendered.
 func (h *Handler) ListAccounts(
 	ctx context.Context, req *connect.Request[financev1.ListAccountsRequest],
 ) (*connect.Response[financev1.ListAccountsResponse], error) {
@@ -77,9 +73,6 @@ func (h *Handler) ListAccounts(
 	return connect.NewResponse(out), nil
 }
 
-// memberNames is the display-name lookup the hidden-private rows and the member chips need.
-// Pending members are included: an invited member can own nothing yet, but a row keyed to
-// them should still read as a person rather than a uuid.
 func (h *Handler) memberNames(ctx context.Context, c caller) (map[string]string, error) {
 	rows, err := h.q.ListMembers(ctx, db.ListMembersParams{
 		FamilyID: c.familyID, IncludePending: true,
@@ -108,8 +101,6 @@ func (h *Handler) GetAccount(
 	row, err := h.q.GetVisibleAccount(ctx, db.GetVisibleAccountParams{
 		ID: id, FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 	})
-	// A row that exists but belongs to another member's private set returns no rows, and gets
-	// the same answer as an id that never existed: "this exists but is not yours" is a leak.
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, notFound("account")
 	}
@@ -154,8 +145,6 @@ func (h *Handler) CreateAccount(
 			return nil, err
 		}
 	}
-	// An opening balance may be negative — a card is often overdrawn — so it skips checkAmount,
-	// but not the currency check: it is stored in the account's currency like everything else.
 	if err := checkMoneyCurrency(msg.GetOpeningBalance(), currency); err != nil {
 		return nil, err
 	}
@@ -165,8 +154,6 @@ func (h *Handler) CreateAccount(
 	var owner pgtype.UUID
 	excluded := msg.GetExcludedFromFamilyTotal()
 	if visibility == visibilityPrivate {
-		// The owner is the caller, always. A private account created for someone else would be
-		// a balance one member can hide from another while still calling it theirs.
 		owner = c.memberID()
 		excluded = true
 	}
@@ -206,9 +193,6 @@ func (h *Handler) UpdateAccount(
 	if err != nil {
 		return nil, err
 	}
-	// Read through the visibility predicate first: editing an account is a read of it, and a
-	// caller who may not see it may not rename it either. The row is kept: its currency is what
-	// a new opening balance has to be denominated in.
 	existing, err := h.q.GetVisibleAccount(ctx, db.GetVisibleAccountParams{
 		ID: id, FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 	})
@@ -262,10 +246,6 @@ func (h *Handler) UpdateAccount(
 
 	var row db.Account
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		// Visibility moves with its owner in one statement, so an account can never be private
-		// with no owner or shared with one — the CHECK would reject the pair anyway, but
-		// splitting it across two statements would make the failure a 500 rather than a state
-		// this code never constructs.
 		if msg.Visibility != nil {
 			visibility := visibilityFromProto(msg.GetVisibility())
 			var owner pgtype.UUID
@@ -365,8 +345,6 @@ func (h *Handler) DeleteAccount(
 		return nil, h.internal(ctx, err, "get account")
 	}
 
-	// A balance that silently loses its rows is a corrupt ledger, so an account with history
-	// is archived rather than deleted — and the message says which action to take instead.
 	count, err := h.q.CountAccountTransactions(ctx, db.CountAccountTransactionsParams{
 		AccountID: id, FamilyID: c.familyID,
 	})
@@ -404,10 +382,6 @@ func (h *Handler) ReorderAccounts(
 		return nil, err
 	}
 
-	// One transaction: a half-applied reorder leaves two accounts sharing a position, which
-	// the list then renders in an order that changes between reads. The statement carries the
-	// visibility predicate, so an id the caller may not see does not move — reordering is a
-	// write to the list the caller can see, not to someone else's.
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
 		for i, id := range parsed {
 			if err := q.ReorderAccount(ctx, db.ReorderAccountParams{
@@ -425,9 +399,6 @@ func (h *Handler) ReorderAccounts(
 	return connect.NewResponse(&financev1.ReorderAccountsResponse{}), nil
 }
 
-// TransferBetweenAccounts writes one row, not two: the transfer's second leg is
-// counter_account_id, so the pair can never half-commit and no report has to reconcile two
-// rows that are meant to be one movement.
 func (h *Handler) TransferBetweenAccounts(
 	ctx context.Context, req *connect.Request[financev1.TransferBetweenAccountsRequest],
 ) (*connect.Response[financev1.TransferBetweenAccountsResponse], error) {
@@ -463,8 +434,6 @@ func (h *Handler) TransferBetweenAccounts(
 		return nil, err
 	}
 
-	// Both ends go through the visibility predicate: a transfer into an account the caller
-	// cannot see would let them probe for its existence one id at a time.
 	source, err := h.visibleAccount(ctx, c, fromID)
 	if err != nil {
 		return nil, err
@@ -501,8 +470,6 @@ func (h *Handler) TransferBetweenAccounts(
 		Note: trimmed(msg.GetNote()), OccurredOn: pgDate(occurred),
 		MemberID: memberID, CreatedByUserID: c.userID,
 	}
-	// Cross-currency: the rate is the user's, because this service has no rate source it can
-	// defend. Same-currency transfers ignore any received_amount a client sent.
 	if source.CurrencyCode != target.CurrencyCode {
 		received := moneyMinor(msg.GetReceivedAmount())
 		if received <= 0 {
@@ -537,8 +504,6 @@ func (h *Handler) TransferBetweenAccounts(
 	}), nil
 }
 
-// visibleAccount is the read every write path takes before touching an account, so that
-// "which accounts exist" is answered by the same predicate as "which accounts I may list".
 func (h *Handler) visibleAccount(ctx context.Context, c caller, id pgtype.UUID) (db.GetVisibleAccountRow, error) {
 	row, err := h.q.GetVisibleAccount(ctx, db.GetVisibleAccountParams{
 		ID: id, FamilyID: c.familyID, ViewerMemberID: c.memberID(),

@@ -1,13 +1,3 @@
-// Package handler implements finance.v1.FinanceService over Connect (and gRPC, from the same
-// type). Authorization lives here: the caller's family_id and user_id come from the verified
-// access token, never from the request body.
-//
-// The rule this package exists to enforce, beyond family scoping, is the private-account
-// boundary. A private account belongs to exactly one member; its balance is excluded from the
-// household headline, its transactions are invisible to everyone else, and another member's
-// private accounts become a count and nothing else. That predicate is written once, in
-// internal/db/queries, and every read here passes the caller's own member id into it — so
-// forgetting the filter is not a thing a handler can do by omission.
 package handler
 
 import (
@@ -29,17 +19,10 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// Tx is the transaction boundary. Implemented by internal/store over a pgx pool, and by the
-// fake store in tests.
-//
-// It takes a callback rather than returning a transaction handle so that there is no way to
-// begin one and forget to finish it, and so the Querier bound to the transaction is the only
-// one in scope while it is open.
 type Tx interface {
 	InTx(ctx context.Context, fn func(q db.Querier) error) error
 }
 
-// Handler serves finance.v1.FinanceService.
 type Handler struct {
 	q   db.Querier
 	tx  Tx
@@ -47,22 +30,15 @@ type Handler struct {
 	log *slog.Logger
 	now func() time.Time
 
-	// defaultCurrency and defaultTimezone are only used by BootstrapHousehold when the caller
-	// sends none. Once finance_settings exists it is the authority and these are never read.
 	defaultCurrency string
 	defaultTimezone string
 }
 
-// Options configures a Handler. Only Queries is required.
 type Options struct {
-	Queries db.Querier
-	// Tx groups the writes that must not half-apply — a transfer's two legs, a bootstrap's
-	// whole taxonomy. Nil means every write runs on its own, which is what a zero-valued
-	// Options in a test gets.
-	Tx  Tx
-	Bus EventBus
-	Log *slog.Logger
-	// Now is injected by tests so budget windows and "today" are deterministic.
+	Queries         db.Querier
+	Tx              Tx
+	Bus             EventBus
+	Log             *slog.Logger
 	Now             func() time.Time
 	DefaultCurrency string
 	DefaultTimezone string
@@ -99,7 +75,6 @@ func New(opts Options) *Handler {
 	return h
 }
 
-// withoutTx runs the callback on the plain querier, for a Handler built without a Tx.
 type withoutTx struct{ q db.Querier }
 
 func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
@@ -108,20 +83,9 @@ func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)
 }
 
-/* ------------------------------------------------------------------ identity */
-
-// caller is the verified identity behind a request. Both ids come from the token; nothing in
-// this package reads a family or user id out of a request message.
-//
-// memberID is the same value as userID: finance's member projection is keyed by the auth
-// service's user id, so "who spent" and "who is asking" are comparable without a lookup. The
-// separate name is what keeps the two roles legible at the call sites that mean one and not
-// the other.
 type caller struct {
-	family string
-	user   string
-	// email is informational: authorization never reads it, and it is used only to give a
-	// member row a name until services/family sends a better one.
+	family   string
+	user     string
 	email    string
 	familyID pgtype.UUID
 	userID   pgtype.UUID
@@ -158,13 +122,6 @@ func (h *Handler) caller(ctx context.Context) (caller, error) {
 	}, nil
 }
 
-// ensureSelf gives the caller a member row if the projection has not produced one.
-//
-// The roster is projected from `family.member.*`, and those events carry ids but no name — and
-// with no broker they do not arrive at all. Without this, a household that signed up before
-// finance was listening would draw an empty member switcher and a feed with no avatars. The
-// name is derived from the token's email, which is the only human-readable fact finance has
-// about a person; family's own display name overwrites it the moment an event lands.
 func (h *Handler) ensureSelf(ctx context.Context, c caller) error {
 	if _, err := h.q.GetMember(ctx, db.GetMemberParams{
 		FamilyID: c.familyID, UserID: c.userID,
@@ -174,7 +131,6 @@ func (h *Handler) ensureSelf(ctx context.Context, c caller) error {
 		return h.internal(ctx, err, "get member")
 	}
 
-	// The first member of a household is its owner: they are the one who bootstrapped it.
 	count, err := h.q.CountMembers(ctx, c.familyID)
 	if err != nil {
 		return h.internal(ctx, err, "count members")
@@ -195,12 +151,8 @@ func (h *Handler) ensureSelf(ctx context.Context, c caller) error {
 	return nil
 }
 
-// avatarColorSteps is the width of the design's accent ramp; a member's colour is their
-// position in the household modulo it, so the same person keeps the same hue everywhere.
 const avatarColorSteps = 8
 
-// displayNameFrom turns "olena@example.com" into "olena". It is a placeholder, not an identity:
-// the local part is what a person recognises as themselves when nothing better is known.
 func displayNameFrom(email string) string {
 	at := strings.IndexByte(email, '@')
 	if at <= 0 {
@@ -209,8 +161,6 @@ func displayNameFrom(email string) string {
 	return trimmed(email[:at])
 }
 
-// initialOf is the single grapheme the avatar chip draws, uppercased once here so every
-// surface shows the same letter.
 func initialOf(name string) string {
 	for _, r := range name {
 		return strings.ToUpper(string(r))
@@ -218,10 +168,6 @@ func initialOf(name string) string {
 	return ""
 }
 
-/* ----------------------------------------------------------------- household */
-
-// household is the settings row plus its resolved timezone. Every aggregate needs both: the
-// base currency decides which rows are summable, and the timezone decides where a day ends.
 type household struct {
 	settings db.FinanceSetting
 	loc      *time.Location
@@ -238,9 +184,6 @@ func (h *Handler) household(ctx context.Context, c caller) (household, error) {
 	if err != nil {
 		return household{}, h.internal(ctx, err, "load finance settings")
 	}
-	// A timezone the database accepted but this binary cannot load (a tzdata skew between
-	// deploys) must not fail every read: UTC gives a defensible window, and the misconfigured
-	// name is worth a log line.
 	loc, lerr := time.LoadLocation(row.Timezone)
 	if lerr != nil {
 		h.log.WarnContext(ctx, "unknown household timezone",
@@ -250,13 +193,8 @@ func (h *Handler) household(ctx context.Context, c caller) (household, error) {
 	return household{settings: row, loc: loc}, nil
 }
 
-// today is the household's calendar day, not the server's.
 func (h *Handler) today(hh household) time.Time { return startOfDay(h.now().In(hh.loc)) }
 
-/* ----------------------------------------------------------- input plumbing */
-
-// invalid is the client-facing validation error. These strings are shown verbatim by the app
-// (packages/api/src/errors.ts), so they are written for a person.
 func invalid(format string, args ...any) error {
 	return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf(format, args...))
 }
@@ -265,8 +203,6 @@ func notFound(what string) error {
 	return connect.NewError(connect.CodeNotFound, errors.New(what+" not found"))
 }
 
-// requireUUID parses an id that must be present. A blank id and a malformed one are different
-// mistakes and get different messages.
 func requireUUID(field, s string) (pgtype.UUID, error) {
 	if trimmed(s) == "" {
 		return pgtype.UUID{}, invalid("%s is required", field)
@@ -278,8 +214,6 @@ func requireUUID(field, s string) (pgtype.UUID, error) {
 	return u, nil
 }
 
-// optionalUUID maps an empty string to a NULL uuid. A malformed one is still an error — never
-// silently NULL a value the client meant.
 func optionalUUID(field, s string) (pgtype.UUID, error) {
 	if trimmed(s) == "" {
 		return pgtype.UUID{}, nil
@@ -291,8 +225,6 @@ func optionalUUID(field, s string) (pgtype.UUID, error) {
 	return u, nil
 }
 
-// requireDay parses a YYYY-MM-DD, defaulting to the household's today when empty: the add
-// sheet opens on today and an omitted date means exactly that.
 func requireDay(field, s string, def time.Time, loc *time.Location) (time.Time, error) {
 	if trimmed(s) == "" {
 		return def, nil
@@ -323,10 +255,6 @@ func uuidList(field string, ids []string) ([]pgtype.UUID, error) {
 	return out, nil
 }
 
-/* ------------------------------------------------------------------- bounds */
-
-// Bounds on free text a client sends. Counted in runes, not bytes: a Ukrainian note must not
-// be worth half an English one.
 const (
 	maxNameRunes     = 120
 	maxNoteRunes     = 1000
@@ -336,16 +264,12 @@ const (
 	maxTitleRunes    = 200
 	maxCurrencyRunes = 3
 	maxColorStep     = 7
-	// maxBatchIDs bounds every repeated-id field: a reorder or a widget refresh is a screen's
-	// worth of ids, and an unbounded array is an unbounded query.
-	maxBatchIDs = 500
+	maxBatchIDs      = 500
 
 	defaultPageSize = 50
 	maxPageSize     = 200
 )
 
-// checkText reports the first violation rather than a list: a client that has exceeded one of
-// these has a bug, not a form to fix.
 func checkText(field, value string, max int) error {
 	if len([]rune(value)) > max {
 		return invalid("%s must be at most %d characters", field, max)
@@ -360,21 +284,14 @@ func checkColorStep(step int32) error {
 	return nil
 }
 
-// checkCurrency normalises to the ISO 4217 shape the CHECK constraint enforces. A currency is
-// three letters or it is a typo.
 func checkCurrency(code string) (string, error) {
 	c := trimmed(code)
 	if len([]rune(c)) != maxCurrencyRunes {
 		return "", invalid("currency_code must be a 3-letter ISO 4217 code")
 	}
-	// Uppercased once, at the door. Every aggregate compares the code in SQL with `=`, and
-	// daySections compares it in Go with `==`, so a "uah" account in a "UAH" household would
-	// otherwise show its transactions in the feed and in no total anywhere.
 	return strings.ToUpper(c), nil
 }
 
-// checkAmount refuses a negative amount rather than taking its absolute value: the sign is the
-// transaction type's job, and a negative expense is a client bug worth surfacing.
 func checkAmount(m *financev1.Money) (int64, error) {
 	if m == nil {
 		return 0, invalid("amount is required")
@@ -385,10 +302,6 @@ func checkAmount(m *financev1.Money) (int64, error) {
 	return m.GetAmountMinor(), nil
 }
 
-// checkMoneyCurrency rejects an amount denominated in a currency other than the one the row is
-// stored in. Every write here takes its currency from the account (or the template the amount
-// overrides), so a client that sends USD into a UAH account would otherwise have it silently
-// recorded as UAH. An empty code means "whatever that row uses" and is accepted.
 func checkMoneyCurrency(m *financev1.Money, expected string) error {
 	code := trimmed(m.GetCurrencyCode())
 	if code == "" {
@@ -422,10 +335,6 @@ func checkBatch(field string, ids []string) error {
 	return nil
 }
 
-/* ------------------------------------------------ household & settings RPCs */
-
-// defaultTaxonomy is the seeded set the onboarding screen promises. It lives here rather than
-// in SQL because it is product copy, not schema: changing it must not need a migration.
 var defaultTaxonomy = []struct {
 	name       string
 	icon       string
@@ -449,8 +358,6 @@ var defaultTaxonomy = []struct {
 	}},
 }
 
-// defaultIncomeTaxonomy exists because every screen carries a ДОХОДИ tab: seeding only expense
-// groups leaves that tab empty on a brand-new household with no way to file a salary.
 var defaultIncomeTaxonomy = []struct {
 	name       string
 	icon       string
@@ -471,8 +378,6 @@ func (h *Handler) BootstrapHousehold(
 	}
 	msg := req.Msg
 
-	// Onboarding is where a household comes into being, so it is also where its first member
-	// row does: everything else on screen 02 draws a member.
 	if err := h.ensureSelf(ctx, c); err != nil {
 		return nil, err
 	}
@@ -498,8 +403,6 @@ func (h *Handler) BootstrapHousehold(
 
 	out := &financev1.BootstrapHouseholdResponse{}
 
-	// One transaction: a household that got its settings row but not its taxonomy would show
-	// an empty categories screen with no way to tell that bootstrap half-ran.
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
 		settings, err := q.BootstrapFinanceSettings(ctx, db.BootstrapFinanceSettingsParams{
 			FamilyID:         c.familyID,
@@ -515,8 +418,6 @@ func (h *Handler) BootstrapHousehold(
 		if !msg.GetSeedDefaultTaxonomy() {
 			return nil
 		}
-		// Idempotence: a second bootstrap must not double the taxonomy. Existing groups are
-		// the signal that seeding already happened.
 		existing, err := q.ListCategoryGroups(ctx, db.ListCategoryGroupsParams{
 			FamilyID: c.familyID, IncludeArchived: true,
 		})
@@ -728,8 +629,6 @@ func (h *Handler) GetHouseholdOverview(
 		return nil, err
 	}
 
-	// The private-account counts on the member cards come from the same query that hides the
-	// accounts themselves: a count is all this response is allowed to carry.
 	hidden, err := h.q.CountHiddenPrivateAccounts(ctx, db.CountHiddenPrivateAccountsParams{
 		FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 	})
@@ -740,8 +639,6 @@ func (h *Handler) GetHouseholdOverview(
 	for _, row := range hidden {
 		counts[pgconv.UUIDString(row.OwnerMemberID)] = row.AccountCount
 	}
-	// The caller's own private accounts are visible to them, so their card's count comes from
-	// the list rather than from the hidden summary.
 	own, err := h.q.ListVisibleAccounts(ctx, db.ListVisibleAccountsParams{
 		FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 	})
@@ -777,8 +674,6 @@ func (h *Handler) GetHouseholdOverview(
 
 func strPtr(s string) *string { return &s }
 
-// window resolves a request's Period against the household calendar, turning a parse failure
-// into an InvalidArgument the app can show.
 func (h *Handler) window(p *financev1.Period, hh household) (dayRange, error) {
 	r, err := resolvePeriod(p, h.now(), hh.loc, hh.settings.WeekStartsOn)
 	if err != nil {

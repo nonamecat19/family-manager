@@ -8,22 +8,8 @@ import (
 	"time"
 )
 
-// DefaultProbeTimeout bounds a container health probe. It is shorter than the health handler's
-// own database timeout on purpose: a probe that outlives the check it is calling reports
-// "timeout" for what the service would have answered "unhealthy".
 const DefaultProbeTimeout = 3 * time.Second
 
-// Probe requests /healthz on the given port over loopback and reports whether the service
-// considers itself healthy.
-//
-// It exists so a distroless image can have a container healthcheck. Those images ship no
-// shell, no wget and no curl — which is the point of them — so every service in this repo has
-// been running with no healthcheck at all, and compose's `depends_on: service_healthy` has had
-// nothing to wait on. The service binary is the one executable in the image, so it probes
-// itself: `/server -healthcheck`.
-//
-// Loopback only. A probe that can be aimed at another host is a request-forgery primitive
-// sitting inside every container.
 func Probe(port string, timeout time.Duration) error {
 	if timeout <= 0 {
 		timeout = DefaultProbeTimeout

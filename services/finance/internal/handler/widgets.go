@@ -13,9 +13,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// Widgets are per-user placements, not household state: two members place the same type and
-// each sees their own scope, so every read here is keyed by user_id as well as family_id.
-
 func (h *Handler) ListWidgets(
 	ctx context.Context, _ *connect.Request[financev1.ListWidgetsRequest],
 ) (*connect.Response[financev1.ListWidgetsResponse], error) {
@@ -156,10 +153,6 @@ func (h *Handler) RemoveWidget(
 	return connect.NewResponse(&financev1.RemoveWidgetResponse{}), nil
 }
 
-// GetWidgetData refreshes every placed widget in one request. One call per widget would make
-// the Android update pass N round trips on a process that may have just been cold-started; an
-// empty id list means "everything I placed", because a cold widget host may not know its own
-// ids yet.
 func (h *Handler) GetWidgetData(
 	ctx context.Context, req *connect.Request[financev1.GetWidgetDataRequest],
 ) (*connect.Response[financev1.GetWidgetDataResponse], error) {
@@ -196,7 +189,6 @@ func (h *Handler) GetWidgetData(
 		}
 	}
 
-	// Widgets show the current month; a widget with its own period selector is not a widget.
 	month, err := resolvePeriod(nil, h.now(), hh.loc, hh.settings.WeekStartsOn)
 	if err != nil {
 		return nil, h.internal(ctx, err, "resolve widget period")
@@ -221,8 +213,6 @@ func (h *Handler) widgetPayload(
 		Type:        widgetTypeToProto(w.Type),
 		RefreshedAt: h.timestamp(),
 	}
-	// A widget scoped to one member filters like the member chip does; a family-scoped widget
-	// filters by nothing, which is the same request with an empty list.
 	members := []pgtype.UUID{}
 	if w.ScopeKind == "member" && w.ScopeMemberID.Valid {
 		members = append(members, w.ScopeMemberID)
@@ -243,7 +233,6 @@ func (h *Handler) widgetPayload(
 		}
 		data := &financev1.QuickAddWidgetData{}
 		for i, t := range templates {
-			// The 4×2 cell draws four slots; sending more is bytes the widget throws away.
 			if i == quickAddSlots {
 				break
 			}
@@ -366,8 +355,6 @@ func (h *Handler) widgetPayload(
 		payload.Data = &financev1.WidgetPayload_RecentTransactions{RecentTransactions: data}
 
 	case "accounts":
-		// The same visibility predicate as the accounts screen: a widget on a locked home
-		// screen is not a reason to skip it.
 		rows, err := h.q.ListVisibleAccounts(ctx, db.ListVisibleAccountsParams{
 			FamilyID: c.familyID, ViewerMemberID: c.memberID(),
 		})
@@ -402,8 +389,6 @@ const (
 	recentTransactionRows = 5
 )
 
-// groupBudgetStatuses is the "4 з 5" pair the month and budgets widgets both draw: every group
-// budget's status, and how many of them are currently inside their limit.
 func (h *Handler) groupBudgetStatuses(
 	ctx context.Context, c caller, hh household,
 ) ([]*financev1.BudgetStatus, int32, error) {

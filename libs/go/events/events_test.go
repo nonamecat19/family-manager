@@ -46,7 +46,6 @@ func TestSubjectDomain(t *testing.T) {
 	}
 }
 
-// fakeMsg is the minimum of jetstream.Msg that dispatch touches.
 type fakeMsg struct {
 	subject   string
 	data      []byte
@@ -93,8 +92,6 @@ func TestDispatchAcksOnSuccess(t *testing.T) {
 	}
 }
 
-// A bare Nak asks for immediate redelivery, so five attempts happened inside a few
-// milliseconds and MaxDeliver was spent before the cause could possibly have cleared.
 func TestDispatchBacksOffBeforeRedelivery(t *testing.T) {
 	for attempt, want := range redeliveryBackoff {
 		m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: uint64(attempt + 1)}
@@ -133,7 +130,6 @@ func TestDispatchWithoutMetadataUsesTheFirstDelay(t *testing.T) {
 	}
 }
 
-// An event a handler cannot parse must not be able to take the service down with it.
 func TestDispatchSurvivesAPanickingHandler(t *testing.T) {
 	m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: 1}
 	dispatch(context.Background(), func(context.Context, Subject, []byte) error {
@@ -148,8 +144,6 @@ func TestDispatchSurvivesAPanickingHandler(t *testing.T) {
 	}
 }
 
-// The whole point of putting the id on the message: the consumer's work belongs to the trace
-// of the request that caused it.
 func TestDispatchRestoresThePublishersRequestID(t *testing.T) {
 	m := &fakeMsg{
 		subject:   string(SubjectFamilyMemberJoined),
@@ -168,8 +162,6 @@ func TestDispatchRestoresThePublishersRequestID(t *testing.T) {
 	}
 }
 
-// An event published outside a request carries no id, and the handler must not be handed an
-// empty one that looks like a trace.
 func TestDispatchWithoutARequestID(t *testing.T) {
 	m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: 1}
 

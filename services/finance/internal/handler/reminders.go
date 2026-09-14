@@ -12,9 +12,6 @@ import (
 	"github.com/nnc/family-manager/services/finance/db"
 )
 
-// Reminders are per-user, not per-household: the settings row that creates one is on a
-// person's device, and a household-wide reminder would notify people who never asked.
-
 func (h *Handler) ListReminders(
 	ctx context.Context, req *connect.Request[financev1.ListRemindersRequest],
 ) (*connect.Response[financev1.ListRemindersResponse], error) {
@@ -36,8 +33,6 @@ func (h *Handler) ListReminders(
 	return connect.NewResponse(&financev1.ListRemindersResponse{Reminders: out}), nil
 }
 
-// UpsertReminder rather than create+update: a reminder is edited far more often than it is
-// created, and the app's editor has no meaningful distinction between the two.
 func (h *Handler) UpsertReminder(
 	ctx context.Context, req *connect.Request[financev1.UpsertReminderRequest],
 ) (*connect.Response[financev1.UpsertReminderResponse], error) {
@@ -60,8 +55,6 @@ func (h *Handler) UpsertReminder(
 	if interval < 0 {
 		return nil, invalid("repeat.interval must not be negative")
 	}
-	// A repeat needs both halves or neither: an interval with no unit is not a schedule, and
-	// the CHECK constraint would reject the pair anyway.
 	if unit == "" {
 		interval = 0
 	}
