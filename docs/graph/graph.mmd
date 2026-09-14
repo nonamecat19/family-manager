@@ -3,6 +3,7 @@ graph LR
     app_finance["app:finance"]
     app_notes["app:notes"]
     app_recipes["app:recipes"]
+    app_tasks["app:tasks"]
   end
   subgraph packages
     pkg__fm_api["pkg:@fm/api"]
@@ -89,6 +90,8 @@ graph LR
     table_reminder_deliveries["table:reminder_deliveries"]
     table_reminders["table:reminders"]
     table_shares["table:shares"]
+    table_subscription_occurrences["table:subscription_occurrences"]
+    table_subscriptions["table:subscriptions"]
     table_task_assignees["table:task_assignees"]
     table_task_reminders["table:task_reminders"]
     table_tasks["table:tasks"]
@@ -125,6 +128,13 @@ graph LR
   app_recipes -->|DEPENDS_ON| pkg__fm_sdk
   app_recipes -->|DEPENDS_ON| pkg__fm_theme
   app_recipes -->|DEPENDS_ON| pkg__fm_ui
+  app_tasks -->|DEPENDS_ON| pkg__fm_api
+  app_tasks -->|DEPENDS_ON| pkg__fm_auth
+  app_tasks -->|DEPENDS_ON| pkg__fm_config
+  app_tasks -->|DEPENDS_ON| pkg__fm_i18n
+  app_tasks -->|DEPENDS_ON| pkg__fm_sdk
+  app_tasks -->|DEPENDS_ON| pkg__fm_theme
+  app_tasks -->|DEPENDS_ON| pkg__fm_ui
   golib_auth -->|DEPENDS_ON| golib_logger
   golib_events -->|DEPENDS_ON| golib_logger
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_auth
@@ -180,6 +190,8 @@ graph LR
   service_finance -->|PERSISTS_TO| table_quick_templates
   service_finance -->|PERSISTS_TO| table_recurring_payments
   service_finance -->|PERSISTS_TO| table_reminders
+  service_finance -->|PERSISTS_TO| table_subscription_occurrences
+  service_finance -->|PERSISTS_TO| table_subscriptions
   service_finance -->|PERSISTS_TO| table_transactions
   service_finance -->|PERSISTS_TO| table_widget_instances
   service_finance -->|RUNS_ON| infra_nats
@@ -236,10 +248,13 @@ graph LR
   service_tasks -->|PERSISTS_TO| table_family_settings
   service_tasks -->|PERSISTS_TO| table_google_connections
   service_tasks -->|PERSISTS_TO| table_known_members
+  service_tasks -->|PERSISTS_TO| table_processed_events
   service_tasks -->|PERSISTS_TO| table_reminder_deliveries
   service_tasks -->|PERSISTS_TO| table_task_assignees
   service_tasks -->|PERSISTS_TO| table_task_reminders
   service_tasks -->|PERSISTS_TO| table_tasks
+  service_tasks -->|RUNS_ON| infra_nats
+  service_tasks -->|RUNS_ON| infra_postgres
   service_telegram -->|DEPENDS_ON| golib_database
   service_telegram -->|DEPENDS_ON| golib_go
   service_telegram -->|DEPENDS_ON| golib_logger
@@ -278,6 +293,7 @@ graph LR
   table_notes -->|OWNED_BY| service_notes
   table_notification_mutes -->|OWNED_BY| service_notifications
   table_processed_events -->|OWNED_BY| service_notifications
+  table_processed_events -->|OWNED_BY| service_tasks
   table_push_tickets -->|OWNED_BY| service_notifications
   table_push_tokens -->|OWNED_BY| service_notifications
   table_quick_templates -->|OWNED_BY| service_finance
@@ -293,6 +309,8 @@ graph LR
   table_reminder_deliveries -->|OWNED_BY| service_tasks
   table_reminders -->|OWNED_BY| service_finance
   table_shares -->|OWNED_BY| service_notes
+  table_subscription_occurrences -->|OWNED_BY| service_finance
+  table_subscriptions -->|OWNED_BY| service_finance
   table_task_assignees -->|OWNED_BY| service_tasks
   table_task_reminders -->|OWNED_BY| service_tasks
   table_tasks -->|OWNED_BY| service_tasks
