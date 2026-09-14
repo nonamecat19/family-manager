@@ -1,14 +1,23 @@
+import { toDisplayError, useTelegramLink } from "@fm/api";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n, type Locale } from "../../components/i18n/index.tsx";
 import { CheckIcon } from "../../components/organic/icons.tsx";
 import { organic } from "../../components/organic/tokens.ts";
-import { Display, Kicker, RoundButton, Screen } from "../../components/organic/ui.tsx";
+import { Display, Kicker, PrimaryButton, RoundButton, Screen } from "../../components/organic/ui.tsx";
+
+const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
 export default function PreferencesScreen() {
   const router = useRouter();
   const { t, locale, setLocale } = useI18n();
+  const telegram = useTelegramLink({ bot: telegramBot, open: Linking.openURL });
+  const telegramError = telegram.error
+    ? toDisplayError(telegram.error, t("preferences.telegramFailed")).message
+    : null;
 
   const options: { value: Locale; label: string }[] = [
     { value: "en", label: t("preferences.english") },
@@ -56,6 +65,38 @@ export default function PreferencesScreen() {
             })}
           </View>
         </View>
+
+        {telegram.available && (
+          <View>
+            <Kicker className="mb-[11px]">{t("preferences.telegram")}</Kicker>
+            <Text className="mb-[12px] font-fig text-[14px] leading-[21px] text-neutral-600">
+              {telegram.awaiting ? t("preferences.telegramWaiting") : t("preferences.telegramHint")}
+            </Text>
+            <View className="mb-[12px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]">
+              <Text className="font-fig-bold text-[15.5px] text-fg">
+                {telegram.identity ? t("preferences.telegramConnected") : t("preferences.telegramNotConnected")}
+              </Text>
+            </View>
+            {telegramError && (
+              <Text className="mb-[12px] font-fig-semi text-[12px]" style={{ color: organic.danger }}>
+                {telegramError}
+              </Text>
+            )}
+            {telegram.identity ? (
+              <PrimaryButton
+                title={t("preferences.telegramDisconnect")}
+                disabled={telegram.unlinking}
+                onPress={() => void telegram.unlink().catch(() => undefined)}
+              />
+            ) : (
+              <PrimaryButton
+                title={t("preferences.telegramConnect")}
+                disabled={telegram.connecting || telegram.loading}
+                onPress={() => void telegram.connect().catch(() => undefined)}
+              />
+            )}
+          </View>
+        )}
       </ScrollView>
     </Screen>
   );
