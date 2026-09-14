@@ -50,7 +50,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	notesURL := fs.String("notes-url", "", "notes service base URL (env FM_NOTES_URL)")
 	credsPath := fs.String("credentials", "", "credentials file (default <user config dir>/family-manager/credentials.json)")
 	fs.Usage = func() {
-		fmt.Fprint(stderr, usage)
+		_, _ = fmt.Fprint(stderr, usage)
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -62,7 +62,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 
 	cfg, err := config.FromEnv(*env)
 	if err != nil {
-		fmt.Fprintf(stderr, "fm: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "fm: %v\n", err)
 		return 2
 	}
 	if v := strings.TrimRight(*authURL, "/"); v != "" {
@@ -75,7 +75,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	store := &credentials.Store{Path: *credsPath}
 	if store.Path == "" {
 		if store, err = credentials.Default(); err != nil {
-			fmt.Fprintf(stderr, "fm: %v\n", err)
+			_, _ = fmt.Fprintf(stderr, "fm: %v\n", err)
 			return 1
 		}
 	}
@@ -101,12 +101,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fs.Usage()
 		return 0
 	default:
-		fmt.Fprintf(stderr, "fm: unknown command %q\n", cmd)
+		_, _ = fmt.Fprintf(stderr, "fm: unknown command %q\n", cmd)
 		fs.Usage()
 		return 2
 	}
 	if err != nil {
-		fmt.Fprintf(stderr, "fm: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "fm: %v\n", err)
 		return 1
 	}
 	return 0
@@ -128,34 +128,34 @@ func (a *App) Login(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(a.Out, "Your code: %s\n", g.UserCode)
-	fmt.Fprintf(a.Out, "%s.\n", session.ApproveHint)
+	_, _ = fmt.Fprintf(a.Out, "Your code: %s\n", g.UserCode)
+	_, _ = fmt.Fprintf(a.Out, "%s.\n", session.ApproveHint)
 	if !g.ExpiresAt.IsZero() {
-		fmt.Fprintf(a.Out, "The code expires at %s.\n", g.ExpiresAt.Local().Format(time.Kitchen))
+		_, _ = fmt.Fprintf(a.Out, "The code expires at %s.\n", g.ExpiresAt.Local().Format(time.Kitchen))
 	}
-	fmt.Fprintln(a.Out, "Waiting for approval…")
+	_, _ = fmt.Fprintln(a.Out, "Waiting for approval…")
 	if err := a.Session.WaitForApproval(ctx, &g, session.Sleep); err != nil {
 		return err
 	}
 	c, err := a.Session.Claims(ctx)
 	if err != nil {
-		fmt.Fprintln(a.Out, "Signed in.")
+		_, _ = fmt.Fprintln(a.Out, "Signed in.")
 		return nil
 	}
-	fmt.Fprintf(a.Out, "Signed in as %s.\n", displayName(c))
+	_, _ = fmt.Fprintf(a.Out, "Signed in as %s.\n", displayName(c))
 	return nil
 }
 
 func (a *App) Logout(ctx context.Context) error {
 	err := a.Session.Logout(ctx)
 	if errors.Is(err, session.ErrLoggedOut) {
-		fmt.Fprintln(a.Out, "Not signed in.")
+		_, _ = fmt.Fprintln(a.Out, "Not signed in.")
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("signed out locally, but the server did not confirm: %w", err)
 	}
-	fmt.Fprintln(a.Out, "Signed out.")
+	_, _ = fmt.Fprintln(a.Out, "Signed out.")
 	return nil
 }
 
@@ -167,16 +167,16 @@ func (a *App) WhoAmI(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(a.Out, "user:   %s\n", c.UserID)
+	_, _ = fmt.Fprintf(a.Out, "user:   %s\n", c.UserID)
 	if c.Email != "" {
-		fmt.Fprintf(a.Out, "email:  %s\n", c.Email)
+		_, _ = fmt.Fprintf(a.Out, "email:  %s\n", c.Email)
 	}
 	family := c.FamilyID
 	if family == "" {
 		family = "(none)"
 	}
-	fmt.Fprintf(a.Out, "family: %s\n", family)
-	fmt.Fprintf(a.Out, "server: %s\n", a.Config.Endpoints.Auth)
+	_, _ = fmt.Fprintf(a.Out, "family: %s\n", family)
+	_, _ = fmt.Fprintf(a.Out, "server: %s\n", a.Config.Endpoints.Auth)
 	return nil
 }
 
