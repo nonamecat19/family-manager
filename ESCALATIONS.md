@@ -227,3 +227,14 @@ logs a template from the widget, and a custom amount opens the app's add screen.
 - **hr2: real bank samples.** The parser fixtures are synthesised from known formats. Replace them
   with real notifications (redact the card digits) and confirm the package ids for PUMB, Sense,
   A-Bank and Raiffeisen.
+
+## E12 — `just lint-go` panics on go1.27 everywhere (open, informational, predates these runs)
+
+golangci-lint 2.12.2 with staticcheck v0.7.0 panics on go1.27
+(`fact_purity: package "poll" ... not *buildir.IR`, rc=3). It panics on a clean export of HEAD as
+well, so no unit caused it. `just verify` does not run `lint-go`, so the runs are not blocked. With
+`--disable staticcheck,unused`, every service lints clean except tasks: its findings are queued as
+0003/u27 (gcal) and u12b (handler gofmt).
+
+To fix: upgrade golangci-lint to a release built against go1.27, wherever CI and local installs
+pin it. That is a toolchain change outside any unit.
