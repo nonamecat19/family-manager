@@ -175,6 +175,11 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "gate.errorTitle": "Щось\nпішло не так",
   "gate.renderError": "Не вдалося намалювати цей екран. Зазвичай допомагає перезапуск застосунку.",
 
+  "home.setupRequiredTitle": "Ще\nтрохи",
+  "home.setupRequiredAction": "Завершити налаштування",
+  "home.setupRequiredBody":
+    "Завершіть налаштування фінансів вашої сім'ї, щоб побачити огляд.",
+
   "auth.title": "Родинні гроші",
   "auth.signInBody": "Спільний бюджет. Приватні рахунки залишаються приватними.",
   "auth.registerBody": "Створіть акаунт, а потім сім'ю — або прийміть запрошення.",

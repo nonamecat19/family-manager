@@ -126,6 +126,10 @@ export const en = {
   "gate.errorTitle": "Something\nwent wrong",
   "gate.renderError": "The app could not draw this screen. Reopening it usually clears it.",
 
+  "home.setupRequiredTitle": "Almost\nthere",
+  "home.setupRequiredBody": "Finish setting up your household's finances to see your overview.",
+  "home.setupRequiredAction": "Finish setup",
+
   "auth.title": "Family Money",
   "auth.signInBody": "One shared budget. Private accounts stay private.",
   "auth.registerBody": "Create an account, then a family — or accept an invitation.",

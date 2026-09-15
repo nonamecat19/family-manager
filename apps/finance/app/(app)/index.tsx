@@ -16,6 +16,7 @@ import {
   type ScopeInput,
   type SteppablePeriod,
 } from "@fm/api";
+import { Code } from "@connectrpc/connect";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
@@ -23,7 +24,7 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useI18n } from "@/components/i18n";
 import { AmountChip, Card, dayHeading, DonutChart, type DonutSegment, Fab, formatMoney, monthTitle, PeriodStepper, type PeriodTab, PeriodTabs, type Scope, ScopeSwitcher, SegmentedTabs, seriesColor, shortDate, type Translate } from "@/components/kit";
 import { HomeGroupCard } from "@/components/screens/home/groupCard.tsx";
-import { Button, EmptyState, IconButton, iconOr, Kicker, organic, Screen, ScreenHeader } from "@fm/ui";
+import { Button, EmptyState, GateMessage, IconButton, iconOr, Kicker, organic, Screen, ScreenHeader } from "@fm/ui";
 
 export default function HomeScreen() {
   const { t } = useI18n();
@@ -142,6 +143,21 @@ export default function HomeScreen() {
   }
 
   if (summary.isError) {
+    const code = (summary.error as { code?: Code }).code;
+    if (code === Code.FailedPrecondition) {
+      return (
+        <Screen>
+          {header}
+          <GateMessage
+            title={t("home.setupRequiredTitle")}
+            body={t("home.setupRequiredBody")}
+            actionTitle={t("home.setupRequiredAction")}
+            onAction={() => router.push("/(app)/onboarding")}
+          />
+        </Screen>
+      );
+    }
+
     const shown = toDisplayError(summary.error, t("common.loadFailed"));
     return (
       <Screen>
