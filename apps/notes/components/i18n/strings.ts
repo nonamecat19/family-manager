@@ -252,5 +252,13 @@ export const strings = {
     queueEmpty: "Everything is synced.",
     about: "About",
     aboutBody: "Commonplace — notes for one family. Blocks, notebooks, and a search box.",
+    telegram: "Telegram",
+    telegramConnected: "Connected",
+    telegramNotConnected: "Not connected",
+    telegramHint: "Opens the bot with a one-time link. One connection works for every family-manager bot.",
+    telegramConnect: "Connect Telegram",
+    telegramWaiting: "Waiting for Telegram. Press Start in the bot.",
+    telegramDisconnect: "Disconnect",
+    telegramFailed: "Telegram linking did not respond. Try again.",
   },
 } as const;

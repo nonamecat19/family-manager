@@ -1,5 +1,8 @@
-import { useFamily } from "@fm/api";
+import { toDisplayError, useFamily, useTelegramLink } from "@fm/api";
 import { useAuth } from "@fm/auth";
+import { useTheme } from "@fm/ui";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
@@ -9,12 +12,19 @@ import { Avatar, Divider, PrimaryButton, Screen } from "../../components/nocturn
 
 const SIGN_OUT_FLUSH_MS = 4_000;
 
+const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
+
 export default function SettingsScreen() {
   const family = useFamily();
   const { signOut } = useAuth();
   const queue = useCaptureQueue();
   const [signingOut, setSigningOut] = useState(false);
+  const telegram = useTelegramLink({ bot: telegramBot, open: Linking.openURL });
+  const theme = useTheme();
   const members = family.data?.members ?? [];
+  const telegramError = telegram.error
+    ? toDisplayError(telegram.error, strings.settings.telegramFailed).message
+    : null;
 
   const endSession = async () => {
     setSigningOut(true);
@@ -109,6 +119,41 @@ export default function SettingsScreen() {
                   />
                 </View>
               ))}
+            </View>
+          </>
+        ) : null}
+
+        {telegram.available ? (
+          <>
+            <Divider />
+            <View className="gap-[10px]">
+              <Section label={strings.settings.telegram} />
+              <Text className="font-sans text-[14px] text-fg">
+                {telegram.identity
+                  ? strings.settings.telegramConnected
+                  : strings.settings.telegramNotConnected}
+              </Text>
+              <Text className="font-sans text-[13px] text-neutral-400">
+                {telegram.awaiting ? strings.settings.telegramWaiting : strings.settings.telegramHint}
+              </Text>
+              {telegramError ? (
+                <Text className="font-sans text-[12px]" style={{ color: theme.danger }}>
+                  {telegramError}
+                </Text>
+              ) : null}
+              {telegram.identity ? (
+                <PrimaryButton
+                  title={strings.settings.telegramDisconnect}
+                  disabled={telegram.unlinking}
+                  onPress={() => void telegram.unlink().catch(() => undefined)}
+                />
+              ) : (
+                <PrimaryButton
+                  title={strings.settings.telegramConnect}
+                  disabled={telegram.connecting || telegram.loading}
+                  onPress={() => void telegram.connect().catch(() => undefined)}
+                />
+              )}
             </View>
           </>
         ) : null}
