@@ -239,7 +239,7 @@ well, so no unit caused it. `just verify` does not run `lint-go`, so the runs ar
 To fix: upgrade golangci-lint to a release built against go1.27, wherever CI and local installs
 pin it. That is a toolchain change outside any unit.
 
-## E13 — 0005/d1: ADR 0018 (capture data at rest) failed verification twice (open, stop-the-line)
+## E13 — 0005/d1: ADR 0018 (capture data at rest) failed verification twice (decided, follow-up in progress)
 
 The run stopped because two verifiers each found a blocker in d1. Units that were already
 running finish their own verification; no new unit starts. The ADR draft is saved in `git stash`
@@ -276,3 +276,8 @@ committed.
 
 Answer each point (or "use recommended"), then `/escalations`. The d1 stash is reapplied and
 the ADR rewritten against the updated plan.
+
+DECIDED 2026-10-08: use the recommended changes in points 1–4 and 6. Encrypt backups and
+store the seal key separately from the backup archive for point 5. Update the backlog and ADR
+to reflect these decisions before resuming the stopped capture run. The infrastructure change
+remains at its human gate before it is applied.
