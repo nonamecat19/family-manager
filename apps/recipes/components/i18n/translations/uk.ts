@@ -391,4 +391,8 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "notifications.topic.family.member.removed": "Хтось залишає родину",
   "notifications.topic.finance.budget.exceeded": "Бюджет перевищено",
   "notifications.topic.recipes.recipe.created": "Додано новий рецепт",
+  "notifications.topic.tasks": "Завдання",
+  "notifications.topic.tasks.task.assigned": "Вам призначили завдання",
+  "notifications.topic.tasks.task.due": "Настає строк завдання",
+  "notifications.topic.tasks.birthday.upcoming": "Наближається день народження",
 };

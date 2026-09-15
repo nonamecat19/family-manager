@@ -20,6 +20,10 @@ const DEFAULT_LABELS: Record<string, string> = {
   "notifications.topic.family.member.removed": "Someone leaves the family",
   "notifications.topic.finance.budget.exceeded": "A budget is overspent",
   "notifications.topic.recipes.recipe.created": "A new recipe is added",
+  "notifications.topic.tasks": "Tasks",
+  "notifications.topic.tasks.task.assigned": "A task is assigned to you",
+  "notifications.topic.tasks.task.due": "A task is due",
+  "notifications.topic.tasks.birthday.upcoming": "A birthday is coming up",
 };
 
 function fill(template: string, vars?: Record<string, string | number>): string {
