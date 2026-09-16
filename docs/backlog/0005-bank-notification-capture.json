@@ -115,7 +115,7 @@
       "title": "capture sqlc queries + generated db package",
       "kind": "service",
       "acceptance": "cd services/capture && sqlc diff && GOWORK=off go build ./...",
-      "notes": "sqlc.yaml as services/finance (pgx/v5, emit_interface). Queries: notifications.sql, suggestions.sql, settings.sql, prefill.sql, retention.sql. Every read/write filters by user_id (and family_id); none by id alone. Insert notification ON CONFLICT (family_id, user_id, device_id, notification_key) DO NOTHING RETURNING. Suggestion transitions are conditional UPDATE ... WHERE status = 'pending'. Purge: null raw columns where suggestion decided_at < cutoff. ADR 0018 (d1 verify): queries InsertDeletedKey / IsDeletedKey for the tombstone; DeletePrefillRulesForNotification is NOT needed but ListPrefillRules/DeletePrefillRule are (member can clear learned rules); purge query also nulls title/text of notifications WITHOUT a suggestion once received_at < now - retention, and of notifications whose suggestion is still pending after 365 days. From s2 verify: schema column is decided_at; dedupe ON CONFLICT target is (family_id, user_id, device_id, notification_key); constraint names suggestions_decided_iff_not_pending / suggestions_transaction_iff_confirmed / suggestions_balance_complete."
+      "notes": "sqlc.yaml as services/finance (pgx/v5, emit_interface). Queries: notifications.sql, suggestions.sql, settings.sql, prefill.sql, retention.sql. Every read/write filters by user_id (and family_id); none by id alone. Insert notification ON CONFLICT (family_id, user_id, device_id, notification_key) DO NOTHING RETURNING. Suggestion transitions are conditional UPDATE ... WHERE status = 'pending'. Purge: null raw columns where suggestion decided_at < cutoff. ADR 0018 (d1 verify): queries InsertDeletedKey / IsDeletedKey for the tombstone; DeletePrefillRulesForNotification is NOT needed but ListPrefillRules/DeletePrefillRule are (member can clear learned rules); purge query also nulls title/text of notifications WITHOUT a suggestion once received_at < now - retention, and of notifications whose suggestion is still pending after 365 days. From s2 verify: schema column is decided_at; dedupe ON CONFLICT target is (family_id, user_id, device_id, notification_key); constraint names suggestions_decided_iff_not_pending / suggestions_transaction_iff_confirmed / suggestions_balance_complete. Add member-scoped ListPrefillRules, DeletePrefillRule and ClearPrefillRules queries, a query to prune deletion tombstones older than one year, and ordered cleanup queries for all rows of a (family_id, user_id) on family.member.removed. Pending raw text expires at received_at + 365 days; suggestion-less raw text expires at received_at + 90 days."
     },
     {
       "nodes": [
@@ -134,10 +134,10 @@
       "commit": null,
       "blocked_reason": null,
       "id": "s4",
-      "title": "Raw notification sealing at rest (AES-GCM, member-bound AAD)",
+      "title": "Raw notification sealing at rest (AES-GCM, owner, row and field AAD)",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/crypto/...",
-      "notes": "Model on services/tasks/internal/crypto/seal.go (versioned prefix, random nonce, length-prefixed owner AAD), domain string 'capture-notification' with family_id, user_id. Tests: round trip, wrong owner fails, tampered ciphertext fails, bad key length rejected. Stdlib only. Do not import the tasks package (services never import another service)."
+      "notes": "Model on services/tasks/internal/crypto/seal.go (versioned prefix, random nonce, length-prefixed AAD), but use domain capture-notification plus family_id, user_id, preallocated notification row id and field name (title or text) as AES-GCM additional data. Tests: round trip; wrong owner, cross-row and title/text swaps fail; tampered ciphertext fails; bad key length rejected. Stdlib only. Do not import the tasks package (services never import another service)."
     },
     {
       "nodes": [
@@ -350,7 +350,7 @@
       "title": "SubmitNotifications: batch, idempotent, sealed, parsed into suggestions",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go. Contract semantics (c1 verify): REJECTED is permanent for NOT_ALLOWED and INVALID, and the device drops those items; for DISABLED the device keeps the item queued until capture is re-enabled. amount_minor is always >= 0 and the sign comes from direction (DEBIT -> finance EXPENSE, CREDIT -> INCOME). occurred_at falls back to posted_at when the bank text has no time. ADR 0018 (d1 verify): before insert, a key present in deleted_notification_keys returns DUPLICATE (test: re-upload after delete -> DUPLICATE, item not back). Never log title, text or parsed fields; errors from parsing are logged by parser id and reason code only (test asserts the log buffer has no fixture text). From s2 verify: validate lengths to match the schema (device_id<=256, notification_key<=512, package_name<=255, merchant<=512, card_hint<=32, parser_id 1-128) and return REJECTED/INVALID beyond them."
+      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go. Contract semantics (c1 verify): REJECTED is permanent for NOT_ALLOWED and INVALID, and the device drops those items; for DISABLED the device keeps the item queued until capture is re-enabled. amount_minor is always >= 0 and the sign comes from direction (DEBIT -> finance EXPENSE, CREDIT -> INCOME). occurred_at falls back to posted_at when the bank text has no time. ADR 0018 (d1 verify): before insert, a key present in deleted_notification_keys returns DUPLICATE (test: re-upload after delete -> DUPLICATE, item not back). Never log title, text or parsed fields; errors from parsing are logged by parser id and reason code only (test asserts the log buffer has no fixture text). From s2 verify: validate lengths to match the schema (device_id<=256, notification_key<=512, package_name<=255, merchant<=512, card_hint<=32, parser_id 1-128) and return REJECTED/INVALID beyond them. Allocate notification id before sealing so s4 can bind row id and field name into AAD; keep that id through insertion and idempotent response."
     },
     {
       "nodes": [
@@ -414,10 +414,10 @@
       "commit": null,
       "blocked_reason": null,
       "id": "h5",
-      "title": "Retention purge loop: raw text nulled 90 days after confirm/dismiss",
+      "title": "Retention purge loop: decided 90 days, unparsed 90 days, pending 365 days, tombstones one year",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/retention/...",
-      "notes": "Injected clock and interval; pending suggestions are never purged; confirmed/dismissed older than CAPTURE_RETENTION have raw title/text set to NULL (parsed fields kept). Tests cover boundary (exactly 90d), pending untouched, idempotent second run. ADR 0018 (d1 verify): purge also covers suggestion-less notifications by received_at (retention) and pending suggestions older than 365 days; text_purged in the API is derived from NULL ciphertext."
+      "notes": "Injected clock and interval. Null sealed title/text for confirmed or dismissed suggestions once decided_at is at least CAPTURE_RETENTION old (default 90 days), for suggestion-less notifications once received_at is at least 90 days old, and for still-pending suggestions once received_at is at least 365 days old. Parsed fields remain; text_purged is derived from NULL ciphertext. Prune deleted_notification_keys once deleted_at is at least one year old. Tests cover every exact boundary, younger pending text, expired pending text, tombstones, and an idempotent second run."
     },
     {
       "nodes": [
@@ -432,7 +432,9 @@
         "h2",
         "h3",
         "h4",
-        "h5"
+        "h5",
+        "h6",
+        "m1"
       ],
       "gate": "auto",
       "status": "todo",
@@ -443,7 +445,7 @@
       "title": "Wire capture main: pool + migrations, seal box, handler, retention loop",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go vet ./... && cd services/capture && GOWORK=off go test -race ./...",
-      "notes": "Run migrations from internal/db embed via libs/go/database at boot (as tasks/finance). Boot fails on a missing or malformed CAPTURE_SEAL_KEY (test). /healthz on both listeners. From s1 verify: do NOT mount CaptureService on the internal :9090 mux (no sibling calls capture); keep only /healthz and /metrics there. Drop the 'config loaded' log line or redact SealKey with a type whose LogValue/String hides it. Add a table test that every CaptureService procedure returns 401 without a token on the public listener."
+      "notes": "Run migrations from internal/db embed via libs/go/database at boot (as tasks/finance). Boot fails on a missing or malformed CAPTURE_SEAL_KEY (test). /healthz on both listeners. From s1 verify: do NOT mount CaptureService on the internal :9090 mux (no sibling calls capture); keep only /healthz and /metrics there. Drop the 'config loaded' log line or redact SealKey with a type whose LogValue/String hides it. Add a table test that every CaptureService procedure returns 401 without a token on the public listener. Wire m1 subscriber to the event bus, establish the needed stream and stop the subscription on shutdown. An event delivery failure must retry rather than acknowledge cleanup as complete."
     },
     {
       "nodes": [
@@ -541,15 +543,15 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 2,
       "commit": null,
-      "blocked_reason": "stop-the-line: 2 verifier blockers (E13). ADR draft stashed.",
+      "blocked_reason": null,
       "id": "d1",
       "title": "ADR 0018: capture data at rest (encryption, member privacy, retention), status proposed",
       "kind": "docs",
       "acceptance": "grep -q '0018-capture-data-at-rest' docs/adr/README.md && grep -qi '^- status: proposed' docs/adr/0018-capture-data-at-rest.md",
-      "notes": "Records the brief defaults: AES-GCM with a service key and member-bound AAD, raw text member-private, purge 90 days after confirm/dismiss, pending kept, member delete, key rotation story (version byte), what is NOT encrypted (parsed amount/merchant) and why. Status line format 'Status: proposed'. (coordinator) Acceptance pattern changed from '^status:' to '^- status:' to match every existing ADR's '- Status:' line. Attempt 2 (after verify): ADR states only what units build (tombstone, purge incl. unparsed, keystore queue); rotation explicitly NOT built in v1; backups keep key next to dumps and 14 runs of history; clear-field list complete incl. prefill_rules and counterparty names; no-logging rule."
+      "notes": "Restore the attempt-2 ADR draft from stash@{0}^3 and revise it for all E13 decisions approved 2026-10-08: additive prefill-rule management, device no-logging, family.member.removed cleanup, 90-day unparsed and 365-day pending purge, row/field AAD, complete clear-field list, one-year tombstone expiry, and encrypted backups with keys held separately. Keep - Status: proposed for later human acceptance in hr. Review against backlog units and existing schema."
     },
     {
       "nodes": [],
@@ -569,7 +571,7 @@
       "title": "Human review of capture storage and retention before first deploy (accept ADR 0018)",
       "kind": "docs",
       "acceptance": "grep -qi '^- status: accepted' docs/adr/0018-capture-data-at-rest.md",
-      "notes": "Brief 'Known gates': financial personal data at rest. Human reads the ADR and the s2 schema / s4 sealing / h5 purge, then flips Status to accepted or answers with changes. (coordinator) acceptance pattern matches the repo's '- Status:' ADR line."
+      "notes": "Brief 'Known gates': financial personal data at rest. Human reads the ADR and the s2 schema / s4 sealing / h5 purge, then flips Status to accepted or answers with changes. (coordinator) acceptance pattern matches the repo's '- Status:' ADR line. Review the explicit clear-field inventory, rule-management RPC/UI, member-removal cleanup, 90/365-day purge, one-year tombstone pruning, row/field-bound AAD, device no-logging and encrypted backup/key-separation plan."
     },
     {
       "nodes": [
@@ -582,7 +584,8 @@
       ],
       "depends_on": [
         "s7",
-        "hr"
+        "hr",
+        "bk"
       ],
       "gate": "human",
       "status": "blocked",
@@ -593,7 +596,7 @@
       "title": "Prod deploy surface: Caddy host capture.<domain>, capture service + DB in prod compose",
       "kind": "infra",
       "acceptance": "docker compose -f infra/docker-compose.prod.yml config -q",
-      "notes": "STOP: infra/**. Brief keeps this a human step. Includes prod postgres init for the capture DB and CAPTURE_SEAL_KEY in infra/secrets. Deploy itself is a human push. From s1 verify: add only capture:8080 to infra/Caddyfile, with a 'capture:9090 deliberately absent' note like the existing ones."
+      "notes": "STOP: infra/**. Brief keeps this a human step. Includes prod postgres init for the capture DB and CAPTURE_SEAL_KEY in infra/secrets. Deploy itself is a human push. From s1 verify: add only capture:8080 to infra/Caddyfile, with a 'capture:9090 deliberately absent' note like the existing ones. Do not deploy capture until bk has been reviewed and applied; the current backup.sh writes clear dumps and archives .env/secrets next to them."
     },
     {
       "nodes": [
@@ -637,7 +640,7 @@
       "title": "@fm/api: optional capture client + capture query keys",
       "kind": "package",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
-      "notes": "ServiceName gains 'capture'; URL optional (falls back like the others) so notes and recipes keep working unchanged. Keys: suggestions(status), pendingCount, captured, captureSettings - all defined here so a2-a4 stay disjoint. Blast radius: finance, notes, recipes."
+      "notes": "ServiceName gains 'capture'; URL optional (falls back like the others) so notes and recipes keep working unchanged. Keys: suggestions(status), pendingCount, captured, captureSettings - all defined here so a2-a4 stay disjoint. Blast radius: finance, notes, recipes. Add a member-scoped prefill-rules query key."
     },
     {
       "nodes": [
@@ -648,7 +651,8 @@
         "packages/api/src/capture.test.ts"
       ],
       "depends_on": [
-        "a1"
+        "a1",
+        "c4"
       ],
       "gate": "auto",
       "status": "todo",
@@ -659,7 +663,7 @@
       "title": "@fm/api: capture hooks (suggestions, pending count, confirm = CreateTransaction then ConfirmSuggestion, dismiss, captured list/delete, settings)",
       "kind": "package",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
-      "notes": "Confirm: finance CreateTransaction with the edited fields, then ConfirmSuggestion(transaction id, account, category); if ConfirmSuggestion fails after the transaction exists, retry it (never create a second transaction). Invalidate finance transaction keys and capture keys. Tests on the ordering/retry logic with fake clients. Contract semantics (c1 verify): confirm persists the created finance transaction id locally (keyed by suggestion id) before calling ConfirmSuggestion and reuses it on retry, so an app crash between CreateTransaction and ConfirmSuggestion never creates a second transaction. occurred_at becomes finance occurred_on in the device timezone."
+      "notes": "Confirm: finance CreateTransaction with the edited fields, then ConfirmSuggestion(transaction id, account, category); if ConfirmSuggestion fails after the transaction exists, retry it (never create a second transaction). Invalidate finance transaction keys and capture keys. Tests on the ordering/retry logic with fake clients. Contract semantics (c1 verify): confirm persists the created finance transaction id locally (keyed by suggestion id) before calling ConfirmSuggestion and reuses it on retry, so an app crash between CreateTransaction and ConfirmSuggestion never creates a second transaction. occurred_at becomes finance occurred_on in the device timezone. Expose list/delete/clear prefill-rule hooks, invalidate prefill rules and suggestions after a rule change, and use the additive c3 contract."
     },
     {
       "nodes": [
@@ -704,7 +708,7 @@
       "title": "@fm/api: device capture queue (allow-list filter, batching, retry/backoff) + known bank package list",
       "kind": "package",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
-      "notes": "Storage injected (native module in the app). Items from packages not on the allow-list are dropped and never sent (test). Batches of <=50, ack only accepted/duplicate items, exponential backoff with cap on network errors, nothing lost across a failure (test). captureBanks: Monobank com.ftband.mono, Privat24 ua.privatbank.ap24, PUMB, Sense, A-Bank, Raiffeisen (unverified ids marked, hr2). Contract semantics (c1 verify): ack (remove from the queue) ACCEPTED, DUPLICATE, and REJECTED with reason NOT_ALLOWED or INVALID; keep REJECTED/DISABLED queued."
+      "notes": "Storage injected (native module in the app). Items from packages not on the allow-list are dropped and never sent (test). Batches of <=50, ack only accepted/duplicate items, exponential backoff with cap on network errors, nothing lost across a failure (test). captureBanks: Monobank com.ftband.mono, Privat24 ua.privatbank.ap24, PUMB, Sense, A-Bank, Raiffeisen (unverified ids marked, hr2). Contract semantics (c1 verify): ack (remove from the queue) ACCEPTED, DUPLICATE, and REJECTED with reason NOT_ALLOWED or INVALID; keep REJECTED/DISABLED queued. Never console-log raw notification title, text or parsed fields, including upload and retry errors. Add a fixture-based test asserting captured console output excludes the fixture text."
     },
     {
       "nodes": [
@@ -749,7 +753,7 @@
       "title": "Finance native module: Kotlin NotificationListenerService with on-device allow-list filter and persistent queue",
       "kind": "app",
       "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug",
-      "notes": "Local Expo module (autolinked from apps/finance/modules), NO new npm dependency: a pnpm-lock.yaml change is STOP. Service declared with BIND_NOTIFICATION_LISTENER_SERVICE. onNotificationPosted: drop unless package is in the allow-list stored in SharedPreferences and capture is enabled; else enqueue {key=sbn.key+postTime, package, title, text, posted_at} to a bounded file-backed queue, then start the headless task (n3). apps/finance/android is gitignored, generated by prebuild. ADR 0018 (d1 verify): the on-device queue encrypts {title,text} with an AES-GCM key held in Android Keystore (non-exportable); queue is bounded (500 items) and items older than 30 days are dropped. From s2 verify: notification_key column is capped at 512 chars and package_name at 255; send notification_key as the SHA-256 hex of sbn.key+postTime (64 chars) so free-form tags never exceed it."
+      "notes": "Local Expo module (autolinked from apps/finance/modules), NO new npm dependency: a pnpm-lock.yaml change is STOP. Service declared with BIND_NOTIFICATION_LISTENER_SERVICE. onNotificationPosted: drop unless package is in the allow-list stored in SharedPreferences and capture is enabled; else enqueue {key=sbn.key+postTime, package, title, text, posted_at} to a bounded file-backed queue, then start the headless task (n3). apps/finance/android is gitignored, generated by prebuild. ADR 0018 (d1 verify): the on-device queue encrypts {title,text} with an AES-GCM key held in Android Keystore (non-exportable); queue is bounded (500 items) and items older than 30 days are dropped. From s2 verify: notification_key column is capped at 512 chars and package_name at 255; send notification_key as the SHA-256 hex of sbn.key+postTime (64 chars) so free-form tags never exceed it. Never log notification title, text or parsed fields in listener, queue or error paths."
     },
     {
       "nodes": [
@@ -772,7 +776,7 @@
       "title": "Finance native module: JS bridge (access status, open settings, installed apps, allow-list, drain/ack queue)",
       "kind": "app",
       "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug",
-      "notes": "Functions: isAccessGranted, openAccessSettings (ACTION_NOTIFICATION_LISTENER_SETTINGS), listInstalledApps (needs QUERY_ALL_PACKAGES, added in n3), setAllowList(enabled, packages), peekQueue(limit), ackQueue(keys). index.ts returns no-op stubs on iOS/web so typecheck and iOS builds pass."
+      "notes": "Functions: isAccessGranted, openAccessSettings (ACTION_NOTIFICATION_LISTENER_SETTINGS), listInstalledApps (needs QUERY_ALL_PACKAGES, added in n3), setAllowList(enabled, packages), peekQueue(limit), ackQueue(keys). index.ts returns no-op stubs on iOS/web so typecheck and iOS builds pass. Never log notification title, text or parsed fields in the native bridge or queue inspection paths."
     },
     {
       "nodes": [
@@ -818,7 +822,7 @@
       "title": "Finance i18n: capture inbox, settings, captured history strings (en, uk)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
-      "notes": "Every key for f2-f6 up front so screen units never share a dictionary file: inbox title with count, confirm/dismiss, possible duplicate, empty states, notification access granted/not granted, bank list, allow-list, captured history, delete, purged, iOS 'captured on your Android phone' note."
+      "notes": "Every key for f2-f6 up front so screen units never share a dictionary file: inbox title with count, confirm/dismiss, possible duplicate, empty states, notification access granted/not granted, bank list, allow-list, captured history, delete, purged, iOS 'captured on your Android phone' note. Include prefill-rule list, delete-one and clear-all labels, confirmation and empty state in both languages."
     },
     {
       "nodes": [
@@ -841,7 +845,7 @@
       "title": "Finance headless uploader: drain native queue through captureQueue to SubmitNotifications",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
-      "notes": "headless.ts is the task body registered by n3's index.js; also flush on app foreground. Uses @fm/api captureQueue with the native module as storage and the access token from @fm/auth; on 401/offline keeps items for retry."
+      "notes": "headless.ts is the task body registered by n3's index.js; also flush on app foreground. Uses @fm/api captureQueue with the native module as storage and the access token from @fm/auth; on 401/offline keeps items for retry. Never console-log raw notification title, text or parsed fields in headless or foreground upload paths. Add a fixture-based test asserting captured console output excludes the fixture text on success, retry and failure."
     },
     {
       "nodes": [
@@ -879,7 +883,8 @@
         "f1",
         "f3",
         "n2",
-        "a5"
+        "a5",
+        "c4"
       ],
       "gate": "auto",
       "status": "todo",
@@ -890,7 +895,7 @@
       "title": "Finance capture settings screen: notification access, installed bank apps with known ones preselected, allow-list",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
-      "notes": "Android only: the settings.tsx entry is hidden on iOS. On save: SetCaptureSettings, then native setAllowList (device filter mirrors server). Known banks from captureBanks preselected only when installed and no saved list exists. Links to captured history (f3)."
+      "notes": "Android only: the settings.tsx entry is hidden on iOS. On save: SetCaptureSettings, then native setAllowList (device filter mirrors server). Known banks from captureBanks preselected only when installed and no saved list exists. Links to captured history (f3). Add a prefill rules section that lists learned card/merchant matches and permits deleting one rule or clearing all with confirmation; do not show another member’s rules."
     },
     {
       "nodes": [
@@ -988,7 +993,117 @@
       "kind": "docs",
       "acceptance": "just verify",
       "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
+    },
+    {
+      "nodes": [
+        "proto:libs/proto/capture/v1/capture.proto"
+      ],
+      "files": [
+        "libs/proto/capture/v1/capture.proto"
+      ],
+      "depends_on": [
+        "c2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "c3",
+      "title": "Additive capture.v1 prefill-rule management RPCs",
+      "kind": "contract",
+      "acceptance": "just proto-check",
+      "notes": "Add ListPrefillRules, DeletePrefillRule and ClearPrefillRules; represent match kind/value, account/category ids and timestamps. No removals or renumbering of c1 fields. Every RPC acts on the authenticated member only."
+    },
+    {
+      "nodes": [
+        "proto:libs/proto/capture/v1/capture.proto"
+      ],
+      "files": [
+        "sdk/go/capture/v1/capture.pb.go",
+        "sdk/go/capture/v1/capturev1connect/capture.connect.go",
+        "sdk/typescript/src/capture/v1/capture_pb.ts"
+      ],
+      "depends_on": [
+        "c3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "c4",
+      "title": "Regenerate capture SDKs for prefill-rule RPCs",
+      "kind": "contract",
+      "acceptance": "just proto && cd sdk/go && go vet ./capture/...",
+      "notes": "Generated output only; inspect for unrelated codegen churn before committing."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/handler/prefill.go",
+        "services/capture/internal/handler/prefill_test.go"
+      ],
+      "depends_on": [
+        "h1",
+        "c4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h6",
+      "title": "Prefill-rule management handlers with member-scoped list, delete and clear",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Use caller family_id and user_id from fmauth.Require. List only the caller’s rules; delete one by kind/value and clear all. Include another member in the same family in tests. Do not edit fake_test.go; h1 must include generated db.Querier methods from s3."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/members/removed.go",
+        "services/capture/internal/members/removed_test.go"
+      ],
+      "depends_on": [
+        "s3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "m1",
+      "title": "Consume family.member.removed and delete the former member’s capture data",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/members/...",
+      "notes": "Subscribe to events.SubjectFamilyMemberRemoved with a durable capture-specific consumer. Parse family.v1 MemberRemovedEvent and delete suggestions, captured notifications, prefill rules, capture settings and tombstones for exactly (family_id, user_id), in one transaction. Retry transient DB failures; duplicate events are harmless. Never log payload or clear fields. Mirror the finance/tasks event-consumer pattern."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "infra/backup.sh",
+        "infra/test-backup-encryption.sh",
+        "infra/README.md"
+      ],
+      "depends_on": [
+        "d1"
+      ],
+      "gate": "human",
+      "status": "blocked",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": "human gate (E13 backup encryption)",
+      "id": "bk",
+      "title": "Encrypt production backup archives and separate capture seal and backup keys",
+      "kind": "infra",
+      "acceptance": "bash -n infra/backup.sh && bash infra/test-backup-encryption.sh",
+      "notes": "Human gate before first capture production deployment. Encrypt each completed backup archive containing database dumps and deployment configuration; no clear dump or staging archive may remain after success or failure. Keep CAPTURE_SEAL_KEY and the backup decryption key outside the archive and outside backup storage; document the separate secure restore location and operator procedure without committing key values. The deterministic acceptance script must create a fixture archive with a fake database dump and fake seal key, run the backup encryption and restore paths, prove the plaintext marker is absent from the stored archive and backup directory, prove neither key is in the archive, decrypt with a separately supplied key, and verify a captured raw-notification fixture opens only with its separately held seal key. It must also exercise failure cleanup and retention without a production database. A separate operator restore test with real local data is required before the human gate is cleared. Keep the existing 14-run retention; encrypted retained backups can still contain pre-purge text."
     }
   ],
-  "updated_at": "2026-10-06T08:36:10.477Z"
+  "updated_at": "2026-10-08T00:00:00.000Z"
 }

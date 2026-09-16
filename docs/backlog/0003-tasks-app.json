@@ -350,7 +350,7 @@
         "u12b"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -373,7 +373,7 @@
         "u15"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -498,7 +498,7 @@
         "u18b"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -515,6 +515,7 @@
       "files": [
         "services/tasks/internal/handler/tasks.go",
         "services/tasks/internal/handler/birthdays.go",
+        "services/tasks/internal/calsync/push.go",
         "services/tasks/internal/handler/calsync_test.go"
       ],
       "depends_on": [
@@ -532,7 +533,7 @@
       "title": "Hook calendar push into task and birthday handlers",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Create/edit/complete/delete task with deadline and create/edit/delete birthday drive the fake Google calendar; failures logged and retried by the pull loop, never fail the write."
+      "notes": "Create/edit/complete/delete task with deadline and create/edit/delete birthday drive the fake Google calendar; failures logged and retried by the pull loop, never fail the write. Before u24 enables SweepOrphans, serialize task deadline writes and orphan cleanup with the same calsync item lock. The u21 reviewer found that a restored deadline after SweepOrphans' due_on recheck can otherwise lose its Google event. Add a test that restores a deadline while the sweep is deleting, and prove the event remains tracked or is recreated."
     },
     {
       "nodes": [
@@ -546,7 +547,7 @@
         "u21"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -577,7 +578,7 @@
         "u12b"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1374,5 +1375,5 @@
       "notes": "From u25 verify: 3 errcheck on res.Body.Close (gcal/http.go), 3 forcetypeassert (gcal/http_test.go). Handler gofmt/contextcheck issues belong to u12b (it owns those files). Separately: golangci-lint 2.12.2 staticcheck panics on go1.27 repo-wide (pre-existing; see E12)."
     }
   ],
-  "updated_at": "2026-10-06T08:27:15.674Z"
+  "updated_at": "2026-10-08T18:11:19.806Z"
 }
