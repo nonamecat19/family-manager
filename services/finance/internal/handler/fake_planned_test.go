@@ -34,8 +34,8 @@ func (s *fakeStore) AdoptCategoryGroupRole(_ context.Context, arg db.AdoptCatego
 	return db.CategoryGroup{}, pgx.ErrNoRows
 }
 
-func (s *fakeStore) CreateRoleCategoryGroup(_ context.Context, arg db.CreateRoleCategoryGroupParams) (db.CategoryGroup, error) {
-	if _, err := s.GetCategoryGroupByRole(context.Background(), db.GetCategoryGroupByRoleParams{
+func (s *fakeStore) CreateRoleCategoryGroup(ctx context.Context, arg db.CreateRoleCategoryGroupParams) (db.CategoryGroup, error) {
+	if _, err := s.GetCategoryGroupByRole(ctx, db.GetCategoryGroupByRoleParams{
 		FamilyID: arg.FamilyID, Role: arg.Role,
 	}); err == nil {
 		return db.CategoryGroup{}, pgx.ErrNoRows
@@ -68,7 +68,7 @@ func (s *fakeStore) categorySpend(familyID, categoryID string, currency string, 
 		}
 		if viewer != nil {
 			a, ok := s.accounts[id(t.AccountID)]
-			if !ok || !(a.Visibility == visibilityShared || id(a.OwnerMemberID) == *viewer) {
+			if !ok || (a.Visibility != visibilityShared && id(a.OwnerMemberID) != *viewer) {
 				continue
 			}
 		}
