@@ -113,6 +113,28 @@ services:
       retries: 3
       start_period: 30s
 
+  notes:
+    build:
+      context: ./services/notes
+    environment:
+      NOTES_DB_URL: jdbc:postgresql://postgres:5432/notes
+      NOTES_DB_USER: ${POSTGRES_USER:-admin}
+      NOTES_DB_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+    ports:
+      - "${NOTES_PORT:-8085}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
 secrets:
   auth-signing-key:
     file: ./infra/secrets/auth-signing-key.pem
