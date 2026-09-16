@@ -12,6 +12,9 @@ const (
 	FamilyMemberRemoved   = "family.member.removed"
 	FinanceBudgetExceeded = "finance.budget.exceeded"
 	RecipesRecipeCreated  = "recipes.recipe.created"
+	TasksTaskAssigned     = "tasks.task.assigned"
+	TasksTaskDue          = "tasks.task.due"
+	TasksBirthdayUpcoming = "tasks.birthday.upcoming"
 )
 
 var All = []Topic{
@@ -19,6 +22,9 @@ var All = []Topic{
 	{Key: FamilyMemberRemoved, Domain: "family"},
 	{Key: FinanceBudgetExceeded, Domain: "finance"},
 	{Key: RecipesRecipeCreated, Domain: "recipes"},
+	{Key: TasksTaskAssigned, Domain: "tasks"},
+	{Key: TasksTaskDue, Domain: "tasks"},
+	{Key: TasksBirthdayUpcoming, Domain: "tasks"},
 }
 
 func Valid(s string) bool {

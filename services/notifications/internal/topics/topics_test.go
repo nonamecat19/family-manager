@@ -26,3 +26,17 @@ func TestMutedByDomainOrKey(t *testing.T) {
 		t.Error("muting one family topic muted another")
 	}
 }
+
+func TestTasksTopicsAreInTheCatalog(t *testing.T) {
+	for _, key := range []string{TasksTaskAssigned, TasksTaskDue, TasksBirthdayUpcoming} {
+		if !Valid(key) {
+			t.Errorf("%s missing from the catalog", key)
+		}
+		if Domain(key) != "tasks" {
+			t.Errorf("%s domain = %s", key, Domain(key))
+		}
+	}
+	if !Valid("tasks") {
+		t.Error("the tasks domain must be mutable as a whole")
+	}
+}
