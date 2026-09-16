@@ -5,12 +5,14 @@ import {
   useFamily,
   useFinanceMembers,
   useFinanceSettings,
+  useTelegramLink,
   useTemplates,
   useUpdateFinanceSettings,
   useWidgets,
 } from "@fm/api";
 import { useAuth } from "@fm/auth";
 import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { useRouter, type Href } from "expo-router";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -32,9 +34,12 @@ import {
   DataSheet,
   PinSheet,
   PrivacySheet,
+  TelegramSheet,
 } from "@/components/screens/settings/sheets.tsx";
 
-type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced";
+type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced" | "telegram";
+
+const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
 export default function SettingsScreen() {
   const { t } = useI18n();
@@ -48,6 +53,7 @@ export default function SettingsScreen() {
   const settings = useFinanceSettings();
   const family = useFamily();
   const updateSettings = useUpdateFinanceSettings();
+  const telegram = useTelegramLink({ bot: telegramBot, open: Linking.openURL });
 
   const drawerItems = useDrawerItems();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -200,6 +206,18 @@ export default function SettingsScreen() {
           onPress={() => setSheet("appearance")}
         />
         <SettingsRow icon="database" label={t("settings.data")} onPress={() => setSheet("data")} />
+        {telegram.available ? (
+          <SettingsRow
+            icon="device-mobile"
+            label={t("settings.telegram")}
+            meta={
+              telegram.identity
+                ? t("settings.telegramConnected")
+                : t("settings.telegramNotConnected")
+            }
+            onPress={() => setSheet("telegram")}
+          />
+        ) : null}
         <SettingsRow
           icon="sliders-horizontal"
           label={t("settings.advanced")}
@@ -227,6 +245,11 @@ export default function SettingsScreen() {
         onClose={() => setSheet(null)}
         settings={settings.data ?? null}
         syncedAt={t("nav.syncedAt", { time: clockTime(settings.dataUpdatedAt) })}
+      />
+      <TelegramSheet
+        visible={sheet === "telegram"}
+        onClose={() => setSheet(null)}
+        link={telegram}
       />
       <AdvancedSheet
         visible={sheet === "advanced"}

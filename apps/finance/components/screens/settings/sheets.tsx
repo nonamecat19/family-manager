@@ -1,4 +1,10 @@
-import { fromWire, type Account, type HouseholdFinanceSettings } from "@fm/api";
+import {
+  fromWire,
+  toDisplayError,
+  type Account,
+  type HouseholdFinanceSettings,
+  type TelegramLink,
+} from "@fm/api";
 import { Text, View } from "react-native";
 
 import { LOCALES, useI18n, type Locale, type TranslationKey } from "@/components/i18n";
@@ -127,6 +133,47 @@ export function AdvancedSheet({
       <View className="gap-n4 pb-n4">
         <Text className="text-[11.5px] text-neutral-600">{version}</Text>
         <Button title={t("settings.signOut")} variant="ghost" onPress={onSignOut} />
+      </View>
+    </Sheet>
+  );
+}
+
+export function TelegramSheet({
+  visible,
+  onClose,
+  link,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  link: TelegramLink;
+}) {
+  const { t } = useI18n();
+  const error = link.error ? toDisplayError(link.error, t("settings.telegramFailed")).message : null;
+  return (
+    <Sheet visible={visible} onClose={onClose} title={t("settings.telegram")}>
+      <View className="gap-n4 pb-n4">
+        <Text className="text-[13px] text-neutral-300">
+          {link.identity ? t("settings.telegramConnected") : t("settings.telegramNotConnected")}
+        </Text>
+        <Text className="text-[11.5px] text-neutral-600">
+          {link.awaiting ? t("settings.telegramWaiting") : t("settings.telegramHint")}
+        </Text>
+        {error ? <Text className="text-[11.5px] text-overspend">{error}</Text> : null}
+        {link.identity ? (
+          <Button
+            title={t("settings.telegramDisconnect")}
+            variant="ghost"
+            disabled={link.unlinking}
+            onPress={() => void link.unlink().catch(() => undefined)}
+          />
+        ) : (
+          <Button
+            title={t("settings.telegramConnect")}
+            icon="device-mobile"
+            disabled={link.connecting || link.loading}
+            onPress={() => void link.connect().catch(() => undefined)}
+          />
+        )}
       </View>
     </Sheet>
   );
