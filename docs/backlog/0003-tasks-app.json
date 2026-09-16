@@ -498,7 +498,7 @@
         "u18b"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -600,9 +600,9 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "d10cdd3",
       "blocked_reason": null,
       "id": "u25",
       "title": "Register services/tasks in go.work",
@@ -1340,7 +1340,7 @@
         "u13"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1349,7 +1349,30 @@
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
       "notes": "E8 decision 1 (2026-10-06): u12 shipped short of its notes. Meet every rule in u12 notes: CreateTask/UpdateTask set due_at via schedule.Deadline.At(family tz) whenever due_on is set, so task_due reminders are created; assignees must be members (refresh via family.Client.ListMembers with the REQUEST bearer token, upsert known_members + DeleteKnownMembersExcept in one InTx; reuse fetchMembers/refreshKnownMembers from u13 birthdays.go); remove the tasks.task.assigned publish (u15 owns it); touchKnownMember uses TouchKnownMember (keeps display_name). fake_test.go may gain real birthday methods replacing the u13 birthdayStore wrapper only if trivial."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/gcal/http.go",
+        "services/tasks/internal/gcal/http_test.go"
+      ],
+      "depends_on": [
+        "u25",
+        "u18b"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u27",
+      "title": "tasks lint clean: errcheck Body.Close in gcal, forcetypeassert in gcal tests",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/gcal/... && golangci-lint run --disable staticcheck,unused ./internal/gcal/...",
+      "notes": "From u25 verify: 3 errcheck on res.Body.Close (gcal/http.go), 3 forcetypeassert (gcal/http_test.go). Handler gofmt/contextcheck issues belong to u12b (it owns those files). Separately: golangci-lint 2.12.2 staticcheck panics on go1.27 repo-wide (pre-existing; see E12)."
     }
   ],
-  "updated_at": "2026-10-06T08:16:21.396Z"
+  "updated_at": "2026-10-06T08:20:26.998Z"
 }
