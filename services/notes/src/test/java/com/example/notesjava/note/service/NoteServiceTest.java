@@ -3,6 +3,7 @@ package com.example.notesjava.note.service;
 import com.example.notesjava.common.error.InvalidRequestException;
 import com.example.notesjava.common.error.ResourceNotFoundException;
 import com.example.notesjava.common.persistence.BaseEntity;
+import com.example.notesjava.common.security.CallerContext;
 import com.example.notesjava.group.domain.Group;
 import com.example.notesjava.group.repository.GroupRepository;
 import com.example.notesjava.note.api.dto.CreateNoteRequest;
@@ -21,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,14 +41,20 @@ class NoteServiceTest {
     @Mock
     private GroupRepository groupRepository;
 
+    @Mock
+    private CallerContext callerContext;
+
     @InjectMocks
     private NoteService noteService;
+
+    private static final UUID FAMILY = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private Note existing;
 
     @BeforeEach
     void setUp() {
-        existing = Note.of("existing", "body", null);
+        existing = Note.of(FAMILY, "existing", "body", null);
+        lenient().when(callerContext.requireFamilyId()).thenReturn(FAMILY);
         lenient().when(noteRepository.save(any(Note.class))).thenAnswer(call -> call.getArgument(0));
         lenient().when(noteRepository.saveAndFlush(any(Note.class))).thenAnswer(call -> call.getArgument(0));
     }
@@ -62,7 +70,7 @@ class NoteServiceTest {
 
     @Test
     void createRejectsAnUnknownGroup() {
-        when(groupRepository.findById(99L)).thenReturn(Optional.empty());
+        when(groupRepository.findByIdAndFamilyId(99L, FAMILY)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.create(
                 new CreateNoteRequest("title", null, null, null, null, 99L)))
@@ -73,8 +81,17 @@ class NoteServiceTest {
     }
 
     @Test
+    void createStampsTheCallersFamilyOnTheNote() {
+        noteService.create(new CreateNoteRequest("title", null, null, null, null, null));
+
+        org.mockito.ArgumentCaptor<Note> saved = org.mockito.ArgumentCaptor.forClass(Note.class);
+        verify(noteRepository).save(saved.capture());
+        assertThat(saved.getValue().getFamilyId()).isEqualTo(FAMILY);
+    }
+
+    @Test
     void getByIdRaisesNotFoundForAMissingNote() {
-        when(noteRepository.findWithRelationsById(7L)).thenReturn(Optional.empty());
+        when(noteRepository.findWithRelationsByIdAndFamilyId(7L, FAMILY)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.getById(7L))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -83,7 +100,7 @@ class NoteServiceTest {
 
     @Test
     void updateRefusesToMakeANoteItsOwnParent() {
-        when(noteRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(noteRepository.findByIdAndFamilyId(1L, FAMILY)).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> noteService.update(1L,
                 new UpdateNoteRequest("t", null, NoteStatus.ACTIVE, NotePriority.NORMAL, 1L, null)))
@@ -96,8 +113,8 @@ class NoteServiceTest {
         Note root = noteWithId(1L, "root");
         Note child = noteWithId(2L, "child");
         child.reparent(root);
-        when(noteRepository.findById(1L)).thenReturn(Optional.of(root));
-        when(noteRepository.findById(2L)).thenReturn(Optional.of(child));
+        when(noteRepository.findByIdAndFamilyId(1L, FAMILY)).thenReturn(Optional.of(root));
+        when(noteRepository.findByIdAndFamilyId(2L, FAMILY)).thenReturn(Optional.of(child));
 
         assertThatThrownBy(() -> noteService.update(1L,
                 new UpdateNoteRequest("t", null, NoteStatus.ACTIVE, NotePriority.NORMAL, 2L, null)))
@@ -107,7 +124,7 @@ class NoteServiceTest {
 
     @Test
     void updateWritesEveryMutableField() {
-        when(noteRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(noteRepository.findByIdAndFamilyId(1L, FAMILY)).thenReturn(Optional.of(existing));
 
         NoteResponse updated = noteService.update(1L,
                 new UpdateNoteRequest("new title", "new body", NoteStatus.COMPLETED, NotePriority.HIGH, null, null));
@@ -124,8 +141,8 @@ class NoteServiceTest {
     void reparentingUpwardsIsAllowedWhenThereIsNoCycle() {
         Note root = noteWithId(1L, "root");
         Note other = noteWithId(2L, "other");
-        when(noteRepository.findById(1L)).thenReturn(Optional.of(root));
-        when(noteRepository.findById(2L)).thenReturn(Optional.of(other));
+        when(noteRepository.findByIdAndFamilyId(1L, FAMILY)).thenReturn(Optional.of(root));
+        when(noteRepository.findByIdAndFamilyId(2L, FAMILY)).thenReturn(Optional.of(other));
 
         assertThat(noteService.update(1L,
                 new UpdateNoteRequest("t", null, NoteStatus.ACTIVE, NotePriority.NORMAL, 2L, null)).parentId())
@@ -134,7 +151,7 @@ class NoteServiceTest {
 
     @Test
     void deleteLoadsTheNoteFirstSoAMissingIdIsA404() {
-        when(noteRepository.findById(5L)).thenReturn(Optional.empty());
+        when(noteRepository.findByIdAndFamilyId(5L, FAMILY)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.delete(5L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -143,7 +160,7 @@ class NoteServiceTest {
     }
 
     private static Note noteWithId(Long id, String title) {
-        Note note = Note.of(title, null, null);
+        Note note = Note.of(FAMILY, title, null, null);
         ReflectionTestUtils.setField(note, BaseEntity.class, "id", id, Long.class);
         return note;
     }

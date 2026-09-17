@@ -22,14 +22,16 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(
         name = "notes",
         indexes = {
-                @Index(name = "idx_notes_group_id", columnList = "group_id"),
+                @Index(name = "idx_notes_family_id", columnList = "family_id, updated_at"),
+                @Index(name = "idx_notes_group_id", columnList = "family_id, group_id"),
                 @Index(name = "idx_notes_parent_id", columnList = "parent_id"),
-                @Index(name = "idx_notes_status", columnList = "status")
+                @Index(name = "idx_notes_status", columnList = "family_id, status")
         }
 )
 @Getter
@@ -37,6 +39,9 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Note extends BaseEntity {
+
+    @Column(name = "family_id", nullable = false, updatable = false)
+    private UUID familyId;
 
     @Column(nullable = false)
     private String title;
@@ -66,8 +71,9 @@ public class Note extends BaseEntity {
     @JoinColumn(name = "group_id")
     private Group group;
 
-    public static Note of(String title, String content, Group group) {
+    public static Note of(UUID familyId, String title, String content, Group group) {
         return Note.builder()
+                .familyId(familyId)
                 .title(title)
                 .content(content)
                 .group(group)
