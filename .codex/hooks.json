@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/home/nnc/Projects/family-manager/.codex/hooks/guard-generated.mjs'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/home/nnc/Projects/family-manager/.codex/hooks/refresh-graph.mjs'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node '/home/nnc/Projects/family-manager/.codex/hooks/session-end-check.mjs'"
+          }
+        ]
+      }
+    ]
+  }
+}
