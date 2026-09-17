@@ -67,6 +67,9 @@ export interface BudgetFilters {
 }
 
 export const queryKeys = {
+  auth: ["auth"] as const,
+  identities: () => ["auth", "identities"] as const,
+
   family: ["family"] as const,
   familyDetail: () => ["family", "detail"] as const,
   userSettings: () => ["family", "userSettings"] as const,
