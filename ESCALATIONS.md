@@ -56,6 +56,18 @@ enable the Google Calendar API, then put the values in the repo-root `.env` (nev
 Nothing depends on this unit: every test uses a fake Google API. Without it the service starts
 and "Connect Google Calendar" answers FailedPrecondition.
 
+**Decision needed — OAuth client type.** A Google "Web application" client rejects custom-scheme
+redirect URIs (`fmtasks:/oauthredirect`), and new Android clients have custom schemes disabled, so
+the brief's default will fail at Google's authorize step. Options:
+1. Android client for the app + Web client for the server: the app signs in with Google
+   (`serverAuthCode`) and the service exchanges that code with the Web client id/secret
+   (redirect URI empty). Needs the app's SHA-1 signing fingerprint in Google Cloud.
+2. Web client with an HTTPS redirect on the tasks host (`https://tasks.<domain>/oauth/google`)
+   that hands the code back to the app via a deep link. Needs the public host (unit h3).
+The service supports both (it sends `client_secret` only when configured, and checks that the
+calendar and email scopes were actually granted). The app must request
+`access_type=offline&prompt=consent` with scopes `openid email https://www.googleapis.com/auth/calendar`.
+
 ## E5 — 0003/h2: BotFather token for the tasks bot (open, credential)
 
 Create the bot with @BotFather and add `TELEGRAM_TASKS_TOKEN=<id>:<secret>` to the repo-root

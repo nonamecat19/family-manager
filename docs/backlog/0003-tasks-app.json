@@ -150,9 +150,9 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 1,
-      "commit": null,
+      "commit": "6541d7a",
       "blocked_reason": null,
       "id": "u07",
       "title": "tasks migration 000001: tasks, assignees, birthdays, family settings, Google connections, calendar links, sync state, reminder deliveries",
@@ -419,7 +419,7 @@
       ],
       "gate": "auto",
       "status": "todo",
-      "attempts": 0,
+      "attempts": 1,
       "commit": null,
       "blocked_reason": null,
       "id": "u18",
@@ -440,7 +440,7 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1286,5 +1286,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:47:27.802Z"
+  "updated_at": "2026-10-05T19:53:12.903Z"
 }
