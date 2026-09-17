@@ -34,7 +34,7 @@ export default function ConnectedAccountsScreen() {
         />
 
         {unlinkError ? (
-          <Text className="font-fig-semi text-[12px]" style={{ color: organic.danger }}>
+          <Text className="font-fig-semi text-12" style={{ color: organic.danger }}>
             {unlinkError}
           </Text>
         ) : null}
@@ -44,7 +44,7 @@ export default function ConnectedAccountsScreen() {
             <ActivityIndicator color={organic.accent.DEFAULT} />
           </View>
         ) : identities.isError ? (
-          <Text className="font-fig text-[14px] leading-[21px] text-neutral-600">
+          <Text className="font-fig text-14 leading-[21px] text-neutral-600">
             {toDisplayError(identities.error, strings.connectedAccounts.loadFailed).message}
           </Text>
         ) : rows.length === 0 ? (
@@ -63,10 +63,10 @@ export default function ConnectedAccountsScreen() {
                   <Icon name="link-simple" size={16} color={organic.accent[600]} />
                 </View>
                 <View className="flex-1 gap-0.75">
-                  <Text className="font-fig-bold text-[15.5px] text-fg">{providerLabel(identity.provider)}</Text>
-                  <Text className="font-fig text-[12.5px] text-neutral-600">{identity.externalId}</Text>
+                  <Text className="font-fig-bold text-15.5 text-fg">{providerLabel(identity.provider)}</Text>
+                  <Text className="font-fig text-12.5 text-neutral-600">{identity.externalId}</Text>
                   {identity.linkedAt ? (
-                    <Text className="font-fig text-[12px] text-neutral-600">
+                    <Text className="font-fig text-12 text-neutral-600">
                       {strings.connectedAccounts.linked(longDate(identity.linkedAt))}
                     </Text>
                   ) : null}

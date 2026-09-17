@@ -48,7 +48,7 @@ export default function NotesScreen() {
         onNewNote={shell.openCapture}
       />
       {queue.queued.length > 0 ? (
-        <Text className="px-5 py-1.5 font-fig text-[11px] text-neutral-600">
+        <Text className="px-5 py-1.5 font-fig text-11 text-neutral-600">
           {strings.capture.queued(queue.queued.length)}
         </Text>
       ) : null}

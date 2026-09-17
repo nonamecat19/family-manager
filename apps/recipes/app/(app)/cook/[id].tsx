@@ -29,7 +29,7 @@ export default function CookScreen() {
             >
               <Icon name="close" size={20} color={organic.accent[100]} />
             </Pressable>
-            <Text className="font-fig-x text-[13px] uppercase tracking-[1.5px] text-accent-100 opacity-65">
+            <Text className="font-fig-x text-13 uppercase tracking-[1.5px] text-accent-100 opacity-65">
               {steps.length > 0 ? t("cook.stepOf", { index: index + 1, total: steps.length }) : t("cook.cook")}
             </Text>
             <View className="w-10" />
@@ -48,9 +48,9 @@ export default function CookScreen() {
 
           <View className="flex-1 justify-center gap-6.5 py-7.5">
             <View className="h-[74px] w-[74px] items-center justify-center rounded-full bg-accent">
-              <Text className="font-cap text-[30px] text-white">{index + 1}</Text>
+              <Text className="font-cap text-30 text-white">{index + 1}</Text>
             </View>
-            <Text className="font-cap text-[30px] leading-[37px] text-accent-100">
+            <Text className="font-cap text-30 leading-[37px] text-accent-100">
               {step?.instruction ?? t("cook.noStepsYet")}
             </Text>
             {step && step.durationSeconds > 0 && (
@@ -79,7 +79,7 @@ export default function CookScreen() {
               }}
               className="h-[56px] flex-1 items-center justify-center rounded-full bg-accent"
             >
-              <Text className="font-fig-x text-[16px] text-white">
+              <Text className="font-fig-x text-16 text-white">
                 {index >= steps.length - 1 ? t("cook.done") : t("cook.nextStep")}
               </Text>
             </Pressable>
@@ -131,11 +131,11 @@ function StepTimer({ seconds }: { seconds: number }) {
       }`}
     >
       <Icon name="plan" size={18} color={organic.accent[100]} width={2.4} />
-      <Text className="font-fig-x text-[16px] text-accent-100">
+      <Text className="font-fig-x text-16 text-accent-100">
         {done ? t("cook.timesUp") : mmss(remaining)}
       </Text>
       {!done && (
-        <Text className="font-fig-semi text-[13px] text-accent-100 opacity-70">
+        <Text className="font-fig-semi text-13 text-accent-100 opacity-70">
           {running ? t("cook.tapToPause") : t("cook.tapToStart")}
         </Text>
       )}

@@ -47,9 +47,9 @@ export default function RecipeDetailScreen() {
       <Screen>
         <View className="flex-1 justify-center gap-lg px-5.5">
           <Display size={26}>{t("recipeDetail.gotAway")}</Display>
-          <Text className="font-fig text-[15px] text-neutral-600">{shown.message}</Text>
+          <Text className="font-fig text-15 text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
-            <Text className="font-fig text-[13px] text-neutral-500">
+            <Text className="font-fig text-13 text-neutral-500">
               {t("common.errorReference", { ref: shown.reference })}
             </Text>
           ) : null}
@@ -115,7 +115,7 @@ export default function RecipeDetailScreen() {
                 />
               ) : (
                 <View className="h-[244px] w-[244px] items-center justify-center rounded-full bg-neutral-100/50">
-                  <Text className="font-cap text-[80px]" style={{ color: tint.fg }}>
+                  <Text className="font-cap text-80" style={{ color: tint.fg }}>
                     {initialOf(r.title)}
                   </Text>
                 </View>
@@ -136,21 +136,21 @@ export default function RecipeDetailScreen() {
                 {totalSeconds > 0 && (
                   <View className="flex-row items-center gap-1.25">
                     <ClockIcon />
-                    <Text className="font-fig-bold text-[13.5px] text-neutral-700">
+                    <Text className="font-fig-bold text-13.5 text-neutral-700">
                       {formatDuration(totalSeconds, t)}
                     </Text>
                   </View>
                 )}
                 <View className="flex-row items-center gap-1.25">
                   <StarIcon size={15} />
-                  <Text className="font-fig-bold text-[13.5px] text-accent-700">
+                  <Text className="font-fig-bold text-13.5 text-accent-700">
                     {r.rating > 0 ? `${r.rating}.0` : t("recipeDetail.unrated")}
                     {r.favoriteCount > 0 ? ` · ♥ ${r.favoriteCount}` : ""}
                   </Text>
                 </View>
               </View>
               {r.description !== "" && (
-                <Text className="mt-2.5 font-fig text-[15px] leading-[22px] text-neutral-700">
+                <Text className="mt-2.5 font-fig text-15 leading-[22px] text-neutral-700">
                   {r.description}
                 </Text>
               )}
@@ -177,11 +177,11 @@ export default function RecipeDetailScreen() {
             {tab === "Ingredients" && (
               <View>
                 <View className="mb-sm flex-row items-center justify-between">
-                  <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipeDetail.batches")}</Text>
+                  <Text className="font-fig-bold text-13 text-neutral-600">{t("recipeDetail.batches")}</Text>
                   <Stepper value={batch} onChange={setBatch} label={t("recipeDetail.batchesLabel")} max={6} />
                 </View>
                 {r.ingredients.length === 0 ? (
-                  <Text className="font-fig text-[15px] text-neutral-600">
+                  <Text className="font-fig text-15 text-neutral-600">
                     {t("recipeDetail.noIngredientsYet")}
                   </Text>
                 ) : (
@@ -190,8 +190,8 @@ export default function RecipeDetailScreen() {
                       key={`${ing.name}-${i}`}
                       className="flex-row items-baseline justify-between gap-3 border-b border-divider py-2.75"
                     >
-                      <Text className="font-fig-semi text-[15.5px] text-fg">{ing.name}</Text>
-                      <Text className="font-fig-x text-[14px] text-accent-700">
+                      <Text className="font-fig-semi text-15.5 text-fg">{ing.name}</Text>
+                      <Text className="font-fig-x text-14 text-accent-700">
                         {`${scaleAmount(ing.amount, batch)} ${ing.unit}`.trim()}
                       </Text>
                     </View>
@@ -203,19 +203,19 @@ export default function RecipeDetailScreen() {
             {tab === "Steps" && (
               <View className="gap-3.5">
                 {r.steps.length === 0 ? (
-                  <Text className="font-fig text-[15px] text-neutral-600">{t("recipeDetail.noStepsYet")}</Text>
+                  <Text className="font-fig text-15 text-neutral-600">{t("recipeDetail.noStepsYet")}</Text>
                 ) : (
                   r.steps.map((step, i) => (
                     <View key={i} className="flex-row gap-3.5">
                       <View className="h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-accent2-300">
-                        <Text className="font-cap text-[14px] text-accent2-900">{step.position}</Text>
+                        <Text className="font-cap text-14 text-accent2-900">{step.position}</Text>
                       </View>
                       <View className="flex-1 pt-0.75">
-                        <Text className="font-fig text-[15.5px] leading-[22px] text-fg">
+                        <Text className="font-fig text-15.5 leading-[22px] text-fg">
                           {step.instruction}
                         </Text>
                         {step.durationSeconds > 0 && (
-                          <Text className="mt-xs font-fig-bold text-[12.5px] text-neutral-600">
+                          <Text className="mt-xs font-fig-bold text-12.5 text-neutral-600">
                             {formatDuration(step.durationSeconds, t)}
                           </Text>
                         )}
@@ -231,7 +231,7 @@ export default function RecipeDetailScreen() {
                 {r.notes !== "" && (
                   <View className="rounded-2xl bg-accent2-100 px-4.5 py-lg">
                     <Kicker className="text-accent2-700">{t("recipeDetail.theCook")}</Kicker>
-                    <Text className="mt-1.75 font-fig text-[15px] leading-[22px] text-fg">{r.notes}</Text>
+                    <Text className="mt-1.75 font-fig text-15 leading-[22px] text-fg">{r.notes}</Text>
                   </View>
                 )}
                 {(comments.data ?? []).map((c) => (
@@ -241,11 +241,11 @@ export default function RecipeDetailScreen() {
                         ? new Date(Number(c.createdAt.seconds) * 1000).toLocaleDateString(locale)
                         : t("recipeDetail.family")}
                     </Kicker>
-                    <Text className="mt-1.75 font-fig text-[15px] leading-[22px] text-fg">{c.body}</Text>
+                    <Text className="mt-1.75 font-fig text-15 leading-[22px] text-fg">{c.body}</Text>
                   </View>
                 ))}
                 {r.notes === "" && (comments.data ?? []).length === 0 && (
-                  <Text className="font-fig text-[15px] text-neutral-600">
+                  <Text className="font-fig text-15 text-neutral-600">
                     {t("recipeDetail.nothingInTheMargin")}
                   </Text>
                 )}
@@ -259,7 +259,7 @@ export default function RecipeDetailScreen() {
                     multiline
                     placeholder={t("recipeDetail.whatDidYouChange")}
                     placeholderTextColor={organic.neutral[500]}
-                    className="min-h-[54px] font-fig text-[15px] text-fg"
+                    className="min-h-[54px] font-fig text-15 text-fg"
                   />
                   <PrimaryButton
                     title={t("recipeDetail.post")}
@@ -303,7 +303,7 @@ export default function RecipeDetailScreen() {
               onPress={handleDelete}
               className="items-center pt-1.5"
             >
-              <Text className="font-fig-semi text-[13.5px]" style={{ color: organic.danger }}>
+              <Text className="font-fig-semi text-13.5" style={{ color: organic.danger }}>
                 {t("recipeDetail.deleteRecipe")}
               </Text>
             </Pressable>

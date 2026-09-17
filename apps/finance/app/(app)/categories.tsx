@@ -127,7 +127,7 @@ export default function CategoriesScreen() {
 
       {tree.isPending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[15px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-15 text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : tree.isError ? (
         <ErrorPane
@@ -199,7 +199,7 @@ export default function CategoriesScreen() {
           })}
 
           <DashedAction label={t("categories.newGroup")} onPress={() => setDraft({ kind: "group" })} />
-          <Text className="px-sm text-center text-[11px] text-neutral-600">{t("categories.editHint")}</Text>
+          <Text className="px-sm text-center text-11 text-neutral-600">{t("categories.editHint")}</Text>
         </ScrollView>
       )}
 

@@ -72,7 +72,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
         <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
 
         <View className="flex-row items-center">
-          <Text className="font-fig-med text-[16px] text-fg">
+          <Text className="font-fig-med text-16 text-fg">
             {notebookId ? strings.share.titleNotebook : strings.share.title}
           </Text>
           <View className="ml-auto">
@@ -80,7 +80,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
           </View>
         </View>
 
-        <Text className="font-fig text-[12.5px] leading-[19px] text-neutral-700">
+        <Text className="font-fig text-12.5 leading-[19px] text-neutral-700">
           {strings.share.body}
         </Text>
 
@@ -100,7 +100,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
             </View>
 
             {members.length === 0 ? (
-              <Text className="py-sm font-fig text-[12.5px] text-neutral-700">
+              <Text className="py-sm font-fig text-12.5 text-neutral-700">
                 {strings.share.noMembers}
               </Text>
             ) : null}
@@ -110,10 +110,10 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
                 return (
                   <View key={member.userId} className="flex-row items-center gap-2.25 py-2.25">
                     <Avatar name={member.displayName || member.email} size={24} />
-                    <Text className="font-fig text-[13.5px] text-fg">
+                    <Text className="font-fig text-13.5 text-fg">
                       {member.displayName || member.email}
                     </Text>
-                    <Text className="ml-auto font-fig text-[11.5px] text-neutral-700">
+                    <Text className="ml-auto font-fig text-11.5 text-neutral-700">
                       {strings.note.owner}
                     </Text>
                   </View>
@@ -137,9 +137,9 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
           </View>
         </ScrollView>
 
-        <Text className="font-fig text-[11.5px] text-neutral-600">{strings.share.inviteHint}</Text>
+        <Text className="font-fig text-11.5 text-neutral-600">{strings.share.inviteHint}</Text>
         {shares.data && shares.data.length > 0 ? null : (
-          <Text className="font-fig text-[11.5px] text-neutral-600">{strings.share.notShared}</Text>
+          <Text className="font-fig text-11.5 text-neutral-600">{strings.share.notShared}</Text>
         )}
       </View>
     </Modal>
@@ -172,7 +172,7 @@ function ShareRow({
           <Icon name={icon ?? "users-three"} size={13} color={organic.accent[800]} />
         </View>
       )}
-      <Text className="shrink font-fig text-[13.5px] text-fg" numberOfLines={1}>
+      <Text className="shrink font-fig text-13.5 text-fg" numberOfLines={1}>
         {label}
       </Text>
 
@@ -226,7 +226,7 @@ function PermissionToggle({
         selected ? "border-accent bg-accent-100" : "border-neutral-300"
       }`}
     >
-      <Text className={`font-fig-med text-[12px] ${selected ? "text-accent-800" : "text-neutral-700"}`}>
+      <Text className={`font-fig-med text-12 ${selected ? "text-accent-800" : "text-neutral-700"}`}>
         {label}
       </Text>
     </Pressable>

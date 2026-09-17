@@ -46,13 +46,13 @@ export default function ConnectedAccountsScreen() {
             <ActivityIndicator color={organic.accent.DEFAULT} />
           </View>
         ) : identities.isError ? (
-          <Text className="text-[14px] leading-[21px] text-neutral-600">
+          <Text className="text-14 leading-[21px] text-neutral-600">
             {toDisplayError(identities.error, t("connectedAccounts.loadFailed")).message}
           </Text>
         ) : rows.length === 0 ? (
           <View className="gap-sm py-4.5">
-            <Text className="text-[15.5px] font-fig-bold text-fg">{t("connectedAccounts.emptyTitle")}</Text>
-            <Text className="text-[14px] leading-[21px] text-neutral-600">
+            <Text className="text-15.5 font-fig-bold text-fg">{t("connectedAccounts.emptyTitle")}</Text>
+            <Text className="text-14 leading-[21px] text-neutral-600">
               {t("connectedAccounts.emptyBody")}
             </Text>
           </View>
@@ -64,12 +64,12 @@ export default function ConnectedAccountsScreen() {
                 className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-lg py-3.5"
               >
                 <View className="flex-1 gap-0.75">
-                  <Text className="text-[15.5px] font-fig-bold text-fg">
+                  <Text className="text-15.5 font-fig-bold text-fg">
                     {providerLabel(identity.provider, t)}
                   </Text>
-                  <Text className="text-[12.5px] text-neutral-600">{identity.externalId}</Text>
+                  <Text className="text-12.5 text-neutral-600">{identity.externalId}</Text>
                   {identity.linkedAt ? (
-                    <Text className="text-[12px] text-neutral-600">
+                    <Text className="text-12 text-neutral-600">
                       {t("connectedAccounts.linked", { date: linkedDate(identity.linkedAt, locale) })}
                     </Text>
                   ) : null}
@@ -101,7 +101,7 @@ export default function ConnectedAccountsScreen() {
             onPress={() => setUnlinking(null)}
             className="flex-1 items-center justify-center rounded-full border border-divider py-3"
           >
-            <Text className="text-[14px] font-fig-bold text-fg">{t("common.cancel")}</Text>
+            <Text className="text-14 font-fig-bold text-fg">{t("common.cancel")}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -115,7 +115,7 @@ export default function ConnectedAccountsScreen() {
             }}
             className="flex-1 items-center justify-center rounded-full bg-error py-3"
           >
-            <Text className="text-[14px] font-fig-bold text-white">{t("connectedAccounts.unlink")}</Text>
+            <Text className="text-14 font-fig-bold text-white">{t("connectedAccounts.unlink")}</Text>
           </Pressable>
         </View>
       </Sheet>

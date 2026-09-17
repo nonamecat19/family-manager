@@ -48,10 +48,10 @@ export default function AccountsScreen() {
         <ScreenHeader title={t("accounts.title")} />
 
         <View className="items-center">
-          <Text className="text-[11px] text-neutral-600">{t("accounts.available")}</Text>
+          <Text className="text-11 text-neutral-600">{t("accounts.available")}</Text>
           <MoneyText value={sharedBalance} size={27} weight="medium" className="mt-0.5" />
           {savings.amountMinor !== 0 ? (
-            <Text className="mt-0.5 text-[11px] text-neutral-600">
+            <Text className="mt-0.5 text-11 text-neutral-600">
               {t("accounts.inSavings", { amount: formatMoney(savings) })}
             </Text>
           ) : null}
@@ -73,7 +73,7 @@ export default function AccountsScreen() {
 
       {accounts.isPending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : accounts.isError ? (
         <LoadError error={accounts.error} onRetry={() => void accounts.refetch()} />
@@ -99,7 +99,7 @@ export default function AccountsScreen() {
           {shared.length > 0 ? (
             <View className="mb-0.7 flex-row items-baseline justify-between px-0.7">
               <Kicker>{t("accounts.sharedSection")}</Kicker>
-              <Text className="text-[10.5px] text-neutral-600">{t("accounts.visibleToAll")}</Text>
+              <Text className="text-10.5 text-neutral-600">{t("accounts.visibleToAll")}</Text>
             </View>
           ) : null}
           {shared.map((account) => (

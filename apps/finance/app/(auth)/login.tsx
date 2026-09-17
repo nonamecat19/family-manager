@@ -112,7 +112,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
   if (telegram.phase === "pending" && telegram.userCode) {
     return (
       <View className="items-center gap-2.5">
-        <Text className="text-[22px] font-fig-semi text-fg" style={{ letterSpacing: 3 }}>
+        <Text className="text-22 font-fig-semi text-fg" style={{ letterSpacing: 3 }}>
           {telegram.userCode}
         </Text>
         <Caption>{t("auth.telegramPendingHint")}</Caption>

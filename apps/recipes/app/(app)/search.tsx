@@ -47,7 +47,7 @@ export default function SearchScreen() {
               placeholder={t("search.placeholder")}
               placeholderTextColor={organic.neutral[500]}
               returnKeyType="search"
-              className="flex-1 font-fig-semi text-[16px] text-fg"
+              className="flex-1 font-fig-semi text-16 text-fg"
             />
           </View>
         </View>
@@ -64,7 +64,7 @@ export default function SearchScreen() {
                   onPress={() => setQuery(term)}
                   className="rounded-full border border-accent px-2.5 py-xs"
                 >
-                  <Text className="font-fig-semi text-[12px] text-accent">{term}</Text>
+                  <Text className="font-fig-semi text-12 text-accent">{term}</Text>
                 </Pressable>
               ))}
             </View>
@@ -86,7 +86,7 @@ export default function SearchScreen() {
                 />
               ))}
               {!results.isPending && recipes.length === 0 && (
-                <Text className="font-fig text-[15px] text-neutral-600">
+                <Text className="font-fig text-15 text-neutral-600">
                   {t("search.noMatches", { query: debounced })}
                 </Text>
               )}
@@ -118,10 +118,10 @@ function ResultRow({
     >
       <Avatar initial={initialOf(recipe.title)} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
-        <Text className="font-fig-bold text-[15.5px] text-fg" numberOfLines={1}>
+        <Text className="font-fig-bold text-15.5 text-fg" numberOfLines={1}>
           {recipe.title}
         </Text>
-        <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
+        <Text className="mt-0.75 font-fig-semi text-12.5 text-neutral-600" numberOfLines={1}>
           {metaLine([
             t("plurals.servingsCount", { count: recipe.servings }),
             formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),

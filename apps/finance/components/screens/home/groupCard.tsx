@@ -30,7 +30,7 @@ export function HomeGroupCard({
       <View className="flex-row items-center gap-2.8 px-2.8 py-2.8">
         <IconCircle icon={icon} index={colorStep} size={34} />
         <View className="flex-1">
-          <Text className="text-[14px] font-fig-med text-fg" numberOfLines={1}>
+          <Text className="text-14 font-fig-med text-fg" numberOfLines={1}>
             {name}
           </Text>
           {budget ? (
@@ -42,7 +42,7 @@ export function HomeGroupCard({
               className="mt-1.4 w-[120px]"
             />
           ) : meta ? (
-            <Text className="mt-0.5 text-[10.5px] text-neutral-600" numberOfLines={1}>
+            <Text className="mt-0.5 text-10.5 text-neutral-600" numberOfLines={1}>
               {meta}
             </Text>
           ) : null}
@@ -51,7 +51,7 @@ export function HomeGroupCard({
           <MoneyText value={amount} size={14} />
           {caption ? (
             <Text
-              className={`mt-0.5 text-[10.5px] ${budget?.over ? "text-error" : "text-neutral-600"}`}
+              className={`mt-0.5 text-10.5 ${budget?.over ? "text-error" : "text-neutral-600"}`}
             >
               {caption}
             </Text>

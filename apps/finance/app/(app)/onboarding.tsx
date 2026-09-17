@@ -106,8 +106,8 @@ export default function OnboardingScreen() {
             <Icon name="users-three" size={22} color={organic.accent[600]} />
           </View>
 
-          <Text className="text-[27px] font-fig-med leading-[31px] text-fg">{t("onboarding.title")}</Text>
-          <Text className="mb-5.6 mt-2.1 text-[13.5px] leading-[21px] text-neutral-600">
+          <Text className="text-27 font-fig-med leading-[31px] text-fg">{t("onboarding.title")}</Text>
+          <Text className="mb-5.6 mt-2.1 text-13.5 leading-[21px] text-neutral-600">
             {t("onboarding.body")}
           </Text>
 
@@ -159,10 +159,10 @@ export default function OnboardingScreen() {
           <View className="flex-1" />
 
           {error ? (
-            <Text className="mb-2.1 text-[12.5px] leading-[19px] text-error">{error}</Text>
+            <Text className="mb-2.1 text-12.5 leading-[19px] text-error">{error}</Text>
           ) : null}
           {errorRef ? (
-            <Text className="mb-2.1 text-[12px] text-neutral-600">
+            <Text className="mb-2.1 text-12 text-neutral-600">
               {t("common.errorReference", { ref: errorRef })}
             </Text>
           ) : null}
@@ -217,7 +217,7 @@ function InviteAction({ label, onPress, disabled }: { label: string; onPress: ()
       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
     >
       <Icon name="user-plus" size={17} color={organic.neutral[600]} />
-      <Text className="text-[13px] font-fig-med text-neutral-600">{label}</Text>
+      <Text className="text-13 font-fig-med text-neutral-600">{label}</Text>
     </Pressable>
   );
 }

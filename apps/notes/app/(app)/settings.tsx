@@ -68,7 +68,7 @@ export default function SettingsScreen() {
 
         <SettingsSection title={strings.settings.family}>
           <SettingsGroup className="py-3.5">
-            <Text className="font-fig-bold text-[15.5px] text-fg">{family.data?.family?.name ?? ""}</Text>
+            <Text className="font-fig-bold text-15.5 text-fg">{family.data?.family?.name ?? ""}</Text>
           </SettingsGroup>
         </SettingsSection>
 
@@ -83,10 +83,10 @@ export default function SettingsScreen() {
               >
                 <Avatar name={member.displayName || member.email} size={32} />
                 <View className="flex-1">
-                  <Text className="font-fig-bold text-[14.5px] text-fg" numberOfLines={1}>
+                  <Text className="font-fig-bold text-14.5 text-fg" numberOfLines={1}>
                     {member.displayName || member.email}
                   </Text>
-                  <Text className="font-fig text-[11.5px] text-neutral-600">{member.email}</Text>
+                  <Text className="font-fig text-11.5 text-neutral-600">{member.email}</Text>
                 </View>
               </View>
             ))}
@@ -95,7 +95,7 @@ export default function SettingsScreen() {
 
         <SettingsSection title={strings.settings.offlineQueue}>
           <SettingsGroup className="gap-2.5 py-3.5">
-            <Text className="font-fig text-[13.5px] text-neutral-700">
+            <Text className="font-fig text-13.5 text-neutral-700">
               {queue.pending.length === 0
                 ? strings.settings.queueEmpty
                 : strings.capture.queued(queue.pending.length)}
@@ -113,15 +113,15 @@ export default function SettingsScreen() {
         {queue.rejected.length > 0 ? (
           <SettingsSection title={offlineCopy.refusedTitle}>
             <SettingsGroup className="gap-3 py-3.5">
-              <Text className="font-fig text-[13.5px] text-neutral-700">
+              <Text className="font-fig text-13.5 text-neutral-700">
                 {offlineCopy.refusedBody(queue.rejected.length)}
               </Text>
               {queue.rejected.map((item) => (
                 <View key={item.clientId} className="gap-1.5">
-                  <Text className="font-fig-bold text-[14px] text-fg">
+                  <Text className="font-fig-bold text-14 text-fg">
                     {item.title || strings.common.untitled}
                   </Text>
-                  <Text className="font-fig text-[11.5px] text-neutral-600">
+                  <Text className="font-fig text-11.5 text-neutral-600">
                     {item.rejection?.reason ?? ""}
                   </Text>
                   <PrimaryButton
@@ -172,14 +172,14 @@ export default function SettingsScreen() {
         />
 
         <SettingsSection title={strings.settings.about}>
-          <Text className="font-fig text-[13px] leading-[20px] text-neutral-700">
+          <Text className="font-fig text-13 leading-[20px] text-neutral-700">
             {strings.settings.aboutBody}
           </Text>
         </SettingsSection>
 
         <View className="gap-sm">
           {unsynced > 0 ? (
-            <Text className="text-center font-fig text-[12px] text-neutral-700">
+            <Text className="text-center font-fig text-12 text-neutral-700">
               {offlineCopy.unsyncedOnSignOut(unsynced)}
             </Text>
           ) : null}

@@ -44,7 +44,7 @@ export function TemplateStrip({
         ))}
         <AmountChip label={newLabel} icon="plus" variant="outline" onPress={onNew} />
       </View>
-      <Text className="mt-2.1 text-[10.5px] leading-[16px] text-neutral-600">{hint}</Text>
+      <Text className="mt-2.1 text-10.5 leading-[16px] text-neutral-600">{hint}</Text>
     </View>
   );
 }

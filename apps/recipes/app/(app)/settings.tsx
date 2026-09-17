@@ -37,7 +37,7 @@ export default function ProfileScreen() {
           />
           <View className="flex-1">
             <Display size={23}>{family.data?.family?.name ?? t("profile.householdFallback")}</Display>
-            <Text className="mt-xs font-fig-bold text-[13.5px] text-neutral-600">
+            <Text className="mt-xs font-fig-bold text-13.5 text-neutral-600">
               {t("profile.keeperOfTheCookbook")}
             </Text>
           </View>
@@ -63,16 +63,16 @@ export default function ProfileScreen() {
                   tint={tintFor(member.userId, i)}
                   size={40}
                 />
-                <Text className="flex-1 font-fig-bold text-[15px] text-fg" numberOfLines={1}>
+                <Text className="flex-1 font-fig-bold text-15 text-fg" numberOfLines={1}>
                   {member.displayName || member.email}
                 </Text>
-                <Text className="font-fig-bold text-[12.5px] text-neutral-600">
+                <Text className="font-fig-bold text-12.5 text-neutral-600">
                   {member.role === Role.ADMIN ? t("profile.owner") : t("profile.cook")}
                 </Text>
               </View>
             ))}
             {(members.data?.members ?? []).length === 0 && (
-              <Text className="py-3.5 font-fig text-[15px] text-neutral-600">
+              <Text className="py-3.5 font-fig text-15 text-neutral-600">
                 {t("profile.justYouSoFar")}
               </Text>
             )}
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
           keyboardType="email-address"
           placeholder={t("profile.emailPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-5 rounded-full border border-neutral-300 bg-neutral-100 px-lg py-3 font-fig text-[15px] text-fg"
+          className="mb-5 rounded-full border border-neutral-300 bg-neutral-100 px-lg py-3 font-fig text-15 text-fg"
         />
         <PrimaryButton
           title={invite.isPending ? t("profile.sending") : t("profile.sendTheInvitation")}

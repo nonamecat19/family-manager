@@ -89,13 +89,13 @@ function BasketTab() {
       {basket.items.length > 0 && (
         <View className="mt-xs rounded-2xl bg-accent2-200 px-5 py-4.5">
           <View className="flex-row justify-between">
-            <Text className="font-fig-bold text-[14px] text-accent2-800">
+            <Text className="font-fig-bold text-14 text-accent2-800">
               {t("mealPlan.recipesAndBatches", {
                 recipes: t("plurals.recipesCount", { count: basket.items.length }),
                 batches: t("plurals.batchesCount", { count: batches }),
               })}
             </Text>
-            <Text className="font-fig-bold text-[14px] text-accent2-800">
+            <Text className="font-fig-bold text-14 text-accent2-800">
               {formatTotalTime(totalSeconds, t)}
             </Text>
           </View>
@@ -125,10 +125,10 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
     <View className="flex-row items-center gap-3.25 rounded-2xl bg-neutral-100 py-3 pl-3 pr-3.5">
       <Avatar initial={initialOf(r?.title ?? "?")} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
-        <Text className="font-fig-bold text-[15px] leading-[18px] text-fg" numberOfLines={1}>
+        <Text className="font-fig-bold text-15 leading-[18px] text-fg" numberOfLines={1}>
           {r?.title ?? t("mealPlan.loading")}
         </Text>
-        <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
+        <Text className="mt-0.75 font-fig-semi text-12.5 text-neutral-600" numberOfLines={1}>
           {r
             ? metaLine([
                 formatDuration(r.prepSeconds + r.cookSeconds, t),
@@ -170,10 +170,10 @@ function WeekTab() {
         return (
           <View key={day.iso} className="flex-row items-stretch gap-3.25">
             <View className="w-[46px] flex-none items-center pt-3.25">
-              <Text className={`font-cap text-[17px] ${day.isToday ? "text-accent-700" : "text-fg"}`}>
+              <Text className={`font-cap text-17 ${day.isToday ? "text-accent-700" : "text-fg"}`}>
                 {day.num}
               </Text>
-              <Text className="mt-0.25 font-fig-x text-[11px] uppercase tracking-[1px] text-neutral-600">
+              <Text className="mt-0.25 font-fig-x text-11 uppercase tracking-[1px] text-neutral-600">
                 {t(day.dayKey)}
               </Text>
             </View>
@@ -203,14 +203,14 @@ function WeekTab() {
                     style={{ backgroundColor: tint.bg }}
                   >
                     <Text
-                      className="flex-1 font-fig-bold text-[14px]"
+                      className="flex-1 font-fig-bold text-14"
                       style={{ color: tint.fg }}
                       numberOfLines={1}
                     >
                       {recipe?.title ?? t("mealPlan.unknownRecipe")}
                     </Text>
                     <Text
-                      className="font-fig-bold text-[12.5px] opacity-70"
+                      className="font-fig-bold text-12.5 opacity-70"
                       style={{ color: tint.fg }}
                     >
                       {t(SLOT_LABEL_KEYS[entry.slot] ?? "mealPlan.slotMeal")}
@@ -224,7 +224,7 @@ function WeekTab() {
                 onPress={() => setAddingTo(day.iso)}
                 className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-3.75 py-2.75"
               >
-                <Text className="font-fig-bold text-[13.5px] text-neutral-500">
+                <Text className="font-fig-bold text-13.5 text-neutral-500">
                   {dayEntries.length === 0 ? t("mealPlan.nothingPlanned") : t("mealPlan.addAnother")}
                 </Text>
                 <Icon name="plus" size={15} color={organic.neutral[500]} width={2.4} />
@@ -258,13 +258,13 @@ function WeekTab() {
                 className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 py-2.5 pl-2.5 pr-3.5"
               >
                 <Avatar initial={initialOf(r.title)} tint={tintFor(r.categoryId, index)} size={40} />
-                <Text className="flex-1 font-fig-bold text-[14.5px] text-fg" numberOfLines={1}>
+                <Text className="flex-1 font-fig-bold text-14.5 text-fg" numberOfLines={1}>
                   {r.title}
                 </Text>
               </Pressable>
             ))}
             {(recipes.data ?? []).length === 0 && (
-              <Text className="font-fig text-[15px] text-neutral-600">
+              <Text className="font-fig text-15 text-neutral-600">
                 {t("mealPlan.noRecipesYet")}
               </Text>
             )}

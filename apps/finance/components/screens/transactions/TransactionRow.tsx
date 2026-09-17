@@ -37,12 +37,12 @@ export function TransactionRow({
     <View className="flex-row items-center gap-2.1 px-2.8 py-2.1">
       <IconCircle icon={icon} index={iconIndex} size={32} />
       <View className="flex-1">
-        <Text className="text-[13.5px] text-fg" numberOfLines={1}>
+        <Text className="text-13.5 text-fg" numberOfLines={1}>
           {title}
         </Text>
         <View className="mt-0.5 flex-row items-center gap-1.4">
           <Avatar name={memberName} index={memberIndex} size={14} />
-          <Text className="flex-shrink text-[10.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="flex-shrink text-10.5 text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>
           {templateLabel ? <Badge label={templateLabel} /> : null}

@@ -147,9 +147,9 @@ export default function HomeScreen() {
       <Screen>
         {header}
         <View className="flex-1 justify-center gap-2.8 px-5.6">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
+          <Text className="text-13.5 leading-[21px] text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
-            <Text className="text-[12px] text-neutral-600">
+            <Text className="text-12 text-neutral-600">
               {t("common.errorReference", { ref: shown.reference })}
             </Text>
           ) : null}

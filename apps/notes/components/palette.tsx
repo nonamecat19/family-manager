@@ -35,7 +35,7 @@ export function FacetPill({
         active ? "border-accent bg-accent-100" : "border-transparent bg-neutral-200"
       }`}
     >
-      <Text className={`font-fig text-[11.5px] ${active ? "text-accent-800" : "text-neutral-800"}`}>
+      <Text className={`font-fig text-11.5 ${active ? "text-accent-800" : "text-neutral-800"}`}>
         {label}
       </Text>
     </Pressable>
@@ -151,7 +151,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
               placeholder={strings.palette.placeholder}
               placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.palette.placeholder}
-              className="flex-1 font-fig text-[17px] text-fg"
+              className="flex-1 font-fig text-17 text-fg"
             />
             <Kbd>{strings.palette.esc}</Kbd>
           </View>
@@ -169,14 +169,14 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
 
           <ScrollView className="max-h-[420px] px-sm pb-1.5 pt-sm">
             {query.trim() === "" ? (
-              <Text className="px-2.5 py-3.5 font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-2.5 py-3.5 font-fig text-12.5 text-neutral-700">
                 {strings.palette.hint}
               </Text>
             ) : null}
 
             {grouped.map((group) => (
               <View key={group.label}>
-                <Text className="px-2.5 pb-1.25 pt-2.5 font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
+                <Text className="px-2.5 pb-1.25 pt-2.5 font-fig-semi text-10 uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
                   {group.label}
                 </Text>
                 {group.hits.map((hit) => {
@@ -196,7 +196,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ))}
 
             {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-              <Text className="px-2.5 py-3.5 font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-2.5 py-3.5 font-fig text-12.5 text-neutral-700">
                 {strings.palette.empty}
               </Text>
             ) : null}
@@ -209,7 +209,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
                 className="mt-1.5 flex-row items-center gap-2.75 rounded-xl px-2.5 py-2.25"
               >
                 <Icon name="plus-circle" size={16} color={organic.accent.DEFAULT} />
-                <Text className="font-fig text-[13.5px] text-fg">
+                <Text className="font-fig text-13.5 text-fg">
                   {strings.palette.createNote(query.trim())}
                 </Text>
                 <View className="ml-auto">
@@ -223,7 +223,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             <FooterHint keys="↑↓" label={strings.palette.navigate} />
             <FooterHint keys="⇥" label={strings.palette.filter} />
             <FooterHint keys="⌘⏎" label={strings.palette.newNote} />
-            <Text className="ml-auto font-fig text-[11px] text-neutral-700">
+            <Text className="ml-auto font-fig text-11 text-neutral-700">
               {search.data
                 ? strings.palette.footer(search.data.searchedNotes, search.data.elapsedMs)
                 : ""}
@@ -239,7 +239,7 @@ function FooterHint({ keys, label }: { keys: string; label: string }) {
   return (
     <View className="flex-row items-center gap-1.25">
       <Kbd>{keys}</Kbd>
-      <Text className="font-fig text-[11px] text-neutral-700">{label}</Text>
+      <Text className="font-fig text-11 text-neutral-700">{label}</Text>
     </View>
   );
 }
@@ -274,10 +274,10 @@ function HitRow({
         <Highlighted
           text={hit.title}
           query={query}
-          className="font-fig-med text-[13.5px] text-fg"
+          className="font-fig-med text-13.5 text-fg"
         />
         {hit.context !== "" || hit.snippet !== "" ? (
-          <Text numberOfLines={1} className="font-fig text-[11.5px] text-neutral-700">
+          <Text numberOfLines={1} className="font-fig text-11.5 text-neutral-700">
             {[hit.context, hit.snippet].filter((part) => part !== "").join(" · ")}
           </Text>
         ) : null}

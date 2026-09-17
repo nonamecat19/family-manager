@@ -195,10 +195,10 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
             onChangeValue={setLimitText}
             currencyCode={budgetCurrency}
           />
-          <Text className="text-center text-[11px] text-neutral-600">{t("categories.budgetHint")}</Text>
+          <Text className="text-center text-11 text-neutral-600">{t("categories.budgetHint")}</Text>
         </View>
 
-        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+        {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 

@@ -66,11 +66,11 @@ export default function TemplatesScreen() {
 
         {templates.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : templates.isError ? (
           <View className="gap-3 py-4.5">
-            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+            <Text className="text-13.5 leading-[21px] text-neutral-600">
               {toDisplayError(templates.error, t("common.loadFailed")).message}
             </Text>
             <Button title={t("common.tryAgain")} onPress={() => void templates.refetch()} />
@@ -258,14 +258,14 @@ function TemplateSheet({
             onPress={() => setPicker("category")}
           />
 
-          {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+          {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
 
           <Button
             title={t("common.save")}
             onPress={() => void save()}
             disabled={create.isPending || update.isPending}
           />
-          <Text className="text-center text-[11px] text-neutral-600">
+          <Text className="text-center text-11 text-neutral-600">
             {t("templates.amountNote", { amount: amount ? formatMoney(amount) : "" })}
           </Text>
         </View>

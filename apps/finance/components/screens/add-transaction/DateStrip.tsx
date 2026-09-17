@@ -37,11 +37,11 @@ export function DateStrip({
             className={`items-center rounded-md px-2.1 py-1.4 ${selected ? "bg-accent" : ""}`}
           >
             <Text
-              className={`text-[12px] ${selected ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
+              className={`text-12 ${selected ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
             >
               {shortDate(iso)}
             </Text>
-            <Text className={`text-[10px] ${selected ? "text-accent-700" : "text-neutral-600"}`}>
+            <Text className={`text-10 ${selected ? "text-accent-700" : "text-neutral-600"}`}>
               {word}
             </Text>
           </Pressable>

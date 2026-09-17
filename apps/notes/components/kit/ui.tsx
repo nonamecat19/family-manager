@@ -71,7 +71,7 @@ export function Kbd({ children, className = "" }: { children: ReactNode; classNa
     <View
       className={`flex-none items-center justify-center rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 ${className}`}
     >
-      <Text className="font-fig-med text-[11px] text-neutral-600">{children}</Text>
+      <Text className="font-fig-med text-11 text-neutral-600">{children}</Text>
     </View>
   );
 }

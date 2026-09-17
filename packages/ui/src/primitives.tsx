@@ -11,7 +11,7 @@ export function Kicker({ children, className = "" }: { children: ReactNode; clas
   const t = useTheme();
   return (
     <Text
-      className={`text-[12px] uppercase tracking-[1.2px] text-neutral-600 ${className}`}
+      className={`text-12 uppercase tracking-[1.2px] text-neutral-600 ${className}`}
       style={{ fontFamily: t.fonts?.bold }}
     >
       {children}

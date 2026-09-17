@@ -83,7 +83,7 @@ export function TelegramSection({
   return (
     <SettingsSection title={strings.title} hint={telegram.awaiting ? strings.waiting : strings.hint}>
       <SettingsGroup className="mb-3 py-3.5">
-        <Text className="text-[15.5px] text-fg" style={{ fontFamily: t.fonts?.bold }}>
+        <Text className="text-15.5 text-fg" style={{ fontFamily: t.fonts?.bold }}>
           {telegram.identity ? strings.connected : strings.notConnected}
         </Text>
       </SettingsGroup>
@@ -141,7 +141,7 @@ export function NotificationsSection({
   return (
     <SettingsSection title={title}>
       {isError ? (
-        <Text className="text-[13px] text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
+        <Text className="text-13 text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
           {failedText}
         </Text>
       ) : (
@@ -215,11 +215,11 @@ export function ApproveDeviceForm({
 
   return (
     <>
-      <Text className="text-[14px] leading-[21px] text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
+      <Text className="text-14 leading-[21px] text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
         {strings.body}
       </Text>
       {decided ? (
-        <Text className="text-[15.5px] text-fg" style={{ fontFamily: t.fonts?.bold }}>
+        <Text className="text-15.5 text-fg" style={{ fontFamily: t.fonts?.bold }}>
           {decided === "approved" ? strings.approved : strings.denied}
         </Text>
       ) : (

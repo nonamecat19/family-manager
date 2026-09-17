@@ -89,11 +89,11 @@ export default function RecurringScreen() {
 
         {payments.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : payments.isError ? (
           <View className="gap-3 py-4.5">
-            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+            <Text className="text-13.5 leading-[21px] text-neutral-600">
               {toDisplayError(payments.error, t("common.loadFailed")).message}
             </Text>
             <Button title={t("common.tryAgain")} onPress={() => void payments.refetch()} />
@@ -153,7 +153,7 @@ export default function RecurringScreen() {
                 divider={false}
               />
             </View>
-            <Text className="text-[11px] text-neutral-600">{t("recurring.tapHint")}</Text>
+            <Text className="text-11 text-neutral-600">{t("recurring.tapHint")}</Text>
           </>
         )}
       </ScrollBody>
@@ -316,12 +316,12 @@ function NewRecurringSheet({
               onValueChange={setAutoPost}
               divider={false}
             />
-            <Text className="pb-2.1 font-fig text-[11.5px] text-neutral-600">
+            <Text className="pb-2.1 font-fig text-11.5 text-neutral-600">
               {t("recurring.autoPostHint")}
             </Text>
           </View>
 
-          {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+          {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
 
           <Button title={t("common.save")} onPress={() => void save()} disabled={create.isPending} />
         </View>

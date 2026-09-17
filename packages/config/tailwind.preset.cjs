@@ -57,19 +57,31 @@ const radius = {
   full: "9999px",
 };
 
+// fine numeric scale, key = px value, 0.5px resolution from 1px to 96px.
+// text-[Npx] brackets should use this instead of arbitrary values.
+const fineFontSize = {};
+for (let halfPx = 2; halfPx <= 192; halfPx += 1) {
+  const px = halfPx / 2;
+  fineFontSize[String(px)] = `${px}px`;
+}
+
+const fontSize = {
+  caption: ["12px", { lineHeight: "16px" }],
+  body: ["15px", { lineHeight: "22px" }],
+  title: ["20px", { lineHeight: "26px" }],
+  display: ["32px", { lineHeight: "38px" }],
+  amount: ["28px", { lineHeight: "34px" }],
+
+  ...fineFontSize,
+};
+
 module.exports = {
   theme: {
     extend: {
       colors,
       spacing,
       borderRadius: radius,
-      fontSize: {
-        caption: ["12px", { lineHeight: "16px" }],
-        body: ["15px", { lineHeight: "22px" }],
-        title: ["20px", { lineHeight: "26px" }],
-        display: ["32px", { lineHeight: "38px" }],
-        amount: ["28px", { lineHeight: "34px" }],
-      },
+      fontSize,
     },
   },
 };

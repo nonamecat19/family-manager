@@ -121,7 +121,7 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
           </View>
         </View>
 
-        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+        {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
@@ -137,7 +137,7 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
               />
             ))}
           </View>
-          <Text className="text-[11px] text-neutral-600">{t("categories.moveTransactionsHint")}</Text>
+          <Text className="text-11 text-neutral-600">{t("categories.moveTransactionsHint")}</Text>
           <Button title={t("categories.deleteCategory")} tone="danger" onPress={confirmDelete} disabled={busy} />
         </View>
       </View>

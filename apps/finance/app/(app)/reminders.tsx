@@ -44,11 +44,11 @@ export default function RemindersScreen() {
 
         {reminders.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : reminders.isError ? (
           <View className="gap-3 py-4.5">
-            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+            <Text className="text-13.5 leading-[21px] text-neutral-600">
               {toDisplayError(reminders.error, t("common.loadFailed")).message}
             </Text>
             <Button title={t("common.tryAgain")} onPress={() => void reminders.refetch()} />
@@ -69,7 +69,7 @@ export default function RemindersScreen() {
                   subtitle={t(kindKey(reminder.kind))}
                   leading={<IconCircle icon={kindIcon(reminder.kind)} />}
                   trailing={
-                    <Text className="text-[12px] text-neutral-600">
+                    <Text className="text-12 text-neutral-600">
                       {reminder.enabled ? t("reminders.on") : t("reminders.off")}
                     </Text>
                   }
@@ -87,7 +87,7 @@ export default function RemindersScreen() {
               ))}
             </ListSection>
 
-            <Text className="text-[11px] text-neutral-600">{t("reminders.tapHint")}</Text>
+            <Text className="text-11 text-neutral-600">{t("reminders.tapHint")}</Text>
           </>
         )}
       </ScrollBody>
@@ -161,7 +161,7 @@ function NewReminderSheet({ visible, onClose }: { visible: boolean; onClose: () 
           ]}
         />
 
-        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+        {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={upsert.isPending} />
       </View>

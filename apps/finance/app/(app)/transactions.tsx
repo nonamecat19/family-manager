@@ -260,7 +260,7 @@ export default function TransactionsScreen() {
                 size={16}
               />
             ) : null}
-            <Text className="text-[13px] text-fg">{periodLabel(t, period, range)}</Text>
+            <Text className="text-13 text-fg">{periodLabel(t, period, range)}</Text>
             {steppable ? (
               <IconButton
                 icon="caret-right"
@@ -377,7 +377,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   if (pending) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+        <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
       </View>
     );
   }
@@ -386,9 +386,9 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
     const shown = toDisplayError(error, t("common.loadFailed"));
     return (
       <View className="flex-1 justify-center gap-2.1 px-2.8">
-        <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
+        <Text className="text-13.5 leading-[21px] text-neutral-600">{shown.message}</Text>
         {shown.reference ? (
-          <Text className="text-[12px] text-neutral-600">
+          <Text className="text-12 text-neutral-600">
             {t("common.errorReference", { ref: shown.reference })}
           </Text>
         ) : null}
@@ -419,7 +419,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
       onEndReachedThreshold={0.4}
       ListFooterComponent={
         fetchingMore ? (
-          <Text className="pb-4.2 text-center text-[13px] text-neutral-600">
+          <Text className="pb-4.2 text-center text-13 text-neutral-600">
             {t("common.loadingEllipsis")}
           </Text>
         ) : null

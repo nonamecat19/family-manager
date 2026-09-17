@@ -106,7 +106,7 @@ export default function ChartsScreen() {
 
       {pending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-600">{t("gate.preparing")}</Text>
+          <Text className="text-13 text-neutral-600">{t("gate.preparing")}</Text>
         </View>
       ) : failed ? (
         <LoadError error={series.error ?? budgets.error} onRetry={retry} />
@@ -137,10 +137,10 @@ export default function ChartsScreen() {
           {budgetRows.length > 0 ? (
             <Card>
               <View className="mb-2.8 flex-row items-baseline justify-between">
-                <Text className="text-[13px] font-fig-med text-fg">
+                <Text className="text-13 font-fig-med text-fg">
                   {t("charts.groupBudgets", { month: monthNameLower(t, month) })}
                 </Text>
-                <Text className="text-[11px] text-neutral-600">
+                <Text className="text-11 text-neutral-600">
                   {t("common.xOfY", {
                     done: budgets.data?.withinLimitCount ?? 0,
                     total: budgets.data?.totalCount ?? 0,
@@ -195,7 +195,7 @@ function GranularityStrip({
             className="items-center"
           >
             <Text
-              className={`pb-0.75 text-[12px] ${active ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
+              className={`pb-0.75 text-12 ${active ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
             >
               {labels[option]}
             </Text>

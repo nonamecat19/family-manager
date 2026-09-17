@@ -74,7 +74,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
 
           <View className="flex-row items-center gap-sm">
-            <Text className="font-fig-med text-[15px] text-fg">{strings.capture.title}</Text>
+            <Text className="font-fig-med text-15 text-fg">{strings.capture.title}</Text>
             <View
               className="flex-row items-center gap-1.25 rounded-2xl px-sm py-0.75"
               style={{ backgroundColor: queue.online ? organic.accent[100] : organic.accent[200] }}
@@ -84,7 +84,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
                 size={12}
                 color={organic.accent[800]}
               />
-              <Text className="font-fig text-[11px] text-accent-800">
+              <Text className="font-fig text-11 text-accent-800">
                 {queue.online ? strings.capture.online : strings.capture.offline}
               </Text>
             </View>
@@ -100,7 +100,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
               placeholder={strings.capture.titlePlaceholder}
               placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.capture.titlePlaceholder}
-              className="font-fig-med text-[19px] text-fg"
+              className="font-fig-med text-19 text-fg"
             />
             <TextInput
               value={body}
@@ -109,7 +109,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
               placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.capture.bodyPlaceholder}
               multiline
-              className="min-h-[64px] font-fig text-[15.5px] leading-[25px] text-fg"
+              className="min-h-[64px] font-fig text-15.5 leading-[25px] text-fg"
             />
           </View>
 
@@ -148,13 +148,13 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           ) : null}
 
           {failed ? (
-            <Text className="font-fig text-[12px] text-accent2-800">
+            <Text className="font-fig text-12 text-accent2-800">
               {offlineCopy.captureNotSaved}
             </Text>
           ) : null}
 
           <View className="flex-row items-center gap-2.5">
-            <Text className="font-fig text-[12px] text-neutral-700">
+            <Text className="font-fig text-12 text-neutral-700">
               {queue.queued.length > 0
                 ? strings.capture.queued(queue.queued.length)
                 : notebook

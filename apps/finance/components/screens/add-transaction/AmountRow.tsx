@@ -21,13 +21,13 @@ export function AmountRow({ value, onChangeValue, currencyCode, label, invalid =
         placeholder="0"
         placeholderTextColor={organic.neutral[600]}
         selectionColor={organic.accent.DEFAULT}
-        className="w-[150px] pb-1.4 text-right text-[30px] font-fig-med text-fg"
+        className="w-[150px] pb-1.4 text-right text-30 font-fig-med text-fg"
         style={{
           borderBottomWidth: 1,
           borderBottomColor: invalid ? organic.danger : organic.neutral[700],
         }}
       />
-      <Text className="pb-2.1 text-[15px] font-fig-med text-accent-700">{currencyCode}</Text>
+      <Text className="pb-2.1 text-15 font-fig-med text-accent-700">{currencyCode}</Text>
       <View className="pb-2.1">
         <Icon name="calculator" size={19} color={organic.neutral[600]} />
       </View>

@@ -29,7 +29,7 @@ export default function SearchScreen() {
   return (
     <Screen>
       <View className="gap-3 px-5 pb-2.5 pt-1.5">
-        <Text className="font-cap text-[26px] text-fg" style={{ letterSpacing: -0.5 }}>
+        <Text className="font-cap text-26 text-fg" style={{ letterSpacing: -0.5 }}>
           {strings.search.title}
         </Text>
         <View className="h-[38px] flex-row items-center gap-2.25 rounded-xl border border-neutral-300 bg-surface px-2.75">
@@ -40,7 +40,7 @@ export default function SearchScreen() {
             placeholder={strings.search.placeholder}
             placeholderTextColor={organic.neutral[600]}
             accessibilityLabel={strings.search.placeholder}
-            className="flex-1 font-fig text-[14px] text-fg"
+            className="flex-1 font-fig text-14 text-fg"
           />
         </View>
         <View className="flex-row gap-1.75">
@@ -57,12 +57,12 @@ export default function SearchScreen() {
 
       <ScrollView className="px-3">
         {query.trim() === "" ? (
-          <Text className="px-sm py-3.5 font-fig text-[13px] text-neutral-700">
+          <Text className="px-sm py-3.5 font-fig text-13 text-neutral-700">
             {strings.search.hint}
           </Text>
         ) : null}
         {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-          <Text className="px-sm py-3.5 font-fig text-[13px] text-neutral-700">
+          <Text className="px-sm py-3.5 font-fig text-13 text-neutral-700">
             {strings.search.empty}
           </Text>
         ) : null}
@@ -76,11 +76,11 @@ export default function SearchScreen() {
           >
             <Icon name={GLYPH[hit.kind] ?? "file-text"} size={17} color={organic.neutral[700]} />
             <View className="min-w-0 flex-1 gap-0.5">
-              <Text numberOfLines={1} className="font-fig-med text-[14px] text-fg">
+              <Text numberOfLines={1} className="font-fig-med text-14 text-fg">
                 {hit.title}
               </Text>
               {hit.context !== "" || hit.snippet !== "" ? (
-                <Text numberOfLines={1} className="font-fig text-[12px] text-neutral-700">
+                <Text numberOfLines={1} className="font-fig text-12 text-neutral-700">
                   {[hit.context, hit.snippet].filter((part) => part !== "").join(" · ")}
                 </Text>
               ) : null}
@@ -88,7 +88,7 @@ export default function SearchScreen() {
           </Pressable>
         ))}
         {search.data ? (
-          <Text className="px-sm py-3.5 font-fig text-[11px] text-neutral-600">
+          <Text className="px-sm py-3.5 font-fig text-11 text-neutral-600">
             {strings.palette.footer(search.data.searchedNotes, search.data.elapsedMs)}
           </Text>
         ) : null}

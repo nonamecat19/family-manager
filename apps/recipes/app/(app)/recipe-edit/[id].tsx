@@ -188,7 +188,7 @@ export default function RecipeEditScreen() {
               <Icon name="plus" size={26} color={organic.accent[700]} />
             )}
           </Pressable>
-          <Text className="flex-1 font-fig-semi text-[13.5px] leading-[20px] text-neutral-600">
+          <Text className="flex-1 font-fig-semi text-13.5 leading-[20px] text-neutral-600">
             {t("recipeEdit.photoHint")}
           </Text>
         </View>
@@ -356,9 +356,9 @@ export default function RecipeEditScreen() {
               <View key={idx} className="gap-sm rounded-2xl bg-neutral-100 px-3.5 py-3.5">
                 <View className="flex-row items-center gap-2.5">
                   <View className="h-[26px] w-[26px] items-center justify-center rounded-full bg-accent2-300">
-                    <Text className="font-cap text-[13px] text-accent2-900">{idx + 1}</Text>
+                    <Text className="font-cap text-13 text-accent2-900">{idx + 1}</Text>
                   </View>
-                  <Text className="font-fig-bold text-[12.5px] text-neutral-600">
+                  <Text className="font-fig-bold text-12.5 text-neutral-600">
                     {t("recipeEdit.stepNumber", { number: idx + 1 })}
                   </Text>
                 </View>
@@ -418,7 +418,7 @@ function Placeholder({ label }: { label: string }) {
   return (
     <Screen>
       <View className="flex-1 items-center justify-center px-5.5">
-        <Text className="text-center font-fig-semi text-[14px] text-neutral-600">{label}</Text>
+        <Text className="text-center font-fig-semi text-14 text-neutral-600">{label}</Text>
       </View>
     </Screen>
   );

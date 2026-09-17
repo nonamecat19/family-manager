@@ -62,7 +62,7 @@ export function Chip({
       }`}
     >
       <Text
-        className={`text-[13.5px] ${active ? text : "text-neutral-700"}`}
+        className={`text-13.5 ${active ? text : "text-neutral-700"}`}
         style={{ fontFamily: t.fonts?.bold }}
       >
         {label}
@@ -80,7 +80,7 @@ export function Tag({ label, tone = "accent" }: { label: string; tone?: "accent"
       }`}
     >
       <Text
-        className={`text-[11px] ${tone === "accent2" ? "text-accent2-800" : "text-accent-800"}`}
+        className={`text-11 ${tone === "accent2" ? "text-accent2-800" : "text-accent-800"}`}
         style={{ fontFamily: t.fonts?.semibold }}
       >
         {label}
@@ -115,7 +115,7 @@ export function SegTabs<T extends string>({
             className={`flex-1 items-center rounded-full py-2.25 ${active ? "bg-neutral-100" : ""}`}
           >
             <Text
-              className={`text-[14px] ${active ? "text-fg" : "text-neutral-600"}`}
+              className={`text-14 ${active ? "text-fg" : "text-neutral-600"}`}
               style={{ fontFamily: t.fonts?.bold }}
             >
               {labels[option]}
@@ -148,7 +148,7 @@ export function PrimaryButton({
       onPress={onPress}
       className={`items-center rounded-full bg-accent py-3.75 ${disabled ? "opacity-50" : ""} ${className}`}
     >
-      <Text className="text-[15.5px] text-white" style={{ fontFamily: t.fonts?.heavy }}>
+      <Text className="text-15.5 text-white" style={{ fontFamily: t.fonts?.heavy }}>
         {title}
       </Text>
     </Pressable>
@@ -172,7 +172,7 @@ export function OutlineButton({
       onPress={onPress}
       className={`flex-none items-center rounded-full border-2 border-accent px-5.5 py-3.25 ${className}`}
     >
-      <Text className="text-[15.5px] text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
+      <Text className="text-15.5 text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
         {title}
       </Text>
     </Pressable>
@@ -196,7 +196,7 @@ export function DashedButton({
       onPress={onPress}
       className={`items-center rounded-2xl border-2 border-dashed border-neutral-400 py-3.5 ${className}`}
     >
-      <Text className="text-[14.5px] text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
+      <Text className="text-14.5 text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
         {title}
       </Text>
     </Pressable>
@@ -238,7 +238,7 @@ export function Stepper({
         </Text>
       </Pressable>
       <Text
-        className="min-w-[22px] text-center text-[15px] text-fg"
+        className="min-w-[22px] text-center text-15 text-fg"
         style={{ fontFamily: t.fonts?.heavy }}
       >
         ×{value}
@@ -268,7 +268,7 @@ export function RatingMark({ rating, size = 13 }: { rating: number; size?: numbe
       className="flex-none flex-row items-center gap-0.75"
     >
       <StarIcon size={size} />
-      <Text className="text-[13.5px] text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
+      <Text className="text-13.5 text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
         {rating.toFixed(1)}
       </Text>
     </View>

@@ -18,7 +18,7 @@ export function DashedAction({ label, onPress, icon = "folder-plus", className =
       style={({ pressed }) => ({ borderColor: organic.neutral[700], opacity: pressed ? 0.8 : 1 })}
     >
       <Icon name={icon} size={17} color={organic.neutral[600]} />
-      <Text className="text-[13px] font-fig-med text-neutral-600">{label}</Text>
+      <Text className="text-13 font-fig-med text-neutral-600">{label}</Text>
     </Pressable>
   );
 }

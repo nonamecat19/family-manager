@@ -79,11 +79,11 @@ export default function InvestmentsScreen() {
 
         {investments.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : investments.isError ? (
           <View className="gap-3 py-4.5">
-            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+            <Text className="text-13.5 leading-[21px] text-neutral-600">
               {toDisplayError(investments.error, t("common.loadFailed")).message}
             </Text>
             <Button title={t("common.tryAgain")} onPress={() => void investments.refetch()} />
@@ -151,7 +151,7 @@ export default function InvestmentsScreen() {
                 divider={false}
               />
             </View>
-            <Text className="text-[11px] text-neutral-600">{t("investments.hint")}</Text>
+            <Text className="text-11 text-neutral-600">{t("investments.hint")}</Text>
           </>
         )}
       </ScrollBody>
@@ -224,8 +224,8 @@ function NewInvestmentSheet({ visible, onClose }: { visible: boolean; onClose: (
           <Kicker>{t("investments.kind")}</Kicker>
           <KindChips value={kind} onChange={setKind} />
         </View>
-        <Text className="text-[11.5px] text-neutral-600">{t("investments.createHint")}</Text>
-        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+        <Text className="text-11.5 text-neutral-600">{t("investments.createHint")}</Text>
+        {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
         <Button title={t("common.save")} onPress={() => void save()} disabled={create.isPending} />
       </View>
     </ScrollSheet>
@@ -327,7 +327,7 @@ function InvestmentSheet({
         <Field label={t("investments.name")} value={name} onChangeText={setName} />
         <KindChips value={kind} onChange={setKind} />
 
-        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+        {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
         <View className="mt-sm gap-sm border-t border-divider pt-3">

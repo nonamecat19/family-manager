@@ -46,10 +46,10 @@ export function GroupCard({
       >
         <IconCircle icon={icon} tint={tintFor(colorStep)} size={34} />
         <View className="flex-1">
-          <Text className="text-[14px] font-fig-med text-fg" numberOfLines={1}>
+          <Text className="text-14 font-fig-med text-fg" numberOfLines={1}>
             {name}
           </Text>
-          <Text className="mt-0.5 text-[10.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 text-10.5 text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>
         </View>

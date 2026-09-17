@@ -84,11 +84,11 @@ export function NutritionStrip({
     <Panel className={`flex-row px-1.5 py-3 ${className}`}>
       {cells.map((c) => (
         <View key={c.key} className="flex-1 items-center">
-          <Text className="text-[17px] text-accent-800" style={{ fontFamily: t.fonts?.display }}>
+          <Text className="text-17 text-accent-800" style={{ fontFamily: t.fonts?.display }}>
             {c.value}
           </Text>
           <Text
-            className="mt-0.5 text-[11px] uppercase tracking-[0.7px] text-neutral-600"
+            className="mt-0.5 text-11 uppercase tracking-[0.7px] text-neutral-600"
             style={{ fontFamily: t.fonts?.body }}
           >
             {c.label}

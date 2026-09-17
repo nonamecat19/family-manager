@@ -26,7 +26,7 @@ export function ListSection({ title, action, children, className = "" }: ListSec
           {title ? <Kicker>{title}</Kicker> : <View />}
           {action ? (
             <Pressable accessibilityRole="button" accessibilityLabel={action.label} onPress={action.onPress}>
-              <Text className="font-fig-bold text-[12.5px] text-accent-700">{action.label}</Text>
+              <Text className="font-fig-bold text-12.5 text-accent-700">{action.label}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -65,11 +65,11 @@ export function Row({
     <View className={`flex-row items-center gap-2.8 px-4.2 py-2.8 ${className}`}>
       {leading}
       <View className="flex-1">
-        <Text className="font-fig-med text-[14.5px] text-fg" numberOfLines={1}>
+        <Text className="font-fig-med text-14.5 text-fg" numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (
-          <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 font-fig text-11.5 text-neutral-600" numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
@@ -78,7 +78,7 @@ export function Row({
         <View className="items-end">
           {trailing}
           {trailingSubtitle ? (
-            <Text className="mt-0.5 font-fig text-[11px] text-neutral-600">{trailingSubtitle}</Text>
+            <Text className="mt-0.5 font-fig text-11 text-neutral-600">{trailingSubtitle}</Text>
           ) : null}
         </View>
       ) : null}
@@ -212,7 +212,7 @@ export function AmountChip({
       {icon ? (
         <Icon name={icon} size={15} color={filled ? organic.accentFg : organic.accent.DEFAULT} />
       ) : null}
-      <Text className={`font-fig-med text-[12.5px] ${filled ? "text-white" : "text-fg"}`}>{label}</Text>
+      <Text className={`font-fig-med text-12.5 ${filled ? "text-white" : "text-fg"}`}>{label}</Text>
       {amount ? <MoneyText value={amount} size={12.5} tone={filled ? "onAccent" : "accent"} /> : null}
     </Pressable>
   );
@@ -235,8 +235,8 @@ export function Fab({ label, onPress, icon = "plus" }: { label: string; onPress:
 export function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: MoneyTone }) {
   return (
     <View className="flex-1">
-      <Text className="font-fig-bold text-[10.5px] uppercase tracking-[0.8px] text-neutral-600">{label}</Text>
-      <Text className={`mt-0.75 font-fig-med text-[15px] ${TONE_CLASS[tone]}`}>{value}</Text>
+      <Text className="font-fig-bold text-10.5 uppercase tracking-[0.8px] text-neutral-600">{label}</Text>
+      <Text className={`mt-0.75 font-fig-med text-15 ${TONE_CLASS[tone]}`}>{value}</Text>
     </View>
   );
 }

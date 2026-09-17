@@ -26,7 +26,7 @@ export function PickerField({ label, value, onPress, icon, avatar }: PickerField
       >
         {avatar ? <Avatar name={avatar.name} index={avatar.index} size={22} /> : null}
         {icon ? <Icon name={icon} size={16} color={organic.accent[600]} /> : null}
-        <Text className="flex-1 text-[13px] font-fig-med text-fg" numberOfLines={1}>
+        <Text className="flex-1 text-13 font-fig-med text-fg" numberOfLines={1}>
           {value}
         </Text>
         <Icon name="caret-down" size={11} color={organic.neutral[600]} />

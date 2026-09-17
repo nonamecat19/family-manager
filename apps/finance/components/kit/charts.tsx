@@ -77,8 +77,8 @@ export function DonutChart({
         </G>
       </Svg>
       <View className="absolute items-center" pointerEvents="none">
-        {centerValue ? <Text className="font-fig-med text-[24px] text-fg">{centerValue}</Text> : null}
-        {centerLabel ? <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600">{centerLabel}</Text> : null}
+        {centerValue ? <Text className="font-fig-med text-24 text-fg">{centerValue}</Text> : null}
+        {centerLabel ? <Text className="mt-0.5 font-fig text-11.5 text-neutral-600">{centerLabel}</Text> : null}
       </View>
     </View>
   );
@@ -159,7 +159,7 @@ export function StackedBarSeries({
         {points.map((point, index) => (
           <Text
             key={`${point.label}-label-${index}`}
-            className={`flex-1 text-center text-[10.5px] ${
+            className={`flex-1 text-center text-10.5 ${
               activeIndex === index ? "font-fig-bold text-fg" : "font-fig text-neutral-600"
             }`}
           >
@@ -187,7 +187,7 @@ export function ChartLegend({
             className="h-[8px] w-[8px] rounded-full"
             style={{ backgroundColor: s.color ?? seriesColor(index) }}
           />
-          <Text className="font-fig text-[11.5px] text-neutral-600">{s.label}</Text>
+          <Text className="font-fig text-11.5 text-neutral-600">{s.label}</Text>
         </View>
       ))}
     </View>
@@ -262,9 +262,9 @@ export function BudgetBar({
     <View className={className}>
       {label || shown ? (
         <View className="mb-1.4 flex-row items-baseline justify-between">
-          {label ? <Text className="font-fig text-[12.5px] text-neutral-600">{label}</Text> : <View />}
+          {label ? <Text className="font-fig text-12.5 text-neutral-600">{label}</Text> : <View />}
           {shown ? (
-            <Text className={`font-fig-med text-[12px] ${over ? "text-error" : "text-neutral-600"}`}>
+            <Text className={`font-fig-med text-12 ${over ? "text-error" : "text-neutral-600"}`}>
               {shown}
             </Text>
           ) : null}

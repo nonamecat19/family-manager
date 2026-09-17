@@ -47,7 +47,7 @@ export default function HomeScreen() {
           className="flex-row items-center gap-2.5 rounded-full border border-neutral-300 bg-neutral-100 px-4.5 py-3.25"
         >
           <SearchIcon />
-          <Text className="font-fig text-[16px] text-neutral-600">
+          <Text className="font-fig text-16 text-neutral-600">
             {recipes.length > 0
               ? t("home.searchRecipesCount", { count: recipes.length })
               : t("home.searchRecipes")}
@@ -77,7 +77,7 @@ export default function HomeScreen() {
                 accessibilityLabel={t("home.seeAllRecipes")}
                 onPress={() => router.push("/(app)/recipes")}
               >
-                <Text className="font-fig-bold text-[14px] text-accent-700">{t("home.seeAll")}</Text>
+                <Text className="font-fig-bold text-14 text-accent-700">{t("home.seeAll")}</Text>
               </Pressable>
             </View>
             <ScrollView
@@ -108,7 +108,7 @@ export default function HomeScreen() {
             <Display size={17} className="text-accent2-900">
               {t("home.thisWeeksPlan")}
             </Display>
-            <Text className="mt-xs font-fig-semi text-[13.5px] text-accent2-800">
+            <Text className="mt-xs font-fig-semi text-13.5 text-accent2-800">
               {planned === 0
                 ? t("home.nothingPlannedYet")
                 : `${t("plurals.recipesCount", { count: planned })} · ${t("plurals.ingredientsToBuyCount", { count: (totals.data ?? []).length })}`}
@@ -123,7 +123,7 @@ export default function HomeScreen() {
           onPress={() => router.push("/(app)/favorites")}
           className="flex-row items-center justify-between rounded-2xl border-2 border-dashed border-neutral-400 px-5 py-3.75"
         >
-          <Text className="flex-1 font-fig-bold text-[14.5px] text-neutral-700" numberOfLines={2}>
+          <Text className="flex-1 font-fig-bold text-14.5 text-neutral-700" numberOfLines={2}>
             {t("home.keepComingBackTo")}
           </Text>
           <Icon name="forward" size={18} color={organic.neutral[700]} />
@@ -155,15 +155,15 @@ function CategoryCard({
       style={{ backgroundColor: tint.bg }}
     >
       <View className="h-[32px] w-[32px] items-center justify-center rounded-full bg-white/60">
-        <Text className="font-cap text-[14px]" style={{ color: tint.fg }}>
+        <Text className="font-cap text-14" style={{ color: tint.fg }}>
           {initialOf(category.name)}
         </Text>
       </View>
       <View>
-        <Text className="font-cap text-[18px] leading-[20px]" style={{ color: tint.fg }}>
+        <Text className="font-cap text-18 leading-[20px]" style={{ color: tint.fg }}>
           {category.name}
         </Text>
-        <Text className="mt-0.75 font-fig-bold text-[12.5px] opacity-70" style={{ color: tint.fg }}>
+        <Text className="mt-0.75 font-fig-bold text-12.5 opacity-70" style={{ color: tint.fg }}>
           {t("plurals.recipesCount", { count })}
         </Text>
       </View>
@@ -197,16 +197,16 @@ function TopRatedCard({
         {recipe.imageUrl !== "" ? (
           <Image source={{ uri: recipe.imageUrl }} className="h-[92px] w-[92px]" resizeMode="contain" />
         ) : (
-          <Text className="font-cap text-[32px]" style={{ color: tint.fg }}>
+          <Text className="font-cap text-32" style={{ color: tint.fg }}>
             {initialOf(recipe.title)}
           </Text>
         )}
       </View>
-      <Text className="mt-2.75 font-cap text-[15.5px] leading-[18px]" numberOfLines={2}>
+      <Text className="mt-2.75 font-cap text-15.5 leading-[18px]" numberOfLines={2}>
         {recipe.title}
       </Text>
       <View className="mt-1.75 flex-row items-center gap-sm">
-        {time !== "" && <Text className="font-fig-bold text-[12.5px] text-neutral-700">{time}</Text>}
+        {time !== "" && <Text className="font-fig-bold text-12.5 text-neutral-700">{time}</Text>}
         {time !== "" && recipe.rating > 0 && <Text className="text-neutral-400">·</Text>}
         <RatingMark rating={recipe.rating} size={12} />
       </View>

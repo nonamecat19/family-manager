@@ -197,7 +197,7 @@ export default function HouseholdScreen() {
 
         {overview.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : overview.isError ? (
           <LoadError error={overview.error} onRetry={() => void overview.refetch()} />
@@ -387,12 +387,12 @@ function MemberCard({
         <Avatar name={name} index={index} size={40} />
         <View className="flex-1">
           <View className="flex-row items-center gap-1.4">
-            <Text className="text-[14.5px] font-fig-med text-fg" numberOfLines={1}>
+            <Text className="text-14.5 font-fig-med text-fg" numberOfLines={1}>
               {name}
             </Text>
             {owner ? <Badge label={t("household.owner")} tone="accent" /> : null}
           </View>
-          <Text className="mt-0.5 text-[11px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 text-11 text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>
         </View>
@@ -402,7 +402,7 @@ function MemberCard({
       <View className="mt-2.8"><Divider /></View>
       <View className="mt-2.8 flex-row gap-2.8">
         <View className="flex-1">
-          <Text className="text-[10.5px] uppercase text-neutral-600" style={{ letterSpacing: 0.8 }}>
+          <Text className="text-10.5 uppercase text-neutral-600" style={{ letterSpacing: 0.8 }}>
             {t("household.spending")}
           </Text>
           <MoneyText value={spent} size={15} className="mt-0.75" />
@@ -415,5 +415,5 @@ function MemberCard({
 }
 
 function Count({ value }: { value: number }) {
-  return <Text className="text-[12px] text-neutral-600">{String(value)}</Text>;
+  return <Text className="text-12 text-neutral-600">{String(value)}</Text>;
 }

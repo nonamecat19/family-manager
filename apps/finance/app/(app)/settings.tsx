@@ -99,7 +99,7 @@ export default function SettingsScreen() {
           <Avatar initial={initialOf(me?.displayName || familyName)} size={64} />
           <View className="flex-1">
             <Display size={19}>{me?.displayName || familyName}</Display>
-            <Text className="mt-0.5 text-[13px] font-fig-bold text-neutral-600">
+            <Text className="mt-0.5 text-13 font-fig-bold text-neutral-600">
               {familyName}
             </Text>
           </View>
@@ -238,7 +238,7 @@ export default function SettingsScreen() {
           onPress={() => setSheet("advanced")}
         />
 
-        <Text className="text-center text-[10.5px] text-neutral-600">{version}</Text>
+        <Text className="text-center text-10.5 text-neutral-600">{version}</Text>
 
         <DangerLink title={t("settings.signOut")} onPress={() => void signOut()} />
       </ScrollBody>

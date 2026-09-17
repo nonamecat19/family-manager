@@ -98,7 +98,7 @@ export default function RecipeListScreen() {
             <View className="flex-row items-center justify-between gap-3 px-5.5 pt-sm">
               <View className="flex-1">
                 <Display size={28}>{category?.name ?? t("recipesList.allRecipes")}</Display>
-                <Text className="mt-xs font-fig-bold text-[13px] text-neutral-600">
+                <Text className="mt-xs font-fig-bold text-13 text-neutral-600">
                   {list.isPending ? t("common.loadingEllipsis") : t("plurals.recipesCount", { count: recipes.length })}
                 </Text>
               </View>
@@ -109,7 +109,7 @@ export default function RecipeListScreen() {
                 className="flex-none flex-row items-center gap-sm rounded-full bg-accent px-4.25 py-2.75"
               >
                 <Icon name="filter" size={16} color={organic.accentFg} />
-                <Text className="font-fig-bold text-[14px] text-white">
+                <Text className="font-fig-bold text-14 text-white">
                   {activeFilters > 0 ? t("recipesList.filterCount", { count: activeFilters }) : t("recipesList.filter")}
                 </Text>
               </Pressable>
@@ -144,7 +144,7 @@ export default function RecipeListScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerClassName="flex-row items-center gap-2.25 px-5.5 pb-xs pt-3.5"
             >
-              <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipesList.sort")}</Text>
+              <Text className="font-fig-bold text-13 text-neutral-600">{t("recipesList.sort")}</Text>
               {SORTS.map((option) => {
                 const active = option.value === sort;
                 const label = t(option.labelKey);
@@ -158,7 +158,7 @@ export default function RecipeListScreen() {
                     className={`rounded-full px-3.25 py-1.5 ${active ? "bg-accent-200" : ""}`}
                   >
                     <Text
-                      className={`font-fig-bold text-[13px] ${active ? "text-accent-800" : "text-neutral-600"}`}
+                      className={`font-fig-bold text-13 ${active ? "text-accent-800" : "text-neutral-600"}`}
                     >
                       {label}
                     </Text>
@@ -179,7 +179,7 @@ export default function RecipeListScreen() {
           list.isPending ? null : (
             <View className="gap-sm pt-10">
               <Display size={20}>{t("recipesList.nothingHereYet")}</Display>
-              <Text className="font-fig text-[15px] text-neutral-600">
+              <Text className="font-fig text-15 text-neutral-600">
                 {activeFilters > 0
                   ? t("recipesList.noneMatchFilters")
                   : t("recipesList.addFirstWithButton")}
@@ -261,7 +261,7 @@ export default function RecipeListScreen() {
           onChangeText={setIngredient}
           placeholder={t("recipesList.ingredientPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-xl rounded-full border border-neutral-300 bg-neutral-100 px-lg py-2.75 font-fig text-[14px] text-fg"
+          className="mb-xl rounded-full border border-neutral-300 bg-neutral-100 px-lg py-2.75 font-fig text-14 text-fg"
         />
 
         <View className="flex-row gap-2.5">
@@ -271,7 +271,7 @@ export default function RecipeListScreen() {
             onPress={resetFilters}
             className="flex-none rounded-full border-2 border-neutral-400 px-xl py-3.25"
           >
-            <Text className="font-fig-x text-[15px] text-neutral-700">{t("recipesList.reset")}</Text>
+            <Text className="font-fig-x text-15 text-neutral-700">{t("recipesList.reset")}</Text>
           </Pressable>
           <PrimaryButton
             title={t("recipesList.showRecipes", { count: recipes.length })}
@@ -314,14 +314,14 @@ function RecipeRow({
         <Avatar initial={initialOf(recipe.title)} tint={tint} size={62} />
       )}
       <View className="min-w-0 flex-1">
-        <Text className="font-cap text-[16px] leading-[18px] text-fg" numberOfLines={2}>
+        <Text className="font-cap text-16 leading-[18px] text-fg" numberOfLines={2}>
           {recipe.title}
         </Text>
         <View className="mt-1.5 flex-row items-center gap-1.75">
-          <Text className="font-fig-bold text-[12.5px] text-neutral-700">
+          <Text className="font-fig-bold text-12.5 text-neutral-700">
             {t("plurals.servingsCount", { count: recipe.servings })}
           </Text>
-          {time !== "" && <Text className="font-fig-bold text-[12.5px] text-neutral-700">{time}</Text>}
+          {time !== "" && <Text className="font-fig-bold text-12.5 text-neutral-700">{time}</Text>}
         </View>
       </View>
       <RatingMark rating={recipe.rating} />

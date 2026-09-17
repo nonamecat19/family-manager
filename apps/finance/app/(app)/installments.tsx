@@ -110,11 +110,11 @@ export default function InstallmentsScreen() {
 
         {installments.isPending ? (
           <View className="items-center py-7">
-            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+            <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : installments.isError ? (
           <View className="gap-3 py-4.5">
-            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+            <Text className="text-13.5 leading-[21px] text-neutral-600">
               {toDisplayError(installments.error, t("common.loadFailed")).message}
             </Text>
             <Button title={t("common.tryAgain")} onPress={() => void installments.refetch()} />
@@ -156,7 +156,7 @@ export default function InstallmentsScreen() {
                 divider={false}
               />
             </View>
-            <Text className="text-[11px] text-neutral-600">{t("installments.hint")}</Text>
+            <Text className="text-11 text-neutral-600">{t("installments.hint")}</Text>
           </>
         )}
       </ScrollBody>
@@ -305,11 +305,11 @@ function NewInstallmentSheet({
 
           <Field label={t("installments.purchasedOn")} value={purchasedOn} onChangeText={setPurchasedOn} />
           <Field label={t("installments.firstDueOn")} value={firstDueOn} onChangeText={setFirstDueOn} />
-          <Text className="text-[11.5px] text-neutral-600">{t("installments.firstDueHint")}</Text>
+          <Text className="text-11.5 text-neutral-600">{t("installments.firstDueHint")}</Text>
 
           <Button title={account ? account.name : t("add.account")} tone="quiet" onPress={() => setPicking(true)} />
 
-          {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+          {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
           <Button title={t("common.save")} onPress={() => void save()} disabled={create.isPending} />
         </View>
       </ScrollSheet>
@@ -413,7 +413,7 @@ function InstallmentSheet({
           <Stat label={t("installments.remaining")} value={formatMoney(fromWire(installment.remaining, code))} />
           <Stat label={t("installments.totalShort")} value={formatMoney(fromWire(installment.total, code))} />
         </View>
-        <Text className="text-[12px] text-neutral-600">{statusLine(t, installment)}</Text>
+        <Text className="text-12 text-neutral-600">{statusLine(t, installment)}</Text>
 
         {isActive ? (
           <>
@@ -427,11 +427,11 @@ function InstallmentSheet({
               inputMode="decimal"
             />
             <Field label={t("installments.nextDue")} value={nextDueOn} onChangeText={setNextDueOn} />
-            {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
+            {error ? <Text className="text-12.5 text-error">{error}</Text> : null}
             <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
           </>
         ) : error ? (
-          <Text className="text-[12.5px] text-error">{error}</Text>
+          <Text className="text-12.5 text-error">{error}</Text>
         ) : null}
 
         <View className="mt-sm gap-sm border-t border-divider pt-3">

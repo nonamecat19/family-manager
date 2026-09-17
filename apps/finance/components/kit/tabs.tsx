@@ -72,7 +72,7 @@ export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className =
             onPress={() => onChange(option)}
             className="items-center px-0.5 py-1.4"
           >
-            <Text className={`text-[12.5px] ${active ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}>
+            <Text className={`text-12.5 ${active ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}>
               {LABELS[option]}
             </Text>
             <View className={`mt-1.4 h-[2px] w-[18px] rounded-full ${active ? "bg-accent" : "bg-transparent"}`} />
@@ -108,7 +108,7 @@ export function PeriodStepper({
         <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPrev} hitSlop={10}>
           <Icon name="caret-left" size={18} color={organic.neutral[600]} />
         </Pressable>
-        <Text className="font-fig-med text-[13px] text-fg">{label}</Text>
+        <Text className="font-fig-med text-13 text-fg">{label}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={label}
@@ -121,7 +121,7 @@ export function PeriodStepper({
         </Pressable>
       </View>
       {total ? <MoneyText value={total} size={30} weight="medium" className="mt-2.1" /> : null}
-      {subtitle ? <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600">{subtitle}</Text> : null}
+      {subtitle ? <Text className="mt-0.5 font-fig text-11.5 text-neutral-600">{subtitle}</Text> : null}
     </View>
   );
 }
@@ -203,7 +203,7 @@ export function ScopeSwitcher({
         disabled={!onExpand}
         className="flex-row items-center gap-1.4"
       >
-        <Text className="font-fig text-[13px] text-neutral-600">{label}</Text>
+        <Text className="font-fig text-13 text-neutral-600">{label}</Text>
         {onExpand ? <Icon name="caret-down" size={14} color={organic.neutral[600]} /> : null}
       </Pressable>
       {balance ? <MoneyText value={balance} size={34} weight="medium" className="mt-1.4" /> : null}
@@ -267,7 +267,7 @@ function ScopePill({
       ) : (
         <View className="w-[3px]" />
       )}
-      <Text className={`font-fig-med text-[12px] ${selected ? "text-white" : "text-neutral-600"}`}>
+      <Text className={`font-fig-med text-12 ${selected ? "text-white" : "text-neutral-600"}`}>
         {label}
       </Text>
     </Pressable>

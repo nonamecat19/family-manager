@@ -284,7 +284,7 @@ export default function AddTransactionScreen() {
 
       {failed ? (
         <View className="flex-1 justify-center gap-2.1 px-4.2">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+          <Text className="text-13.5 leading-[21px] text-neutral-600">
             {toDisplayError(failed.error, t("common.loadFailed")).message}
           </Text>
           <Button
@@ -301,7 +301,7 @@ export default function AddTransactionScreen() {
         </View>
       ) : pending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-13 text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : (
         <>
@@ -357,7 +357,7 @@ export default function AddTransactionScreen() {
                   onPress={() => setSheet("category")}
                   hitSlop={6}
                 >
-                  <Text className="text-[11px] text-accent-700">
+                  <Text className="text-11 text-accent-700">
                     {group?.group?.name ? `${group.group.name} ▸` : t("add.more")}
                   </Text>
                 </Pressable>
@@ -385,9 +385,9 @@ export default function AddTransactionScreen() {
 
             {error ? (
               <View className="gap-0.7">
-                <Text className="text-[12.5px] text-error">{error}</Text>
+                <Text className="text-12.5 text-error">{error}</Text>
                 {errorRef ? (
-                  <Text className="text-[11px] text-neutral-600">
+                  <Text className="text-11 text-neutral-600">
                     {t("common.errorReference", { ref: errorRef })}
                   </Text>
                 ) : null}

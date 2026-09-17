@@ -20,7 +20,7 @@ export function PrivacySheet({
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("settings.privacy")} scroll>
       {privateOwn.length === 0 ? (
-        <Text className="py-4.2 text-[13px] text-neutral-600">{t("common.none")}</Text>
+        <Text className="py-4.2 text-13 text-neutral-600">{t("common.none")}</Text>
       ) : (
         <View className="overflow-hidden rounded-lg bg-bg">
           {privateOwn.map((account, index) => (
@@ -79,8 +79,8 @@ export function DataSheet({
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("settings.data")}>
       <View className="gap-2.1 pb-2.8">
-        <Text className="text-[13px] text-neutral-600">{facts}</Text>
-        <Text className="text-[11.5px] text-neutral-600">{syncedAt}</Text>
+        <Text className="text-13 text-neutral-600">{facts}</Text>
+        <Text className="text-11.5 text-neutral-600">{syncedAt}</Text>
       </View>
     </ScrollSheet>
   );
@@ -99,7 +99,7 @@ export function AdvancedSheet({
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("settings.advanced")}>
       <View className="gap-2.8 pb-2.8">
-        <Text className="text-[11.5px] text-neutral-600">{version}</Text>
+        <Text className="text-11.5 text-neutral-600">{version}</Text>
       </View>
     </ScrollSheet>
   );

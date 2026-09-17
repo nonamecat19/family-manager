@@ -69,7 +69,7 @@ export function ScreenHeader({
       {onBack ? <RoundButton icon="back" label={backLabel} onPress={onBack} /> : null}
       <View className="flex-1">
         {kicker ? (
-          <Text className="mb-0.5 text-[13px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
+          <Text className="mb-0.5 text-13 text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
             {kicker}
           </Text>
         ) : null}
@@ -109,11 +109,11 @@ export function GateMessage({
   return (
     <View className="flex-1 justify-center gap-4.5 px-5.5">
       {title ? <Display size={30}>{title}</Display> : null}
-      <Text className="text-[15.5px] leading-[23px] text-neutral-700" style={{ fontFamily: t.fonts?.body }}>
+      <Text className="text-15.5 leading-[23px] text-neutral-700" style={{ fontFamily: t.fonts?.body }}>
         {body}
       </Text>
       {reference ? (
-        <Text className="text-[13px] leading-[19px] text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
+        <Text className="text-13 leading-[19px] text-neutral-600" style={{ fontFamily: t.fonts?.body }}>
           {reference}
         </Text>
       ) : null}
@@ -128,7 +128,7 @@ export function BootSplash({ title, label }: { title: string; label?: string }) 
     <View className="flex-1 items-center justify-center gap-2.5 bg-bg">
       <Display size={30}>{title}</Display>
       {label ? (
-        <Text className="text-[13.5px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
+        <Text className="text-13.5 text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
           {label}
         </Text>
       ) : null}
@@ -140,10 +140,10 @@ export function StatTile({ value, label }: { value: string; label: string }) {
   const t = useTheme();
   return (
     <View className="flex-1 rounded-2xl bg-neutral-100 px-3.5 py-3.75">
-      <Text className="text-[24px] text-accent-700" style={{ fontFamily: t.fonts?.display }}>
+      <Text className="text-24 text-accent-700" style={{ fontFamily: t.fonts?.display }}>
         {value}
       </Text>
-      <Text className="mt-0.75 text-[12px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
+      <Text className="mt-0.75 text-12 text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
         {label}
       </Text>
     </View>
@@ -159,7 +159,7 @@ export function PillButton({ title, onPress }: { title: string; onPress: () => v
       onPress={onPress}
       className="items-center rounded-full bg-neutral-200 py-3.25"
     >
-      <Text className="text-[14.5px] text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
+      <Text className="text-14.5 text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
         {title}
       </Text>
     </Pressable>
@@ -170,7 +170,7 @@ export function DangerLink({ title, onPress }: { title: string; onPress: () => v
   const t = useTheme();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress} className="items-center pt-xs">
-      <Text className="text-[14px] text-error" style={{ fontFamily: t.fonts?.semibold }}>
+      <Text className="text-14 text-error" style={{ fontFamily: t.fonts?.semibold }}>
         {title}
       </Text>
     </Pressable>
@@ -180,7 +180,7 @@ export function DangerLink({ title, onPress }: { title: string; onPress: () => v
 export function ErrorText({ children }: { children: ReactNode }) {
   const t = useTheme();
   return (
-    <Text className="text-[12px] text-error" style={{ fontFamily: t.fonts?.semibold }}>
+    <Text className="text-12 text-error" style={{ fontFamily: t.fonts?.semibold }}>
       {children}
     </Text>
   );

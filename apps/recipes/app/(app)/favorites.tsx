@@ -34,7 +34,7 @@ export default function FavoritesScreen() {
         </View>
 
         {!favorites.isPending && recipes.length === 0 && (
-          <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
+          <Text className="font-fig text-15 leading-[22px] text-neutral-600">
             {t("favorites.empty")}
           </Text>
         )}
@@ -68,15 +68,15 @@ function FavoriteCard({
         {recipe.imageUrl !== "" ? (
           <Image source={{ uri: recipe.imageUrl }} className="h-[76px] w-[76px]" resizeMode="contain" />
         ) : (
-          <Text className="font-cap text-[26px]" style={{ color: tint.fg }}>
+          <Text className="font-cap text-26" style={{ color: tint.fg }}>
             {initialOf(recipe.title)}
           </Text>
         )}
       </View>
-      <Text className="mt-2.5 font-cap text-[15px] leading-[17px]" numberOfLines={2}>
+      <Text className="mt-2.5 font-cap text-15 leading-[17px]" numberOfLines={2}>
         {recipe.title}
       </Text>
-      <Text className="mt-1.25 font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>
+      <Text className="mt-1.25 font-fig-bold text-12.5 text-neutral-600" numberOfLines={1}>
         {metaLine([
           formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),
           recipe.rating > 0 ? `${recipe.rating}.0 ★` : undefined,

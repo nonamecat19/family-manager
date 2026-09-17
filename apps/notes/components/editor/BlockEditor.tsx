@@ -111,7 +111,7 @@ export function BlockEditor({
         placeholderTextColor={organic.neutral[600]}
         multiline
         accessibilityLabel={strings.note.titlePlaceholder}
-        className={`font-cap text-fg ${size === "roomy" ? "text-[33px] leading-[40px]" : "text-[26px] leading-[32px]"}`}
+        className={`font-cap text-fg ${size === "roomy" ? "text-33 leading-[40px]" : "text-26 leading-[32px]"}`}
         style={{ letterSpacing: -0.6 }}
         onFocus={() => onFocusedChange(NO_BLOCK)}
       />
@@ -219,7 +219,7 @@ function BlockRow({
           className="h-[92px] flex-row items-center justify-center gap-sm rounded-xl border border-dashed border-neutral-300"
         >
           <Icon name="image" size={16} color={organic.neutral[600]} />
-          <Text className="font-fig text-[12px] text-neutral-700">{strings.note.imageBlock}</Text>
+          <Text className="font-fig text-12 text-neutral-700">{strings.note.imageBlock}</Text>
         </View>
       </View>,
     );
@@ -288,7 +288,7 @@ function BlockRow({
   if (block.type === BlockType.NUMBERED) {
     return wrap(
       <View className="flex-row items-start gap-2.5 py-0.5">
-        <Text className="mt-xs w-[16px] flex-none text-right font-fig-med text-[14px] text-neutral-700">
+        <Text className="mt-xs w-[16px] flex-none text-right font-fig-med text-14 text-neutral-700">
           {ordinal}.
         </Text>
         {text}
@@ -356,16 +356,16 @@ function GutterButton({
   );
 }
 
-const PARAGRAPH_CLASS = "font-fig text-[15.5px] leading-[27px] text-fg";
+const PARAGRAPH_CLASS = "font-fig text-15.5 leading-[27px] text-fg";
 
 const TEXT_CLASS: Partial<Record<BlockType, string>> = {
   [BlockType.PARAGRAPH]: PARAGRAPH_CLASS,
   [BlockType.HEADING]: "font-fig-semi text-fg",
-  [BlockType.TODO]: "font-fig text-[15.5px] leading-[24px] text-fg",
-  [BlockType.BULLET]: "font-fig text-[15.5px] leading-[26px] text-fg",
-  [BlockType.NUMBERED]: "font-fig text-[15.5px] leading-[26px] text-fg",
-  [BlockType.QUOTE]: "font-fig text-[15px] leading-[25px] text-neutral-900",
-  [BlockType.CODE]: "font-fig text-[13.5px] leading-[21px] text-accent-800",
+  [BlockType.TODO]: "font-fig text-15.5 leading-[24px] text-fg",
+  [BlockType.BULLET]: "font-fig text-15.5 leading-[26px] text-fg",
+  [BlockType.NUMBERED]: "font-fig text-15.5 leading-[26px] text-fg",
+  [BlockType.QUOTE]: "font-fig text-15 leading-[25px] text-neutral-900",
+  [BlockType.CODE]: "font-fig text-13.5 leading-[21px] text-accent-800",
 };
 
 function textClassFor(type: BlockType): string {

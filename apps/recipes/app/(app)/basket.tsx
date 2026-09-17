@@ -33,7 +33,7 @@ export default function ShoppingListScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-4.5 px-5.5 pb-7 pt-sm">
         <View>
           <Display size={28}>{t("shoppingList.title")}</Display>
-          <Text className="mt-1.25 font-fig-bold text-[13px] text-neutral-600">
+          <Text className="mt-1.25 font-fig-bold text-13 text-neutral-600">
             {totals.length === 0
               ? t("shoppingList.nothingToBuyYet")
               : t("shoppingList.fromRecipesInBasket", {
@@ -43,7 +43,7 @@ export default function ShoppingListScreen() {
                 })}
           </Text>
           {!usingBasket && totals.length > 0 && (
-            <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-500">
+            <Text className="mt-0.75 font-fig-semi text-12.5 text-neutral-500">
               {t("shoppingList.totalledFromWeek")}
             </Text>
           )}
@@ -56,7 +56,7 @@ export default function ShoppingListScreen() {
                 className="h-[9px] w-[9px] rounded-full"
                 style={{ backgroundColor: group.aisle.dot }}
               />
-              <Text className="font-fig-x text-[12px] uppercase tracking-[1.2px] text-neutral-700">
+              <Text className="font-fig-x text-12 uppercase tracking-[1.2px] text-neutral-700">
                 {t(group.aisle.nameKey)}
               </Text>
             </View>
@@ -85,12 +85,12 @@ export default function ShoppingListScreen() {
                       {on && <CheckIcon />}
                     </View>
                     <Text
-                      className={`flex-1 font-fig-semi text-[15.5px] text-fg ${on ? "opacity-45" : ""}`}
+                      className={`flex-1 font-fig-semi text-15.5 text-fg ${on ? "opacity-45" : ""}`}
                       style={on ? { textDecorationLine: "line-through" } : undefined}
                     >
                       {item.name}
                     </Text>
-                    <Text className={`font-fig-x text-[14px] text-accent-700 ${on ? "opacity-45" : ""}`}>
+                    <Text className={`font-fig-x text-14 text-accent-700 ${on ? "opacity-45" : ""}`}>
                       {`${item.totalAmount} ${item.unit}`.trim()}
                     </Text>
                   </Pressable>
@@ -102,7 +102,7 @@ export default function ShoppingListScreen() {
 
         {totals.length === 0 ? (
           <View className="gap-3 pt-sm">
-            <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
+            <Text className="font-fig text-15 leading-[22px] text-neutral-600">
               {t("shoppingList.emptyBody")}
             </Text>
             <DashedButton title={t("shoppingList.openThePlan")} onPress={() => router.push("/(app)/meal-plan")} />

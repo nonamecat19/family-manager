@@ -65,7 +65,7 @@ export function NewAccountSheet({ visible, onClose, currencyCode }: NewAccountSh
           divider={false}
         />
         {shared ? null : (
-          <Text className="font-fig text-[11.5px] text-neutral-600">{t("accounts.excluded")}</Text>
+          <Text className="font-fig text-11.5 text-neutral-600">{t("accounts.excluded")}</Text>
         )}
 
         <View className="flex-row gap-2.1">

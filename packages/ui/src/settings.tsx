@@ -22,7 +22,7 @@ export function SettingsSection({
       <Kicker className="mb-2.75">{title}</Kicker>
       {hint ? (
         <Text
-          className="mb-3 text-[14px] leading-[21px] text-neutral-600"
+          className="mb-3 text-14 leading-[21px] text-neutral-600"
           style={{ fontFamily: t.fonts?.body }}
         >
           {hint}
@@ -66,12 +66,12 @@ export function SettingsLinkRow({
         <Icon name={icon} size={18} color={iconTone === "accent" ? t.accent[600] : t.neutral[600]} />
       ) : null}
       <View className="flex-1">
-        <Text className="text-[15.5px] text-fg" numberOfLines={1} style={{ fontFamily: t.fonts?.bold }}>
+        <Text className="text-15.5 text-fg" numberOfLines={1} style={{ fontFamily: t.fonts?.bold }}>
           {label}
         </Text>
         {meta ? (
           <Text
-            className="mt-0.5 text-[12px] text-neutral-600"
+            className="mt-0.5 text-12 text-neutral-600"
             numberOfLines={1}
             style={{ fontFamily: t.fonts?.body }}
           >
@@ -104,7 +104,7 @@ export function SettingsChoiceRow({
       onPress={onPress}
       className={`flex-row items-center justify-between py-3.5 ${divider ? "border-b border-divider" : ""}`}
     >
-      <Text className="text-[15.5px] text-fg" style={{ fontFamily: t.fonts?.bold }}>
+      <Text className="text-15.5 text-fg" style={{ fontFamily: t.fonts?.bold }}>
         {label}
       </Text>
       {selected ? (
@@ -146,7 +146,7 @@ export function SettingsToggleRow({
       style={indent > 0 ? { paddingLeft: indent } : undefined}
     >
       <Text
-        className="flex-1 text-[15px] text-fg"
+        className="flex-1 text-15 text-fg"
         numberOfLines={1}
         style={{ fontFamily: t.fonts?.bold }}
       >

@@ -83,7 +83,7 @@ export function BlockBar({
           onPress={onDone}
           className="ml-auto px-1.5 py-xs"
         >
-          <Text className="font-fig-med text-[14px] text-accent-700">{strings.note.done}</Text>
+          <Text className="font-fig-med text-14 text-accent-700">{strings.note.done}</Text>
         </Pressable>
       ) : null}
     </View>

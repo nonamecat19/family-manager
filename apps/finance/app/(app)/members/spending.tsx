@@ -105,7 +105,7 @@ export default function PerMemberSpendingScreen() {
               {(data?.groups ?? []).map((group) => (
                 <View key={group.groupId}>
                   <View className="mb-1.4 flex-row items-baseline justify-between">
-                    <Text className="text-[12.5px] font-fig-med text-fg">{group.name}</Text>
+                    <Text className="text-12.5 font-fig-med text-fg">{group.name}</Text>
                     <MoneyText value={fromWire(group.total, currency)} size={12.5} weight="regular" tone="muted" />
                   </View>
                   <SplitBar
@@ -157,7 +157,7 @@ function MonthButton({ label, onPress }: { label: string; onPress: () => void })
       hitSlop={8}
       className="mt-0.7 flex-row items-center justify-end gap-1.4 self-end"
     >
-      <Text className="text-[12px] text-neutral-600">{label}</Text>
+      <Text className="text-12 text-neutral-600">{label}</Text>
       <Icon name="caret-down" size={10} color={organic.neutral[600]} />
     </Pressable>
   );
@@ -177,7 +177,7 @@ function SplitCard({
   return (
     <Card className="border border-border">
       <View className="mb-2.8 flex-row items-baseline justify-between">
-        <Text className="text-[13px] font-fig-med text-fg">{title}</Text>
+        <Text className="text-13 font-fig-med text-fg">{title}</Text>
         <MoneyText value={total} size={11} weight="regular" tone="muted" />
       </View>
       <SplitBar
@@ -200,7 +200,7 @@ function SplitCard({
             />
             <View>
               <Text
-                className={`text-[12.5px] font-fig-med ${
+                className={`text-12.5 font-fig-med ${
                   highlightId === "" || member.id === highlightId ? "text-fg" : "text-neutral-600"
                 }`}
               >
@@ -231,8 +231,8 @@ function InsightCard({
     <Card className="flex-row items-start gap-2.8 border border-border">
       <Icon name={iconOr(insight.icon, "trend-up")} size={18} color={organic.accent[600]} />
       <View className="flex-1">
-        <Text className="mb-0.5 text-[12.5px] font-fig-med text-fg">{insight.title}</Text>
-        {body ? <Text className="text-[11.5px] leading-[17px] text-neutral-600">{body}</Text> : null}
+        <Text className="mb-0.5 text-12.5 font-fig-med text-fg">{insight.title}</Text>
+        {body ? <Text className="text-11.5 leading-[17px] text-neutral-600">{body}</Text> : null}
       </View>
     </Card>
   );

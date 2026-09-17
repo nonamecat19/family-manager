@@ -170,7 +170,7 @@ export default function NoteScreen() {
   ];
 
   const notice = deleteNote.isError ? (
-    <Text className="px-5.5 py-sm font-fig text-[12px] text-neutral-700">
+    <Text className="px-5.5 py-sm font-fig text-12 text-neutral-700">
       {strings.note.deleteFailed}
     </Text>
   ) : null;
@@ -243,10 +243,10 @@ export default function NoteScreen() {
             color={organic.neutral[700]}
             onPress={() => router.back()}
           />
-          <Text className="font-fig text-[12.5px] text-neutral-700">
+          <Text className="font-fig text-12.5 text-neutral-700">
             {breadcrumb(shell.notebooks.find((n) => n.id === note.notebookId)?.name)}
           </Text>
-          <Text numberOfLines={1} className="shrink font-fig text-[12.5px] text-fg">
+          <Text numberOfLines={1} className="shrink font-fig text-12.5 text-fg">
             {note.title || strings.common.untitled}
           </Text>
 
@@ -257,7 +257,7 @@ export default function NoteScreen() {
                 style={{ backgroundColor: organic.accent[100] }}
               >
                 <AvatarStack names={shareNames} size={24} max={3} />
-                <Text className="font-fig text-[11.5px] text-accent-800">
+                <Text className="font-fig text-11.5 text-accent-800">
                   {editorName !== ""
                     ? strings.note.editedBy(firstName(editorName), relative(note.updatedAt))
                     : strings.note.updated(relative(note.updatedAt))}
@@ -283,7 +283,7 @@ export default function NoteScreen() {
               className="h-[30px] flex-row items-center gap-1.5 rounded-xl border border-accent px-3"
             >
               <Icon name="user-plus" size={14} color={organic.accent.DEFAULT} />
-              <Text className="font-fig-med text-[13px] text-accent-700">{strings.note.share}</Text>
+              <Text className="font-fig-med text-13 text-accent-700">{strings.note.share}</Text>
             </Pressable>
 
             <IconButton
@@ -313,7 +313,7 @@ export default function NoteScreen() {
                 <NoteMeta note={note} />
                 {editor}
                 {!canEdit ? (
-                  <Text className="pt-4.5 font-fig text-[12px] text-neutral-600">
+                  <Text className="pt-4.5 font-fig text-12 text-neutral-600">
                     {strings.note.readOnly}
                   </Text>
                 ) : null}
@@ -380,7 +380,7 @@ export default function NoteScreen() {
               router.back();
             }}
           />
-          <Text className="font-fig text-[13px] text-neutral-700">
+          <Text className="font-fig text-13 text-neutral-700">
             {shell.notebooks.find((n) => n.id === note.notebookId)?.name ?? strings.list.title}
           </Text>
           <View className="ml-auto flex-row items-center gap-3">
@@ -409,14 +409,14 @@ export default function NoteScreen() {
           <View className="flex-row items-center gap-sm pb-2.5">
             <SaveState state={draft.state} />
             {editorName !== "" ? (
-              <Text className="font-fig text-[11.5px] text-neutral-600">
+              <Text className="font-fig text-11.5 text-neutral-600">
                 · {strings.note.editedBy(firstName(editorName), relative(note.updatedAt))}
               </Text>
             ) : null}
           </View>
           {editor}
           {!canEdit ? (
-            <Text className="pt-lg font-fig text-[12px] text-neutral-600">
+            <Text className="pt-lg font-fig text-12 text-neutral-600">
               {strings.note.readOnly}
             </Text>
           ) : null}
@@ -445,11 +445,11 @@ export default function NoteScreen() {
 function NoteMeta({ note }: { note: Note }) {
   return (
     <View className="flex-row items-center gap-2.25 pb-2.5">
-      <Text className="font-fig text-[11.5px] text-neutral-600">
+      <Text className="font-fig text-11.5 text-neutral-600">
         {strings.note.created(longDate(note.createdAt))}
       </Text>
-      <Text className="font-fig text-[11.5px] text-neutral-500">·</Text>
-      <Text className="font-fig text-[11.5px] text-neutral-600">
+      <Text className="font-fig text-11.5 text-neutral-500">·</Text>
+      <Text className="font-fig text-11.5 text-neutral-600">
         {strings.note.version(Number(note.version))}
       </Text>
     </View>
@@ -473,7 +473,7 @@ function SaveState({ state }: { state: string }) {
         size={14}
         color={failed ? organic.neutral[700] : organic.accent[600]}
       />
-      <Text className="font-fig text-[11.5px] text-neutral-700">{label}</Text>
+      <Text className="font-fig text-11.5 text-neutral-700">{label}</Text>
     </View>
   );
 }
@@ -484,8 +484,8 @@ function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOve
       className="gap-sm border-b border-neutral-300 px-5.5 py-3"
       style={{ backgroundColor: organic.accent[100] }}
     >
-      <Text className="font-fig-med text-[13px] text-accent-800">{strings.note.conflictTitle}</Text>
-      <Text className="font-fig text-[12.5px] leading-[19px] text-neutral-800">
+      <Text className="font-fig-med text-13 text-accent-800">{strings.note.conflictTitle}</Text>
+      <Text className="font-fig text-12.5 leading-[19px] text-neutral-800">
         {strings.note.conflictBody}
       </Text>
       <View className="flex-row gap-sm pt-0.5">
@@ -496,7 +496,7 @@ function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOve
           onPress={onOverwrite}
           className="rounded-xl border border-neutral-400 px-3.5 py-2.5"
         >
-          <Text className="font-fig-med text-[13px] text-neutral-900">
+          <Text className="font-fig-med text-13 text-neutral-900">
             {strings.note.conflictOverwrite}
           </Text>
         </Pressable>
@@ -544,7 +544,7 @@ function CommentsColumn({
             placeholderTextColor={organic.neutral[600]}
             accessibilityLabel={strings.note.addComment}
             onSubmitEditing={submit}
-            className="min-h-[54px] font-fig text-[12.5px] leading-[19px] text-fg"
+            className="min-h-[54px] font-fig text-12.5 leading-[19px] text-fg"
           />
           <View className="flex-row items-center gap-2.5">
             <Pressable
@@ -555,7 +555,7 @@ function CommentsColumn({
                 onCloseComposer();
               }}
             >
-              <Text className="font-fig text-[11.5px] text-neutral-700">{strings.common.cancel}</Text>
+              <Text className="font-fig text-11.5 text-neutral-700">{strings.common.cancel}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -566,7 +566,7 @@ function CommentsColumn({
               className="ml-auto"
             >
               <Text
-                className={`font-fig-med text-[11.5px] ${body.trim() === "" ? "text-neutral-600" : "text-accent-700"}`}
+                className={`font-fig-med text-11.5 ${body.trim() === "" ? "text-neutral-600" : "text-accent-700"}`}
               >
                 {strings.note.addComment}
               </Text>
@@ -610,8 +610,8 @@ function CommentThread({
             size={11}
             color={organic.neutral[600]}
           />
-          <Text className="font-fig text-[11.5px] text-neutral-700">{strings.note.resolved}</Text>
-          <Text className="font-fig text-[11.5px] text-neutral-600">{resolved.length}</Text>
+          <Text className="font-fig text-11.5 text-neutral-700">{strings.note.resolved}</Text>
+          <Text className="font-fig text-11.5 text-neutral-600">{resolved.length}</Text>
         </Pressable>
       ) : null}
 
@@ -633,12 +633,12 @@ function CommentCard({ comment, nameOf }: { comment: Comment; nameOf: (id: strin
     >
       <View className="flex-row items-center gap-1.75">
         <Avatar name={author} size={20} />
-        <Text className="font-fig-med text-[12px] text-fg">{firstName(author)}</Text>
-        <Text className="ml-auto font-fig text-[10.5px] text-neutral-600">
+        <Text className="font-fig-med text-12 text-fg">{firstName(author)}</Text>
+        <Text className="ml-auto font-fig text-10.5 text-neutral-600">
           {relative(comment.createdAt)}
         </Text>
       </View>
-      <Text className="font-fig text-[12.5px] leading-[19px] text-neutral-900">{comment.body}</Text>
+      <Text className="font-fig text-12.5 leading-[19px] text-neutral-900">{comment.body}</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={comment.resolved ? strings.note.resolved : strings.note.resolve}
@@ -646,7 +646,7 @@ function CommentCard({ comment, nameOf }: { comment: Comment; nameOf: (id: strin
         onPress={() => resolve.mutate({ commentId: comment.id, resolved: !comment.resolved })}
       >
         <Text
-          className={`font-fig text-[11.5px] ${comment.resolved ? "text-neutral-700" : "text-accent-700"}`}
+          className={`font-fig text-11.5 ${comment.resolved ? "text-neutral-700" : "text-accent-700"}`}
         >
           {comment.resolved ? strings.note.resolved : strings.note.resolve}
         </Text>
@@ -681,7 +681,7 @@ function StackedComments({
   return (
     <View className="gap-2.5 pt-xl">
       <Divider />
-      <Text className="font-fig-semi text-[10px] uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
+      <Text className="font-fig-semi text-10 uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
         {strings.note.comments}
       </Text>
       <CommentThread comments={rows} nameOf={nameOf} />
@@ -693,7 +693,7 @@ function StackedComments({
           placeholder={strings.note.commentPlaceholder}
           placeholderTextColor={organic.neutral[600]}
           accessibilityLabel={strings.note.addComment}
-          className="flex-1 rounded-xl border border-neutral-300 px-3 py-2.25 font-fig text-[13px] text-fg"
+          className="flex-1 rounded-xl border border-neutral-300 px-3 py-2.25 font-fig text-13 text-fg"
         />
         <IconButton
           icon="plus"
@@ -732,14 +732,14 @@ function EditorRail({
     >
       <RailHeading label={strings.note.inThisNote} />
       {headings.length === 0 ? (
-        <Text className="font-fig text-[12.5px] text-neutral-600">—</Text>
+        <Text className="font-fig text-12.5 text-neutral-600">—</Text>
       ) : (
         <View className="gap-1.75">
           {headings.map((heading, index) => (
             <Text
               key={heading.id}
               numberOfLines={1}
-              className={`font-fig text-[12.5px] ${index === 0 ? "text-accent-800" : "text-neutral-800"}`}
+              className={`font-fig text-12.5 ${index === 0 ? "text-accent-800" : "text-neutral-800"}`}
               style={{ paddingLeft: (heading.level - 1) * 10 }}
             >
               {heading.text}
@@ -752,12 +752,12 @@ function EditorRail({
       <RailHeading label={strings.note.activity} />
       <View className="gap-2.75">
         {(activity.data ?? []).length === 0 ? (
-          <Text className="font-fig text-[12px] text-neutral-600">{strings.activity.empty}</Text>
+          <Text className="font-fig text-12 text-neutral-600">{strings.activity.empty}</Text>
         ) : null}
         {(activity.data ?? []).map((entry) => (
           <View key={entry.id} className="flex-row gap-sm">
             <Avatar name={nameOf(entry.actorUserId)} size={18} />
-            <Text className="flex-1 font-fig text-[12px] leading-[18px] text-neutral-800">
+            <Text className="flex-1 font-fig text-12 leading-[18px] text-neutral-800">
               {sentenceFor(entry, nameOf)} · {relative(entry.createdAt)}
             </Text>
           </View>
@@ -769,10 +769,10 @@ function EditorRail({
       <View className="gap-2.25">
         <View className="flex-row items-center gap-sm">
           <Avatar name={nameOf(note.ownerUserId)} size={20} />
-          <Text className="shrink font-fig text-[12.5px] text-fg" numberOfLines={1}>
+          <Text className="shrink font-fig text-12.5 text-fg" numberOfLines={1}>
             {nameOf(note.ownerUserId)}
           </Text>
-          <Text className="ml-auto font-fig text-[11px] text-neutral-600">{strings.note.owner}</Text>
+          <Text className="ml-auto font-fig text-11 text-neutral-600">{strings.note.owner}</Text>
         </View>
         {note.shares.map((share) => (
           <View key={share.id} className="flex-row items-center gap-sm">
@@ -783,12 +783,12 @@ function EditorRail({
             ) : (
               <Avatar name={nameOf(share.memberUserId)} size={20} />
             )}
-            <Text className="shrink font-fig text-[12.5px] text-fg" numberOfLines={1}>
+            <Text className="shrink font-fig text-12.5 text-fg" numberOfLines={1}>
               {share.subject === ShareSubject.FAMILY
                 ? strings.share.wholeFamily
                 : nameOf(share.memberUserId)}
             </Text>
-            <Text className="ml-auto font-fig text-[11px] text-neutral-600">
+            <Text className="ml-auto font-fig text-11 text-neutral-600">
               {share.permission === SharePermission.EDIT ? strings.note.canEdit : strings.note.canView}
             </Text>
           </View>
@@ -802,7 +802,7 @@ function EditorRail({
           <View className="h-[20px] w-[20px] items-center justify-center rounded-full border border-dashed border-neutral-400">
             <Icon name="plus" size={10} color={organic.neutral[700]} />
           </View>
-          <Text className="font-fig text-[12.5px] text-neutral-700">{strings.note.share}</Text>
+          <Text className="font-fig text-12.5 text-neutral-700">{strings.note.share}</Text>
         </Pressable>
       </View>
     </View>
@@ -811,7 +811,7 @@ function EditorRail({
 
 function RailHeading({ label }: { label: string }) {
   return (
-    <Text className="font-fig-semi text-[10px] uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
+    <Text className="font-fig-semi text-10 uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
       {label}
     </Text>
   );

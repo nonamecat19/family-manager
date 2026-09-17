@@ -17,7 +17,7 @@ import { Icon, Avatar, iconOr, organic } from "@fm/ui";
 const COMPACT_FROM = 10_000;
 
 function EmptyLine({ label }: { label: string }) {
-  return <Text className="py-1.4 text-[11px] text-neutral-600">{label}</Text>;
+  return <Text className="py-1.4 text-11 text-neutral-600">{label}</Text>;
 }
 
 export function QuickAddPreview({
@@ -32,7 +32,7 @@ export function QuickAddPreview({
   return (
     <View>
       <View className="mb-2.8 flex-row items-center justify-between">
-        <Text className="text-[11px] font-fig-med text-neutral-600">{ownerLabel}</Text>
+        <Text className="text-11 font-fig-med text-neutral-600">{ownerLabel}</Text>
         <Icon name="arrow-clockwise" size={12} color={organic.neutral[600]} />
       </View>
       <View className="flex-row gap-2.1">
@@ -57,7 +57,7 @@ export function QuickAddPreview({
 }
 
 function Dash() {
-  return <Text className="text-[9.5px] text-neutral-600">—</Text>;
+  return <Text className="text-9.5 text-neutral-600">—</Text>;
 }
 
 function TemplateCell({
@@ -88,7 +88,7 @@ function TemplateCell({
         color={highlighted ? organic.accent[300] : organic.neutral[600]}
       />
       <Text
-        className={`mt-0.75 text-[9.5px] font-fig-med ${highlighted ? "text-accent-700" : "text-neutral-600"}`}
+        className={`mt-0.75 text-9.5 font-fig-med ${highlighted ? "text-accent-700" : "text-neutral-600"}`}
         numberOfLines={1}
       >
         {label}
@@ -118,10 +118,10 @@ export function MonthPreview({
         gap={1}
       />
       <View className="flex-1">
-        <Text className="text-[9.5px] text-neutral-600">{model.label}</Text>
+        <Text className="text-9.5 text-neutral-600">{model.label}</Text>
         <MoneyText value={model.total} size={15} className="mt-0.25" />
         {overspentLabel ? (
-          <Text className="mt-0.25 text-[9.5px] text-error">{overspentLabel}</Text>
+          <Text className="mt-0.25 text-9.5 text-error">{overspentLabel}</Text>
         ) : null}
       </View>
     </View>
@@ -140,7 +140,7 @@ export function CategoryPreview({
     <View className="flex-row items-center gap-2.1">
       <IconCircle icon={model.icon} index={model.index} size={28} />
       <View className="flex-1">
-        <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>
+        <Text className="text-9.5 text-neutral-600" numberOfLines={1}>
           {model.name}
         </Text>
         <MoneyText value={model.amount} size={13.5} className="mt-0.25" />
@@ -182,7 +182,7 @@ export function BudgetsAndFamilyPreview({
           {model.members.map((member, index) => (
             <View key={member.id} className="flex-row items-center gap-2.1">
               <Avatar name={member.name} index={index} size={20} />
-              <Text className="flex-1 text-[11px] text-neutral-600" numberOfLines={1}>
+              <Text className="flex-1 text-11 text-neutral-600" numberOfLines={1}>
                 {member.name}
               </Text>
               <WidgetAmount value={member.spent} size={11} />
@@ -208,7 +208,7 @@ export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; empt
               backgroundColor: seriesColor(index),
             }}
           />
-          <Text className="flex-1 text-[11.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="flex-1 text-11.5 text-neutral-600" numberOfLines={1}>
             {line.label}
           </Text>
           <MoneyText value={line.amount} size={11.5} />
@@ -230,7 +230,7 @@ export function AccountsPreview({
     <View className="flex-row gap-4.2">
       {model.accounts.map((account) => (
         <View key={account.id} className="flex-1">
-          <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="text-9.5 text-neutral-600" numberOfLines={1}>
             {account.name}
           </Text>
           <WidgetAmount
