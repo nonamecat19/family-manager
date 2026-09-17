@@ -14,6 +14,7 @@ use (
 	./services/finance
 	./services/notifications
 	./services/recipes
+	./services/tasks
 	./services/telegram
 )
 
