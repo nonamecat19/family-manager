@@ -24,6 +24,7 @@ decision gets a new ADR that supersedes the old one, and the old one's status ch
 | [0015](0015-prometheus-metrics.md) | Prometheus metrics from `rpc.Observe`, scraped off the internal listener | accepted |
 | [0016](0016-notifications-service.md) | `services/notifications` turns domain events into Expo pushes; mute list per user | accepted |
 | [0017](0017-terminal-client.md) | `apps/tui`: a Go + Bubble Tea terminal client, `fm`, that signs in with a device code | accepted |
+| [0018](0018-capture-data-at-rest.md) | Seal and limit retention of captured bank notifications | proposed |
 
 Write a new ADR when a change would displace a row in [../stack.md](../stack.md), add a
 container to `docker-compose.yml`, or alter a boundary rule in
