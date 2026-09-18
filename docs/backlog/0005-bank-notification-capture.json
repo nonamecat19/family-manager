@@ -35,9 +35,9 @@
         "c1"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "d91bd62",
       "blocked_reason": null,
       "id": "c2",
       "title": "Generate capture.v1 stubs into sdk/go and sdk/typescript",
@@ -990,5 +990,5 @@
       "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
     }
   ],
-  "updated_at": "2026-10-06T08:16:32.537Z"
+  "updated_at": "2026-10-06T08:19:53.405Z"
 }
