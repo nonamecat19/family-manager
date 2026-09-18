@@ -60,3 +60,20 @@ and "Connect Google Calendar" answers FailedPrecondition.
 
 Create the bot with @BotFather and add `TELEGRAM_TASKS_TOKEN=<id>:<secret>` to the repo-root
 `.env` (never committed). Nothing depends on it: the e2e suite uses the tgemu fake token.
+
+## E6 — 0003/u25: register services/tasks in go.work (open, gate: workspace change)
+
+`services/tasks` builds and tests with `GOWORK=off` (its go.mod carries the same replace block as
+finance). Adding `use ./services/tasks` to `go.work` makes `just check-go`, `just lint-go` and the
+knowledge graph pick it up; gate-check treats any go.work edit as a workspace-wide change.
+
+To unblock: approve here ("u25: approved") and run `/escalations`, or add the line yourself and
+run `go work sync`. Units u06 (Dockerfile) and the final g1 verify depend on it.
+
+## E7 — 0003/u07: tasks schema ships without a down migration (open, informational)
+
+gate-check stops any `DROP`, including a `.down.sql` that only drops the tables the same unit
+creates. The migration runner never executes down files (`libs/go/database/migrate.go`
+`LoadMigrations` skips them), so u07 ships `000001_init.up.sql` alone; rolling back a fresh
+`tasks` database is `DROP DATABASE tasks`. If you want down files kept for parity with finance,
+answer "u07: add down" and the drop list will be added as a human-approved commit.

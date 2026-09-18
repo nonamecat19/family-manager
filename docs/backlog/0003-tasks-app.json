@@ -102,9 +102,9 @@
         "u02"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "e6a105d",
       "blocked_reason": null,
       "id": "u05",
       "title": "Scaffold services/tasks module: go.mod with replaces, viper config, server main",
@@ -142,7 +142,6 @@
       ],
       "files": [
         "services/tasks/internal/db/migrations/000001_init.up.sql",
-        "services/tasks/internal/db/migrations/000001_init.down.sql",
         "services/tasks/internal/db/embed.go",
         "services/tasks/internal/db/embed_test.go",
         "services/tasks/go.mod"
@@ -152,7 +151,7 @@
       ],
       "gate": "auto",
       "status": "todo",
-      "attempts": 0,
+      "attempts": 1,
       "commit": null,
       "blocked_reason": null,
       "id": "u07",
@@ -588,10 +587,10 @@
         "u05"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate: go.work edit is a workspace-wide dependency change (gate-check STOP)",
       "id": "u25",
       "title": "Register services/tasks in go.work",
       "kind": "infra",
@@ -1287,5 +1286,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:43:12.263Z"
+  "updated_at": "2026-10-05T19:47:27.802Z"
 }
