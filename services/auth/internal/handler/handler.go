@@ -36,8 +36,13 @@ type FamilyLookup interface {
 	LocaleOf(ctx context.Context, userID string) (locale string, err error)
 }
 
+type Tx interface {
+	InTx(ctx context.Context, fn func(q db.Querier) error) error
+}
+
 type Handler struct {
 	q          db.Querier
+	tx         Tx
 	signer     Signer
 	family     FamilyLookup
 	log        *slog.Logger
@@ -50,6 +55,7 @@ type Handler struct {
 
 type Options struct {
 	Queries    db.Querier
+	Tx         Tx
 	Signer     Signer
 	Family     FamilyLookup
 	Log        *slog.Logger
@@ -63,6 +69,7 @@ type Options struct {
 func New(opts Options) *Handler {
 	h := &Handler{
 		q:          opts.Queries,
+		tx:         opts.Tx,
 		signer:     opts.Signer,
 		family:     opts.Family,
 		log:        opts.Log,
@@ -84,8 +91,15 @@ func New(opts Options) *Handler {
 	if h.now == nil {
 		h.now = time.Now
 	}
+	if h.tx == nil {
+		h.tx = withoutTx{h.q}
+	}
 	return h
 }
+
+type withoutTx struct{ q db.Querier }
+
+func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
 const minPasswordLength = 8
 
@@ -183,7 +197,7 @@ func (h *Handler) Login(
 		return nil, h.internal(ctx, err, "generate chain id")
 	}
 
-	tokens, err := h.mintSession(ctx, user, chainID)
+	tokens, err := h.mintSession(ctx, user, chainID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +229,9 @@ func (h *Handler) Refresh(
 		return nil, errInvalidRefresh()
 	}
 	if row.UsedAt.Valid {
-		if _, err := h.q.RevokeChain(ctx, row.ChainID); err != nil {
+		if err := h.tx.InTx(ctx, func(q db.Querier) error {
+			return revokeChain(ctx, q, row.ChainID)
+		}); err != nil {
 			h.log.ErrorContext(ctx, "revoke chain after replay",
 				slog.String("error", err.Error()))
 		}
@@ -243,7 +259,7 @@ func (h *Handler) Refresh(
 		return nil, h.internal(ctx, err, "get user")
 	}
 
-	tokens, err := h.mintSession(ctx, user, row.ChainID)
+	tokens, err := h.mintSession(ctx, user, row.ChainID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +287,9 @@ func (h *Handler) Logout(
 		return nil, h.internal(ctx, err, "get refresh token")
 	}
 
-	if _, err := h.q.RevokeChain(ctx, row.ChainID); err != nil {
+	if err := h.tx.InTx(ctx, func(q db.Querier) error {
+		return revokeChain(ctx, q, row.ChainID)
+	}); err != nil {
 		return nil, h.internal(ctx, err, "revoke chain")
 	}
 	return connect.NewResponse(&authv1.LogoutResponse{}), nil
@@ -283,7 +301,9 @@ type session struct {
 	expiresIn int64
 }
 
-func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.UUID) (session, error) {
+func (h *Handler) mintSession(
+	ctx context.Context, user db.User, chainID pgtype.UUID, fresh bool,
+) (session, error) {
 	userID := pgconv.UUIDString(user.ID)
 	familyID := h.familyOf(ctx, userID)
 	locale := h.localeOf(ctx, userID)
@@ -303,14 +323,34 @@ func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.
 		return session{}, h.internal(ctx, err, "generate refresh token")
 	}
 
-	if _, err := h.q.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
-		UserID:    user.ID,
-		TokenHash: hashToken(refresh),
-		ChainID:   chainID,
-		ExpiresAt: pgconv.TimestampFrom(h.now().Add(h.refreshTTL)),
-	}); err != nil {
+	err = h.tx.InTx(ctx, func(q db.Querier) error {
+		revokedAt, err := lockChain(ctx, q, chainID, fresh)
 		if errors.Is(err, pgx.ErrNoRows) {
-			return session{}, errInvalidRefresh()
+			return errInvalidRefresh()
+		}
+		if err != nil {
+			return err
+		}
+		if revokedAt.Valid {
+			return errInvalidRefresh()
+		}
+		if _, err := q.CreateRefreshToken(ctx, db.CreateRefreshTokenParams{
+			UserID:    user.ID,
+			TokenHash: hashToken(refresh),
+			ChainID:   chainID,
+			ExpiresAt: pgconv.TimestampFrom(h.now().Add(h.refreshTTL)),
+		}); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return errInvalidRefresh()
+			}
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		var cerr *connect.Error
+		if errors.As(err, &cerr) {
+			return session{}, err
 		}
 		return session{}, h.internal(ctx, err, "store refresh token")
 	}

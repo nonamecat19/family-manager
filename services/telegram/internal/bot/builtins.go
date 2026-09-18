@@ -45,7 +45,7 @@ func builtinCallbacks() []Callback {
 func start(ctx context.Context, c *Context) error {
 	payload := strings.TrimSpace(c.Args)
 	if payload == "" {
-		if s, err := c.Bot.sessions.Session(ctx, c.Bot.name, c.From.ID); err == nil {
+		if s, err := c.Bot.sessions.Session(ctx, c.From.ID); err == nil {
 			c.session = s
 			c.locale = i18n.Match(s.Locale)
 			return c.Bot.welcome(ctx, c, c.T(i18n.LinkedAlready))
@@ -53,13 +53,20 @@ func start(ctx context.Context, c *Context) error {
 		return c.Reply(ctx, c.Bot.linkPrompt(c.Locale()))
 	}
 
-	s, err := c.Bot.sessions.Redeem(ctx, c.Bot.name, payload, c.From, c.Chat)
+	s, err := c.Bot.sessions.Redeem(ctx, payload, c.From, c.Chat)
 	if err != nil {
 		if errors.Is(err, session.ErrLinkAgain) {
 			return c.Reply(ctx, Lines(
 				Bold(c.T(i18n.LinkSpent)),
 				"",
 				Esc(c.T(i18n.LinkSpentAgain)),
+			))
+		}
+		if errors.Is(err, session.ErrTaken) {
+			return c.Reply(ctx, Lines(
+				Bold(c.T(i18n.LinkTaken)),
+				"",
+				Esc(c.T(i18n.LinkTakenBody)),
 			))
 		}
 		return err
@@ -82,7 +89,7 @@ func (b *Bot) welcome(ctx context.Context, c *Context, headline string) error {
 }
 
 func unlink(ctx context.Context, c *Context) error {
-	switch err := c.Bot.sessions.Unlink(ctx, c.Bot.name, c.From.ID); {
+	switch err := c.Bot.sessions.Unlink(ctx, c.From.ID); {
 	case errors.Is(err, session.ErrNotLinked):
 		return c.Reply(ctx, c.T(i18n.UnlinkNothing))
 	case err != nil:

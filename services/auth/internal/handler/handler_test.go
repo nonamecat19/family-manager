@@ -38,6 +38,7 @@ func newFixture(t *testing.T) *fixture {
 	return &fixture{
 		h: New(Options{
 			Queries:    store,
+			Tx:         store,
 			Signer:     signer,
 			Family:     fam,
 			HashParams: params,

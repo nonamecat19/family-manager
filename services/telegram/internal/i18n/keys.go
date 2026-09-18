@@ -5,6 +5,8 @@ const (
 	LinkBody       Key = "link.body"
 	LinkSpent      Key = "link.spent.title"
 	LinkSpentAgain Key = "link.spent.body"
+	LinkTaken      Key = "link.taken.title"
+	LinkTakenBody  Key = "link.taken.body"
 	LinkedTitle    Key = "link.connected"
 	LinkedAlready  Key = "link.already"
 	Unlinked       Key = "unlink.title"

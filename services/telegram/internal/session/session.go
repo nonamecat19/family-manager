@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"connectrpc.com/connect"
@@ -29,6 +30,7 @@ const (
 var (
 	ErrNotLinked = errors.New("session: this telegram account is not linked")
 	ErrLinkAgain = errors.New("session: the link expired; start over from the app")
+	ErrTaken     = errors.New("session: this telegram account is linked to another user")
 )
 
 type Session struct {
@@ -38,10 +40,11 @@ type Session struct {
 }
 
 type Store struct {
-	q    db.Querier
-	box  *secret.Box
-	auth authv1connect.AuthServiceClient
-	now  func() time.Time
+	q     db.Querier
+	box   *secret.Box
+	auth  authv1connect.AuthServiceClient
+	now   func() time.Time
+	locks sync.Map
 }
 
 type Options struct {
@@ -60,7 +63,7 @@ func NewStore(opts Options) *Store {
 }
 
 func (s *Store) Redeem(
-	ctx context.Context, bot, linkToken string, from telegram.User, chatID int64,
+	ctx context.Context, linkToken string, from telegram.User, chatID int64,
 ) (*Session, error) {
 	res, err := s.auth.RedeemLinkToken(ctx, connect.NewRequest(&authv1.RedeemLinkTokenRequest{
 		Token:      linkToken,
@@ -68,8 +71,11 @@ func (s *Store) Redeem(
 		ExternalId: fmt.Sprint(from.ID),
 	}))
 	if err != nil {
-		if connect.CodeOf(err) == connect.CodeUnauthenticated {
+		switch connect.CodeOf(err) {
+		case connect.CodeUnauthenticated:
 			return nil, ErrLinkAgain
+		case connect.CodeAlreadyExists:
+			return nil, ErrTaken
 		}
 		return nil, fmt.Errorf("session: redeem link token: %w", err)
 	}
@@ -94,7 +100,6 @@ func (s *Store) Redeem(
 	}
 
 	if _, err := s.q.UpsertLink(ctx, db.UpsertLinkParams{
-		Bot:              bot,
 		TelegramUserID:   from.ID,
 		UserID:           userID,
 		TelegramUsername: username,
@@ -109,24 +114,44 @@ func (s *Store) Redeem(
 	return newSession(res.Msg.GetUserId(), res.Msg.GetAccessToken()), nil
 }
 
-func (s *Store) Session(ctx context.Context, bot string, telegramUserID int64) (*Session, error) {
-	link, err := s.q.GetLink(ctx, db.GetLinkParams{Bot: bot, TelegramUserID: telegramUserID})
+func (s *Store) Session(ctx context.Context, telegramUserID int64) (*Session, error) {
+	if current, _, err := s.cached(ctx, telegramUserID); err != nil || current != nil {
+		return current, err
+	}
+
+	mu := s.lockFor(telegramUserID)
+	mu.Lock()
+	defer mu.Unlock()
+
+	current, link, err := s.cached(ctx, telegramUserID)
+	if err != nil || current != nil {
+		return current, err
+	}
+	return s.refresh(ctx, *link)
+}
+
+func (s *Store) cached(ctx context.Context, telegramUserID int64) (*Session, *db.TelegramLink, error) {
+	link, err := s.q.GetLink(ctx, telegramUserID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotLinked
+			return nil, nil, ErrNotLinked
 		}
-		return nil, fmt.Errorf("session: get link: %w", err)
+		return nil, nil, fmt.Errorf("session: get link: %w", err)
 	}
 
 	if link.AccessExpiresAt.Valid && link.AccessExpiresAt.Time.After(s.now().Add(refreshSkew)) {
 		access, err := s.box.Open(link.AccessToken)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return newSession(pgconv.UUIDString(link.UserID), access), nil
+		return newSession(pgconv.UUIDString(link.UserID), access), &link, nil
 	}
+	return nil, &link, nil
+}
 
-	return s.refresh(ctx, link)
+func (s *Store) lockFor(telegramUserID int64) *sync.Mutex {
+	mu, _ := s.locks.LoadOrStore(telegramUserID, &sync.Mutex{})
+	return mu.(*sync.Mutex)
 }
 
 func (s *Store) refresh(ctx context.Context, link db.TelegramLink) (*Session, error) {
@@ -140,8 +165,9 @@ func (s *Store) refresh(ctx context.Context, link db.TelegramLink) (*Session, er
 	}))
 	if err != nil {
 		if connect.CodeOf(err) == connect.CodeUnauthenticated {
-			if _, delErr := s.q.DeleteLink(ctx, db.DeleteLinkParams{
-				Bot: link.Bot, TelegramUserID: link.TelegramUserID,
+			if _, delErr := s.q.DeleteLinkWithToken(ctx, db.DeleteLinkWithTokenParams{
+				TelegramUserID: link.TelegramUserID,
+				RefreshToken:   link.RefreshToken,
 			}); delErr != nil {
 				return nil, fmt.Errorf("session: drop dead link: %w", delErr)
 			}
@@ -159,23 +185,25 @@ func (s *Store) refresh(ctx context.Context, link db.TelegramLink) (*Session, er
 		return nil, err
 	}
 
-	if _, err := s.q.UpdateLinkTokens(ctx, db.UpdateLinkTokensParams{
-		Bot:             link.Bot,
-		TelegramUserID:  link.TelegramUserID,
-		AccessToken:     access,
-		AccessExpiresAt: pgconv.TimestampFrom(s.expiry(res.Msg.GetExpiresIn())),
-		RefreshToken:    refresh,
-	}); err != nil {
+	stored, err := s.q.UpdateLinkTokens(ctx, db.UpdateLinkTokensParams{
+		TelegramUserID:       link.TelegramUserID,
+		PreviousRefreshToken: link.RefreshToken,
+		AccessToken:          access,
+		AccessExpiresAt:      pgconv.TimestampFrom(s.expiry(res.Msg.GetExpiresIn())),
+		RefreshToken:         refresh,
+	})
+	if err != nil {
 		return nil, fmt.Errorf("session: store refreshed tokens: %w", err)
+	}
+	if stored == 0 {
+		return nil, ErrLinkAgain
 	}
 
 	return newSession(pgconv.UUIDString(link.UserID), res.Msg.GetAccessToken()), nil
 }
 
-func (s *Store) ExpireAccess(ctx context.Context, bot string, telegramUserID int64) error {
-	if _, err := s.q.ExpireLinkAccess(ctx, db.ExpireLinkAccessParams{
-		Bot: bot, TelegramUserID: telegramUserID,
-	}); err != nil {
+func (s *Store) ExpireAccess(ctx context.Context, telegramUserID int64) error {
+	if _, err := s.q.ExpireLinkAccess(ctx, telegramUserID); err != nil {
 		return fmt.Errorf("session: expire access token: %w", err)
 	}
 	return nil
@@ -207,25 +235,32 @@ func localeFromToken(accessToken string) string {
 	return claims.Locale
 }
 
-func (s *Store) Unlink(ctx context.Context, bot string, telegramUserID int64) error {
-	link, err := s.q.GetLink(ctx, db.GetLinkParams{Bot: bot, TelegramUserID: telegramUserID})
+func (s *Store) Unlink(ctx context.Context, telegramUserID int64) error {
+	current, err := s.Session(ctx, telegramUserID)
+	switch {
+	case errors.Is(err, ErrNotLinked):
+		return ErrNotLinked
+	case errors.Is(err, ErrLinkAgain):
+		return nil
+	case err != nil:
+		return err
+	}
+
+	req := connect.NewRequest(&authv1.UnlinkRequest{
+		Provider:   provider,
+		ExternalId: fmt.Sprint(telegramUserID),
+	})
+	req.Header().Set("Authorization", "Bearer "+current.AccessToken)
+	if _, err := s.auth.Unlink(ctx, req); err != nil && connect.CodeOf(err) != connect.CodeNotFound {
+		return fmt.Errorf("session: unlink: %w", err)
+	}
+
+	userID, err := pgconv.UUID(current.UserID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrNotLinked
-		}
-		return fmt.Errorf("session: get link: %w", err)
+		return fmt.Errorf("session: malformed user id: %w", err)
 	}
-
-	if presented, err := s.box.Open(link.RefreshToken); err == nil {
-		if _, err := s.auth.Logout(ctx, connect.NewRequest(&authv1.LogoutRequest{
-			RefreshToken: presented,
-		})); err != nil {
-			return fmt.Errorf("session: logout: %w", err)
-		}
-	}
-
-	if _, err := s.q.DeleteLink(ctx, db.DeleteLinkParams{
-		Bot: bot, TelegramUserID: telegramUserID,
+	if _, err := s.q.DeleteLinkForUser(ctx, db.DeleteLinkForUserParams{
+		TelegramUserID: telegramUserID, UserID: userID,
 	}); err != nil {
 		return fmt.Errorf("session: delete link: %w", err)
 	}

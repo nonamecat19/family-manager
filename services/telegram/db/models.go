@@ -24,7 +24,6 @@ type ChatState struct {
 }
 
 type TelegramLink struct {
-	Bot              string
 	TelegramUserID   int64
 	UserID           pgtype.UUID
 	TelegramUsername string

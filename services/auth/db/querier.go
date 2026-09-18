@@ -16,14 +16,23 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
+	DeleteIdentity(ctx context.Context, arg DeleteIdentityParams) (Identity, error)
+	DeleteOrphanChains(ctx context.Context) (int64, error)
+	EnsureChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
+	GetIdentity(ctx context.Context, arg GetIdentityParams) (Identity, error)
 	GetLinkToken(ctx context.Context, tokenHash string) (LinkToken, error)
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
+	ListIdentitiesForUser(ctx context.Context, userID pgtype.UUID) ([]Identity, error)
+	LockChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
+	LockIdentityKey(ctx context.Context, key string) error
 	MarkLinkTokenUsed(ctx context.Context, arg MarkLinkTokenUsedParams) (int64, error)
 	MarkRefreshTokenUsed(ctx context.Context, id pgtype.UUID) (int64, error)
 	RevokeAllForUser(ctx context.Context, userID pgtype.UUID) (int64, error)
 	RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error)
+	TombstoneChain(ctx context.Context, id pgtype.UUID) error
+	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) (Identity, error)
 }
 
 var _ Querier = (*Queries)(nil)

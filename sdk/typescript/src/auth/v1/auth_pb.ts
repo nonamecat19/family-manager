@@ -4,13 +4,15 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file auth/v1/auth.proto.
  */
 export const file_auth_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiLwoMTG9naW5SZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIlAKDUxvZ2luUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyJACg9SZWdpc3RlclJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCSIjChBSZWdpc3RlclJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkiJwoOUmVmcmVzaFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSJSCg9SZWZyZXNoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyImCg1Mb2dvdXRSZXF1ZXN0EhUKDXJlZnJlc2hfdG9rZW4YASABKAkiEAoOTG9nb3V0UmVzcG9uc2UiKgoWQ3JlYXRlTGlua1Rva2VuUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCSI8ChdDcmVhdGVMaW5rVG9rZW5SZXNwb25zZRINCgV0b2tlbhgBIAEoCRISCgpleHBpcmVzX2luGAIgASgDIk4KFlJlZGVlbUxpbmtUb2tlblJlcXVlc3QSDQoFdG9rZW4YASABKAkSEAoIcHJvdmlkZXIYAiABKAkSEwoLZXh0ZXJuYWxfaWQYAyABKAkiawoXUmVkZWVtTGlua1Rva2VuUmVzcG9uc2USDwoHdXNlcl9pZBgBIAEoCRIUCgxhY2Nlc3NfdG9rZW4YAiABKAkSFQoNcmVmcmVzaF90b2tlbhgDIAEoCRISCgpleHBpcmVzX2luGAQgASgDMqsDCgtBdXRoU2VydmljZRI2CgVMb2dpbhIVLmF1dGgudjEuTG9naW5SZXF1ZXN0GhYuYXV0aC52MS5Mb2dpblJlc3BvbnNlEj8KCFJlZ2lzdGVyEhguYXV0aC52MS5SZWdpc3RlclJlcXVlc3QaGS5hdXRoLnYxLlJlZ2lzdGVyUmVzcG9uc2USPAoHUmVmcmVzaBIXLmF1dGgudjEuUmVmcmVzaFJlcXVlc3QaGC5hdXRoLnYxLlJlZnJlc2hSZXNwb25zZRI5CgZMb2dvdXQSFi5hdXRoLnYxLkxvZ291dFJlcXVlc3QaFy5hdXRoLnYxLkxvZ291dFJlc3BvbnNlElQKD0NyZWF0ZUxpbmtUb2tlbhIfLmF1dGgudjEuQ3JlYXRlTGlua1Rva2VuUmVxdWVzdBogLmF1dGgudjEuQ3JlYXRlTGlua1Rva2VuUmVzcG9uc2USVAoPUmVkZWVtTGlua1Rva2VuEh8uYXV0aC52MS5SZWRlZW1MaW5rVG9rZW5SZXF1ZXN0GiAuYXV0aC52MS5SZWRlZW1MaW5rVG9rZW5SZXNwb25zZUKKAQoLY29tLmF1dGgudjFCCUF1dGhQcm90b1ABWjNnaXRodWIuY29tL25uYy9mYW1pbHktbWFuYWdlci9zZGsvZ28vYXV0aC92MTthdXRodjGiAgNBWFiqAgdBdXRoLlYxygIHQXV0aFxWMeICE0F1dGhcVjFcR1BCTWV0YWRhdGHqAghBdXRoOjpWMWIGcHJvdG8z");
+  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiLwoMTG9naW5SZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIlAKDUxvZ2luUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyJACg9SZWdpc3RlclJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCSIjChBSZWdpc3RlclJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkiJwoOUmVmcmVzaFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSJSCg9SZWZyZXNoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyImCg1Mb2dvdXRSZXF1ZXN0EhUKDXJlZnJlc2hfdG9rZW4YASABKAkiEAoOTG9nb3V0UmVzcG9uc2UiKgoWQ3JlYXRlTGlua1Rva2VuUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCSI8ChdDcmVhdGVMaW5rVG9rZW5SZXNwb25zZRINCgV0b2tlbhgBIAEoCRISCgpleHBpcmVzX2luGAIgASgDIk4KFlJlZGVlbUxpbmtUb2tlblJlcXVlc3QSDQoFdG9rZW4YASABKAkSEAoIcHJvdmlkZXIYAiABKAkSEwoLZXh0ZXJuYWxfaWQYAyABKAkiawoXUmVkZWVtTGlua1Rva2VuUmVzcG9uc2USDwoHdXNlcl9pZBgBIAEoCRIUCgxhY2Nlc3NfdG9rZW4YAiABKAkSFQoNcmVmcmVzaF90b2tlbhgDIAEoCRISCgpleHBpcmVzX2luGAQgASgDImAKCElkZW50aXR5EhAKCHByb3ZpZGVyGAEgASgJEhMKC2V4dGVybmFsX2lkGAIgASgJEi0KCWxpbmtlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiFwoVTGlzdElkZW50aXRpZXNSZXF1ZXN0Ij8KFkxpc3RJZGVudGl0aWVzUmVzcG9uc2USJQoKaWRlbnRpdGllcxgBIAMoCzIRLmF1dGgudjEuSWRlbnRpdHkiNgoNVW5saW5rUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCRITCgtleHRlcm5hbF9pZBgCIAEoCSIQCg5VbmxpbmtSZXNwb25zZTK5BAoLQXV0aFNlcnZpY2USNgoFTG9naW4SFS5hdXRoLnYxLkxvZ2luUmVxdWVzdBoWLmF1dGgudjEuTG9naW5SZXNwb25zZRI/CghSZWdpc3RlchIYLmF1dGgudjEuUmVnaXN0ZXJSZXF1ZXN0GhkuYXV0aC52MS5SZWdpc3RlclJlc3BvbnNlEjwKB1JlZnJlc2gSFy5hdXRoLnYxLlJlZnJlc2hSZXF1ZXN0GhguYXV0aC52MS5SZWZyZXNoUmVzcG9uc2USOQoGTG9nb3V0EhYuYXV0aC52MS5Mb2dvdXRSZXF1ZXN0GhcuYXV0aC52MS5Mb2dvdXRSZXNwb25zZRJUCg9DcmVhdGVMaW5rVG9rZW4SHy5hdXRoLnYxLkNyZWF0ZUxpbmtUb2tlblJlcXVlc3QaIC5hdXRoLnYxLkNyZWF0ZUxpbmtUb2tlblJlc3BvbnNlElQKD1JlZGVlbUxpbmtUb2tlbhIfLmF1dGgudjEuUmVkZWVtTGlua1Rva2VuUmVxdWVzdBogLmF1dGgudjEuUmVkZWVtTGlua1Rva2VuUmVzcG9uc2USUQoOTGlzdElkZW50aXRpZXMSHi5hdXRoLnYxLkxpc3RJZGVudGl0aWVzUmVxdWVzdBofLmF1dGgudjEuTGlzdElkZW50aXRpZXNSZXNwb25zZRI5CgZVbmxpbmsSFi5hdXRoLnYxLlVubGlua1JlcXVlc3QaFy5hdXRoLnYxLlVubGlua1Jlc3BvbnNlQooBCgtjb20uYXV0aC52MUIJQXV0aFByb3RvUAFaM2dpdGh1Yi5jb20vbm5jL2ZhbWlseS1tYW5hZ2VyL3Nkay9nby9hdXRoL3YxO2F1dGh2MaICA0FYWKoCB0F1dGguVjHKAgdBdXRoXFYx4gITQXV0aFxWMVxHUEJNZXRhZGF0YeoCCEF1dGg6OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message auth.v1.LoginRequest
@@ -278,6 +280,98 @@ export const RedeemLinkTokenResponseSchema: GenMessage<RedeemLinkTokenResponse> 
   messageDesc(file_auth_v1_auth, 11);
 
 /**
+ * @generated from message auth.v1.Identity
+ */
+export type Identity = Message<"auth.v1.Identity"> & {
+  /**
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string external_id = 2;
+   */
+  externalId: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp linked_at = 3;
+   */
+  linkedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message auth.v1.Identity.
+ * Use `create(IdentitySchema)` to create a new message.
+ */
+export const IdentitySchema: GenMessage<Identity> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 12);
+
+/**
+ * @generated from message auth.v1.ListIdentitiesRequest
+ */
+export type ListIdentitiesRequest = Message<"auth.v1.ListIdentitiesRequest"> & {
+};
+
+/**
+ * Describes the message auth.v1.ListIdentitiesRequest.
+ * Use `create(ListIdentitiesRequestSchema)` to create a new message.
+ */
+export const ListIdentitiesRequestSchema: GenMessage<ListIdentitiesRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 13);
+
+/**
+ * @generated from message auth.v1.ListIdentitiesResponse
+ */
+export type ListIdentitiesResponse = Message<"auth.v1.ListIdentitiesResponse"> & {
+  /**
+   * @generated from field: repeated auth.v1.Identity identities = 1;
+   */
+  identities: Identity[];
+};
+
+/**
+ * Describes the message auth.v1.ListIdentitiesResponse.
+ * Use `create(ListIdentitiesResponseSchema)` to create a new message.
+ */
+export const ListIdentitiesResponseSchema: GenMessage<ListIdentitiesResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 14);
+
+/**
+ * @generated from message auth.v1.UnlinkRequest
+ */
+export type UnlinkRequest = Message<"auth.v1.UnlinkRequest"> & {
+  /**
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string external_id = 2;
+   */
+  externalId: string;
+};
+
+/**
+ * Describes the message auth.v1.UnlinkRequest.
+ * Use `create(UnlinkRequestSchema)` to create a new message.
+ */
+export const UnlinkRequestSchema: GenMessage<UnlinkRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 15);
+
+/**
+ * @generated from message auth.v1.UnlinkResponse
+ */
+export type UnlinkResponse = Message<"auth.v1.UnlinkResponse"> & {
+};
+
+/**
+ * Describes the message auth.v1.UnlinkResponse.
+ * Use `create(UnlinkResponseSchema)` to create a new message.
+ */
+export const UnlinkResponseSchema: GenMessage<UnlinkResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 16);
+
+/**
  * @generated from service auth.v1.AuthService
  */
 export const AuthService: GenService<{
@@ -328,6 +422,22 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof RedeemLinkTokenRequestSchema;
     output: typeof RedeemLinkTokenResponseSchema;
+  },
+  /**
+   * @generated from rpc auth.v1.AuthService.ListIdentities
+   */
+  listIdentities: {
+    methodKind: "unary";
+    input: typeof ListIdentitiesRequestSchema;
+    output: typeof ListIdentitiesResponseSchema;
+  },
+  /**
+   * @generated from rpc auth.v1.AuthService.Unlink
+   */
+  unlink: {
+    methodKind: "unary";
+    input: typeof UnlinkRequestSchema;
+    output: typeof UnlinkResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_auth_v1_auth, 0);

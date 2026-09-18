@@ -19,6 +19,7 @@ decision gets a new ADR that supersedes the old one, and the old one's status ch
 | [0010](0010-telegram-bots.md) | One Go service hosting one Telegram bot per app | accepted |
 | [0011](0011-user-settings.md) | Per-user settings owned by `services/family`, locale on the token | accepted |
 | [0012](0012-notes-connect-java.md) | `services/notes` serves `notes.v1` over Connect from Spring | accepted |
+| [0013](0013-linked-identities.md) | Linked identities live in `services/auth`; one Telegram link covers every bot | accepted |
 
 Write a new ADR when a change would displace a row in [../stack.md](../stack.md), add a
 container to `docker-compose.yml`, or alter a boundary rule in

@@ -104,6 +104,10 @@ func TestAuthProceduresAreRegistered(t *testing.T) {
 		authv1connect.AuthServiceRegisterProcedure,
 		authv1connect.AuthServiceRefreshProcedure,
 		authv1connect.AuthServiceLogoutProcedure,
+		authv1connect.AuthServiceCreateLinkTokenProcedure,
+		authv1connect.AuthServiceRedeemLinkTokenProcedure,
+		authv1connect.AuthServiceListIdentitiesProcedure,
+		authv1connect.AuthServiceUnlinkProcedure,
 	} {
 		_, pattern := mux.Handler(httptest.NewRequest(http.MethodPost, procedure, nil))
 		if pattern == "" {
@@ -149,6 +153,10 @@ func (c *countingSweeper) DeleteExpiredRefreshTokens(context.Context) (int64, er
 }
 
 func (c *countingSweeper) DeleteExpiredLinkTokens(context.Context) (int64, error) {
+	return 1, c.err
+}
+
+func (c *countingSweeper) DeleteOrphanChains(context.Context) (int64, error) {
 	return 1, c.err
 }
 

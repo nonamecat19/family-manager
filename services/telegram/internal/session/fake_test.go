@@ -1,11 +1,13 @@
 package session
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,6 +23,7 @@ import (
 const testUserID = "6f1b9d3e-0d3a-4c19-9a2f-2f9a6a3d5c11"
 
 type fakeQueries struct {
+	mu      sync.Mutex
 	links   map[string]db.TelegramLink
 	deleted []string
 	offsets map[string]int64
@@ -30,11 +33,12 @@ func newFakeQueries() *fakeQueries {
 	return &fakeQueries{links: map[string]db.TelegramLink{}, offsets: map[string]int64{}}
 }
 
-func key(bot string, id int64) string { return bot + ":" + strconv.FormatInt(id, 10) }
+func key(id int64) string { return strconv.FormatInt(id, 10) }
 
 func (f *fakeQueries) UpsertLink(_ context.Context, arg db.UpsertLinkParams) (db.TelegramLink, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	link := db.TelegramLink{
-		Bot:              arg.Bot,
 		TelegramUserID:   arg.TelegramUserID,
 		UserID:           arg.UserID,
 		TelegramUsername: arg.TelegramUsername,
@@ -43,12 +47,14 @@ func (f *fakeQueries) UpsertLink(_ context.Context, arg db.UpsertLinkParams) (db
 		AccessExpiresAt:  arg.AccessExpiresAt,
 		RefreshToken:     arg.RefreshToken,
 	}
-	f.links[key(arg.Bot, arg.TelegramUserID)] = link
+	f.links[key(arg.TelegramUserID)] = link
 	return link, nil
 }
 
-func (f *fakeQueries) GetLink(_ context.Context, arg db.GetLinkParams) (db.TelegramLink, error) {
-	link, ok := f.links[key(arg.Bot, arg.TelegramUserID)]
+func (f *fakeQueries) GetLink(_ context.Context, id int64) (db.TelegramLink, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	link, ok := f.links[key(id)]
 	if !ok {
 		return db.TelegramLink{}, pgx.ErrNoRows
 	}
@@ -57,21 +63,39 @@ func (f *fakeQueries) GetLink(_ context.Context, arg db.GetLinkParams) (db.Teleg
 
 func (f *fakeQueries) UpdateLinkTokens(
 	_ context.Context, arg db.UpdateLinkTokensParams,
-) (db.TelegramLink, error) {
-	link, ok := f.links[key(arg.Bot, arg.TelegramUserID)]
-	if !ok {
-		return db.TelegramLink{}, pgx.ErrNoRows
+) (int64, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	link, ok := f.links[key(arg.TelegramUserID)]
+	if !ok || !bytes.Equal(link.RefreshToken, arg.PreviousRefreshToken) {
+		return 0, nil
 	}
 	link.AccessToken = arg.AccessToken
 	link.AccessExpiresAt = arg.AccessExpiresAt
 	link.RefreshToken = arg.RefreshToken
-	f.links[key(arg.Bot, arg.TelegramUserID)] = link
-	return link, nil
+	f.links[key(arg.TelegramUserID)] = link
+	return 1, nil
 }
 
-func (f *fakeQueries) DeleteLink(_ context.Context, arg db.DeleteLinkParams) (int64, error) {
-	k := key(arg.Bot, arg.TelegramUserID)
-	if _, ok := f.links[k]; !ok {
+func (f *fakeQueries) DeleteLinkWithToken(_ context.Context, arg db.DeleteLinkWithTokenParams) (int64, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	k := key(arg.TelegramUserID)
+	link, ok := f.links[k]
+	if !ok || !bytes.Equal(link.RefreshToken, arg.RefreshToken) {
+		return 0, nil
+	}
+	delete(f.links, k)
+	f.deleted = append(f.deleted, k)
+	return 1, nil
+}
+
+func (f *fakeQueries) DeleteLinkForUser(_ context.Context, arg db.DeleteLinkForUserParams) (int64, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	k := key(arg.TelegramUserID)
+	link, ok := f.links[k]
+	if !ok || link.UserID != arg.UserID {
 		return 0, nil
 	}
 	delete(f.links, k)
@@ -105,11 +129,16 @@ func jwtWithClaims(payload string) string {
 }
 
 type fakeAuth struct {
+	mu          sync.Mutex
 	accessToken string
 	redeemErr   error
 	refreshErr  error
 
 	redeemed   []*authv1.RedeemLinkTokenRequest
+	unlinked   []*authv1.UnlinkRequest
+	bearers    []string
+	unlinkErr  error
+	onRefresh  func()
 	refreshed  []string
 	loggedOut  []string
 	accessSeed int
@@ -137,9 +166,14 @@ func (f *fakeAuth) RedeemLinkToken(
 func (f *fakeAuth) Refresh(
 	_ context.Context, req *connect.Request[authv1.RefreshRequest],
 ) (*connect.Response[authv1.RefreshResponse], error) {
+	if f.onRefresh != nil {
+		f.onRefresh()
+	}
 	if f.refreshErr != nil {
 		return nil, f.refreshErr
 	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.refreshed = append(f.refreshed, req.Msg.GetRefreshToken())
 	f.accessSeed++
 	return connect.NewResponse(&authv1.RefreshResponse{
@@ -211,9 +245,9 @@ func (f *fakeQueries) ClearChatState(_ context.Context, _ db.ClearChatStateParam
 func (f *fakeQueries) DeleteExpiredChatStates(context.Context) (int64, error) { return 0, nil }
 
 func (f *fakeQueries) ExpireLinkAccess(
-	_ context.Context, arg db.ExpireLinkAccessParams,
+	_ context.Context, id int64,
 ) (int64, error) {
-	k := key(arg.Bot, arg.TelegramUserID)
+	k := key(id)
 	link, ok := f.links[k]
 	if !ok {
 		return 0, nil
@@ -221,4 +255,21 @@ func (f *fakeQueries) ExpireLinkAccess(
 	link.AccessExpiresAt = pgtype.Timestamptz{Time: time.Now().Add(-time.Hour), Valid: true}
 	f.links[k] = link
 	return 1, nil
+}
+
+func (f *fakeAuth) ListIdentities(
+	context.Context, *connect.Request[authv1.ListIdentitiesRequest],
+) (*connect.Response[authv1.ListIdentitiesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errUnused)
+}
+
+func (f *fakeAuth) Unlink(
+	_ context.Context, req *connect.Request[authv1.UnlinkRequest],
+) (*connect.Response[authv1.UnlinkResponse], error) {
+	f.unlinked = append(f.unlinked, req.Msg)
+	f.bearers = append(f.bearers, req.Header().Get("Authorization"))
+	if f.unlinkErr != nil {
+		return nil, f.unlinkErr
+	}
+	return connect.NewResponse(&authv1.UnlinkResponse{}), nil
 }

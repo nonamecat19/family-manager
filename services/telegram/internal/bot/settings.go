@@ -70,7 +70,7 @@ func setLanguage(ctx context.Context, c *Context) error {
 	c.locale = i18n.Match(saved)
 	c.session.Locale = saved
 
-	if err := c.Bot.sessions.ExpireAccess(ctx, c.Bot.name, c.From.ID); err != nil {
+	if err := c.Bot.sessions.ExpireAccess(ctx, c.From.ID); err != nil {
 		c.Bot.log.WarnContext(ctx, "expire access after a locale change", "error", err.Error())
 	}
 

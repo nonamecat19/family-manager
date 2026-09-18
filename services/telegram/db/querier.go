@@ -13,14 +13,15 @@ import (
 type Querier interface {
 	ClearChatState(ctx context.Context, arg ClearChatStateParams) (int64, error)
 	DeleteExpiredChatStates(ctx context.Context) (int64, error)
-	DeleteLink(ctx context.Context, arg DeleteLinkParams) (int64, error)
-	ExpireLinkAccess(ctx context.Context, arg ExpireLinkAccessParams) (int64, error)
+	DeleteLinkForUser(ctx context.Context, arg DeleteLinkForUserParams) (int64, error)
+	DeleteLinkWithToken(ctx context.Context, arg DeleteLinkWithTokenParams) (int64, error)
+	ExpireLinkAccess(ctx context.Context, telegramUserID int64) (int64, error)
 	GetBotOffset(ctx context.Context, bot string) (int64, error)
 	GetChatState(ctx context.Context, arg GetChatStateParams) (ChatState, error)
-	GetLink(ctx context.Context, arg GetLinkParams) (TelegramLink, error)
+	GetLink(ctx context.Context, telegramUserID int64) (TelegramLink, error)
 	ListLinksForUser(ctx context.Context, userID pgtype.UUID) ([]TelegramLink, error)
 	SetBotOffset(ctx context.Context, arg SetBotOffsetParams) error
-	UpdateLinkTokens(ctx context.Context, arg UpdateLinkTokensParams) (TelegramLink, error)
+	UpdateLinkTokens(ctx context.Context, arg UpdateLinkTokensParams) (int64, error)
 	UpsertChatState(ctx context.Context, arg UpsertChatStateParams) (ChatState, error)
 	UpsertLink(ctx context.Context, arg UpsertLinkParams) (TelegramLink, error)
 }

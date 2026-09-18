@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package auth.v1;
 
+import "google/protobuf/timestamp.proto";
+
 
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);
@@ -10,6 +12,8 @@ service AuthService {
   rpc Logout(LogoutRequest) returns (LogoutResponse);
   rpc CreateLinkToken(CreateLinkTokenRequest) returns (CreateLinkTokenResponse);
   rpc RedeemLinkToken(RedeemLinkTokenRequest) returns (RedeemLinkTokenResponse);
+  rpc ListIdentities(ListIdentitiesRequest) returns (ListIdentitiesResponse);
+  rpc Unlink(UnlinkRequest) returns (UnlinkResponse);
 }
 
 message LoginRequest {
@@ -70,3 +74,22 @@ message RedeemLinkTokenResponse {
   string refresh_token = 3;
   int64 expires_in = 4;
 }
+
+message Identity {
+  string provider = 1;
+  string external_id = 2;
+  google.protobuf.Timestamp linked_at = 3;
+}
+
+message ListIdentitiesRequest {}
+
+message ListIdentitiesResponse {
+  repeated Identity identities = 1;
+}
+
+message UnlinkRequest {
+  string provider = 1;
+  string external_id = 2;
+}
+
+message UnlinkResponse {}
