@@ -96,7 +96,7 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
           error={error ?? undefined}
         />
 
-        <View className="flex-row gap-[8.4px]">
+        <View className="flex-row gap-2.1">
           <Button title={t("common.cancel")} tone="quiet" onPress={close} />
           <Button
             title={t("common.save")}

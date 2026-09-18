@@ -44,19 +44,19 @@ export default function AccountsScreen() {
 
   return (
     <Screen>
-      <View className="gap-[20px] px-[22px] pt-[8px]">
+      <View className="gap-5 px-5.5 pt-sm">
         <ScreenHeader title={t("accounts.title")} />
 
         <View className="items-center">
           <Text className="text-[11px] text-neutral-600">{t("accounts.available")}</Text>
-          <MoneyText value={sharedBalance} size={27} weight="medium" className="mt-[2px]" />
+          <MoneyText value={sharedBalance} size={27} weight="medium" className="mt-0.5" />
           {savings.amountMinor !== 0 ? (
-            <Text className="mt-[2px] text-[11px] text-neutral-600">
+            <Text className="mt-0.5 text-[11px] text-neutral-600">
               {t("accounts.inSavings", { amount: formatMoney(savings) })}
             </Text>
           ) : null}
 
-          <View className="mt-[16px] flex-row justify-center gap-3">
+          <View className="mt-lg flex-row justify-center gap-3">
             <Button
               title={t("accounts.history")}
               tone="quiet"
@@ -97,7 +97,7 @@ export default function AccountsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {shared.length > 0 ? (
-            <View className="mb-[2.8px] flex-row items-baseline justify-between px-[2.8px]">
+            <View className="mb-0.7 flex-row items-baseline justify-between px-0.7">
               <Kicker>{t("accounts.sharedSection")}</Kicker>
               <Text className="text-[10.5px] text-neutral-600">{t("accounts.visibleToAll")}</Text>
             </View>
@@ -107,7 +107,7 @@ export default function AccountsScreen() {
           ))}
 
           {privateOwn.length > 0 ? (
-            <View className="mb-[2.8px] mt-2.8 flex-row items-center justify-between px-[2.8px]">
+            <View className="mb-0.7 mt-2.8 flex-row items-center justify-between px-0.7">
               <Kicker>{t("accounts.privateSection", { name: selfName }).trim()}</Kicker>
               <Icon name="eye-slash" size={14} color={organic.neutral[600]} />
             </View>

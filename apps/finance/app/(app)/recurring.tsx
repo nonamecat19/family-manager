@@ -88,11 +88,11 @@ export default function RecurringScreen() {
         />
 
         {payments.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : payments.isError ? (
-          <View className="gap-3 py-[18px]">
+          <View className="gap-3 py-4.5">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(payments.error, t("common.loadFailed")).message}
             </Text>
@@ -111,7 +111,7 @@ export default function RecurringScreen() {
                 {due.map((status, index) => (
                   <View key={status.payment?.id ?? index}>
                     {row(status, true, true)}
-                    <View className="flex-row gap-[8px] px-[16px] pb-[8px]">
+                    <View className="flex-row gap-sm px-lg pb-sm">
                       <Button
                         title={t("recurring.post")}
                         tone="quiet"
@@ -316,7 +316,7 @@ function NewRecurringSheet({
               onValueChange={setAutoPost}
               divider={false}
             />
-            <Text className="pb-[8.4px] font-fig text-[11.5px] text-neutral-600">
+            <Text className="pb-2.1 font-fig text-[11.5px] text-neutral-600">
               {t("recurring.autoPostHint")}
             </Text>
           </View>

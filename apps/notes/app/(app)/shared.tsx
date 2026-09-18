@@ -17,8 +17,8 @@ export default function SharedScreen() {
 
   if (desktop) {
     return (
-      <View className="flex-1 bg-bg px-[40px] py-[36px]">
-        <Text className="pb-[16px] font-cap text-[22px] text-fg">{strings.rail.sharedWithMe}</Text>
+      <View className="flex-1 bg-bg px-10 py-9">
+        <Text className="pb-lg font-cap text-[22px] text-fg">{strings.rail.sharedWithMe}</Text>
         {notebooks.length === 0 && notes.length === 0 ? (
           <EmptyState title={strings.list.emptySharedTitle} body={strings.list.emptySharedBody} />
         ) : null}
@@ -32,7 +32,7 @@ export default function SharedScreen() {
                 shell.select("notebook", notebook.id);
                 router.push(`/(app)/notebook/${notebook.id}`);
               }}
-              className="flex-row items-center gap-[10px] py-[10px]"
+              className="flex-row items-center gap-2.5 py-2.5"
             >
               <Icon name="folder-simple" size={16} color={organic.accent[600]} />
               <Text className="font-fig text-[14px] text-fg">{notebook.name}</Text>
@@ -47,7 +47,7 @@ export default function SharedScreen() {
               accessibilityRole="button"
               accessibilityLabel={note.title || strings.common.untitled}
               onPress={() => router.push(`/(app)/note/${note.id}`)}
-              className="gap-[4px] py-[10px]"
+              className="gap-xs py-2.5"
             >
               <Text className="font-fig-med text-[14px] text-fg">
                 {note.title || strings.common.untitled}
@@ -64,14 +64,14 @@ export default function SharedScreen() {
 
   return (
     <Screen>
-      <View className="flex-row items-end gap-[8px] px-[20px] pb-[10px] pt-[6px]">
+      <View className="flex-row items-end gap-sm px-5 pb-2.5 pt-1.5">
         <Text className="font-cap text-[26px] text-fg" style={{ letterSpacing: -0.5 }}>
           {strings.rail.sharedWithMe}
         </Text>
-        <Text className="pb-[4px] font-fig text-[12px] text-neutral-600">{notes.length}</Text>
+        <Text className="pb-xs font-fig text-[12px] text-neutral-600">{notes.length}</Text>
       </View>
       {notebooks.length > 0 ? (
-        <View className="px-[20px] pb-[8px]">
+        <View className="px-5 pb-sm">
           {notebooks.map((notebook) => (
             <Pressable
               key={notebook.id}
@@ -81,7 +81,7 @@ export default function SharedScreen() {
                 shell.select("notebook", notebook.id);
                 router.push(`/(app)/notebook/${notebook.id}`);
               }}
-              className="flex-row items-center gap-[10px] py-[8px]"
+              className="flex-row items-center gap-2.5 py-sm"
             >
               <Icon name="folder-simple" size={15} color={organic.accent[600]} />
               <Text className="font-fig text-[14px] text-fg">{notebook.name}</Text>

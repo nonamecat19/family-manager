@@ -102,12 +102,12 @@ export default function OnboardingScreen() {
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 22.4, paddingTop: 40, paddingBottom: 16.8 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="mb-[22.4px] h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
+          <View className="mb-5.6 h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
             <Icon name="users-three" size={22} color={organic.accent[600]} />
           </View>
 
           <Text className="text-[27px] font-fig-med leading-[31px] text-fg">{t("onboarding.title")}</Text>
-          <Text className="mb-[22.4px] mt-[8.4px] text-[13.5px] leading-[21px] text-neutral-600">
+          <Text className="mb-5.6 mt-2.1 text-[13.5px] leading-[21px] text-neutral-600">
             {t("onboarding.body")}
           </Text>
 
@@ -123,8 +123,8 @@ export default function OnboardingScreen() {
             error={nameError ?? undefined}
           />
 
-          <Kicker className="mb-[8.4px] mt-[22.4px]">{t("onboarding.members")}</Kicker>
-          <View className="gap-[8.4px]">
+          <Kicker className="mb-2.1 mt-5.6">{t("onboarding.members")}</Kicker>
+          <View className="gap-2.1">
             {members.map((member, index) => (
               <Card key={member.userId} padded={false}>
                 <Row
@@ -159,10 +159,10 @@ export default function OnboardingScreen() {
           <View className="flex-1" />
 
           {error ? (
-            <Text className="mb-[8.4px] text-[12.5px] leading-[19px] text-error">{error}</Text>
+            <Text className="mb-2.1 text-[12.5px] leading-[19px] text-error">{error}</Text>
           ) : null}
           {errorRef ? (
-            <Text className="mb-[8.4px] text-[12px] text-neutral-600">
+            <Text className="mb-2.1 text-[12px] text-neutral-600">
               {t("common.errorReference", { ref: errorRef })}
             </Text>
           ) : null}

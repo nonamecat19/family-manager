@@ -45,7 +45,7 @@ export default function RecipeDetailScreen() {
     const shown = toDisplayError(recipe.error, t("common.loadFailed"));
     return (
       <Screen>
-        <View className="flex-1 justify-center gap-[16px] px-[22px]">
+        <View className="flex-1 justify-center gap-lg px-5.5">
           <Display size={26}>{t("recipeDetail.gotAway")}</Display>
           <Text className="font-fig text-[15px] text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
@@ -82,14 +82,14 @@ export default function RecipeDetailScreen() {
   return (
     <Screen edges={["bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-[28px]">
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-7">
           <View
-            className="rounded-b-3xl px-[22px] pb-[16px] pt-[56px]"
+            className="rounded-b-3xl px-5.5 pb-lg pt-14"
             style={{ backgroundColor: tint.bg }}
           >
             <View className="flex-row justify-between">
               <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} tone="translucent" />
-              <View className="flex-row gap-[10px]">
+              <View className="flex-row gap-2.5">
                 <RoundButton
                   label={t("recipeDetail.editRecipe")}
                   onPress={() => router.push(`/(app)/recipe-edit/${r.id}`)}
@@ -106,7 +106,7 @@ export default function RecipeDetailScreen() {
                 </RoundButton>
               </View>
             </View>
-            <View className="mb-[2px] mt-[2px] items-center">
+            <View className="mb-0.5 mt-0.5 items-center">
               {r.imageUrl !== "" ? (
                 <Image
                   source={{ uri: r.imageUrl }}
@@ -123,10 +123,10 @@ export default function RecipeDetailScreen() {
             </View>
           </View>
 
-          <View className="gap-[18px] px-[22px] pb-[24px] pt-[22px]">
+          <View className="gap-4.5 px-5.5 pb-xl pt-5.5">
             <View>
               {(categoryName ?? subcategoryName) !== undefined && (
-                <View className="mb-[10px] flex-row gap-[7px]">
+                <View className="mb-2.5 flex-row gap-1.75">
                   {categoryName !== undefined && <Tag label={categoryName} />}
                   {subcategoryName !== undefined && <Tag label={subcategoryName} tone="accent2" />}
                 </View>
@@ -150,7 +150,7 @@ export default function RecipeDetailScreen() {
                 </View>
               </View>
               {r.description !== "" && (
-                <Text className="mt-[10px] font-fig text-[15px] leading-[22px] text-neutral-700">
+                <Text className="mt-2.5 font-fig text-[15px] leading-[22px] text-neutral-700">
                   {r.description}
                 </Text>
               )}
@@ -176,7 +176,7 @@ export default function RecipeDetailScreen() {
 
             {tab === "Ingredients" && (
               <View>
-                <View className="mb-[8px] flex-row items-center justify-between">
+                <View className="mb-sm flex-row items-center justify-between">
                   <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipeDetail.batches")}</Text>
                   <Stepper value={batch} onChange={setBatch} label={t("recipeDetail.batchesLabel")} max={6} />
                 </View>
@@ -210,12 +210,12 @@ export default function RecipeDetailScreen() {
                       <View className="h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-accent2-300">
                         <Text className="font-cap text-[14px] text-accent2-900">{step.position}</Text>
                       </View>
-                      <View className="flex-1 pt-[3px]">
+                      <View className="flex-1 pt-0.75">
                         <Text className="font-fig text-[15.5px] leading-[22px] text-fg">
                           {step.instruction}
                         </Text>
                         {step.durationSeconds > 0 && (
-                          <Text className="mt-[4px] font-fig-bold text-[12.5px] text-neutral-600">
+                          <Text className="mt-xs font-fig-bold text-[12.5px] text-neutral-600">
                             {formatDuration(step.durationSeconds, t)}
                           </Text>
                         )}
@@ -229,19 +229,19 @@ export default function RecipeDetailScreen() {
             {tab === "Notes" && (
               <View className="gap-3">
                 {r.notes !== "" && (
-                  <View className="rounded-2xl bg-accent2-100 px-[18px] py-[16px]">
+                  <View className="rounded-2xl bg-accent2-100 px-4.5 py-lg">
                     <Kicker className="text-accent2-700">{t("recipeDetail.theCook")}</Kicker>
-                    <Text className="mt-[7px] font-fig text-[15px] leading-[22px] text-fg">{r.notes}</Text>
+                    <Text className="mt-1.75 font-fig text-[15px] leading-[22px] text-fg">{r.notes}</Text>
                   </View>
                 )}
                 {(comments.data ?? []).map((c) => (
-                  <View key={c.id} className="rounded-2xl bg-accent2-100 px-[18px] py-[16px]">
+                  <View key={c.id} className="rounded-2xl bg-accent2-100 px-4.5 py-lg">
                     <Kicker className="text-accent2-700">
                       {c.createdAt
                         ? new Date(Number(c.createdAt.seconds) * 1000).toLocaleDateString(locale)
                         : t("recipeDetail.family")}
                     </Kicker>
-                    <Text className="mt-[7px] font-fig text-[15px] leading-[22px] text-fg">{c.body}</Text>
+                    <Text className="mt-1.75 font-fig text-[15px] leading-[22px] text-fg">{c.body}</Text>
                   </View>
                 ))}
                 {r.notes === "" && (comments.data ?? []).length === 0 && (
@@ -250,7 +250,7 @@ export default function RecipeDetailScreen() {
                   </Text>
                 )}
 
-                <View className="gap-[10px] rounded-2xl bg-neutral-100 px-[16px] py-3.5">
+                <View className="gap-2.5 rounded-2xl bg-neutral-100 px-lg py-3.5">
                   <Kicker>{t("recipeDetail.addANote")}</Kicker>
                   <TextInput
                     accessibilityLabel={t("recipeDetail.addAComment")}
@@ -273,7 +273,7 @@ export default function RecipeDetailScreen() {
                   />
                 </View>
 
-                <View className="gap-[8px] pt-[4px]">
+                <View className="gap-sm pt-xs">
                   <Kicker>{t("recipeDetail.yourRating")}</Kicker>
                   <StarPicker
                     rating={r.rating}
@@ -283,7 +283,7 @@ export default function RecipeDetailScreen() {
               </View>
             )}
 
-            <View className="mt-[2px] flex-row gap-[10px]">
+            <View className="mt-0.5 flex-row gap-2.5">
               <PrimaryButton
                 title={inBasket ? t("recipeDetail.inThePlan") : t("recipeDetail.addToPlan")}
                 onPress={() => {
@@ -301,7 +301,7 @@ export default function RecipeDetailScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("recipeDetail.deleteRecipe")}
               onPress={handleDelete}
-              className="items-center pt-[6px]"
+              className="items-center pt-1.5"
             >
               <Text className="font-fig-semi text-[13.5px]" style={{ color: organic.danger }}>
                 {t("recipeDetail.deleteRecipe")}

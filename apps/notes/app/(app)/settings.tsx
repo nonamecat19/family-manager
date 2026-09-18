@@ -73,11 +73,11 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title={strings.settings.members}>
-          <SettingsGroup className="py-[4px]">
+          <SettingsGroup className="py-xs">
             {members.map((member, i) => (
               <View
                 key={member.userId}
-                className={`flex-row items-center gap-[10px] py-3 ${
+                className={`flex-row items-center gap-2.5 py-3 ${
                   i === members.length - 1 ? "" : "border-b border-divider"
                 }`}
               >
@@ -94,7 +94,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title={strings.settings.offlineQueue}>
-          <SettingsGroup className="gap-[10px] py-3.5">
+          <SettingsGroup className="gap-2.5 py-3.5">
             <Text className="font-fig text-[13.5px] text-neutral-700">
               {queue.pending.length === 0
                 ? strings.settings.queueEmpty
@@ -117,7 +117,7 @@ export default function SettingsScreen() {
                 {offlineCopy.refusedBody(queue.rejected.length)}
               </Text>
               {queue.rejected.map((item) => (
-                <View key={item.clientId} className="gap-[6px]">
+                <View key={item.clientId} className="gap-1.5">
                   <Text className="font-fig-bold text-[14px] text-fg">
                     {item.title || strings.common.untitled}
                   </Text>
@@ -150,7 +150,7 @@ export default function SettingsScreen() {
         />
 
         <SettingsSection title={strings.settings.account}>
-          <View className="gap-[10px]">
+          <View className="gap-2.5">
             <SettingsLinkRow
               label={strings.settings.connectedAccounts}
               onPress={() => router.push("/(app)/connected-accounts")}
@@ -177,7 +177,7 @@ export default function SettingsScreen() {
           </Text>
         </SettingsSection>
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           {unsynced > 0 ? (
             <Text className="text-center font-fig text-[12px] text-neutral-700">
               {offlineCopy.unsyncedOnSignOut(unsynced)}

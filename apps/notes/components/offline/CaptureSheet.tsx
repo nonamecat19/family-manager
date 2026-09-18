@@ -68,15 +68,15 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
       />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View
-          className="gap-3.5 bg-surface px-[18px] pb-[22px] pt-[10px]"
+          className="gap-3.5 bg-surface px-4.5 pb-5.5 pt-2.5"
           style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
         >
           <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
 
-          <View className="flex-row items-center gap-[8px]">
+          <View className="flex-row items-center gap-sm">
             <Text className="font-fig-med text-[15px] text-fg">{strings.capture.title}</Text>
             <View
-              className="flex-row items-center gap-1.25 rounded-2xl px-[8px] py-[3px]"
+              className="flex-row items-center gap-1.25 rounded-2xl px-sm py-0.75"
               style={{ backgroundColor: queue.online ? organic.accent[100] : organic.accent[200] }}
             >
               <Icon
@@ -93,7 +93,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
             </View>
           </View>
 
-          <View className="gap-[6px]">
+          <View className="gap-1.5">
             <TextInput
               value={title}
               onChangeText={setTitle}
@@ -113,7 +113,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
             />
           </View>
 
-          <View className="flex-row gap-[7px]">
+          <View className="flex-row gap-1.75">
             <Chip
               label={strings.capture.kindNote}
               active={!asTask}
@@ -128,7 +128,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
 
           {notebooks.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="max-h-[40px]">
-              <View className="flex-row gap-[7px]">
+              <View className="flex-row gap-1.75">
                 <Chip
                   label={strings.capture.noNotebook}
                   active={notebookId === ""}
@@ -153,7 +153,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
             </Text>
           ) : null}
 
-          <View className="flex-row items-center gap-[10px]">
+          <View className="flex-row items-center gap-2.5">
             <Text className="font-fig text-[12px] text-neutral-700">
               {queue.queued.length > 0
                 ? strings.capture.queued(queue.queued.length)

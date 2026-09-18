@@ -22,7 +22,7 @@ export function ListSection({ title, action, children, className = "" }: ListSec
   return (
     <View className={className}>
       {title || action ? (
-        <View className="mb-[8.4px] flex-row items-baseline justify-between">
+        <View className="mb-2.1 flex-row items-baseline justify-between">
           {title ? <Kicker>{title}</Kicker> : <View />}
           {action ? (
             <Pressable accessibilityRole="button" accessibilityLabel={action.label} onPress={action.onPress}>
@@ -69,7 +69,7 @@ export function Row({
           {title}
         </Text>
         {subtitle ? (
-          <Text className="mt-[2px] font-fig text-[11.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600" numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
@@ -78,7 +78,7 @@ export function Row({
         <View className="items-end">
           {trailing}
           {trailingSubtitle ? (
-            <Text className="mt-[2px] font-fig text-[11px] text-neutral-600">{trailingSubtitle}</Text>
+            <Text className="mt-0.5 font-fig text-[11px] text-neutral-600">{trailingSubtitle}</Text>
           ) : null}
         </View>
       ) : null}
@@ -206,7 +206,7 @@ export function AmountChip({
       accessibilityState={{ selected }}
       onPress={onPress}
       onLongPress={onLongPress}
-      className={`flex-none flex-row items-center gap-1.4 rounded-full px-2.8 py-[8.4px] ${shell} ${className}`}
+      className={`flex-none flex-row items-center gap-1.4 rounded-full px-2.8 py-2.1 ${shell} ${className}`}
       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
     >
       {icon ? (
@@ -236,7 +236,7 @@ export function Stat({ label, value, tone = "default" }: { label: string; value:
   return (
     <View className="flex-1">
       <Text className="font-fig-bold text-[10.5px] uppercase tracking-[0.8px] text-neutral-600">{label}</Text>
-      <Text className={`mt-[3px] font-fig-med text-[15px] ${TONE_CLASS[tone]}`}>{value}</Text>
+      <Text className={`mt-0.75 font-fig-med text-[15px] ${TONE_CLASS[tone]}`}>{value}</Text>
     </View>
   );
 }

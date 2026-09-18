@@ -191,7 +191,7 @@ export default function TransactionsScreen() {
 
   return (
     <Screen edges={["top"]}>
-      <View className="gap-[16px] px-[22px] pt-[8px]">
+      <View className="gap-lg px-5.5 pt-sm">
         <ScreenHeader
           title={t("transactions.title")}
           kicker={t("common.family")}
@@ -225,7 +225,7 @@ export default function TransactionsScreen() {
       </View>
 
       {searchOpen ? (
-        <View className="px-[22px] pt-[8px]">
+        <View className="px-5.5 pt-sm">
           <Field
             label={t("transactions.search")}
             value={query}
@@ -237,7 +237,7 @@ export default function TransactionsScreen() {
       ) : null}
 
       {!focused ? null : (
-        <View className="flex-row px-[22px] pt-[8px]">
+        <View className="flex-row px-5.5 pt-sm">
           <AmountChip
             label={focusLabel}
             icon="x"
@@ -250,7 +250,7 @@ export default function TransactionsScreen() {
       <View className="flex-1 px-2.8 pt-2.8">
         <PeriodTabs value={tab} onChange={changeTab} />
 
-        <View className="mt-[8.4px] flex-row items-center justify-between">
+        <View className="mt-2.1 flex-row items-center justify-between">
           <View className="flex-row items-center">
             {steppable ? (
               <IconButton
@@ -290,7 +290,7 @@ export default function TransactionsScreen() {
           }}
           renderDay={(day, last) => (
             <View className="mb-2.8">
-              <Kicker className="mb-[8.4px] ml-1.4">
+              <Kicker className="mb-2.1 ml-1.4">
                 {t("transactions.dayHeading", {
                   date: day.weekdayLabel || dayHeading(t, day.date),
                   amount: formatMoney(fromWire(day.dayTotal, currency)),
@@ -385,7 +385,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   if (error) {
     const shown = toDisplayError(error, t("common.loadFailed"));
     return (
-      <View className="flex-1 justify-center gap-[8.4px] px-2.8">
+      <View className="flex-1 justify-center gap-2.1 px-2.8">
         <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
         {shown.reference ? (
           <Text className="text-[12px] text-neutral-600">

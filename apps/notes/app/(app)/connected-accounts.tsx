@@ -40,7 +40,7 @@ export default function ConnectedAccountsScreen() {
         ) : null}
 
         {identities.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <ActivityIndicator color={organic.accent.DEFAULT} />
           </View>
         ) : identities.isError ? (
@@ -53,16 +53,16 @@ export default function ConnectedAccountsScreen() {
             body={strings.connectedAccounts.emptyBody}
           />
         ) : (
-          <View className="gap-[10px]">
+          <View className="gap-2.5">
             {rows.map((identity) => (
               <View
                 key={`${identity.provider}:${identity.externalId}`}
-                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-[16px] py-3.5"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-lg py-3.5"
               >
                 <View className="h-[34px] w-[34px] items-center justify-center rounded-full bg-accent-100">
                   <Icon name="link-simple" size={16} color={organic.accent[600]} />
                 </View>
-                <View className="flex-1 gap-[3px]">
+                <View className="flex-1 gap-0.75">
                   <Text className="font-fig-bold text-[15.5px] text-fg">{providerLabel(identity.provider)}</Text>
                   <Text className="font-fig text-[12.5px] text-neutral-600">{identity.externalId}</Text>
                   {identity.linkedAt ? (

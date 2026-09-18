@@ -80,7 +80,7 @@ export default function ChartsScreen() {
 
   return (
     <Screen>
-      <View className="gap-[16px] px-[22px] pt-[8px]">
+      <View className="gap-lg px-5.5 pt-sm">
         <ScreenHeader
           title={t("charts.title")}
           onBack={() => router.back()}
@@ -117,7 +117,7 @@ export default function ChartsScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-[8.4px] px-2.8 pb-[22.4px] pt-2.8"
+          contentContainerClassName="gap-2.1 px-2.8 pb-5.6 pt-2.8"
           showsVerticalScrollIndicator={false}
         >
           <Card>
@@ -147,7 +147,7 @@ export default function ChartsScreen() {
                   })}
                 </Text>
               </View>
-              <View className="gap-[8.4px]">
+              <View className="gap-2.1">
                 {budgetRows.map((row) => (
                   <BudgetBar
                     key={row.id}
@@ -195,7 +195,7 @@ function GranularityStrip({
             className="items-center"
           >
             <Text
-              className={`pb-[3px] text-[12px] ${active ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
+              className={`pb-0.75 text-[12px] ${active ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
             >
               {labels[option]}
             </Text>

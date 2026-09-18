@@ -69,13 +69,13 @@ export function ScreenHeader({
       {onBack ? <RoundButton icon="back" label={backLabel} onPress={onBack} /> : null}
       <View className="flex-1">
         {kicker ? (
-          <Text className="mb-[2px] text-[13px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
+          <Text className="mb-0.5 text-[13px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
             {kicker}
           </Text>
         ) : null}
         <Display size={size}>{title}</Display>
       </View>
-      {actions ? <View className="flex-row items-center gap-[8px]">{actions}</View> : null}
+      {actions ? <View className="flex-row items-center gap-sm">{actions}</View> : null}
     </View>
   );
 }
@@ -85,7 +85,7 @@ export function ScrollBody({ children, className = "" }: { children: ReactNode; 
     <ScrollView
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
-      contentContainerClassName={`gap-[20px] px-[22px] pb-[28px] pt-[8px] ${className}`}
+      contentContainerClassName={`gap-5 px-5.5 pb-7 pt-sm ${className}`}
     >
       {children}
     </ScrollView>
@@ -107,7 +107,7 @@ export function GateMessage({
 }) {
   const t = useTheme();
   return (
-    <View className="flex-1 justify-center gap-[18px] px-[22px]">
+    <View className="flex-1 justify-center gap-4.5 px-5.5">
       {title ? <Display size={30}>{title}</Display> : null}
       <Text className="text-[15.5px] leading-[23px] text-neutral-700" style={{ fontFamily: t.fonts?.body }}>
         {body}
@@ -125,7 +125,7 @@ export function GateMessage({
 export function BootSplash({ title, label }: { title: string; label?: string }) {
   const t = useTheme();
   return (
-    <View className="flex-1 items-center justify-center gap-[10px] bg-bg">
+    <View className="flex-1 items-center justify-center gap-2.5 bg-bg">
       <Display size={30}>{title}</Display>
       {label ? (
         <Text className="text-[13.5px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
@@ -139,11 +139,11 @@ export function BootSplash({ title, label }: { title: string; label?: string }) 
 export function StatTile({ value, label }: { value: string; label: string }) {
   const t = useTheme();
   return (
-    <View className="flex-1 rounded-2xl bg-neutral-100 px-3.5 py-[15px]">
+    <View className="flex-1 rounded-2xl bg-neutral-100 px-3.5 py-3.75">
       <Text className="text-[24px] text-accent-700" style={{ fontFamily: t.fonts?.display }}>
         {value}
       </Text>
-      <Text className="mt-[3px] text-[12px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
+      <Text className="mt-0.75 text-[12px] text-neutral-600" style={{ fontFamily: t.fonts?.bold }}>
         {label}
       </Text>
     </View>
@@ -157,7 +157,7 @@ export function PillButton({ title, onPress }: { title: string; onPress: () => v
       accessibilityRole="button"
       accessibilityLabel={title}
       onPress={onPress}
-      className="items-center rounded-full bg-neutral-200 py-[13px]"
+      className="items-center rounded-full bg-neutral-200 py-3.25"
     >
       <Text className="text-[14.5px] text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
         {title}
@@ -169,7 +169,7 @@ export function PillButton({ title, onPress }: { title: string; onPress: () => v
 export function DangerLink({ title, onPress }: { title: string; onPress: () => void }) {
   const t = useTheme();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress} className="items-center pt-[4px]">
+    <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress} className="items-center pt-xs">
       <Text className="text-[14px] text-error" style={{ fontFamily: t.fonts?.semibold }}>
         {title}
       </Text>

@@ -23,11 +23,11 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[22px] px-[22px] pb-[24px] pt-[8px]">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-5.5 px-5.5 pb-xl pt-sm">
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
             <Kicker>{today(locale)}</Kicker>
-            <Display size={33} className="mt-[7px]">
+            <Display size={33} className="mt-1.75">
               {t("home.title")}
             </Display>
           </View>
@@ -44,7 +44,7 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("home.searchRecipes")}
           onPress={() => router.push("/(app)/search")}
-          className="flex-row items-center gap-[10px] rounded-full border border-neutral-300 bg-neutral-100 px-[18px] py-[13px]"
+          className="flex-row items-center gap-2.5 rounded-full border border-neutral-300 bg-neutral-100 px-4.5 py-3.25"
         >
           <SearchIcon />
           <Text className="font-fig text-[16px] text-neutral-600">
@@ -70,7 +70,7 @@ export default function HomeScreen() {
 
         {topRated.length > 0 && (
           <>
-            <View className="mt-[2px] flex-row items-baseline justify-between">
+            <View className="mt-0.5 flex-row items-baseline justify-between">
               <Display size={21}>{t("home.topRated")}</Display>
               <Pressable
                 accessibilityRole="button"
@@ -83,8 +83,8 @@ export default function HomeScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="-mx-[22px] -mt-[6px]"
-              contentContainerClassName="gap-3.5 px-[22px] pb-[8px] pt-[6px]"
+              className="-mx-5.5 -mt-1.5"
+              contentContainerClassName="gap-3.5 px-5.5 pb-sm pt-1.5"
             >
               {topRated.map((recipe, index) => (
                 <TopRatedCard
@@ -102,13 +102,13 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("home.thisWeeksPlan")}
           onPress={() => router.push("/(app)/meal-plan")}
-          className="flex-row items-center gap-[16px] rounded-2xl bg-accent2-200 px-[20px] py-[18px]"
+          className="flex-row items-center gap-lg rounded-2xl bg-accent2-200 px-5 py-4.5"
         >
           <View className="flex-1">
             <Display size={17} className="text-accent2-900">
               {t("home.thisWeeksPlan")}
             </Display>
-            <Text className="mt-[4px] font-fig-semi text-[13.5px] text-accent2-800">
+            <Text className="mt-xs font-fig-semi text-[13.5px] text-accent2-800">
               {planned === 0
                 ? t("home.nothingPlannedYet")
                 : `${t("plurals.recipesCount", { count: planned })} · ${t("plurals.ingredientsToBuyCount", { count: (totals.data ?? []).length })}`}
@@ -121,7 +121,7 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("home.favorites")}
           onPress={() => router.push("/(app)/favorites")}
-          className="flex-row items-center justify-between rounded-2xl border-2 border-dashed border-neutral-400 px-[20px] py-[15px]"
+          className="flex-row items-center justify-between rounded-2xl border-2 border-dashed border-neutral-400 px-5 py-3.75"
         >
           <Text className="flex-1 font-fig-bold text-[14.5px] text-neutral-700" numberOfLines={2}>
             {t("home.keepComingBackTo")}
@@ -151,7 +151,7 @@ function CategoryCard({
       accessibilityRole="button"
       accessibilityLabel={category.name}
       onPress={onPress}
-      className="min-h-[100px] flex-1 basis-[45%] justify-between gap-[24px] rounded-2xl px-[16px] pb-[17px] pt-[15px]"
+      className="min-h-[100px] flex-1 basis-[45%] justify-between gap-xl rounded-2xl px-lg pb-4.25 pt-3.75"
       style={{ backgroundColor: tint.bg }}
     >
       <View className="h-[32px] w-[32px] items-center justify-center rounded-full bg-white/60">
@@ -163,7 +163,7 @@ function CategoryCard({
         <Text className="font-cap text-[18px] leading-[20px]" style={{ color: tint.fg }}>
           {category.name}
         </Text>
-        <Text className="mt-[3px] font-fig-bold text-[12.5px] opacity-70" style={{ color: tint.fg }}>
+        <Text className="mt-0.75 font-fig-bold text-[12.5px] opacity-70" style={{ color: tint.fg }}>
           {t("plurals.recipesCount", { count })}
         </Text>
       </View>
@@ -205,7 +205,7 @@ function TopRatedCard({
       <Text className="mt-2.75 font-cap text-[15.5px] leading-[18px]" numberOfLines={2}>
         {recipe.title}
       </Text>
-      <View className="mt-[7px] flex-row items-center gap-[8px]">
+      <View className="mt-1.75 flex-row items-center gap-sm">
         {time !== "" && <Text className="font-fig-bold text-[12.5px] text-neutral-700">{time}</Text>}
         {time !== "" && recipe.rating > 0 && <Text className="text-neutral-400">·</Text>}
         <RatingMark rating={recipe.rating} size={12} />

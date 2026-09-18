@@ -31,7 +31,7 @@ export function FacetPill({
       accessibilityLabel={label}
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      className={`flex-none rounded-full border px-[9px] py-[3px] ${
+      className={`flex-none rounded-full border px-2.25 py-0.75 ${
         active ? "border-accent bg-accent-100" : "border-transparent bg-neutral-200"
       }`}
     >
@@ -140,9 +140,9 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
         <Pressable
           accessibilityRole="none"
           onPress={() => undefined}
-          className="mt-[96px] w-[660px] max-w-[92%] overflow-hidden rounded-2xl bg-surface"
+          className="mt-24 w-[660px] max-w-[92%] overflow-hidden rounded-2xl bg-surface"
         >
-          <View className="flex-row items-center gap-2.75 border-b border-neutral-300 px-[18px] py-[15px]">
+          <View className="flex-row items-center gap-2.75 border-b border-neutral-300 px-4.5 py-3.75">
             <Icon name="magnifying-glass" size={18} color={organic.accent.DEFAULT} />
             <TextInput
               value={query}
@@ -156,7 +156,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             <Kbd>{strings.palette.esc}</Kbd>
           </View>
 
-          <View className="flex-row gap-[6px] px-[18px] pb-[4px] pt-[10px]">
+          <View className="flex-row gap-1.5 px-4.5 pb-xs pt-2.5">
             {FACETS.map((f) => (
               <FacetPill
                 key={f.facet}
@@ -167,16 +167,16 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ))}
           </View>
 
-          <ScrollView className="max-h-[420px] px-[8px] pb-[6px] pt-[8px]">
+          <ScrollView className="max-h-[420px] px-sm pb-1.5 pt-sm">
             {query.trim() === "" ? (
-              <Text className="px-[10px] py-3.5 font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-2.5 py-3.5 font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.hint}
               </Text>
             ) : null}
 
             {grouped.map((group) => (
               <View key={group.label}>
-                <Text className="px-[10px] pb-1.25 pt-[10px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
+                <Text className="px-2.5 pb-1.25 pt-2.5 font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
                   {group.label}
                 </Text>
                 {group.hits.map((hit) => {
@@ -196,7 +196,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ))}
 
             {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-              <Text className="px-[10px] py-3.5 font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-2.5 py-3.5 font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.empty}
               </Text>
             ) : null}
@@ -206,7 +206,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
                 accessibilityRole="button"
                 accessibilityLabel={strings.palette.createNote(query.trim())}
                 onPress={create}
-                className="mt-[6px] flex-row items-center gap-2.75 rounded-xl px-[10px] py-[9px]"
+                className="mt-1.5 flex-row items-center gap-2.75 rounded-xl px-2.5 py-2.25"
               >
                 <Icon name="plus-circle" size={16} color={organic.accent.DEFAULT} />
                 <Text className="font-fig text-[13.5px] text-fg">
@@ -219,7 +219,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ) : null}
           </ScrollView>
 
-          <View className="flex-row items-center gap-[16px] border-t border-neutral-300 px-[18px] py-[9px]">
+          <View className="flex-row items-center gap-lg border-t border-neutral-300 px-4.5 py-2.25">
             <FooterHint keys="↑↓" label={strings.palette.navigate} />
             <FooterHint keys="⇥" label={strings.palette.filter} />
             <FooterHint keys="⌘⏎" label={strings.palette.newNote} />
@@ -261,7 +261,7 @@ function HitRow({
       accessibilityLabel={hit.title}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-row items-center gap-2.75 rounded-xl px-[10px] py-[9px] ${
+      className={`flex-row items-center gap-2.75 rounded-xl px-2.5 py-2.25 ${
         selected ? "bg-accent-100" : ""
       }`}
     >
@@ -270,7 +270,7 @@ function HitRow({
         size={16}
         color={selected ? organic.accent[700] : organic.neutral[700]}
       />
-      <View className="min-w-0 flex-1 gap-[2px]">
+      <View className="min-w-0 flex-1 gap-0.5">
         <Highlighted
           text={hit.title}
           query={query}

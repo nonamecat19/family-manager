@@ -70,7 +70,7 @@ export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className =
             accessibilityLabel={LABELS[option]}
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option)}
-            className="items-center px-[2px] py-1.4"
+            className="items-center px-0.5 py-1.4"
           >
             <Text className={`text-[12.5px] ${active ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}>
               {LABELS[option]}
@@ -120,8 +120,8 @@ export function PeriodStepper({
           <Icon name="caret-right" size={18} color={organic.neutral[600]} />
         </Pressable>
       </View>
-      {total ? <MoneyText value={total} size={30} weight="medium" className="mt-[8.4px]" /> : null}
-      {subtitle ? <Text className="mt-[2px] font-fig text-[11.5px] text-neutral-600">{subtitle}</Text> : null}
+      {total ? <MoneyText value={total} size={30} weight="medium" className="mt-2.1" /> : null}
+      {subtitle ? <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600">{subtitle}</Text> : null}
     </View>
   );
 }

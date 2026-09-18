@@ -33,11 +33,11 @@ export default function SearchScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-[20px] px-[22px] pb-[24px] pt-[8px]"
+        contentContainerClassName="gap-5 px-5.5 pb-xl pt-sm"
       >
         <View className="flex-row items-center gap-3">
           <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
-          <View className="flex-1 flex-row items-center gap-[10px] rounded-full border-2 border-accent bg-neutral-100 px-[18px] py-[9px]">
+          <View className="flex-1 flex-row items-center gap-2.5 rounded-full border-2 border-accent bg-neutral-100 px-4.5 py-2.25">
             <SearchIcon size={18} color={organic.accent[700]} />
             <TextInput
               accessibilityLabel={t("search.placeholder")}
@@ -55,14 +55,14 @@ export default function SearchScreen() {
         {recent.length > 0 && (
           <View>
             <Kicker className="mb-2.75">{t("search.recent")}</Kicker>
-            <View className="flex-row flex-wrap gap-[8px]">
+            <View className="flex-row flex-wrap gap-sm">
               {recent.map((term) => (
                 <Pressable
                   key={term}
                   accessibilityRole="button"
                   accessibilityLabel={t("search.searchFor", { term })}
                   onPress={() => setQuery(term)}
-                  className="rounded-full border border-accent px-[10px] py-[4px]"
+                  className="rounded-full border border-accent px-2.5 py-xs"
                 >
                   <Text className="font-fig-semi text-[12px] text-accent">{term}</Text>
                 </Pressable>
@@ -76,7 +76,7 @@ export default function SearchScreen() {
             <Kicker className="mb-2.75">
               {results.isPending ? t("search.searching") : t("plurals.resultsCount", { count: recipes.length })}
             </Kicker>
-            <View className="gap-[10px]">
+            <View className="gap-2.5">
               {recipes.map((recipe, index) => (
                 <ResultRow
                   key={recipe.id}
@@ -114,14 +114,14 @@ function ResultRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-[16px]"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-lg"
     >
       <Avatar initial={initialOf(recipe.title)} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
         <Text className="font-fig-bold text-[15.5px] text-fg" numberOfLines={1}>
           {recipe.title}
         </Text>
-        <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
+        <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
           {metaLine([
             t("plurals.servingsCount", { count: recipe.servings }),
             formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),

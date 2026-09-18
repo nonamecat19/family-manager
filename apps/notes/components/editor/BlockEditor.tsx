@@ -102,7 +102,7 @@ export function BlockEditor({
   const lane = editable && size === "roomy";
 
   return (
-    <View className={`gap-[2px] ${lane ? "pl-[52px]" : ""}`}>
+    <View className={`gap-0.5 ${lane ? "pl-13" : ""}`}>
       <TextInput
         value={title}
         onChangeText={onChangeTitle}
@@ -212,11 +212,11 @@ function BlockRow({
 
   if (block.type === BlockType.IMAGE) {
     return wrap(
-      <View className="py-[6px]">
+      <View className="py-1.5">
         <View
           accessible
           accessibilityLabel={strings.note.imageBlock}
-          className="h-[92px] flex-row items-center justify-center gap-[8px] rounded-xl border border-dashed border-neutral-300"
+          className="h-[92px] flex-row items-center justify-center gap-sm rounded-xl border border-dashed border-neutral-300"
         >
           <Icon name="image" size={16} color={organic.neutral[600]} />
           <Text className="font-fig text-[12px] text-neutral-700">{strings.note.imageBlock}</Text>
@@ -254,7 +254,7 @@ function BlockRow({
 
   if (block.type === BlockType.TODO) {
     return wrap(
-      <View className="flex-row items-start gap-[10px] py-[3px]">
+      <View className="flex-row items-start gap-2.5 py-0.75">
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: block.checked }}
@@ -262,7 +262,7 @@ function BlockRow({
           disabled={!editable}
           onPress={onToggle}
           hitSlop={8}
-          className="mt-[6px] h-[17px] w-[17px] flex-none items-center justify-center rounded-md border"
+          className="mt-1.5 h-[17px] w-[17px] flex-none items-center justify-center rounded-md border"
           style={{
             borderColor: block.checked ? organic.accent.DEFAULT : organic.neutral[600],
             backgroundColor: block.checked ? organic.accent.DEFAULT : "transparent",
@@ -278,7 +278,7 @@ function BlockRow({
 
   if (block.type === BlockType.BULLET) {
     return wrap(
-      <View className="flex-row items-start gap-[10px] py-[2px]">
+      <View className="flex-row items-start gap-2.5 py-0.5">
         <View className="mt-2.75 h-1.25 w-1.25 flex-none rounded-full bg-neutral-600" />
         {text}
       </View>,
@@ -287,8 +287,8 @@ function BlockRow({
 
   if (block.type === BlockType.NUMBERED) {
     return wrap(
-      <View className="flex-row items-start gap-[10px] py-[2px]">
-        <Text className="mt-[4px] w-[16px] flex-none text-right font-fig-med text-[14px] text-neutral-700">
+      <View className="flex-row items-start gap-2.5 py-0.5">
+        <Text className="mt-xs w-[16px] flex-none text-right font-fig-med text-[14px] text-neutral-700">
           {ordinal}.
         </Text>
         {text}
@@ -299,7 +299,7 @@ function BlockRow({
   if (block.type === BlockType.QUOTE) {
     return wrap(
       <View
-        className="my-[6px] flex-row pl-3.5"
+        className="my-1.5 flex-row pl-3.5"
         style={{ borderLeftWidth: 2, borderLeftColor: organic.accent.DEFAULT }}
       >
         {text}
@@ -308,10 +308,10 @@ function BlockRow({
   }
 
   if (block.type === BlockType.CODE) {
-    return wrap(<View className="my-[6px] rounded-xl bg-surface px-3 py-[9px]">{text}</View>);
+    return wrap(<View className="my-1.5 rounded-xl bg-surface px-3 py-2.25">{text}</View>);
   }
 
-  return wrap(<View className="flex-row py-[2px]">{text}</View>);
+  return wrap(<View className="flex-row py-0.5">{text}</View>);
 }
 
 function BlockGutter({
@@ -324,7 +324,7 @@ function BlockGutter({
   onMoveDown?: () => void;
 }) {
   return (
-    <View className="absolute left-[-52px] top-[4px] flex-row items-center gap-[1px]">
+    <View className="absolute left-[-52px] top-[4px] flex-row items-center gap-0.25">
       <GutterButton icon="plus" label={strings.gutter.insert} onPress={onInsert} />
       <GutterButton icon="caret-up" label={strings.gutter.moveUp} onPress={onMoveUp} />
       <GutterButton icon="caret-down" label={strings.gutter.moveDown} onPress={onMoveDown} />
@@ -349,7 +349,7 @@ function GutterButton({
       disabled={!onPress}
       onPress={onPress}
       hitSlop={6}
-      className={`p-[1px] ${onPress ? "" : "opacity-30"}`}
+      className={`p-0.25 ${onPress ? "" : "opacity-30"}`}
     >
       <Icon name={icon} size={13} color={organic.neutral[600]} />
     </Pressable>

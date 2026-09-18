@@ -183,20 +183,20 @@ export default function HouseholdScreen() {
           }
         />
 
-        <View className="flex-row gap-[20px]">
+        <View className="flex-row gap-5">
           <View>
             <Kicker>{t("household.sharedBalance")}</Kicker>
-            <MoneyText value={sharedBalance} size={22} className="mt-[2px]" />
+            <MoneyText value={sharedBalance} size={22} className="mt-0.5" />
           </View>
           <View className="w-[1px]" style={{ backgroundColor: organic.divider }} />
           <View>
             <Kicker>{t("household.spendingIn", { month: monthNameLower(t, anchorMonth) })}</Kicker>
-            <MoneyText value={periodExpense} size={22} className="mt-[2px]" />
+            <MoneyText value={periodExpense} size={22} className="mt-0.5" />
           </View>
         </View>
 
         {overview.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : overview.isError ? (
@@ -211,7 +211,7 @@ export default function HouseholdScreen() {
                 action={{ label: t("household.invite"), onPress: openInvite }}
               />
             ) : (
-              <View className="gap-[8px]">
+              <View className="gap-sm">
                 {members.map((entry, index) => (
                   <MemberCard
                     key={entry.member?.userId ?? String(index)}
@@ -336,7 +336,7 @@ export default function HouseholdScreen() {
           keyboardType="email-address"
           error={inviteError ?? undefined}
         />
-        <View className="mt-[16px]">
+        <View className="mt-lg">
           <Button
             title={t("household.invite")}
             onPress={() => void submitInvite()}
@@ -383,7 +383,7 @@ function MemberCard({
       accessibilityLabel={name}
       className={`p-2.8 border ${owner ? "border-accent" : "border-divider"}`}
     >
-      <View className="flex-row items-center gap-[8.4px]">
+      <View className="flex-row items-center gap-2.1">
         <Avatar name={name} index={index} size={40} />
         <View className="flex-1">
           <View className="flex-row items-center gap-1.4">
@@ -392,7 +392,7 @@ function MemberCard({
             </Text>
             {owner ? <Badge label={t("household.owner")} tone="accent" /> : null}
           </View>
-          <Text className="mt-[2px] text-[11px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 text-[11px] text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>
         </View>
@@ -405,7 +405,7 @@ function MemberCard({
           <Text className="text-[10.5px] uppercase text-neutral-600" style={{ letterSpacing: 0.8 }}>
             {t("household.spending")}
           </Text>
-          <MoneyText value={spent} size={15} className="mt-[3px]" />
+          <MoneyText value={spent} size={15} className="mt-0.75" />
         </View>
         <Stat label={t("household.share")} value={formatPercent(share)} />
         <Stat label={t("household.transactions")} value={String(transactionCount)} />

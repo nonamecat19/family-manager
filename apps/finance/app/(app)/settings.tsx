@@ -95,23 +95,23 @@ export default function SettingsScreen() {
       <ScrollBody>
         <ScreenHeader title={t("settings.title")} />
 
-        <View className="flex-row items-center gap-[16px]">
+        <View className="flex-row items-center gap-lg">
           <Avatar initial={initialOf(me?.displayName || familyName)} size={64} />
           <View className="flex-1">
             <Display size={19}>{me?.displayName || familyName}</Display>
-            <Text className="mt-[2px] text-[13px] font-fig-bold text-neutral-600">
+            <Text className="mt-0.5 text-[13px] font-fig-bold text-neutral-600">
               {familyName}
             </Text>
           </View>
         </View>
 
-        <View className="flex-row gap-[10px]">
+        <View className="flex-row gap-2.5">
           <StatTile value={String(templateCount)} label={t("settings.statTemplates")} />
           <StatTile value={String(widgetCount)} label={t("settings.statWidgets")} />
           <StatTile value={String(accountCount)} label={t("settings.statAccounts")} />
         </View>
 
-        <View className="gap-[10px]">
+        <View className="gap-2.5">
           <SettingsLinkRow
             icon="users-three"
             iconTone="accent"
@@ -176,7 +176,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <View className="flex-row gap-[10px]">
+        <View className="flex-row gap-2.5">
           <View className="flex-1">
             <PillButton title={t("settings.privacy")} onPress={() => setSheet("privacy")} />
           </View>

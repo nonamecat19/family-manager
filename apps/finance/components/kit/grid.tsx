@@ -44,7 +44,7 @@ export function CategoryIconGrid({
             accessibilityState={{ selected }}
             onPress={() => onSelect(item)}
             onLongPress={onLongPress ? () => onLongPress(item) : undefined}
-            className="items-center py-[8.4px]"
+            className="items-center py-2.1"
             style={{ width }}
           >
             <View
@@ -71,7 +71,7 @@ export function CategoryIconGrid({
           accessibilityRole="button"
           accessibilityLabel={more.label}
           onPress={more.onPress}
-          className="items-center py-[8.4px]"
+          className="items-center py-2.1"
           style={{ width }}
         >
           <View className="h-[46px] w-[46px] items-center justify-center rounded-full border border-dashed border-neutral-400">

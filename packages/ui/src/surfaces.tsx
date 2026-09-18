@@ -30,9 +30,9 @@ export function Sheet({
           onPress={onClose}
           className="absolute inset-0 bg-scrim"
         />
-        <View className="rounded-t-3xl bg-bg px-[22px] pb-[34px] pt-[20px]">
-          <View className="mb-[18px] h-1.25 w-[44px] self-center rounded-full bg-neutral-400" />
-          <Display size={22} className="mb-[16px]">
+        <View className="rounded-t-3xl bg-bg px-5.5 pb-8.5 pt-5">
+          <View className="mb-4.5 h-1.25 w-[44px] self-center rounded-full bg-neutral-400" />
+          <Display size={22} className="mb-lg">
             {title}
           </Display>
           {children}
@@ -81,14 +81,14 @@ export function NutritionStrip({
     },
   ];
   return (
-    <Panel className={`flex-row px-[6px] py-3 ${className}`}>
+    <Panel className={`flex-row px-1.5 py-3 ${className}`}>
       {cells.map((c) => (
         <View key={c.key} className="flex-1 items-center">
           <Text className="text-[17px] text-accent-800" style={{ fontFamily: t.fonts?.display }}>
             {c.value}
           </Text>
           <Text
-            className="mt-[2px] text-[11px] uppercase tracking-[0.7px] text-neutral-600"
+            className="mt-0.5 text-[11px] uppercase tracking-[0.7px] text-neutral-600"
             style={{ fontFamily: t.fonts?.body }}
           >
             {c.label}

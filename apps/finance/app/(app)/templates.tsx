@@ -65,11 +65,11 @@ export default function TemplatesScreen() {
         />
 
         {templates.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : templates.isError ? (
-          <View className="gap-3 py-[18px]">
+          <View className="gap-3 py-4.5">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(templates.error, t("common.loadFailed")).message}
             </Text>

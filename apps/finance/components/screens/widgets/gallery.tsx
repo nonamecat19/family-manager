@@ -34,7 +34,7 @@ export function GalleryItem({
 }) {
   return (
     <View className={className}>
-      <View className="mb-[8.4px] flex-row items-baseline justify-between px-[2px]">
+      <View className="mb-2.1 flex-row items-baseline justify-between px-0.5">
         <Kicker>{title}</Kicker>
         <Text className="text-[10px] text-neutral-700">{size}</Text>
       </View>

@@ -78,11 +78,11 @@ export default function InvestmentsScreen() {
         <ScreenHeader title={t("investments.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
         {investments.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : investments.isError ? (
-          <View className="gap-3 py-[18px]">
+          <View className="gap-3 py-4.5">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(investments.error, t("common.loadFailed")).message}
             </Text>
@@ -175,7 +175,7 @@ export default function InvestmentsScreen() {
 function KindChips({ value, onChange }: { value: InvestmentKind; onChange: (next: InvestmentKind) => void }) {
   const { t } = useI18n();
   return (
-    <View className="flex-row flex-wrap gap-[8px]">
+    <View className="flex-row flex-wrap gap-sm">
       {KINDS.map((each) => (
         <Chip
           key={each.kind}
@@ -220,7 +220,7 @@ function NewInvestmentSheet({ visible, onClose }: { visible: boolean; onClose: (
     <ScrollSheet visible={visible} onClose={onClose} title={t("investments.new")}>
       <View className="gap-3.5 pt-1.4">
         <Field label={t("investments.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("investments.kind")}</Kicker>
           <KindChips value={kind} onChange={setKind} />
         </View>
@@ -319,7 +319,7 @@ function InvestmentSheet({
 
         <Button title={t("investments.contribute")} onPress={() => onContribute(investment)} />
 
-        <View className="gap-[6px]">
+        <View className="gap-1.5">
           <Kicker>{t("investments.currentValue")}</Kicker>
           <AmountRow label={t("investments.currentValue")} value={valueText} onChangeValue={setValueText} currencyCode={code} />
         </View>
@@ -330,7 +330,7 @@ function InvestmentSheet({
         {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
+        <View className="mt-sm gap-sm border-t border-divider pt-3">
           <Button
             title={investment.archived ? t("investments.unarchive") : t("investments.archive")}
             tone="quiet"

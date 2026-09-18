@@ -46,8 +46,8 @@ export function BlockBar({
     <View
       className={
         floating
-          ? "flex-row items-center gap-[2px] self-center rounded-2xl bg-surface px-[7px] py-1.25"
-          : "flex-row items-center gap-[2px] border-t border-neutral-300 bg-surface px-[10px] py-[7px]"
+          ? "flex-row items-center gap-0.5 self-center rounded-2xl bg-surface px-1.75 py-1.25"
+          : "flex-row items-center gap-0.5 border-t border-neutral-300 bg-surface px-2.5 py-1.75"
       }
     >
       {ITEMS.map((item) => (
@@ -81,7 +81,7 @@ export function BlockBar({
           accessibilityRole="button"
           accessibilityLabel={strings.note.done}
           onPress={onDone}
-          className="ml-auto px-[6px] py-[4px]"
+          className="ml-auto px-1.5 py-xs"
         >
           <Text className="font-fig-med text-[14px] text-accent-700">{strings.note.done}</Text>
         </Pressable>
@@ -92,7 +92,7 @@ export function BlockBar({
 
 function Separator({ visible }: { visible: boolean }) {
   if (!visible) return null;
-  return <View className="mx-[4px] h-[16px] w-[1px] bg-neutral-400" />;
+  return <View className="mx-xs h-[16px] w-[1px] bg-neutral-400" />;
 }
 
 function BarButton({

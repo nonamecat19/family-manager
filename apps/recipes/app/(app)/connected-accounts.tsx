@@ -34,7 +34,7 @@ export default function ConnectedAccountsScreen() {
     <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]"
+        contentContainerClassName="gap-4.5 px-5.5 pb-7 pt-sm"
       >
         <ScreenHeader title={t("connectedAccounts.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
@@ -45,7 +45,7 @@ export default function ConnectedAccountsScreen() {
         ) : null}
 
         {identities.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <ActivityIndicator color={organic.accent.DEFAULT} />
           </View>
         ) : identities.isError ? (
@@ -53,7 +53,7 @@ export default function ConnectedAccountsScreen() {
             {toDisplayError(identities.error, t("connectedAccounts.loadFailed")).message}
           </Text>
         ) : rows.length === 0 ? (
-          <View className="gap-[8px] py-[18px]">
+          <View className="gap-sm py-4.5">
             <Text className="font-fig-bold text-[15.5px] text-fg">
               {t("connectedAccounts.emptyTitle")}
             </Text>
@@ -62,13 +62,13 @@ export default function ConnectedAccountsScreen() {
             </Text>
           </View>
         ) : (
-          <View className="gap-[10px]">
+          <View className="gap-2.5">
             {rows.map((identity) => (
               <View
                 key={`${identity.provider}:${identity.externalId}`}
-                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-[16px] py-3.5"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-lg py-3.5"
               >
-                <View className="flex-1 gap-[3px]">
+                <View className="flex-1 gap-0.75">
                   <Text className="font-fig-bold text-[15.5px] text-fg">
                     {providerLabel(identity.provider, t)}
                   </Text>
@@ -99,7 +99,7 @@ export default function ConnectedAccountsScreen() {
         onClose={() => setUnlinking(null)}
         title={t("connectedAccounts.unlinkConfirm")}
       >
-        <View className="flex-row gap-[10px] pt-[8px]">
+        <View className="flex-row gap-2.5 pt-sm">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("common.cancel")}

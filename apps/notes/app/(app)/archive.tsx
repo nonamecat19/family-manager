@@ -38,7 +38,7 @@ export default function ArchiveScreen() {
 
   return (
     <Screen>
-      <View className="flex-row items-center px-[16px] pt-[6px]">
+      <View className="flex-row items-center px-lg pt-1.5">
         <RoundButton icon="back" label={strings.note.back} onPress={() => router.back()} />
       </View>
       <MobileListHeader title={strings.rail.archive} count={rows.length} />

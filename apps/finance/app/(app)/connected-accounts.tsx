@@ -42,7 +42,7 @@ export default function ConnectedAccountsScreen() {
         {unlinkError ? <ErrorText>{unlinkError}</ErrorText> : null}
 
         {identities.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <ActivityIndicator color={organic.accent.DEFAULT} />
           </View>
         ) : identities.isError ? (
@@ -50,20 +50,20 @@ export default function ConnectedAccountsScreen() {
             {toDisplayError(identities.error, t("connectedAccounts.loadFailed")).message}
           </Text>
         ) : rows.length === 0 ? (
-          <View className="gap-[8px] py-[18px]">
+          <View className="gap-sm py-4.5">
             <Text className="text-[15.5px] font-fig-bold text-fg">{t("connectedAccounts.emptyTitle")}</Text>
             <Text className="text-[14px] leading-[21px] text-neutral-600">
               {t("connectedAccounts.emptyBody")}
             </Text>
           </View>
         ) : (
-          <View className="gap-[10px]">
+          <View className="gap-2.5">
             {rows.map((identity) => (
               <View
                 key={`${identity.provider}:${identity.externalId}`}
-                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-[16px] py-3.5"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-lg py-3.5"
               >
-                <View className="flex-1 gap-[3px]">
+                <View className="flex-1 gap-0.75">
                   <Text className="text-[15.5px] font-fig-bold text-fg">
                     {providerLabel(identity.provider, t)}
                   </Text>
@@ -94,7 +94,7 @@ export default function ConnectedAccountsScreen() {
         onClose={() => setUnlinking(null)}
         title={t("connectedAccounts.unlinkConfirm")}
       >
-        <View className="flex-row gap-[10px] pt-[8px]">
+        <View className="flex-row gap-2.5 pt-sm">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("common.cancel")}

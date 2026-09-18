@@ -50,14 +50,14 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 justify-center gap-[18px] px-[24px]"
+        className="flex-1 justify-center gap-4.5 px-xl"
       >
         <View>
-          <View className="mb-[16px] h-[44px] w-[44px] items-center justify-center rounded-full border border-accent">
+          <View className="mb-lg h-[44px] w-[44px] items-center justify-center rounded-full border border-accent">
             <Icon name="wallet" size={22} color={organic.accent[600]} />
           </View>
           <Display size={36}>{t("auth.title")}</Display>
-          <View className="mt-[10px]">
+          <View className="mt-2.5">
             <Body>{mode === "login" ? t("auth.signInBody") : t("auth.registerBody")}</Body>
           </View>
         </View>
@@ -111,7 +111,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (telegram.phase === "pending" && telegram.userCode) {
     return (
-      <View className="items-center gap-[10px]">
+      <View className="items-center gap-2.5">
         <Text className="text-[22px] font-fig-semi text-fg" style={{ letterSpacing: 3 }}>
           {telegram.userCode}
         </Text>
@@ -132,7 +132,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (failure) {
     return (
-      <View className="items-center gap-[10px]">
+      <View className="items-center gap-2.5">
         <Caption>{failure}</Caption>
         <Button title={t("auth.telegramRetry")} onPress={() => void telegram.start()} />
       </View>

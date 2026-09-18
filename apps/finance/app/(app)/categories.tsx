@@ -97,7 +97,7 @@ export default function CategoriesScreen() {
   };
 
   const header = (
-    <View className="gap-[16px] px-[22px] pt-[8px]">
+    <View className="gap-lg px-5.5 pt-sm">
       <ScreenHeader
         title={t("categories.title")}
         onBack={() => router.back()}
@@ -148,7 +148,7 @@ export default function CategoriesScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-[8.4px] px-2.8 pb-[22.4px] pt-[8.4px]"
+          contentContainerClassName="gap-2.1 px-2.8 pb-5.6 pt-2.1"
           showsVerticalScrollIndicator={false}
         >
           {groups.map((node, index) => {
@@ -199,7 +199,7 @@ export default function CategoriesScreen() {
           })}
 
           <DashedAction label={t("categories.newGroup")} onPress={() => setDraft({ kind: "group" })} />
-          <Text className="px-[8px] text-center text-[11px] text-neutral-600">{t("categories.editHint")}</Text>
+          <Text className="px-sm text-center text-[11px] text-neutral-600">{t("categories.editHint")}</Text>
         </ScrollView>
       )}
 

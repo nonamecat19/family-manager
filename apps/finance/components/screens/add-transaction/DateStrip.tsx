@@ -34,7 +34,7 @@ export function DateStrip({
             accessibilityLabel={`${shortDate(iso)} ${word}`}
             accessibilityState={{ selected }}
             onPress={() => onChange(iso)}
-            className={`items-center rounded-md px-[8.4px] py-1.4 ${selected ? "bg-accent" : ""}`}
+            className={`items-center rounded-md px-2.1 py-1.4 ${selected ? "bg-accent" : ""}`}
           >
             <Text
               className={`text-[12px] ${selected ? "font-fig-med text-accent-700" : "text-neutral-600"}`}

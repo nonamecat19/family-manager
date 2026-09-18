@@ -59,7 +59,7 @@ function ratioPaid(inst: Installment): number {
 
 function ProgressBar({ ratio }: { ratio: number }) {
   return (
-    <View className="mx-4.2 mb-[10px] h-1.25 overflow-hidden rounded-full bg-neutral-200">
+    <View className="mx-4.2 mb-2.5 h-1.25 overflow-hidden rounded-full bg-neutral-200">
       <View className="h-full rounded-full bg-accent" style={{ width: `${Math.round(ratio * 100)}%` }} />
     </View>
   );
@@ -109,11 +109,11 @@ export default function InstallmentsScreen() {
         <ScreenHeader title={t("installments.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
         {installments.isPending ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : installments.isError ? (
-          <View className="gap-3 py-[18px]">
+          <View className="gap-3 py-4.5">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(installments.error, t("common.loadFailed")).message}
             </Text>
@@ -274,14 +274,14 @@ function NewInstallmentSheet({
         <View className="gap-3 pt-1.4">
           <Field label={t("installments.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
 
-          <View className="gap-[6px]">
+          <View className="gap-1.5">
             <Kicker>{t("installments.total")}</Kicker>
             <AmountRow label={t("installments.total")} value={totalText} onChangeValue={setTotalText} currencyCode={code} />
           </View>
 
-          <View className="gap-[8px]">
+          <View className="gap-sm">
             <Kicker>{t("installments.months")}</Kicker>
-            <View className="flex-row flex-wrap gap-[8px]">
+            <View className="flex-row flex-wrap gap-sm">
               {MONTH_PRESETS.map((preset) => (
                 <Chip
                   key={preset}
@@ -434,7 +434,7 @@ function InstallmentSheet({
           <Text className="text-[12.5px] text-error">{error}</Text>
         ) : null}
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
+        <View className="mt-sm gap-sm border-t border-divider pt-3">
           {isActive ? (
             <Button
               title={t("installments.cancel")}

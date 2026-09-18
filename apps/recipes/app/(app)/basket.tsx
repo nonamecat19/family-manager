@@ -30,7 +30,7 @@ export default function ShoppingListScreen() {
 
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-4.5 px-5.5 pb-7 pt-sm">
         <View>
           <Display size={28}>{t("shoppingList.title")}</Display>
           <Text className="mt-1.25 font-fig-bold text-[13px] text-neutral-600">
@@ -43,7 +43,7 @@ export default function ShoppingListScreen() {
                 })}
           </Text>
           {!usingBasket && totals.length > 0 && (
-            <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-500">
+            <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-500">
               {t("shoppingList.totalledFromWeek")}
             </Text>
           )}
@@ -51,7 +51,7 @@ export default function ShoppingListScreen() {
 
         {groups.map((group) => (
           <View key={group.aisle.id}>
-            <View className="mb-[9px] flex-row items-center gap-[9px]">
+            <View className="mb-2.25 flex-row items-center gap-2.25">
               <View
                 className="h-[9px] w-[9px] rounded-full"
                 style={{ backgroundColor: group.aisle.dot }}
@@ -60,7 +60,7 @@ export default function ShoppingListScreen() {
                 {t(group.aisle.nameKey)}
               </Text>
             </View>
-            <View className="rounded-2xl bg-neutral-100 px-[16px] py-[4px]">
+            <View className="rounded-2xl bg-neutral-100 px-lg py-xs">
               {group.items.map((item, i) => {
                 const key = keyOf(item);
                 const on = basket.checked[key] === true;
@@ -71,7 +71,7 @@ export default function ShoppingListScreen() {
                     accessibilityLabel={item.name}
                     accessibilityState={{ checked: on }}
                     onPress={() => basket.toggleChecked(key)}
-                    className={`flex-row items-center gap-[13px] py-3 ${
+                    className={`flex-row items-center gap-3.25 py-3 ${
                       i === group.items.length - 1 ? "" : "border-b border-divider"
                     }`}
                   >
@@ -101,7 +101,7 @@ export default function ShoppingListScreen() {
         ))}
 
         {totals.length === 0 ? (
-          <View className="gap-3 pt-[8px]">
+          <View className="gap-3 pt-sm">
             <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
               {t("shoppingList.emptyBody")}
             </Text>

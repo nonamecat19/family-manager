@@ -307,10 +307,10 @@ export function RailSidebar() {
 
   return (
     <Rail
-      className="flex-none gap-3.5 px-3 py-[16px]"
+      className="flex-none gap-3.5 px-3 py-lg"
       style={{ width: PANE.rail }}
     >
-      <View className="flex-row items-center gap-[9px] px-[4px]">
+      <View className="flex-row items-center gap-2.25 px-xs">
         <View className="h-[22px] w-[22px] items-center justify-center rounded-xl border border-accent">
           <Text className="font-fig-semi text-[11px] text-accent-700">C</Text>
         </View>
@@ -321,7 +321,7 @@ export function RailSidebar() {
         accessibilityRole="button"
         accessibilityLabel={strings.rail.search}
         onPress={shell.openPalette}
-        className="h-[32px] flex-row items-center gap-[8px] rounded-xl border border-neutral-300 bg-surface px-[10px]"
+        className="h-[32px] flex-row items-center gap-sm rounded-xl border border-neutral-300 bg-surface px-2.5"
       >
         <Icon name="magnifying-glass" size={14} color={organic.neutral[700]} />
         <Text className="font-fig text-[13px] text-neutral-700">{strings.rail.search}</Text>
@@ -334,14 +334,14 @@ export function RailSidebar() {
         accessibilityRole="button"
         accessibilityLabel={strings.rail.newNote}
         onPress={() => shell.newNote()}
-        className="h-[34px] flex-row items-center justify-center gap-[7px] rounded-xl border border-accent"
+        className="h-[34px] flex-row items-center justify-center gap-1.75 rounded-xl border border-accent"
       >
         <Icon name="plus" size={14} color={organic.accent.DEFAULT} />
         <Text className="font-fig-med text-[13px] text-accent-700">{strings.rail.newNote}</Text>
         <Kbd>⌘N</Kbd>
       </Pressable>
 
-      <View className="gap-[1px]">
+      <View className="gap-0.25">
         <RailRow
           icon="notebook"
           label={strings.rail.allNotes}
@@ -382,11 +382,11 @@ export function RailSidebar() {
         />
       </View>
 
-      <View className="my-[2px]">
+      <View className="my-0.5">
         <Divider />
       </View>
 
-      <View className="flex-row items-center px-[10px]">
+      <View className="flex-row items-center px-2.5">
         <Text className="font-fig-semi text-[10px] uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
           {strings.rail.notebooks}
         </Text>
@@ -396,7 +396,7 @@ export function RailSidebar() {
       </View>
 
       <ScrollView className="grow-0" showsVerticalScrollIndicator={false}>
-        <View className="gap-[1px]">
+        <View className="gap-0.25">
           {tree.map((node) => (
             <View key={node.notebook.id}>
               <RailRow
@@ -441,7 +441,7 @@ export function RailSidebar() {
       />
 
       {failed ? (
-        <Text className="px-[10px] font-fig text-[11px] text-neutral-700">
+        <Text className="px-2.5 font-fig text-[11px] text-neutral-700">
           {strings.rail.notebookFailed}
         </Text>
       ) : null}
@@ -537,7 +537,7 @@ export function RailSidebar() {
         ]}
       />
 
-      <View className="mt-auto flex-row items-center gap-[8px] px-[10px] pt-[8px]">
+      <View className="mt-auto flex-row items-center gap-sm px-2.5 pt-sm">
         <AvatarStack names={members.map((m) => m.displayName || m.email)} size={22} max={3} />
         <Text className="font-fig text-[11px] text-neutral-700">
           {strings.rail.familyCount(members.length)}
@@ -582,7 +582,7 @@ function RailRow({
       accessibilityState={{ selected: active }}
       onPress={onPress}
       onLongPress={onMenu}
-      className={`h-[30px] flex-row items-center gap-[9px] rounded-xl ${nested ? "pl-[22px] pr-[10px]" : "px-[10px]"}`}
+      className={`h-[30px] flex-row items-center gap-2.25 rounded-xl ${nested ? "pl-5.5 pr-2.5" : "px-2.5"}`}
       style={active ? { backgroundColor: organic.accent[100] } : undefined}
     >
       {icon ? (
@@ -671,9 +671,9 @@ export function ActionSheet({
         className="absolute inset-0"
         style={SCRIM}
       />
-      <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-[6px] rounded-2xl bg-surface px-[10px] py-3 shadow-card">
-          <Text className="px-[8px] pb-[2px] font-fig text-[12px] leading-[18px] text-neutral-700">
+      <View className="flex-1 items-center justify-center px-xl" pointerEvents="box-none">
+        <View className="w-full max-w-[320px] gap-1.5 rounded-2xl bg-surface px-2.5 py-3 shadow-card">
+          <Text className="px-sm pb-0.5 font-fig text-[12px] leading-[18px] text-neutral-700">
             {title}
           </Text>
           {children}
@@ -687,7 +687,7 @@ export function ActionSheet({
                 onClose();
                 action.onPress();
               }}
-              className="h-[36px] flex-row items-center gap-[10px] rounded-xl px-[8px]"
+              className="h-[36px] flex-row items-center gap-2.5 rounded-xl px-sm"
             >
               {action.icon ? (
                 <Icon
@@ -752,8 +752,8 @@ function NotebookDialog({
         className="absolute inset-0"
         style={SCRIM}
       />
-      <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-3 rounded-2xl bg-surface p-[16px] shadow-card">
+      <View className="flex-1 items-center justify-center px-xl" pointerEvents="box-none">
+        <View className="w-full max-w-[320px] gap-3 rounded-2xl bg-surface p-lg shadow-card">
           <Text className="font-fig-med text-[15px] text-fg">{title}</Text>
           <TextInput
             value={name}
@@ -765,14 +765,14 @@ function NotebookDialog({
             onSubmitEditing={() => {
               if (name.trim() !== "") onSubmit(name.trim());
             }}
-            className="rounded-xl border border-neutral-300 px-3 py-[9px] font-fig text-[14px] text-fg"
+            className="rounded-xl border border-neutral-300 px-3 py-2.25 font-fig text-[14px] text-fg"
           />
-          <View className="flex-row items-center gap-[8px]">
+          <View className="flex-row items-center gap-sm">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={strings.common.cancel}
               onPress={onClose}
-              className="rounded-xl border border-neutral-300 px-3.5 py-[9px]"
+              className="rounded-xl border border-neutral-300 px-3.5 py-2.25"
             >
               <Text className="font-fig-med text-[13px] text-neutral-900">{strings.common.cancel}</Text>
             </Pressable>
@@ -820,12 +820,12 @@ function NoteListPane() {
       className="flex-none border-x border-neutral-300"
       style={{ width: PANE.list }}
     >
-      <View className="flex-row items-center gap-[8px] px-[16px] pb-3 pt-[16px]">
+      <View className="flex-row items-center gap-sm px-lg pb-3 pt-lg">
         <Text className="font-fig-med text-[17px] text-fg">{title}</Text>
         <Text className="font-fig text-[11px] text-neutral-600">
           {strings.list.noteCount(rows.length)}
         </Text>
-        <View className="ml-auto flex-row items-center gap-[2px]">
+        <View className="ml-auto flex-row items-center gap-0.5">
           <SortButton />
           {
 }
@@ -941,7 +941,7 @@ export function NoteListBody({
 
   if (loading) {
     return (
-      <View className="items-center py-[40px]">
+      <View className="items-center py-10">
         <ActivityIndicator color={organic.accent.DEFAULT} />
       </View>
     );
@@ -962,14 +962,14 @@ export function NoteListBody({
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {queued.map((item) => (
-        <View key={item.clientId} className="border-b border-neutral-300 px-[16px] py-[13px]">
-          <View className="flex-row items-center gap-[7px]">
+        <View key={item.clientId} className="border-b border-neutral-300 px-lg py-3.25">
+          <View className="flex-row items-center gap-1.75">
             <Text className="font-fig-med text-[14px] text-fg" numberOfLines={1}>
               {item.title || strings.common.untitled}
             </Text>
             <View className="ml-auto h-[7px] w-[7px] rounded-full bg-neutral-600" />
           </View>
-          <Text className="pt-[4px] font-fig text-[11px] text-neutral-600">
+          <Text className="pt-xs font-fig text-[11px] text-neutral-600">
             {strings.list.notSynced}
           </Text>
         </View>
@@ -978,7 +978,7 @@ export function NoteListBody({
       {groups.map((group) => (
         <View key={group.label}>
           {density === "dense" ? (
-            <Text className="px-[16px] pb-[4px] pt-3.5 font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
+            <Text className="px-lg pb-xs pt-3.5 font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
               {group.label}
             </Text>
           ) : null}
@@ -1023,7 +1023,7 @@ function CardRow({
       accessibilityLabel={note.title || strings.common.untitled}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className="gap-1.25 border-b border-neutral-300 px-[16px] py-[13px]"
+      className="gap-1.25 border-b border-neutral-300 px-lg py-3.25"
       style={
         selected
           ? {
@@ -1034,7 +1034,7 @@ function CardRow({
           : undefined
       }
     >
-      <View className="flex-row items-center gap-[7px]">
+      <View className="flex-row items-center gap-1.75">
         <Text numberOfLines={1} className="shrink font-fig-med text-[14px] text-fg">
           {note.title || strings.common.untitled}
         </Text>
@@ -1054,7 +1054,7 @@ function CardRow({
         </Text>
       ) : null}
 
-      <View className="flex-row items-center gap-[7px]">
+      <View className="flex-row items-center gap-1.75">
         {editorName !== "" ? <Avatar name={editorName} size={16} /> : null}
         <Text className="font-fig text-[11px] text-neutral-600">
           {editorName !== ""
@@ -1062,7 +1062,7 @@ function CardRow({
             : relative(note.updatedAt)}
         </Text>
         {note.taskTotal > 0 ? (
-          <View className="ml-auto flex-row items-center gap-[4px]">
+          <View className="ml-auto flex-row items-center gap-xs">
             <Icon name="check-square" size={12} color={organic.neutral[600]} />
             <Text className="font-fig text-[11px] text-neutral-600">
               {note.taskDone}/{note.taskTotal}
@@ -1081,7 +1081,7 @@ function DenseRow({ note, selected, onPress }: { note: Note; selected: boolean; 
       accessibilityLabel={note.title || strings.common.untitled}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className="h-[30px] flex-row items-center gap-[8px] px-[16px]"
+      className="h-[30px] flex-row items-center gap-sm px-lg"
       style={selected ? { backgroundColor: organic.accent[100] } : undefined}
     >
       <Text numberOfLines={1} className="shrink font-fig text-[13px] text-fg">
@@ -1159,7 +1159,7 @@ export function MobileListHeader({
   const sortLabel =
     SORT_OPTIONS.find((option) => option.sort === shell.sort)?.label ?? strings.list.sortUpdated;
   return (
-    <View className="flex-row items-end gap-[8px] px-[20px] pb-[10px] pt-[6px]">
+    <View className="flex-row items-end gap-sm px-5 pb-2.5 pt-1.5">
       <Text
         numberOfLines={1}
         className="flex-1 font-cap text-[26px] text-fg"
@@ -1167,8 +1167,8 @@ export function MobileListHeader({
       >
         {title}
       </Text>
-      <Text className="pb-[4px] font-fig text-[12px] text-neutral-600">{count}</Text>
-      <View className="ml-auto flex-row items-center gap-[6px]">
+      <Text className="pb-xs font-fig text-[12px] text-neutral-600">{count}</Text>
+      <View className="ml-auto flex-row items-center gap-1.5">
         <Chip label={sortLabel} onPress={() => setSorting(true)} active tone="accent2" />
         <Chip
           label={shell.density === "dense" ? strings.list.dense : strings.list.cards}

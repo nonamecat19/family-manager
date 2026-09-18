@@ -83,7 +83,7 @@ export function AccountSheet({
         </View>
       ) : null}
       {privateOwn.length > 0 ? (
-        <View className="pt-[8.4px]">
+        <View className="pt-2.1">
           <Kicker className="mb-1.4">{privateLabel}</Kicker>
           {privateOwn.map((account, index) => (
             <Row
@@ -121,7 +121,7 @@ export function CategorySheet({
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {groups.map((node) => (
-        <View key={node.group?.id ?? ""} className="pb-[8.4px]">
+        <View key={node.group?.id ?? ""} className="pb-2.1">
           <Kicker className="mb-1.4">{node.group?.name ?? ""}</Kicker>
           {node.categories.map((category, index) => (
             <Row

@@ -35,7 +35,7 @@ export function QuickAddPreview({
         <Text className="text-[11px] font-fig-med text-neutral-600">{ownerLabel}</Text>
         <Icon name="arrow-clockwise" size={12} color={organic.neutral[600]} />
       </View>
-      <View className="flex-row gap-[8.4px]">
+      <View className="flex-row gap-2.1">
         {model.templates.map((template, index) => (
           <TemplateCell
             key={template.id}
@@ -88,7 +88,7 @@ function TemplateCell({
         color={highlighted ? organic.accent[300] : organic.neutral[600]}
       />
       <Text
-        className={`mt-[3px] text-[9.5px] font-fig-med ${highlighted ? "text-accent-700" : "text-neutral-600"}`}
+        className={`mt-0.75 text-[9.5px] font-fig-med ${highlighted ? "text-accent-700" : "text-neutral-600"}`}
         numberOfLines={1}
       >
         {label}
@@ -119,9 +119,9 @@ export function MonthPreview({
       />
       <View className="flex-1">
         <Text className="text-[9.5px] text-neutral-600">{model.label}</Text>
-        <MoneyText value={model.total} size={15} className="mt-[1px]" />
+        <MoneyText value={model.total} size={15} className="mt-0.25" />
         {overspentLabel ? (
-          <Text className="mt-[1px] text-[9.5px] text-error">{overspentLabel}</Text>
+          <Text className="mt-0.25 text-[9.5px] text-error">{overspentLabel}</Text>
         ) : null}
       </View>
     </View>
@@ -137,13 +137,13 @@ export function CategoryPreview({
 }) {
   if (!model) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="flex-row items-center gap-[8.4px]">
+    <View className="flex-row items-center gap-2.1">
       <IconCircle icon={model.icon} index={model.index} size={28} />
       <View className="flex-1">
         <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>
           {model.name}
         </Text>
-        <MoneyText value={model.amount} size={13.5} className="mt-[1px]" />
+        <MoneyText value={model.amount} size={13.5} className="mt-0.25" />
       </View>
     </View>
   );
@@ -161,7 +161,7 @@ export function BudgetsAndFamilyPreview({
 
   return (
     <View>
-      <View className="gap-[8.4px]">
+      <View className="gap-2.1">
         {model.budgets.map((budget) => (
           <BudgetBar
             key={budget.id}
@@ -180,7 +180,7 @@ export function BudgetsAndFamilyPreview({
           style={{ borderTopWidth: 1, borderTopColor: organic.neutral[800] }}
         >
           {model.members.map((member, index) => (
-            <View key={member.id} className="flex-row items-center gap-[8.4px]">
+            <View key={member.id} className="flex-row items-center gap-2.1">
               <Avatar name={member.name} index={index} size={20} />
               <Text className="flex-1 text-[11px] text-neutral-600" numberOfLines={1}>
                 {member.name}
@@ -197,9 +197,9 @@ export function BudgetsAndFamilyPreview({
 export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; emptyLabel: string }) {
   if (lines.length === 0) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="gap-[8.4px]">
+    <View className="gap-2.1">
       {lines.map((line, index) => (
-        <View key={line.id} className="flex-row items-center gap-[8.4px]">
+        <View key={line.id} className="flex-row items-center gap-2.1">
           <View
             style={{
               width: 8,

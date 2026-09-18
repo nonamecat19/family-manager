@@ -78,7 +78,7 @@ export function DonutChart({
       </Svg>
       <View className="absolute items-center" pointerEvents="none">
         {centerValue ? <Text className="font-fig-med text-[24px] text-fg">{centerValue}</Text> : null}
-        {centerLabel ? <Text className="mt-[2px] font-fig text-[11.5px] text-neutral-600">{centerLabel}</Text> : null}
+        {centerLabel ? <Text className="mt-0.5 font-fig text-[11.5px] text-neutral-600">{centerLabel}</Text> : null}
       </View>
     </View>
   );
@@ -155,7 +155,7 @@ export function StackedBarSeries({
           );
         })}
       </View>
-      <View className="mt-[8.4px] flex-row justify-between">
+      <View className="mt-2.1 flex-row justify-between">
         {points.map((point, index) => (
           <Text
             key={`${point.label}-label-${index}`}

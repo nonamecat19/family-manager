@@ -65,7 +65,7 @@ export default function PerMemberSpendingScreen() {
 
   return (
     <Screen>
-      <View className="gap-[8px] px-[22px] pt-[8px]">
+      <View className="gap-sm px-5.5 pt-sm">
         <ScreenHeader
           title={focusMember?.name ?? t("member.title")}
           kicker={focusMember ? t("member.title") : undefined}
@@ -99,8 +99,8 @@ export default function PerMemberSpendingScreen() {
             highlightId={focusMember?.id ?? ""}
           />
 
-          <View className="gap-[8.4px]">
-            <Kicker className="ml-[2px]">{t("member.byGroup")}</Kicker>
+          <View className="gap-2.1">
+            <Kicker className="ml-0.5">{t("member.byGroup")}</Kicker>
             <Card className="gap-4.2 border border-border">
               {(data?.groups ?? []).map((group) => (
                 <View key={group.groupId}>
@@ -155,7 +155,7 @@ function MonthButton({ label, onPress }: { label: string; onPress: () => void })
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={8}
-      className="mt-[2.8px] flex-row items-center justify-end gap-1.4 self-end"
+      className="mt-0.7 flex-row items-center justify-end gap-1.4 self-end"
     >
       <Text className="text-[12px] text-neutral-600">{label}</Text>
       <Icon name="caret-down" size={10} color={organic.neutral[600]} />
@@ -193,7 +193,7 @@ function SplitCard({
       />
       <View className="mt-2.8 flex-row flex-wrap gap-4.2">
         {members.map((member) => (
-          <View key={member.id} className="min-w-[110px] flex-1 flex-row items-center gap-[8.4px]">
+          <View key={member.id} className="min-w-[110px] flex-1 flex-row items-center gap-2.1">
             <View
               className="h-[8px] w-[8px] rounded-full"
               style={{ backgroundColor: member.color }}
@@ -206,7 +206,7 @@ function SplitCard({
               >
                 {member.name}
               </Text>
-              <MoneyText value={member.amount} size={15} weight="regular" className="mt-[1px]" />
+              <MoneyText value={member.amount} size={15} weight="regular" className="mt-0.25" />
             </View>
           </View>
         ))}
@@ -231,7 +231,7 @@ function InsightCard({
     <Card className="flex-row items-start gap-2.8 border border-border">
       <Icon name={iconOr(insight.icon, "trend-up")} size={18} color={organic.accent[600]} />
       <View className="flex-1">
-        <Text className="mb-[2px] text-[12.5px] font-fig-med text-fg">{insight.title}</Text>
+        <Text className="mb-0.5 text-[12.5px] font-fig-med text-fg">{insight.title}</Text>
         {body ? <Text className="text-[11.5px] leading-[17px] text-neutral-600">{body}</Text> : null}
       </View>
     </Card>

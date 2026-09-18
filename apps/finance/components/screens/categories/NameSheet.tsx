@@ -45,7 +45,7 @@ export function NameSheet({
           onSubmitEditing={() => trimmed !== "" && !submitting && onSubmit(trimmed)}
           error={error ?? undefined}
         />
-        <View className="flex-row gap-[8.4px]">
+        <View className="flex-row gap-2.1">
           <Button title={cancelLabel} tone="quiet" onPress={onClose} />
           <Button
             title={saveLabel}

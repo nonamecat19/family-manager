@@ -17,7 +17,7 @@ export default function FavoritesScreen() {
     <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]"
+        contentContainerClassName="gap-4.5 px-5.5 pb-7 pt-sm"
         refreshControl={undefined}
       >
         <ScreenHeader title={t("favorites.title")} onBack={() => router.back()} backLabel={t("common.back")} />
@@ -73,7 +73,7 @@ function FavoriteCard({
           </Text>
         )}
       </View>
-      <Text className="mt-[10px] font-cap text-[15px] leading-[17px]" numberOfLines={2}>
+      <Text className="mt-2.5 font-cap text-[15px] leading-[17px]" numberOfLines={2}>
         {recipe.title}
       </Text>
       <Text className="mt-1.25 font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>

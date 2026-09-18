@@ -164,14 +164,14 @@ export default function RecipeEditScreen() {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-[20px] px-[22px] pb-[32px] pt-[8px]"
+        contentContainerClassName="gap-5 px-5.5 pb-2xl pt-sm"
       >
-        <View className="flex-row items-center gap-[13px]">
+        <View className="flex-row items-center gap-3.25">
           <RoundButton icon="close" label={t("recipeEdit.cancel")} onPress={() => router.back()} />
           <Display size={24}>{isNew ? t("recipeEdit.newRecipe") : t("recipeEdit.editRecipe")}</Display>
         </View>
 
-        <View className="flex-row items-center gap-[16px]">
+        <View className="flex-row items-center gap-lg">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("recipeEdit.addAPhoto")}
@@ -203,8 +203,8 @@ export default function RecipeEditScreen() {
 
         {categories.data && categories.data.length > 0 && (
           <View>
-            <Kicker className="mb-[10px]">{t("recipeEdit.category")}</Kicker>
-            <View className="flex-row flex-wrap gap-[8px]">
+            <Kicker className="mb-2.5">{t("recipeEdit.category")}</Kicker>
+            <View className="flex-row flex-wrap gap-sm">
               <Chip
                 label={t("common.none")}
                 active={categoryId === ""}
@@ -230,8 +230,8 @@ export default function RecipeEditScreen() {
 
         {categoryId !== "" && subcategories.data && subcategories.data.length > 0 && (
           <View>
-            <Kicker className="mb-[10px]">{t("recipeEdit.subcategory")}</Kicker>
-            <View className="flex-row flex-wrap gap-[8px]">
+            <Kicker className="mb-2.5">{t("recipeEdit.subcategory")}</Kicker>
+            <View className="flex-row flex-wrap gap-sm">
               <Chip
                 label={t("common.none")}
                 active={subcategoryId === ""}
@@ -276,7 +276,7 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">{t("recipeEdit.perServing")}</Kicker>
+          <Kicker className="mb-2.5">{t("recipeEdit.perServing")}</Kicker>
           <View className="flex-row gap-3">
             <Field
               className="flex-1"
@@ -310,15 +310,15 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">{t("recipeEdit.rating")}</Kicker>
+          <Kicker className="mb-2.5">{t("recipeEdit.rating")}</Kicker>
           <StarPicker rating={rating} onChange={setRating} />
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">{t("recipeEdit.ingredients")}</Kicker>
-          <View className="gap-[8px]">
+          <Kicker className="mb-2.5">{t("recipeEdit.ingredients")}</Kicker>
+          <View className="gap-sm">
             {ingredients.map((ing, idx) => (
-              <View key={idx} className="flex-row items-end gap-[8px]">
+              <View key={idx} className="flex-row items-end gap-sm">
                 <Field
                   className="flex-1"
                   label={idx === 0 ? t("recipeEdit.ingredientName") : ""}
@@ -350,11 +350,11 @@ export default function RecipeEditScreen() {
         </View>
 
         <View>
-          <Kicker className="mb-[10px]">{t("recipeEdit.steps")}</Kicker>
-          <View className="gap-[10px]">
+          <Kicker className="mb-2.5">{t("recipeEdit.steps")}</Kicker>
+          <View className="gap-2.5">
             {steps.map((step, idx) => (
-              <View key={idx} className="gap-[8px] rounded-2xl bg-neutral-100 px-3.5 py-3.5">
-                <View className="flex-row items-center gap-[10px]">
+              <View key={idx} className="gap-sm rounded-2xl bg-neutral-100 px-3.5 py-3.5">
+                <View className="flex-row items-center gap-2.5">
                   <View className="h-[26px] w-[26px] items-center justify-center rounded-full bg-accent2-300">
                     <Text className="font-cap text-[13px] text-accent2-900">{idx + 1}</Text>
                   </View>
@@ -417,7 +417,7 @@ function parseNumber(text: string): number {
 function Placeholder({ label }: { label: string }) {
   return (
     <Screen>
-      <View className="flex-1 items-center justify-center px-[22px]">
+      <View className="flex-1 items-center justify-center px-5.5">
         <Text className="text-center font-fig-semi text-[14px] text-neutral-600">{label}</Text>
       </View>
     </Screen>

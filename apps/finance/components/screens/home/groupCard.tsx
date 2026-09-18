@@ -42,7 +42,7 @@ export function HomeGroupCard({
               className="mt-1.4 w-[120px]"
             />
           ) : meta ? (
-            <Text className="mt-[2px] text-[10.5px] text-neutral-600" numberOfLines={1}>
+            <Text className="mt-0.5 text-[10.5px] text-neutral-600" numberOfLines={1}>
               {meta}
             </Text>
           ) : null}
@@ -51,7 +51,7 @@ export function HomeGroupCard({
           <MoneyText value={amount} size={14} />
           {caption ? (
             <Text
-              className={`mt-[2px] text-[10.5px] ${budget?.over ? "text-error" : "text-neutral-600"}`}
+              className={`mt-0.5 text-[10.5px] ${budget?.over ? "text-error" : "text-neutral-600"}`}
             >
               {caption}
             </Text>

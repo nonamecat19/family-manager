@@ -16,10 +16,10 @@ export default function OnboardingScreen() {
 
   return (
     <Screen>
-      <View className="flex-1 justify-center gap-[20px] px-[24px]">
+      <View className="flex-1 justify-center gap-5 px-xl">
         <View>
           <Display size={33}>{t("onboarding.title")}</Display>
-          <Text className="mt-[10px] font-fig text-[15.5px] leading-[23px] text-neutral-700">
+          <Text className="mt-2.5 font-fig text-[15.5px] leading-[23px] text-neutral-700">
             {t("onboarding.body")}
           </Text>
         </View>

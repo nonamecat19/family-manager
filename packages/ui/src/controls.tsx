@@ -57,7 +57,7 @@ export function Chip({
       accessibilityLabel={label}
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      className={`flex-none rounded-full border-[1.5px] px-[15px] py-[8px] ${
+      className={`flex-none rounded-full border-[1.5px] px-3.75 py-sm ${
         active ? fill : "border-neutral-400 bg-transparent"
       }`}
     >
@@ -75,7 +75,7 @@ export function Tag({ label, tone = "accent" }: { label: string; tone?: "accent"
   const t = useTheme();
   return (
     <View
-      className={`rounded-full px-[10px] py-[3px] ${
+      className={`rounded-full px-2.5 py-0.75 ${
         tone === "accent2" ? "bg-accent2-100" : "bg-accent-100"
       }`}
     >
@@ -102,7 +102,7 @@ export function SegTabs<T extends string>({
 }) {
   const t = useTheme();
   return (
-    <View className="flex-row gap-[6px] rounded-full bg-neutral-200 p-1.25">
+    <View className="flex-row gap-1.5 rounded-full bg-neutral-200 p-1.25">
       {options.map((option) => {
         const active = option === value;
         return (
@@ -112,7 +112,7 @@ export function SegTabs<T extends string>({
             accessibilityLabel={labels[option]}
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option)}
-            className={`flex-1 items-center rounded-full py-[9px] ${active ? "bg-neutral-100" : ""}`}
+            className={`flex-1 items-center rounded-full py-2.25 ${active ? "bg-neutral-100" : ""}`}
           >
             <Text
               className={`text-[14px] ${active ? "text-fg" : "text-neutral-600"}`}
@@ -146,7 +146,7 @@ export function PrimaryButton({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`items-center rounded-full bg-accent py-[15px] ${disabled ? "opacity-50" : ""} ${className}`}
+      className={`items-center rounded-full bg-accent py-3.75 ${disabled ? "opacity-50" : ""} ${className}`}
     >
       <Text className="text-[15.5px] text-white" style={{ fontFamily: t.fonts?.heavy }}>
         {title}
@@ -170,7 +170,7 @@ export function OutlineButton({
       accessibilityRole="button"
       accessibilityLabel={title}
       onPress={onPress}
-      className={`flex-none items-center rounded-full border-2 border-accent px-[22px] py-[13px] ${className}`}
+      className={`flex-none items-center rounded-full border-2 border-accent px-5.5 py-3.25 ${className}`}
     >
       <Text className="text-[15.5px] text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
         {title}
@@ -224,7 +224,7 @@ export function Stepper({
   return (
     <View
       className={`flex-none flex-row items-center rounded-full ${
-        compact ? "gap-2.75 bg-bg p-1.25" : "gap-3.5 bg-neutral-100 px-[8px] py-[6px]"
+        compact ? "gap-2.75 bg-bg p-1.25" : "gap-3.5 bg-neutral-100 px-sm py-1.5"
       }`}
     >
       <Pressable
@@ -265,7 +265,7 @@ export function RatingMark({ rating, size = 13 }: { rating: number; size?: numbe
     <View
       accessible
       accessibilityLabel={tLabel("ui.ratedOutOf5", { rating })}
-      className="flex-none flex-row items-center gap-[3px]"
+      className="flex-none flex-row items-center gap-0.75"
     >
       <StarIcon size={size} />
       <Text className="text-[13.5px] text-accent-700" style={{ fontFamily: t.fonts?.heavy }}>
@@ -286,7 +286,7 @@ export function StarPicker({
 }) {
   const tLabel = useUiTranslate();
   return (
-    <View className="flex-row gap-[6px]">
+    <View className="flex-row gap-1.5">
       {[1, 2, 3, 4, 5].map((n) => (
         <Pressable
           key={n}

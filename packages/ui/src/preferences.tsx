@@ -33,7 +33,7 @@ export function LanguageSection<L extends string>({
 }) {
   return (
     <SettingsSection title={title} hint={hint}>
-      <SettingsGroup className="py-[4px]">
+      <SettingsGroup className="py-xs">
         {options.map((option, i) => (
           <SettingsChoiceRow
             key={option.value}
@@ -145,7 +145,7 @@ export function NotificationsSection({
           {failedText}
         </Text>
       ) : (
-        <SettingsGroup className="py-[4px]">
+        <SettingsGroup className="py-xs">
           {domains.map((domain) => (
             <View key={domain}>
               <SettingsToggleRow

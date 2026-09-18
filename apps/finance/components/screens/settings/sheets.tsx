@@ -78,7 +78,7 @@ export function DataSheet({
     : "";
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("settings.data")}>
-      <View className="gap-[8.4px] pb-2.8">
+      <View className="gap-2.1 pb-2.8">
         <Text className="text-[13px] text-neutral-600">{facts}</Text>
         <Text className="text-[11.5px] text-neutral-600">{syncedAt}</Text>
       </View>

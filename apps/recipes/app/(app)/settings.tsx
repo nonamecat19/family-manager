@@ -28,8 +28,8 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[20px] px-[22px] pb-[28px] pt-[8px]">
-        <View className="flex-row items-center gap-[16px]">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-5 px-5.5 pb-7 pt-sm">
+        <View className="flex-row items-center gap-lg">
           <Avatar
             initial={initialOf(family.data?.family?.name ?? t("profile.familyFallback"))}
             tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }}
@@ -37,24 +37,24 @@ export default function ProfileScreen() {
           />
           <View className="flex-1">
             <Display size={23}>{family.data?.family?.name ?? t("profile.householdFallback")}</Display>
-            <Text className="mt-[4px] font-fig-bold text-[13.5px] text-neutral-600">
+            <Text className="mt-xs font-fig-bold text-[13.5px] text-neutral-600">
               {t("profile.keeperOfTheCookbook")}
             </Text>
           </View>
         </View>
 
-        <View className="flex-row gap-[10px]">
+        <View className="flex-row gap-2.5">
           <StatTile value={`${all.length}`} label={t("profile.statRecipes")} />
           <StatTile value={`${members.data?.members.length ?? cooks}`} label={t("profile.statCooks")} />
           <StatTile value={formatDuration(totalMinutes, t) || "—"} label={t("profile.statTimeWrittenDown")} />
         </View>
 
         <SettingsSection title={t("profile.family")}>
-          <SettingsGroup className="py-[4px]">
+          <SettingsGroup className="py-xs">
             {(members.data?.members ?? []).map((member, i, list) => (
               <View
                 key={member.userId}
-                className={`flex-row items-center gap-[13px] py-3 ${
+                className={`flex-row items-center gap-3.25 py-3 ${
                   i === list.length - 1 ? "" : "border-b border-divider"
                 }`}
               >
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Sheet visible={inviteOpen} onClose={() => setInviteOpen(false)} title={t("profile.inviteACook")}>
-        <Kicker className="mb-[10px]">{t("profile.theirEmail")}</Kicker>
+        <Kicker className="mb-2.5">{t("profile.theirEmail")}</Kicker>
         <TextInput
           accessibilityLabel={t("profile.email")}
           value={email}
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
           keyboardType="email-address"
           placeholder={t("profile.emailPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-[20px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-3 font-fig text-[15px] text-fg"
+          className="mb-5 rounded-full border border-neutral-300 bg-neutral-100 px-lg py-3 font-fig text-[15px] text-fg"
         />
         <PrimaryButton
           title={invite.isPending ? t("profile.sending") : t("profile.sendTheInvitation")}

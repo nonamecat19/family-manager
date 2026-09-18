@@ -102,7 +102,7 @@ export default function HomeScreen() {
     });
 
   const header = (
-    <View className="gap-[16px] px-[22px] pt-[8px]">
+    <View className="gap-lg px-5.5 pt-sm">
       <ScreenHeader
         title={t("home.title")}
         actions={
@@ -146,7 +146,7 @@ export default function HomeScreen() {
     return (
       <Screen>
         {header}
-        <View className="flex-1 justify-center gap-2.8 px-[22.4px]">
+        <View className="flex-1 justify-center gap-2.8 px-5.6">
           <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
             <Text className="text-[12px] text-neutral-600">
@@ -199,7 +199,7 @@ export default function HomeScreen() {
 
         {templates.length > 0 ? (
           <View>
-            <Kicker className="mb-[8.4px] ml-[2.8px]">
+            <Kicker className="mb-2.1 ml-0.7">
               {t("home.quickTemplates", { name: templateOwner })}
             </Kicker>
             <ScrollView

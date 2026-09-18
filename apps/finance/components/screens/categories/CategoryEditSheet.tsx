@@ -89,9 +89,9 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
       <View className="gap-3.5 pt-1.4">
         <Field label={t("categories.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("categories.icon")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {GROUP_ICONS.map((option) => (
               <Pressable
                 key={option}
@@ -107,9 +107,9 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
           </View>
         </View>
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("categories.group")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {groups.map((node) => (
               <Chip
                 key={node.group?.id}
@@ -125,9 +125,9 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
+        <View className="mt-sm gap-sm border-t border-divider pt-3">
           <Kicker>{t("categories.moveTransactionsTo")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {others.map((other) => (
               <Chip
                 key={other.id}

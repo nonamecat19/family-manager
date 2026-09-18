@@ -52,11 +52,11 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 justify-center gap-[18px] px-[24px]"
+        className="flex-1 justify-center gap-4.5 px-xl"
       >
         <View>
           <Display size={36}>{t("login.appName")}</Display>
-          <View className="mt-[10px]">
+          <View className="mt-2.5">
             <Body>{mode === "login" ? t("login.signInBody") : t("login.registerBody")}</Body>
           </View>
         </View>
@@ -110,7 +110,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (telegram.phase === "pending" && telegram.userCode) {
     return (
-      <View className="items-center gap-[10px]">
+      <View className="items-center gap-2.5">
         <Text className="font-fig-x text-[22px] text-fg" style={{ letterSpacing: 3 }}>
           {telegram.userCode}
         </Text>
@@ -131,7 +131,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (failure) {
     return (
-      <View className="items-center gap-[10px]">
+      <View className="items-center gap-2.5">
         <Caption>{failure}</Caption>
         <Button title={t("login.telegramRetry")} onPress={() => void telegram.start()} />
       </View>

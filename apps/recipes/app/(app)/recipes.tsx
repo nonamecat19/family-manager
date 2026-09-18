@@ -90,15 +90,15 @@ export default function RecipeListScreen() {
         data={recipes}
         keyExtractor={(r) => r.id}
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="gap-[10px] px-[22px] pb-[100px]"
+        contentContainerClassName="gap-2.5 px-5.5 pb-25"
         refreshing={list.isRefetching}
         onRefresh={() => void list.refetch()}
         ListHeaderComponent={
-          <View className="-mx-[22px] pb-3">
-            <View className="flex-row items-center justify-between gap-3 px-[22px] pt-[8px]">
+          <View className="-mx-5.5 pb-3">
+            <View className="flex-row items-center justify-between gap-3 px-5.5 pt-sm">
               <View className="flex-1">
                 <Display size={28}>{category?.name ?? t("recipesList.allRecipes")}</Display>
-                <Text className="mt-[4px] font-fig-bold text-[13px] text-neutral-600">
+                <Text className="mt-xs font-fig-bold text-[13px] text-neutral-600">
                   {list.isPending ? t("common.loadingEllipsis") : t("plurals.recipesCount", { count: recipes.length })}
                 </Text>
               </View>
@@ -106,7 +106,7 @@ export default function RecipeListScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t("recipesList.filter")}
                 onPress={() => setFilterOpen(true)}
-                className="flex-none flex-row items-center gap-[8px] rounded-full bg-accent px-[17px] py-2.75"
+                className="flex-none flex-row items-center gap-sm rounded-full bg-accent px-4.25 py-2.75"
               >
                 <Icon name="filter" size={16} color={organic.accentFg} />
                 <Text className="font-fig-bold text-[14px] text-white">
@@ -119,7 +119,7 @@ export default function RecipeListScreen() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerClassName="gap-[8px] px-[22px] pb-[4px] pt-[16px]"
+                contentContainerClassName="gap-sm px-5.5 pb-xs pt-lg"
               >
                 <Chip
                   label={t("common.all")}
@@ -142,7 +142,7 @@ export default function RecipeListScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerClassName="flex-row items-center gap-[9px] px-[22px] pb-[4px] pt-3.5"
+              contentContainerClassName="flex-row items-center gap-2.25 px-5.5 pb-xs pt-3.5"
             >
               <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipesList.sort")}</Text>
               {SORTS.map((option) => {
@@ -155,7 +155,7 @@ export default function RecipeListScreen() {
                     accessibilityLabel={t("recipesList.sortBy", { label })}
                     accessibilityState={{ selected: active }}
                     onPress={() => setSort(option.value)}
-                    className={`rounded-full px-[13px] py-[6px] ${active ? "bg-accent-200" : ""}`}
+                    className={`rounded-full px-3.25 py-1.5 ${active ? "bg-accent-200" : ""}`}
                   >
                     <Text
                       className={`font-fig-bold text-[13px] ${active ? "text-accent-800" : "text-neutral-600"}`}
@@ -177,7 +177,7 @@ export default function RecipeListScreen() {
         )}
         ListEmptyComponent={
           list.isPending ? null : (
-            <View className="gap-[8px] pt-[40px]">
+            <View className="gap-sm pt-10">
               <Display size={20}>{t("recipesList.nothingHereYet")}</Display>
               <Text className="font-fig text-[15px] text-neutral-600">
                 {activeFilters > 0
@@ -199,8 +199,8 @@ export default function RecipeListScreen() {
       </Pressable>
 
       <Sheet visible={filterOpen} onClose={() => setFilterOpen(false)} title={t("recipesList.filterSheetTitle")}>
-        <Kicker className="mb-[10px]">{t("recipesList.category")}</Kicker>
-        <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
+        <Kicker className="mb-2.5">{t("recipesList.category")}</Kicker>
+        <View className="mb-5 flex-row flex-wrap gap-sm">
           <Chip
             label={t("common.all")}
             active={categoryId === ""}
@@ -222,8 +222,8 @@ export default function RecipeListScreen() {
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">{t("recipesList.maxTime")}</Kicker>
-        <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
+        <Kicker className="mb-2.5">{t("recipesList.maxTime")}</Kicker>
+        <View className="mb-5 flex-row flex-wrap gap-sm">
           {TIME_PRESETS.map((preset) => (
             <Chip
               key={preset.labelKey}
@@ -235,8 +235,8 @@ export default function RecipeListScreen() {
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">{t("recipesList.minimumRating")}</Kicker>
-        <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
+        <Kicker className="mb-2.5">{t("recipesList.minimumRating")}</Kicker>
+        <View className="mb-5 flex-row flex-wrap gap-sm">
           {RATING_PRESETS.map((preset) => (
             <Chip
               key={preset.labelKey}
@@ -254,22 +254,22 @@ export default function RecipeListScreen() {
           />
         </View>
 
-        <Kicker className="mb-[10px]">{t("recipesList.whatCanICookWith")}</Kicker>
+        <Kicker className="mb-2.5">{t("recipesList.whatCanICookWith")}</Kicker>
         <TextInput
           accessibilityLabel={t("recipesList.ingredient")}
           value={ingredient}
           onChangeText={setIngredient}
           placeholder={t("recipesList.ingredientPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-[24px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-2.75 font-fig text-[14px] text-fg"
+          className="mb-xl rounded-full border border-neutral-300 bg-neutral-100 px-lg py-2.75 font-fig text-[14px] text-fg"
         />
 
-        <View className="flex-row gap-[10px]">
+        <View className="flex-row gap-2.5">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("recipesList.resetFilters")}
             onPress={resetFilters}
-            className="flex-none rounded-full border-2 border-neutral-400 px-[24px] py-[13px]"
+            className="flex-none rounded-full border-2 border-neutral-400 px-xl py-3.25"
           >
             <Text className="font-fig-x text-[15px] text-neutral-700">{t("recipesList.reset")}</Text>
           </Pressable>
@@ -301,7 +301,7 @@ function RecipeRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-[16px] shadow-card"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-lg shadow-card"
     >
       {recipe.imageUrl !== "" ? (
         <Image
@@ -317,7 +317,7 @@ function RecipeRow({
         <Text className="font-cap text-[16px] leading-[18px] text-fg" numberOfLines={2}>
           {recipe.title}
         </Text>
-        <View className="mt-[6px] flex-row items-center gap-[7px]">
+        <View className="mt-1.5 flex-row items-center gap-1.75">
           <Text className="font-fig-bold text-[12.5px] text-neutral-700">
             {t("plurals.servingsCount", { count: recipe.servings })}
           </Text>

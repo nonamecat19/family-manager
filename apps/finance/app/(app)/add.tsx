@@ -259,7 +259,7 @@ export default function AddTransactionScreen() {
 
   return (
     <Screen>
-      <View className="gap-[16px] px-[22px] pt-[8px]">
+      <View className="gap-lg px-5.5 pt-sm">
         <ScreenHeader
           title={editingId === "" ? t("add.title") : t("add.editTitle")}
           onBack={
@@ -283,7 +283,7 @@ export default function AddTransactionScreen() {
       </View>
 
       {failed ? (
-        <View className="flex-1 justify-center gap-[8.4px] px-4.2">
+        <View className="flex-1 justify-center gap-2.1 px-4.2">
           <Text className="text-[13.5px] leading-[21px] text-neutral-600">
             {toDisplayError(failed.error, t("common.loadFailed")).message}
           </Text>
@@ -333,7 +333,7 @@ export default function AddTransactionScreen() {
               fallbackCurrency={currencyCode}
             />
 
-            <View className="flex-row gap-[8.4px]">
+            <View className="flex-row gap-2.1">
               <PickerField
                 label={t("add.who")}
                 value={member?.displayName ?? t("common.none")}
@@ -384,7 +384,7 @@ export default function AddTransactionScreen() {
             />
 
             {error ? (
-              <View className="gap-[2.8px]">
+              <View className="gap-0.7">
                 <Text className="text-[12.5px] text-error">{error}</Text>
                 {errorRef ? (
                   <Text className="text-[11px] text-neutral-600">
@@ -395,7 +395,7 @@ export default function AddTransactionScreen() {
             ) : null}
           </ScrollView>
 
-          <View className="px-4.2 pb-1.4 pt-[8.4px]">
+          <View className="px-4.2 pb-1.4 pt-2.1">
             <Button
               title={t("add.submit", {
                 amount: formatMoney(amount ?? zeroLike(undefined, currencyCode)),

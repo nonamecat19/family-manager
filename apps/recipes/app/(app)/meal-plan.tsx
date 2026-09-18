@@ -44,7 +44,7 @@ export default function PlanScreen() {
 
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-4.5 px-5.5 pb-7 pt-sm">
         <Display size={28}>{t("mealPlan.title")}</Display>
         <SegTabs
           options={TABS}
@@ -76,7 +76,7 @@ function BasketTab() {
   const batches = basket.items.reduce((n, i) => n + basket.batchesOf(i.recipeId), 0);
 
   return (
-    <View className="gap-[10px]">
+    <View className="gap-2.5">
       {basket.items.map((item, index) => (
         <BasketRow key={item.recipeId} recipeId={item.recipeId} index={index} />
       ))}
@@ -87,7 +87,7 @@ function BasketTab() {
       />
 
       {basket.items.length > 0 && (
-        <View className="mt-[4px] rounded-2xl bg-accent2-200 px-[20px] py-[18px]">
+        <View className="mt-xs rounded-2xl bg-accent2-200 px-5 py-4.5">
           <View className="flex-row justify-between">
             <Text className="font-fig-bold text-[14px] text-accent2-800">
               {t("mealPlan.recipesAndBatches", {
@@ -122,13 +122,13 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
   const tint = tintFor(r?.categoryId, index);
 
   return (
-    <View className="flex-row items-center gap-[13px] rounded-2xl bg-neutral-100 py-3 pl-3 pr-3.5">
+    <View className="flex-row items-center gap-3.25 rounded-2xl bg-neutral-100 py-3 pl-3 pr-3.5">
       <Avatar initial={initialOf(r?.title ?? "?")} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
         <Text className="font-fig-bold text-[15px] leading-[18px] text-fg" numberOfLines={1}>
           {r?.title ?? t("mealPlan.loading")}
         </Text>
-        <Text className="mt-[3px] font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
+        <Text className="mt-0.75 font-fig-semi text-[12.5px] text-neutral-600" numberOfLines={1}>
           {r
             ? metaLine([
                 formatDuration(r.prepSeconds + r.cookSeconds, t),
@@ -164,20 +164,20 @@ function WeekTab() {
   const entries = plan.data ?? [];
 
   return (
-    <View className="gap-[9px]">
+    <View className="gap-2.25">
       {days.map((day) => {
         const dayEntries = entries.filter((e) => e.date === day.iso);
         return (
-          <View key={day.iso} className="flex-row items-stretch gap-[13px]">
-            <View className="w-[46px] flex-none items-center pt-[13px]">
+          <View key={day.iso} className="flex-row items-stretch gap-3.25">
+            <View className="w-[46px] flex-none items-center pt-3.25">
               <Text className={`font-cap text-[17px] ${day.isToday ? "text-accent-700" : "text-fg"}`}>
                 {day.num}
               </Text>
-              <Text className="mt-[1px] font-fig-x text-[11px] uppercase tracking-[1px] text-neutral-600">
+              <Text className="mt-0.25 font-fig-x text-[11px] uppercase tracking-[1px] text-neutral-600">
                 {t(day.dayKey)}
               </Text>
             </View>
-            <View className="min-w-0 flex-1 gap-[7px]">
+            <View className="min-w-0 flex-1 gap-1.75">
               {dayEntries.map((entry) => {
                 const recipe = recipes.data?.find((r) => r.id === entry.recipeId);
                 const tint = tintFor(recipe?.categoryId);
@@ -199,7 +199,7 @@ function WeekTab() {
                         },
                       ])
                     }
-                    className="flex-row justify-between gap-[10px] rounded-xl px-[15px] py-2.75"
+                    className="flex-row justify-between gap-2.5 rounded-xl px-3.75 py-2.75"
                     style={{ backgroundColor: tint.bg }}
                   >
                     <Text
@@ -222,7 +222,7 @@ function WeekTab() {
                 accessibilityRole="button"
                 accessibilityLabel={t("mealPlan.planAMealForDay", { day: t(day.dayKey), num: day.num })}
                 onPress={() => setAddingTo(day.iso)}
-                className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-[15px] py-2.75"
+                className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-3.75 py-2.75"
               >
                 <Text className="font-fig-bold text-[13.5px] text-neutral-500">
                   {dayEntries.length === 0 ? t("mealPlan.nothingPlanned") : t("mealPlan.addAnother")}
@@ -235,16 +235,16 @@ function WeekTab() {
       })}
 
       <Sheet visible={addingTo !== null} onClose={() => setAddingTo(null)} title={t("mealPlan.planAMeal")}>
-        <Kicker className="mb-[10px]">{t("mealPlan.slot")}</Kicker>
-        <View className="mb-[20px] flex-row flex-wrap gap-[8px]">
+        <Kicker className="mb-2.5">{t("mealPlan.slot")}</Kicker>
+        <View className="mb-5 flex-row flex-wrap gap-sm">
           {SLOTS.map((s) => (
             <Chip key={s.labelKey} label={t(s.labelKey)} active={s.value === slot} onPress={() => setSlot(s.value)} />
           ))}
         </View>
 
-        <Kicker className="mb-[10px]">{t("mealPlan.recipe")}</Kicker>
+        <Kicker className="mb-2.5">{t("mealPlan.recipe")}</Kicker>
         <ScrollView className="max-h-[280px]" showsVerticalScrollIndicator={false}>
-          <View className="gap-[8px]">
+          <View className="gap-sm">
             {(recipes.data ?? []).map((r, index) => (
               <Pressable
                 key={r.id}
@@ -255,7 +255,7 @@ function WeekTab() {
                   planMeal.mutate({ recipeId: r.id, date: addingTo, slot, servings: 0 });
                   setAddingTo(null);
                 }}
-                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 py-[10px] pl-[10px] pr-3.5"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 py-2.5 pl-2.5 pr-3.5"
               >
                 <Avatar initial={initialOf(r.title)} tint={tintFor(r.categoryId, index)} size={40} />
                 <Text className="flex-1 font-fig-bold text-[14.5px] text-fg" numberOfLines={1}>

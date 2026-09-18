@@ -49,7 +49,7 @@ export function GroupCard({
           <Text className="text-[14px] font-fig-med text-fg" numberOfLines={1}>
             {name}
           </Text>
-          <Text className="mt-[2px] text-[10.5px] text-neutral-600" numberOfLines={1}>
+          <Text className="mt-0.5 text-[10.5px] text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>
         </View>
@@ -69,7 +69,7 @@ export function GroupCard({
           onSelect={onSelectCategory}
           onLongPress={onLongPressCategory}
           more={{ label: addLabel, onPress: onAddCategory }}
-          className="px-[8.4px] pb-2.8"
+          className="px-2.1 pb-2.8"
         />
       ) : null}
     </Card>

@@ -148,9 +148,9 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
       <View className="gap-3.5 pt-1.4">
         <Field label={t("categories.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("categories.icon")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {GROUP_ICONS.map((option) => (
               <Pressable
                 key={option}
@@ -166,9 +166,9 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
           </View>
         </View>
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("categories.color")}</Kicker>
-          <View className="flex-row gap-[8px]">
+          <View className="flex-row gap-sm">
             {COLOR_STEPS.map((step) => (
               <Pressable
                 key={step}
@@ -187,7 +187,7 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
           </View>
         </View>
 
-        <View className="gap-[6px]">
+        <View className="gap-1.5">
           <Kicker>{t("categories.monthlyBudget")}</Kicker>
           <AmountRow
             label={t("categories.monthlyBudget")}
@@ -202,11 +202,11 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
+        <View className="mt-sm gap-sm border-t border-divider pt-3">
           {categoryCount > 0 ? (
             <>
               <Kicker>{t("categories.moveCategoriesTo")}</Kicker>
-              <View className="flex-row flex-wrap gap-[8px]">
+              <View className="flex-row flex-wrap gap-sm">
                 {otherGroups.map((other) => (
                   <Chip
                     key={other.group?.id}

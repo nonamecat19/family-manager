@@ -41,10 +41,10 @@ export function FilterSheet({
   const { t } = useI18n();
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("transactions.filter")}>
-      <View className="gap-[16px]">
-        <View className="gap-[8px]">
+      <View className="gap-lg">
+        <View className="gap-sm">
           <Kicker>{t("household.members")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {members.map((member) => (
               <Chip
                 key={member.id}
@@ -56,9 +56,9 @@ export function FilterSheet({
           </View>
         </View>
 
-        <View className="gap-[8px]">
+        <View className="gap-sm">
           <Kicker>{t("accounts.sharedSection")}</Kicker>
-          <View className="flex-row flex-wrap gap-[8px]">
+          <View className="flex-row flex-wrap gap-sm">
             {accounts.map((account) => (
               <Chip
                 key={account.id}
@@ -71,9 +71,9 @@ export function FilterSheet({
         </View>
 
         {groups.length > 0 ? (
-          <View className="gap-[8px]">
+          <View className="gap-sm">
             <Kicker>{t("transactions.groups")}</Kicker>
-            <View className="flex-row flex-wrap gap-[8px]">
+            <View className="flex-row flex-wrap gap-sm">
               {groups.map((group) => (
                 <Chip
                   key={group.id}
@@ -86,7 +86,7 @@ export function FilterSheet({
           </View>
         ) : null}
 
-        <View className="flex-row gap-[8px]">
+        <View className="flex-row gap-sm">
           <Button title={t("common.all")} tone="quiet" onPress={onClear} />
           <View className="flex-1"><Button title={t("common.done")} onPress={onClose} /></View>
         </View>

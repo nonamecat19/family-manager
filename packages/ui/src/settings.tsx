@@ -34,7 +34,7 @@ export function SettingsSection({
 }
 
 export function SettingsGroup({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <View className={`rounded-2xl bg-neutral-100 px-[16px] ${className}`}>{children}</View>;
+  return <View className={`rounded-2xl bg-neutral-100 px-lg ${className}`}>{children}</View>;
 }
 
 export function SettingsLinkRow({
@@ -60,7 +60,7 @@ export function SettingsLinkRow({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 px-[16px] py-3.5 ${className}`}
+      className={`flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 px-lg py-3.5 ${className}`}
     >
       {icon ? (
         <Icon name={icon} size={18} color={iconTone === "accent" ? t.accent[600] : t.neutral[600]} />
@@ -71,7 +71,7 @@ export function SettingsLinkRow({
         </Text>
         {meta ? (
           <Text
-            className="mt-[2px] text-[12px] text-neutral-600"
+            className="mt-0.5 text-[12px] text-neutral-600"
             numberOfLines={1}
             style={{ fontFamily: t.fonts?.body }}
           >

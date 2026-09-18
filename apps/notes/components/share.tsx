@@ -66,7 +66,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
         style={SCRIM}
       />
       <View
-        className="max-h-[70%] gap-3.5 bg-surface px-[18px] pb-[24px] pt-[10px]"
+        className="max-h-[70%] gap-3.5 bg-surface px-4.5 pb-xl pt-2.5"
         style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
       >
         <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
@@ -85,7 +85,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
         </Text>
 
         <ScrollView className="grow-0">
-          <View className="gap-[4px]">
+          <View className="gap-xs">
             <ShareRow
               label={strings.share.wholeFamily}
               icon="users-three"
@@ -95,12 +95,12 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
               onRemove={familyShare ? () => revoke(familyShare) : undefined}
             />
 
-            <View className="py-[6px]">
+            <View className="py-1.5">
               <Divider />
             </View>
 
             {members.length === 0 ? (
-              <Text className="py-[8px] font-fig text-[12.5px] text-neutral-700">
+              <Text className="py-sm font-fig text-[12.5px] text-neutral-700">
                 {strings.share.noMembers}
               </Text>
             ) : null}
@@ -108,7 +108,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
             {members.map((member) => {
               if (member.userId === ownerUserId) {
                 return (
-                  <View key={member.userId} className="flex-row items-center gap-[9px] py-[9px]">
+                  <View key={member.userId} className="flex-row items-center gap-2.25 py-2.25">
                     <Avatar name={member.displayName || member.email} size={24} />
                     <Text className="font-fig text-[13.5px] text-fg">
                       {member.displayName || member.email}
@@ -164,7 +164,7 @@ function ShareRow({
   onRemove?: () => void;
 }) {
   return (
-    <View className="flex-row items-center gap-[9px] py-[7px]">
+    <View className="flex-row items-center gap-2.25 py-1.75">
       {avatarName ? (
         <Avatar name={avatarName} size={24} />
       ) : (
@@ -176,7 +176,7 @@ function ShareRow({
         {label}
       </Text>
 
-      <View className="ml-auto flex-row items-center gap-[6px]">
+      <View className="ml-auto flex-row items-center gap-1.5">
         <PermissionToggle
           label={strings.share.view}
           selected={permission === SharePermission.VIEW}
@@ -222,7 +222,7 @@ function PermissionToggle({
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`rounded-xl border px-[9px] py-[4px] ${
+      className={`rounded-xl border px-2.25 py-xs ${
         selected ? "border-accent bg-accent-100" : "border-neutral-300"
       }`}
     >

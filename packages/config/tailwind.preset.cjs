@@ -21,6 +21,23 @@ const colors = {
   "muted-dark": "#A0AEC0",
 };
 
+// fine numeric scale, key n -> n * 4px, 1px resolution from 1px to 128px.
+// gap/padding/margin brackets should use this instead of arbitrary [Npx] values.
+const fineSpacing = {};
+for (let px = 1; px <= 128; px += 1) {
+  fineSpacing[String(px / 4)] = `${px}px`;
+}
+
+// the ×1.4 "roomy" variant seen in a few compact/expanded layouts — not on the 1px grain above.
+const roomySpacing = {
+  "0.7": "2.8px",
+  "1.4": "5.6px",
+  "2.1": "8.4px",
+  "2.8": "11.2px",
+  "4.2": "16.8px",
+  "5.6": "22.4px",
+};
+
 const spacing = {
   xs: "4px",
   sm: "8px",
@@ -29,14 +46,8 @@ const spacing = {
   xl: "24px",
   "2xl": "32px",
 
-  // numeric scale, n * 4px — covers fine-grained gaps that don't fit the named scale
-  "1.25": "5px",
-  "1.4": "5.6px",
-  "2.75": "11px",
-  "2.8": "11.2px",
-  "3": "12px",
-  "3.5": "14px",
-  "4.2": "16.8px",
+  ...fineSpacing,
+  ...roomySpacing,
 };
 
 const radius = {

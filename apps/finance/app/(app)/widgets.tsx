@@ -33,12 +33,12 @@ export default function WidgetsScreen() {
           onBack={() => router.back()}
           backLabel={t("common.back")}
         />
-        <Text className="-mt-[8px] text-[14px] leading-[21px] text-neutral-600">{t("widgets.body")}</Text>
+        <Text className="-mt-sm text-[14px] leading-[21px] text-neutral-600">{t("widgets.body")}</Text>
 
         {error ? (
           <Failure message={toDisplayError(error, t("common.loadFailed")).message} onRetry={refetch} />
         ) : !previews ? (
-          <View className="items-center py-[28px]">
+          <View className="items-center py-7">
             <Text className="text-[15px] text-neutral-600">
               {isPending ? t("common.loadingEllipsis") : t("common.none")}
             </Text>
@@ -95,7 +95,7 @@ export default function WidgetsScreen() {
 function Failure({ message, onRetry }: { message: string; onRetry: () => void }) {
   const { t } = useI18n();
   return (
-    <View className="gap-3 py-[18px]">
+    <View className="gap-3 py-4.5">
       <Text className="text-[13.5px] leading-[21px] text-neutral-600">{message}</Text>
       <Button title={t("common.tryAgain")} onPress={onRetry} tone="quiet" />
     </View>
