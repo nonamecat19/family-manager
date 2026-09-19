@@ -11,6 +11,8 @@ export interface ApiProviderProps extends ClientsOptions {
   children: ReactNode;
 }
 
+export type { Clients, ClientsOptions };
+
 export function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {

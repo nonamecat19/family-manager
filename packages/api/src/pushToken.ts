@@ -1,11 +1,12 @@
 import type { App, Platform } from "@fm/sdk/notifications/v1/notifications_pb";
 
-export type PushApp = "notes" | "finance" | "recipes";
+export type PushApp = "notes" | "finance" | "recipes" | "tasks";
 
 const APP_BY_NAME: Record<PushApp, App> = {
   notes: 1 as App,
   finance: 2 as App,
   recipes: 3 as App,
+  tasks: 4 as App,
 };
 
 const PLATFORM_UNSPECIFIED = 0 as Platform;
