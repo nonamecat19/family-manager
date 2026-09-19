@@ -56,9 +56,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "ef99ccf",
       "blocked_reason": null,
       "id": "u03",
       "title": "notifications.v1: additive APP_TASKS enum value + regenerated stubs",
@@ -68,7 +68,7 @@
     },
     {
       "nodes": [
-        "golib:libs/go/events"
+        "golib:events"
       ],
       "files": [
         "libs/go/events/events.go",
@@ -76,9 +76,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "d0ed5a7",
       "blocked_reason": null,
       "id": "u04",
       "title": "libs/go/events: tasks subjects (task.assigned, task.due, birthday.upcoming)",
@@ -95,13 +95,14 @@
         "services/tasks/go.sum",
         "services/tasks/cmd/server/main.go",
         "services/tasks/internal/config/config.go",
-        "services/tasks/internal/config/config_test.go"
+        "services/tasks/internal/config/config_test.go",
+        "services/tasks/cmd/server/main_test.go"
       ],
       "depends_on": [
         "u02"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -331,7 +332,7 @@
     {
       "nodes": [
         "service:tasks",
-        "golib:libs/go/events"
+        "golib:events"
       ],
       "files": [
         "services/tasks/internal/events/publisher.go",
@@ -572,7 +573,7 @@
       "title": "Wire tasks main: pool + migrations, family client, publisher, reminder scheduler, calendar pull loop",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go vet ./... && GOWORK=off go test -race ./...",
-      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC."
+      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04)."
     },
     {
       "nodes": [
@@ -825,7 +826,8 @@
       ],
       "files": [
         "services/notifications/internal/notify/notify.go",
-        "services/notifications/internal/notify/notify_test.go"
+        "services/notifications/internal/notify/notify_test.go",
+        "services/notifications/cmd/server/main.go"
       ],
       "depends_on": [
         "u02",
@@ -841,7 +843,7 @@
       "title": "notifications: subscribe to tasks events, render and push to the tasks app",
       "kind": "service",
       "acceptance": "cd services/notifications && go test -race ./internal/notify/...",
-      "notes": "Add subjects to Subjects, 'tasks' to appRank; assigned -> new assignees only, due -> assignees, birthday -> whole family."
+      "notes": "Add subjects to Subjects, 'tasks' to appRank; assigned -> new assignees only, due -> assignees, birthday -> whole family. Also add \"tasks\" to consumedDomains in cmd/server/main.go so the TASKS stream exists before subscribing (verifier u04)."
     },
     {
       "nodes": [
@@ -1285,5 +1287,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:28:59.101Z"
+  "updated_at": "2026-10-05T19:43:12.263Z"
 }
