@@ -41,7 +41,7 @@ export function GroupCard({
         accessibilityLabel={name}
         accessibilityState={{ expanded }}
         onPress={onToggle}
-        className="flex-row items-center gap-[11.2px] px-[11.2px] py-[11.2px]"
+        className="flex-row items-center gap-2.8 px-2.8 py-2.8"
         style={({ pressed }) => (pressed ? { opacity: 0.82 } : null)}
       >
         <IconCircle icon={icon} tint={tintFor(colorStep)} size={34} />
@@ -69,7 +69,7 @@ export function GroupCard({
           onSelect={onSelectCategory}
           onLongPress={onLongPressCategory}
           more={{ label: addLabel, onPress: onAddCategory }}
-          className="px-[8.4px] pb-[11.2px]"
+          className="px-[8.4px] pb-2.8"
         />
       ) : null}
     </Card>

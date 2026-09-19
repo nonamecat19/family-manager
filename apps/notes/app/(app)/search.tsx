@@ -28,11 +28,11 @@ export default function SearchScreen() {
 
   return (
     <Screen>
-      <View className="gap-[12px] px-[20px] pb-[10px] pt-[6px]">
+      <View className="gap-3 px-[20px] pb-[10px] pt-[6px]">
         <Text className="font-cap text-[26px] text-fg" style={{ letterSpacing: -0.5 }}>
           {strings.search.title}
         </Text>
-        <View className="h-[38px] flex-row items-center gap-[9px] rounded-xl border border-neutral-300 bg-surface px-[11px]">
+        <View className="h-[38px] flex-row items-center gap-[9px] rounded-xl border border-neutral-300 bg-surface px-2.75">
           <Icon name="magnifying-glass" size={16} color={organic.accent.DEFAULT} />
           <TextInput
             value={query}
@@ -55,14 +55,14 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      <ScrollView className="px-[12px]">
+      <ScrollView className="px-3">
         {query.trim() === "" ? (
-          <Text className="px-[8px] py-[14px] font-fig text-[13px] text-neutral-700">
+          <Text className="px-[8px] py-3.5 font-fig text-[13px] text-neutral-700">
             {strings.search.hint}
           </Text>
         ) : null}
         {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-          <Text className="px-[8px] py-[14px] font-fig text-[13px] text-neutral-700">
+          <Text className="px-[8px] py-3.5 font-fig text-[13px] text-neutral-700">
             {strings.search.empty}
           </Text>
         ) : null}
@@ -72,7 +72,7 @@ export default function SearchScreen() {
             accessibilityRole="button"
             accessibilityLabel={hit.title}
             onPress={() => open(hit)}
-            className="flex-row items-center gap-[11px] rounded-xl px-[8px] py-[11px]"
+            className="flex-row items-center gap-2.75 rounded-xl px-[8px] py-2.75"
           >
             <Icon name={GLYPH[hit.kind] ?? "file-text"} size={17} color={organic.neutral[700]} />
             <View className="min-w-0 flex-1 gap-[2px]">
@@ -88,7 +88,7 @@ export default function SearchScreen() {
           </Pressable>
         ))}
         {search.data ? (
-          <Text className="px-[8px] py-[14px] font-fig text-[11px] text-neutral-600">
+          <Text className="px-[8px] py-3.5 font-fig text-[11px] text-neutral-600">
             {strings.palette.footer(search.data.searchedNotes, search.data.elapsedMs)}
           </Text>
         ) : null}

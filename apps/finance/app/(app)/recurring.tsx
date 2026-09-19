@@ -92,7 +92,7 @@ export default function RecurringScreen() {
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : payments.isError ? (
-          <View className="gap-[12px] py-[18px]">
+          <View className="gap-3 py-[18px]">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(payments.error, t("common.loadFailed")).message}
             </Text>
@@ -269,7 +269,7 @@ function NewRecurringSheet({
   return (
     <>
       <ScrollSheet visible={visible} onClose={onClose} title={t("recurring.new")} scroll>
-        <View className="gap-[11.2px]">
+        <View className="gap-2.8">
           <Field label={t("recurring.name")} value={name} onChangeText={setName} />
 
           <AmountRow

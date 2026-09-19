@@ -29,8 +29,8 @@ export function TemplateStrip({
 }: TemplateStripProps) {
   return (
     <View>
-      <Kicker className="mb-[5.6px]">{title}</Kicker>
-      <View className="flex-row flex-wrap gap-[5.6px]">
+      <Kicker className="mb-1.4">{title}</Kicker>
+      <View className="flex-row flex-wrap gap-1.4">
         {templates.map((template) => (
           <AmountChip
             key={template.id}

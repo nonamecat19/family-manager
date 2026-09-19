@@ -195,7 +195,7 @@ export default function OnboardingScreen() {
           autoComplete="email"
           error={inviteError ?? undefined}
         />
-        <View className="mt-[16.8px]"><Button
+        <View className="mt-4.2"><Button
           title={t("common.add")}
           disabled={inviteEmail.trim() === "" || inviteMember.isPending}
           onPress={() => void addInvite()}
@@ -213,7 +213,7 @@ function InviteAction({ label, onPress, disabled }: { label: string; onPress: ()
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      className="mt-[11.2px] flex-row items-center justify-center gap-[5.6px] rounded-md border border-dashed border-neutral-400 px-[16.8px] py-[11.2px]"
+      className="mt-2.8 flex-row items-center justify-center gap-1.4 rounded-md border border-dashed border-neutral-400 px-4.2 py-2.8"
       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
     >
       <Icon name="user-plus" size={17} color={organic.neutral[600]} />
@@ -224,7 +224,7 @@ function InviteAction({ label, onPress, disabled }: { label: string; onPress: ()
 
 function StepDots({ count, active }: { count: number; active: number }) {
   return (
-    <View className="mt-[11.2px] flex-row justify-center gap-[5px]" pointerEvents="none">
+    <View className="mt-2.8 flex-row justify-center gap-1.25" pointerEvents="none">
       {Array.from({ length: count }, (_, index) => (
         <View
           key={index}

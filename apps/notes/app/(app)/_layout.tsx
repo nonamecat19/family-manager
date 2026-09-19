@@ -307,7 +307,7 @@ export function RailSidebar() {
 
   return (
     <Rail
-      className="flex-none gap-3.5 px-[12px] py-[16px]"
+      className="flex-none gap-3.5 px-3 py-[16px]"
       style={{ width: PANE.rail }}
     >
       <View className="flex-row items-center gap-[9px] px-[4px]">
@@ -593,7 +593,7 @@ function RailRow({
           weight={active ? "fill" : "regular"}
         />
       ) : nested ? (
-        <View className="h-[5px] w-[5px] rounded-full bg-neutral-600" />
+        <View className="h-1.25 w-1.25 rounded-full bg-neutral-600" />
       ) : null}
       <Text
         numberOfLines={1}
@@ -672,7 +672,7 @@ export function ActionSheet({
         style={SCRIM}
       />
       <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-[6px] rounded-2xl bg-surface px-[10px] py-[12px] shadow-card">
+        <View className="w-full max-w-[320px] gap-[6px] rounded-2xl bg-surface px-[10px] py-3 shadow-card">
           <Text className="px-[8px] pb-[2px] font-fig text-[12px] leading-[18px] text-neutral-700">
             {title}
           </Text>
@@ -765,14 +765,14 @@ function NotebookDialog({
             onSubmitEditing={() => {
               if (name.trim() !== "") onSubmit(name.trim());
             }}
-            className="rounded-xl border border-neutral-300 px-[12px] py-[9px] font-fig text-[14px] text-fg"
+            className="rounded-xl border border-neutral-300 px-3 py-[9px] font-fig text-[14px] text-fg"
           />
           <View className="flex-row items-center gap-[8px]">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={strings.common.cancel}
               onPress={onClose}
-              className="rounded-xl border border-neutral-300 px-[14px] py-[9px]"
+              className="rounded-xl border border-neutral-300 px-3.5 py-[9px]"
             >
               <Text className="font-fig-med text-[13px] text-neutral-900">{strings.common.cancel}</Text>
             </Pressable>
@@ -820,7 +820,7 @@ function NoteListPane() {
       className="flex-none border-x border-neutral-300"
       style={{ width: PANE.list }}
     >
-      <View className="flex-row items-center gap-[8px] px-[16px] pb-[12px] pt-[16px]">
+      <View className="flex-row items-center gap-[8px] px-[16px] pb-3 pt-[16px]">
         <Text className="font-fig-med text-[17px] text-fg">{title}</Text>
         <Text className="font-fig text-[11px] text-neutral-600">
           {strings.list.noteCount(rows.length)}
@@ -978,7 +978,7 @@ export function NoteListBody({
       {groups.map((group) => (
         <View key={group.label}>
           {density === "dense" ? (
-            <Text className="px-[16px] pb-[4px] pt-[14px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
+            <Text className="px-[16px] pb-[4px] pt-3.5 font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
               {group.label}
             </Text>
           ) : null}

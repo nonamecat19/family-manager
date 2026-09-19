@@ -70,12 +70,12 @@ export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className =
             accessibilityLabel={LABELS[option]}
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option)}
-            className="items-center px-[2px] py-[5.6px]"
+            className="items-center px-[2px] py-1.4"
           >
             <Text className={`text-[12.5px] ${active ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}>
               {LABELS[option]}
             </Text>
-            <View className={`mt-[5.6px] h-[2px] w-[18px] rounded-full ${active ? "bg-accent" : "bg-transparent"}`} />
+            <View className={`mt-1.4 h-[2px] w-[18px] rounded-full ${active ? "bg-accent" : "bg-transparent"}`} />
           </Pressable>
         );
       })}
@@ -201,18 +201,18 @@ export function ScopeSwitcher({
         accessibilityLabel={label}
         onPress={onExpand}
         disabled={!onExpand}
-        className="flex-row items-center gap-[5.6px]"
+        className="flex-row items-center gap-1.4"
       >
         <Text className="font-fig text-[13px] text-neutral-600">{label}</Text>
         {onExpand ? <Icon name="caret-down" size={14} color={organic.neutral[600]} /> : null}
       </Pressable>
-      {balance ? <MoneyText value={balance} size={34} weight="medium" className="mt-[5.6px]" /> : null}
+      {balance ? <MoneyText value={balance} size={34} weight="medium" className="mt-1.4" /> : null}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 5.6 }}
-        className="mt-[11.2px]"
+        className="mt-2.8"
       >
         <ScopePill
           label={t("home.scopeAll", { count: members.length })}
@@ -258,7 +258,7 @@ function ScopePill({
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-none flex-row items-center gap-[5.6px] rounded-full py-[5px] pl-[5px] pr-[11.2px] ${
+      className={`flex-none flex-row items-center gap-1.4 rounded-full py-1.25 pl-1.25 pr-2.8 ${
         selected ? "bg-accent" : "bg-surface shadow-card"
       }`}
     >

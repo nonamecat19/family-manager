@@ -251,7 +251,7 @@ export default function RecipeEditScreen() {
           </View>
         )}
 
-        <View className="flex-row gap-[12px]">
+        <View className="flex-row gap-3">
           <Field
             className="flex-1"
             label={t("recipeEdit.servings")}
@@ -277,7 +277,7 @@ export default function RecipeEditScreen() {
 
         <View>
           <Kicker className="mb-[10px]">{t("recipeEdit.perServing")}</Kicker>
-          <View className="flex-row gap-[12px]">
+          <View className="flex-row gap-3">
             <Field
               className="flex-1"
               label={t("recipeEdit.kcal")}
@@ -353,7 +353,7 @@ export default function RecipeEditScreen() {
           <Kicker className="mb-[10px]">{t("recipeEdit.steps")}</Kicker>
           <View className="gap-[10px]">
             {steps.map((step, idx) => (
-              <View key={idx} className="gap-[8px] rounded-2xl bg-neutral-100 px-[14px] py-[14px]">
+              <View key={idx} className="gap-[8px] rounded-2xl bg-neutral-100 px-3.5 py-3.5">
                 <View className="flex-row items-center gap-[10px]">
                   <View className="h-[26px] w-[26px] items-center justify-center rounded-full bg-accent2-300">
                     <Text className="font-cap text-[13px] text-accent2-900">{idx + 1}</Text>

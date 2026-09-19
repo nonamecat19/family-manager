@@ -142,7 +142,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
           onPress={() => undefined}
           className="mt-[96px] w-[660px] max-w-[92%] overflow-hidden rounded-2xl bg-surface"
         >
-          <View className="flex-row items-center gap-[11px] border-b border-neutral-300 px-[18px] py-[15px]">
+          <View className="flex-row items-center gap-2.75 border-b border-neutral-300 px-[18px] py-[15px]">
             <Icon name="magnifying-glass" size={18} color={organic.accent.DEFAULT} />
             <TextInput
               value={query}
@@ -169,14 +169,14 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
 
           <ScrollView className="max-h-[420px] px-[8px] pb-[6px] pt-[8px]">
             {query.trim() === "" ? (
-              <Text className="px-[10px] py-[14px] font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-[10px] py-3.5 font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.hint}
               </Text>
             ) : null}
 
             {grouped.map((group) => (
               <View key={group.label}>
-                <Text className="px-[10px] pb-[5px] pt-[10px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
+                <Text className="px-[10px] pb-1.25 pt-[10px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
                   {group.label}
                 </Text>
                 {group.hits.map((hit) => {
@@ -196,7 +196,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ))}
 
             {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-              <Text className="px-[10px] py-[14px] font-fig text-[12.5px] text-neutral-700">
+              <Text className="px-[10px] py-3.5 font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.empty}
               </Text>
             ) : null}
@@ -206,7 +206,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
                 accessibilityRole="button"
                 accessibilityLabel={strings.palette.createNote(query.trim())}
                 onPress={create}
-                className="mt-[6px] flex-row items-center gap-[11px] rounded-xl px-[10px] py-[9px]"
+                className="mt-[6px] flex-row items-center gap-2.75 rounded-xl px-[10px] py-[9px]"
               >
                 <Icon name="plus-circle" size={16} color={organic.accent.DEFAULT} />
                 <Text className="font-fig text-[13.5px] text-fg">
@@ -237,7 +237,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
 
 function FooterHint({ keys, label }: { keys: string; label: string }) {
   return (
-    <View className="flex-row items-center gap-[5px]">
+    <View className="flex-row items-center gap-1.25">
       <Kbd>{keys}</Kbd>
       <Text className="font-fig text-[11px] text-neutral-700">{label}</Text>
     </View>
@@ -261,7 +261,7 @@ function HitRow({
       accessibilityLabel={hit.title}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-row items-center gap-[11px] rounded-xl px-[10px] py-[9px] ${
+      className={`flex-row items-center gap-2.75 rounded-xl px-[10px] py-[9px] ${
         selected ? "bg-accent-100" : ""
       }`}
     >

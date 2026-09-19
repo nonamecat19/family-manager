@@ -188,7 +188,7 @@ function TopRatedCard({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="w-[158px] flex-none rounded-2xl bg-neutral-100 p-[14px] shadow-card"
+      className="w-[158px] flex-none rounded-2xl bg-neutral-100 p-3.5 shadow-card"
     >
       <View
         className="h-[104px] items-center justify-center overflow-hidden rounded-xl"
@@ -202,7 +202,7 @@ function TopRatedCard({
           </Text>
         )}
       </View>
-      <Text className="mt-[11px] font-cap text-[15.5px] leading-[18px]" numberOfLines={2}>
+      <Text className="mt-2.75 font-cap text-[15.5px] leading-[18px]" numberOfLines={2}>
         {recipe.title}
       </Text>
       <View className="mt-[7px] flex-row items-center gap-[8px]">

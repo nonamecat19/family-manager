@@ -17,7 +17,7 @@ import { Icon, Avatar, iconOr, organic } from "@fm/ui";
 const COMPACT_FROM = 10_000;
 
 function EmptyLine({ label }: { label: string }) {
-  return <Text className="py-[5.6px] text-[11px] text-neutral-600">{label}</Text>;
+  return <Text className="py-1.4 text-[11px] text-neutral-600">{label}</Text>;
 }
 
 export function QuickAddPreview({
@@ -31,7 +31,7 @@ export function QuickAddPreview({
 }) {
   return (
     <View>
-      <View className="mb-[11.2px] flex-row items-center justify-between">
+      <View className="mb-2.8 flex-row items-center justify-between">
         <Text className="text-[11px] font-fig-med text-neutral-600">{ownerLabel}</Text>
         <Icon name="arrow-clockwise" size={12} color={organic.neutral[600]} />
       </View>
@@ -106,7 +106,7 @@ export function MonthPreview({
   overspentLabel: string | null;
 }) {
   return (
-    <View className="flex-row items-center gap-[11.2px]">
+    <View className="flex-row items-center gap-2.8">
       <DonutChart
         segments={model.slices.map((slice) => ({
           id: slice.id,
@@ -176,7 +176,7 @@ export function BudgetsAndFamilyPreview({
       </View>
       {model.members.length > 0 ? (
         <View
-          className="mt-[11.2px] gap-[5.6px] pt-[11.2px]"
+          className="mt-2.8 gap-1.4 pt-2.8"
           style={{ borderTopWidth: 1, borderTopColor: organic.neutral[800] }}
         >
           {model.members.map((member, index) => (
@@ -227,7 +227,7 @@ export function AccountsPreview({
 }) {
   if (model.accounts.length === 0) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="flex-row gap-[16.8px]">
+    <View className="flex-row gap-4.2">
       {model.accounts.map((account) => (
         <View key={account.id} className="flex-1">
           <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>

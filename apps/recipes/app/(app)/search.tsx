@@ -54,7 +54,7 @@ export default function SearchScreen() {
 
         {recent.length > 0 && (
           <View>
-            <Kicker className="mb-[11px]">{t("search.recent")}</Kicker>
+            <Kicker className="mb-2.75">{t("search.recent")}</Kicker>
             <View className="flex-row flex-wrap gap-[8px]">
               {recent.map((term) => (
                 <Pressable
@@ -73,7 +73,7 @@ export default function SearchScreen() {
 
         {debounced !== "" && (
           <View>
-            <Kicker className="mb-[11px]">
+            <Kicker className="mb-2.75">
               {results.isPending ? t("search.searching") : t("plurals.resultsCount", { count: recipes.length })}
             </Kicker>
             <View className="gap-[10px]">
@@ -114,7 +114,7 @@ function ResultRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px]"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-[16px]"
     >
       <Avatar initial={initialOf(recipe.title)} tint={tint} size={52} />
       <View className="min-w-0 flex-1">

@@ -55,7 +55,7 @@ export default function WidgetsScreen() {
               />
             </GalleryItem>
 
-            <View className="flex-row gap-[12px]">
+            <View className="flex-row gap-3">
               <GalleryItem title={t("widgets.month")} size={size(2, 2)} className="flex-1">
                 <MonthPreview
                   model={previews.month}
@@ -95,7 +95,7 @@ export default function WidgetsScreen() {
 function Failure({ message, onRetry }: { message: string; onRetry: () => void }) {
   const { t } = useI18n();
   return (
-    <View className="gap-[12px] py-[18px]">
+    <View className="gap-3 py-[18px]">
       <Text className="text-[13.5px] leading-[21px] text-neutral-600">{message}</Text>
       <Button title={t("common.tryAgain")} onPress={onRetry} tone="quiet" />
     </View>

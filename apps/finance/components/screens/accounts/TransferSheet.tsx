@@ -65,7 +65,7 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
 
   return (
     <ScrollSheet visible={visible} onClose={close} title={t("accounts.transfer")}>
-      <View className="gap-[11.2px] pb-[11.2px]">
+      <View className="gap-2.8 pb-2.8">
         <AccountPicker
           label={t("add.account")}
           accounts={accounts}
@@ -122,7 +122,7 @@ function AccountPicker({
 }) {
   return (
     <View>
-      <Kicker className="mb-[5.6px]">{label}</Kicker>
+      <Kicker className="mb-1.4">{label}</Kicker>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

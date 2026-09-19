@@ -21,7 +21,7 @@ export function AmountRow({ value, onChangeValue, currencyCode, label, invalid =
         placeholder="0"
         placeholderTextColor={organic.neutral[600]}
         selectionColor={organic.accent.DEFAULT}
-        className="w-[150px] pb-[5.6px] text-right text-[30px] font-fig-med text-fg"
+        className="w-[150px] pb-1.4 text-right text-[30px] font-fig-med text-fg"
         style={{
           borderBottomWidth: 1,
           borderBottomColor: invalid ? organic.danger : organic.neutral[700],

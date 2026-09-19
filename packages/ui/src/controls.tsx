@@ -194,7 +194,7 @@ export function DashedButton({
       accessibilityRole="button"
       accessibilityLabel={title}
       onPress={onPress}
-      className={`items-center rounded-2xl border-2 border-dashed border-neutral-400 py-[14px] ${className}`}
+      className={`items-center rounded-2xl border-2 border-dashed border-neutral-400 py-3.5 ${className}`}
     >
       <Text className="text-[14.5px] text-neutral-700" style={{ fontFamily: t.fonts?.bold }}>
         {title}

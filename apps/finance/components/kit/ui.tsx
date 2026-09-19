@@ -62,7 +62,7 @@ export function Row({
   className = "",
 }: RowProps) {
   const body = (
-    <View className={`flex-row items-center gap-[11.2px] px-[16.8px] py-[11.2px] ${className}`}>
+    <View className={`flex-row items-center gap-2.8 px-4.2 py-2.8 ${className}`}>
       {leading}
       <View className="flex-1">
         <Text className="font-fig-med text-[14.5px] text-fg" numberOfLines={1}>
@@ -101,7 +101,7 @@ export function Row({
       ) : (
         body
       )}
-      {divider ? <View className="ml-[16.8px] h-px w-full bg-divider" /> : null}
+      {divider ? <View className="ml-4.2 h-px w-full bg-divider" /> : null}
     </View>
   );
 }
@@ -206,7 +206,7 @@ export function AmountChip({
       accessibilityState={{ selected }}
       onPress={onPress}
       onLongPress={onLongPress}
-      className={`flex-none flex-row items-center gap-[5.6px] rounded-full px-[11.2px] py-[8.4px] ${shell} ${className}`}
+      className={`flex-none flex-row items-center gap-1.4 rounded-full px-2.8 py-[8.4px] ${shell} ${className}`}
       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
     >
       {icon ? (
@@ -258,7 +258,7 @@ export function Card({
   padded = true,
   className = "",
 }: CardProps) {
-  const base = `rounded-xl border border-divider bg-surface shadow-card ${padded ? "p-[16.8px]" : ""} ${className}`;
+  const base = `rounded-xl border border-divider bg-surface shadow-card ${padded ? "p-4.2" : ""} ${className}`;
   if (!onPress && !onLongPress) return <View className={base}>{children}</View>;
   return (
     <Pressable

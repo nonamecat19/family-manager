@@ -49,7 +49,7 @@ export function NewAccountSheet({ visible, onClose, currencyCode }: NewAccountSh
 
   return (
     <ScrollSheet visible={visible} onClose={close} title={t("accounts.addAccount")}>
-      <View className="gap-[11.2px] pb-[11.2px]">
+      <View className="gap-2.8 pb-2.8">
         <Field
           label={t("accounts.addAccount")}
           value={name}

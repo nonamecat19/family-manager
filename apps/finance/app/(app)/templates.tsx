@@ -69,7 +69,7 @@ export default function TemplatesScreen() {
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : templates.isError ? (
-          <View className="gap-[12px] py-[18px]">
+          <View className="gap-3 py-[18px]">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(templates.error, t("common.loadFailed")).message}
             </Text>
@@ -224,7 +224,7 @@ function TemplateSheet({
         title={template ? t("templates.editTitle") : t("templates.new")}
         scroll
       >
-        <View className="gap-[11.2px]">
+        <View className="gap-2.8">
           <Field label={t("templates.label")} value={label} onChangeText={setLabel} />
 
           <SegmentedTabs<Kind>

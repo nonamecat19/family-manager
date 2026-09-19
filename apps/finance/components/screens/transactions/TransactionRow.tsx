@@ -34,13 +34,13 @@ export function TransactionRow({
   divider = true,
 }: TransactionRowProps) {
   const body = (
-    <View className="flex-row items-center gap-[8.4px] px-[11.2px] py-[8.4px]">
+    <View className="flex-row items-center gap-[8.4px] px-2.8 py-[8.4px]">
       <IconCircle icon={icon} index={iconIndex} size={32} />
       <View className="flex-1">
         <Text className="text-[13.5px] text-fg" numberOfLines={1}>
           {title}
         </Text>
-        <View className="mt-[2px] flex-row items-center gap-[5.6px]">
+        <View className="mt-[2px] flex-row items-center gap-1.4">
           <Avatar name={memberName} index={memberIndex} size={14} />
           <Text className="flex-shrink text-[10.5px] text-neutral-600" numberOfLines={1}>
             {meta}

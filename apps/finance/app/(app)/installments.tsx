@@ -59,7 +59,7 @@ function ratioPaid(inst: Installment): number {
 
 function ProgressBar({ ratio }: { ratio: number }) {
   return (
-    <View className="mx-[16.8px] mb-[10px] h-[5px] overflow-hidden rounded-full bg-neutral-200">
+    <View className="mx-4.2 mb-[10px] h-1.25 overflow-hidden rounded-full bg-neutral-200">
       <View className="h-full rounded-full bg-accent" style={{ width: `${Math.round(ratio * 100)}%` }} />
     </View>
   );
@@ -99,7 +99,7 @@ export default function InstallmentsScreen() {
         divider={false}
       />
       <ProgressBar ratio={ratioPaid(inst)} />
-      {last ? null : <View className="ml-[16.8px] h-px w-full bg-divider" />}
+      {last ? null : <View className="ml-4.2 h-px w-full bg-divider" />}
     </View>
   );
 
@@ -434,7 +434,7 @@ function InstallmentSheet({
           <Text className="text-[12.5px] text-error">{error}</Text>
         ) : null}
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-[12px]">
+        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
           {isActive ? (
             <Button
               title={t("installments.cancel")}

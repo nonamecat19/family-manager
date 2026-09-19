@@ -54,7 +54,7 @@ export default function ProfileScreen() {
             {(members.data?.members ?? []).map((member, i, list) => (
               <View
                 key={member.userId}
-                className={`flex-row items-center gap-[13px] py-[12px] ${
+                className={`flex-row items-center gap-[13px] py-3 ${
                   i === list.length - 1 ? "" : "border-b border-divider"
                 }`}
               >
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
               </View>
             ))}
             {(members.data?.members ?? []).length === 0 && (
-              <Text className="py-[14px] font-fig text-[15px] text-neutral-600">
+              <Text className="py-3.5 font-fig text-[15px] text-neutral-600">
                 {t("profile.justYouSoFar")}
               </Text>
             )}
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
           keyboardType="email-address"
           placeholder={t("profile.emailPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-[20px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-[12px] font-fig text-[15px] text-fg"
+          className="mb-[20px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-3 font-fig text-[15px] text-fg"
         />
         <PrimaryButton
           title={invite.isPending ? t("profile.sending") : t("profile.sendTheInvitation")}

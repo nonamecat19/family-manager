@@ -68,8 +68,8 @@ export function AccountSheet({
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {shared.length > 0 ? (
-        <View className="pb-[5.6px]">
-          <Kicker className="mb-[5.6px]">{sharedLabel}</Kicker>
+        <View className="pb-1.4">
+          <Kicker className="mb-1.4">{sharedLabel}</Kicker>
           {shared.map((account, index) => (
             <Row
               key={account.id}
@@ -84,7 +84,7 @@ export function AccountSheet({
       ) : null}
       {privateOwn.length > 0 ? (
         <View className="pt-[8.4px]">
-          <Kicker className="mb-[5.6px]">{privateLabel}</Kicker>
+          <Kicker className="mb-1.4">{privateLabel}</Kicker>
           {privateOwn.map((account, index) => (
             <Row
               key={account.id}
@@ -122,7 +122,7 @@ export function CategorySheet({
     <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {groups.map((node) => (
         <View key={node.group?.id ?? ""} className="pb-[8.4px]">
-          <Kicker className="mb-[5.6px]">{node.group?.name ?? ""}</Kicker>
+          <Kicker className="mb-1.4">{node.group?.name ?? ""}</Kicker>
           {node.categories.map((category, index) => (
             <Row
               key={category.id}

@@ -14,7 +14,7 @@ export function DashedAction({ label, onPress, icon = "folder-plus", className =
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center justify-center gap-[5.6px] rounded-lg border border-dashed py-[11.2px] ${className}`}
+      className={`flex-row items-center justify-center gap-1.4 rounded-lg border border-dashed py-2.8 ${className}`}
       style={({ pressed }) => ({ borderColor: organic.neutral[700], opacity: pressed ? 0.8 : 1 })}
     >
       <Icon name={icon} size={17} color={organic.neutral[600]} />

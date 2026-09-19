@@ -23,7 +23,7 @@ export function DateStrip({
   t,
 }: DateStripProps) {
   return (
-    <View className="flex-row items-center gap-[5.6px]">
+    <View className="flex-row items-center gap-1.4">
       {options.map((iso) => {
         const selected = iso === value;
         const word = relativeDay(t, iso, today);
@@ -34,7 +34,7 @@ export function DateStrip({
             accessibilityLabel={`${shortDate(iso)} ${word}`}
             accessibilityState={{ selected }}
             onPress={() => onChange(iso)}
-            className={`items-center rounded-md px-[8.4px] py-[5.6px] ${selected ? "bg-accent" : ""}`}
+            className={`items-center rounded-md px-[8.4px] py-1.4 ${selected ? "bg-accent" : ""}`}
           >
             <Text
               className={`text-[12px] ${selected ? "font-fig-med text-accent-700" : "text-neutral-600"}`}

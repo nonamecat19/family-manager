@@ -58,7 +58,7 @@ export function CategoryIconGrid({
               <IconCircle icon={item.icon} tint={tint} size={42} />
             </View>
             <Text
-              className={`mt-[5.6px] text-center text-[10.5px] ${selected ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}
+              className={`mt-1.4 text-center text-[10.5px] ${selected ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}
               numberOfLines={1}
             >
               {item.label}
@@ -77,7 +77,7 @@ export function CategoryIconGrid({
           <View className="h-[46px] w-[46px] items-center justify-center rounded-full border border-dashed border-neutral-400">
             <Icon name="dots-three" size={20} color={organic.neutral[600]} />
           </View>
-          <Text className="mt-[5.6px] text-center font-fig text-[10.5px] text-neutral-600">{more.label}</Text>
+          <Text className="mt-1.4 text-center font-fig text-[10.5px] text-neutral-600">{more.label}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -106,7 +106,7 @@ function BasketTab() {
                 : t("mealPlan.generateShoppingList")
             }
             onPress={() => router.push("/(app)/basket")}
-            className="mt-[14px]"
+            className="mt-3.5"
           />
         </View>
       )}
@@ -122,7 +122,7 @@ function BasketRow({ recipeId, index }: { recipeId: string; index: number }) {
   const tint = tintFor(r?.categoryId, index);
 
   return (
-    <View className="flex-row items-center gap-[13px] rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[14px]">
+    <View className="flex-row items-center gap-[13px] rounded-2xl bg-neutral-100 py-3 pl-3 pr-3.5">
       <Avatar initial={initialOf(r?.title ?? "?")} tint={tint} size={52} />
       <View className="min-w-0 flex-1">
         <Text className="font-fig-bold text-[15px] leading-[18px] text-fg" numberOfLines={1}>
@@ -199,7 +199,7 @@ function WeekTab() {
                         },
                       ])
                     }
-                    className="flex-row justify-between gap-[10px] rounded-xl px-[15px] py-[11px]"
+                    className="flex-row justify-between gap-[10px] rounded-xl px-[15px] py-2.75"
                     style={{ backgroundColor: tint.bg }}
                   >
                     <Text
@@ -222,7 +222,7 @@ function WeekTab() {
                 accessibilityRole="button"
                 accessibilityLabel={t("mealPlan.planAMealForDay", { day: t(day.dayKey), num: day.num })}
                 onPress={() => setAddingTo(day.iso)}
-                className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-[15px] py-[11px]"
+                className="flex-row items-center justify-between rounded-xl border-[1.5px] border-dashed border-neutral-400 px-[15px] py-2.75"
               >
                 <Text className="font-fig-bold text-[13.5px] text-neutral-500">
                   {dayEntries.length === 0 ? t("mealPlan.nothingPlanned") : t("mealPlan.addAnother")}
@@ -255,7 +255,7 @@ function WeekTab() {
                   planMeal.mutate({ recipeId: r.id, date: addingTo, slot, servings: 0 });
                   setAddingTo(null);
                 }}
-                className="flex-row items-center gap-[12px] rounded-2xl bg-neutral-100 py-[10px] pl-[10px] pr-[14px]"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 py-[10px] pl-[10px] pr-3.5"
               >
                 <Avatar initial={initialOf(r.title)} tint={tintFor(r.categoryId, index)} size={40} />
                 <Text className="flex-1 font-fig-bold text-[14.5px] text-fg" numberOfLines={1}>

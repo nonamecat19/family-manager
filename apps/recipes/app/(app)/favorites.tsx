@@ -22,7 +22,7 @@ export default function FavoritesScreen() {
       >
         <ScreenHeader title={t("favorites.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
-        <View className="flex-row flex-wrap gap-[12px]">
+        <View className="flex-row flex-wrap gap-3">
           {recipes.map((recipe, index) => (
             <FavoriteCard
               key={recipe.id}
@@ -59,7 +59,7 @@ function FavoriteCard({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-1 basis-[45%] rounded-2xl bg-neutral-100 p-[14px] shadow-card"
+      className="flex-1 basis-[45%] rounded-2xl bg-neutral-100 p-3.5 shadow-card"
     >
       <View
         className="h-[88px] items-center justify-center overflow-hidden rounded-xl"
@@ -76,7 +76,7 @@ function FavoriteCard({
       <Text className="mt-[10px] font-cap text-[15px] leading-[17px]" numberOfLines={2}>
         {recipe.title}
       </Text>
-      <Text className="mt-[5px] font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>
+      <Text className="mt-1.25 font-fig-bold text-[12.5px] text-neutral-600" numberOfLines={1}>
         {metaLine([
           formatDuration(recipe.prepSeconds + recipe.cookSeconds, t),
           recipe.rating > 0 ? `${recipe.rating}.0 ★` : undefined,

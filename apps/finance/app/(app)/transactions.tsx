@@ -247,7 +247,7 @@ export default function TransactionsScreen() {
         </View>
       )}
 
-      <View className="flex-1 px-[11.2px] pt-[11.2px]">
+      <View className="flex-1 px-2.8 pt-2.8">
         <PeriodTabs value={tab} onChange={changeTab} />
 
         <View className="mt-[8.4px] flex-row items-center justify-between">
@@ -289,8 +289,8 @@ export default function TransactionsScreen() {
             if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
           }}
           renderDay={(day, last) => (
-            <View className="mb-[11.2px]">
-              <Kicker className="mb-[8.4px] ml-[5.6px]">
+            <View className="mb-2.8">
+              <Kicker className="mb-[8.4px] ml-1.4">
                 {t("transactions.dayHeading", {
                   date: day.weekdayLabel || dayHeading(t, day.date),
                   amount: formatMoney(fromWire(day.dayTotal, currency)),
@@ -385,7 +385,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   if (error) {
     const shown = toDisplayError(error, t("common.loadFailed"));
     return (
-      <View className="flex-1 justify-center gap-[8.4px] px-[11.2px]">
+      <View className="flex-1 justify-center gap-[8.4px] px-2.8">
         <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
         {shown.reference ? (
           <Text className="text-[12px] text-neutral-600">
@@ -411,7 +411,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   return (
     <FlatList
       data={days}
-      className="mt-[11.2px]"
+      className="mt-2.8"
       keyExtractor={(day) => day.date}
       renderItem={({ item, index }) => renderDay(item, index === days.length - 1)}
       showsVerticalScrollIndicator={false}
@@ -419,7 +419,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
       onEndReachedThreshold={0.4}
       ListFooterComponent={
         fetchingMore ? (
-          <Text className="pb-[16.8px] text-center text-[13px] text-neutral-600">
+          <Text className="pb-4.2 text-center text-[13px] text-neutral-600">
             {t("common.loadingEllipsis")}
           </Text>
         ) : null

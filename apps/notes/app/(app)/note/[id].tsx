@@ -235,7 +235,7 @@ export default function NoteScreen() {
   if (desktop) {
     return (
       <View className="flex-1 bg-bg">
-        <View className="flex-row items-center gap-3 border-b border-neutral-300 px-[22px] py-[12px]">
+        <View className="flex-row items-center gap-3 border-b border-neutral-300 px-[22px] py-3">
           <IconButton
             icon="arrow-left"
             label={strings.note.back}
@@ -253,7 +253,7 @@ export default function NoteScreen() {
           <View className="ml-auto flex-row items-center gap-3.5">
             {shareNames.length > 0 ? (
               <View
-                className="flex-row items-center gap-[7px] rounded-2xl py-[4px] pl-[5px] pr-[10px]"
+                className="flex-row items-center gap-[7px] rounded-2xl py-[4px] pl-1.25 pr-[10px]"
                 style={{ backgroundColor: organic.accent[100] }}
               >
                 <AvatarStack names={shareNames} size={24} max={3} />
@@ -280,7 +280,7 @@ export default function NoteScreen() {
               accessibilityRole="button"
               accessibilityLabel={strings.note.share}
               onPress={() => setShareOpen(true)}
-              className="h-[30px] flex-row items-center gap-[6px] rounded-xl border border-accent px-[12px]"
+              className="h-[30px] flex-row items-center gap-[6px] rounded-xl border border-accent px-3"
             >
               <Icon name="user-plus" size={14} color={organic.accent.DEFAULT} />
               <Text className="font-fig-med text-[13px] text-accent-700">{strings.note.share}</Text>
@@ -481,7 +481,7 @@ function SaveState({ state }: { state: string }) {
 function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOverwrite: () => void }) {
   return (
     <View
-      className="gap-[8px] border-b border-neutral-300 px-[22px] py-[12px]"
+      className="gap-[8px] border-b border-neutral-300 px-[22px] py-3"
       style={{ backgroundColor: organic.accent[100] }}
     >
       <Text className="font-fig-med text-[13px] text-accent-800">{strings.note.conflictTitle}</Text>
@@ -494,7 +494,7 @@ function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOve
           accessibilityRole="button"
           accessibilityLabel={strings.note.conflictOverwrite}
           onPress={onOverwrite}
-          className="rounded-xl border border-neutral-400 px-[14px] py-[10px]"
+          className="rounded-xl border border-neutral-400 px-3.5 py-[10px]"
         >
           <Text className="font-fig-med text-[13px] text-neutral-900">
             {strings.note.conflictOverwrite}
@@ -534,7 +534,7 @@ function CommentsColumn({
   return (
     <View className="flex-none gap-[10px] px-[10px] py-[44px]" style={{ width: PANE.comments }}>
       {composing ? (
-        <View className="gap-[8px] rounded-xl bg-surface px-[12px] py-[11px]">
+        <View className="gap-[8px] rounded-xl bg-surface px-3 py-2.75">
           <TextInput
             value={body}
             onChangeText={setBody}
@@ -629,7 +629,7 @@ function CommentCard({ comment, nameOf }: { comment: Comment; nameOf: (id: strin
   const author = nameOf(comment.authorUserId);
   return (
     <View
-      className={`gap-[7px] rounded-xl bg-surface px-[12px] py-[11px] ${comment.resolved ? "opacity-60" : ""}`}
+      className={`gap-[7px] rounded-xl bg-surface px-3 py-2.75 ${comment.resolved ? "opacity-60" : ""}`}
     >
       <View className="flex-row items-center gap-[7px]">
         <Avatar name={author} size={20} />
@@ -693,7 +693,7 @@ function StackedComments({
           placeholder={strings.note.commentPlaceholder}
           placeholderTextColor={organic.neutral[600]}
           accessibilityLabel={strings.note.addComment}
-          className="flex-1 rounded-xl border border-neutral-300 px-[12px] py-[9px] font-fig text-[13px] text-fg"
+          className="flex-1 rounded-xl border border-neutral-300 px-3 py-[9px] font-fig text-[13px] text-fg"
         />
         <IconButton
           icon="plus"

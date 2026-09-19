@@ -132,7 +132,7 @@ export default function RecipeDetailScreen() {
                 </View>
               )}
               <Display size={29}>{r.title}</Display>
-              <View className="mt-[11px] flex-row items-center gap-3.5">
+              <View className="mt-2.75 flex-row items-center gap-3.5">
                 {totalSeconds > 0 && (
                   <View className="flex-row items-center gap-1.25">
                     <ClockIcon />
@@ -155,7 +155,7 @@ export default function RecipeDetailScreen() {
                 </Text>
               )}
               <NutritionStrip
-                className="mt-[14px]"
+                className="mt-3.5"
                 kcal={r.nutrition?.kcal ?? 0}
                 proteinG={r.nutrition?.proteinG ?? 0}
                 fatG={r.nutrition?.fatG ?? 0}
@@ -188,7 +188,7 @@ export default function RecipeDetailScreen() {
                   r.ingredients.map((ing, i) => (
                     <View
                       key={`${ing.name}-${i}`}
-                      className="flex-row items-baseline justify-between gap-3 border-b border-divider py-[11px]"
+                      className="flex-row items-baseline justify-between gap-3 border-b border-divider py-2.75"
                     >
                       <Text className="font-fig-semi text-[15.5px] text-fg">{ing.name}</Text>
                       <Text className="font-fig-x text-[14px] text-accent-700">
@@ -250,7 +250,7 @@ export default function RecipeDetailScreen() {
                   </Text>
                 )}
 
-                <View className="gap-[10px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]">
+                <View className="gap-[10px] rounded-2xl bg-neutral-100 px-[16px] py-3.5">
                   <Kicker>{t("recipeDetail.addANote")}</Kicker>
                   <TextInput
                     accessibilityLabel={t("recipeDetail.addAComment")}

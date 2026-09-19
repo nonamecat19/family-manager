@@ -57,7 +57,7 @@ export default function ConnectedAccountsScreen() {
             {rows.map((identity) => (
               <View
                 key={`${identity.provider}:${identity.externalId}`}
-                className="flex-row items-center gap-[12px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-[16px] py-3.5"
               >
                 <View className="h-[34px] w-[34px] items-center justify-center rounded-full bg-accent-100">
                   <Icon name="link-simple" size={16} color={organic.accent[600]} />

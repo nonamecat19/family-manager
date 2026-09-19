@@ -283,7 +283,7 @@ export default function AddTransactionScreen() {
       </View>
 
       {failed ? (
-        <View className="flex-1 justify-center gap-[8.4px] px-[16.8px]">
+        <View className="flex-1 justify-center gap-[8.4px] px-4.2">
           <Text className="text-[13.5px] leading-[21px] text-neutral-600">
             {toDisplayError(failed.error, t("common.loadFailed")).message}
           </Text>
@@ -306,8 +306,8 @@ export default function AddTransactionScreen() {
       ) : (
         <>
           <ScrollView
-            className="flex-1 px-[16.8px]"
-            contentContainerClassName="pb-[16.8px] pt-[11.2px] gap-[16.8px]"
+            className="flex-1 px-4.2"
+            contentContainerClassName="pb-4.2 pt-2.8 gap-4.2"
             keyboardShouldPersistTaps="handled"
           >
             <AmountRow
@@ -349,7 +349,7 @@ export default function AddTransactionScreen() {
             </View>
 
             <View>
-              <View className="mb-[5.6px] flex-row items-baseline justify-between">
+              <View className="mb-1.4 flex-row items-baseline justify-between">
                 <Kicker>{t("add.category")}</Kicker>
                 <Pressable
                   accessibilityRole="button"
@@ -395,7 +395,7 @@ export default function AddTransactionScreen() {
             ) : null}
           </ScrollView>
 
-          <View className="px-[16.8px] pb-[5.6px] pt-[8.4px]">
+          <View className="px-4.2 pb-1.4 pt-[8.4px]">
             <Button
               title={t("add.submit", {
                 amount: formatMoney(amount ?? zeroLike(undefined, currencyCode)),

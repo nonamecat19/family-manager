@@ -31,7 +31,7 @@ export function Sheet({
           className="absolute inset-0 bg-scrim"
         />
         <View className="rounded-t-3xl bg-bg px-[22px] pb-[34px] pt-[20px]">
-          <View className="mb-[18px] h-[5px] w-[44px] self-center rounded-full bg-neutral-400" />
+          <View className="mb-[18px] h-1.25 w-[44px] self-center rounded-full bg-neutral-400" />
           <Display size={22} className="mb-[16px]">
             {title}
           </Display>
@@ -81,7 +81,7 @@ export function NutritionStrip({
     },
   ];
   return (
-    <Panel className={`flex-row px-[6px] py-[12px] ${className}`}>
+    <Panel className={`flex-row px-[6px] py-3 ${className}`}>
       {cells.map((c) => (
         <View key={c.key} className="flex-1 items-center">
           <Text className="text-[17px] text-accent-800" style={{ fontFamily: t.fonts?.display }}>

@@ -82,13 +82,13 @@ export function TelegramSection({
   if (!telegram.available) return null;
   return (
     <SettingsSection title={strings.title} hint={telegram.awaiting ? strings.waiting : strings.hint}>
-      <SettingsGroup className="mb-[12px] py-[14px]">
+      <SettingsGroup className="mb-3 py-3.5">
         <Text className="text-[15.5px] text-fg" style={{ fontFamily: t.fonts?.bold }}>
           {telegram.identity ? strings.connected : strings.notConnected}
         </Text>
       </SettingsGroup>
       {error ? (
-        <View className="mb-[12px]">
+        <View className="mb-3">
           <ErrorText>{error}</ErrorText>
         </View>
       ) : null}
@@ -232,7 +232,7 @@ export function ApproveDeviceForm({
             autoCapitalize="characters"
           />
           {error ? <ErrorText>{error}</ErrorText> : null}
-          <View className="gap-[12px]">
+          <View className="gap-3">
             <PrimaryButton
               title={strings.approve}
               disabled={!canSubmit}

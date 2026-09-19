@@ -167,7 +167,7 @@ export function StackedBarSeries({
           </Text>
         ))}
       </View>
-      {legend ? <ChartLegend series={series} className="mt-[11.2px]" /> : null}
+      {legend ? <ChartLegend series={series} className="mt-2.8" /> : null}
     </View>
   );
 }
@@ -180,9 +180,9 @@ export function ChartLegend({
   className?: string;
 }) {
   return (
-    <View className={`flex-row flex-wrap gap-[11.2px] ${className}`}>
+    <View className={`flex-row flex-wrap gap-2.8 ${className}`}>
       {series.map((s, index) => (
-        <View key={s.id} className="flex-row items-center gap-[5.6px]">
+        <View key={s.id} className="flex-row items-center gap-1.4">
           <View
             className="h-[8px] w-[8px] rounded-full"
             style={{ backgroundColor: s.color ?? seriesColor(index) }}
@@ -261,7 +261,7 @@ export function BudgetBar({
   return (
     <View className={className}>
       {label || shown ? (
-        <View className="mb-[5.6px] flex-row items-baseline justify-between">
+        <View className="mb-1.4 flex-row items-baseline justify-between">
           {label ? <Text className="font-fig text-[12.5px] text-neutral-600">{label}</Text> : <View />}
           {shown ? (
             <Text className={`font-fig-med text-[12px] ${over ? "text-error" : "text-neutral-600"}`}>

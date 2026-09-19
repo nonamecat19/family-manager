@@ -117,12 +117,12 @@ export default function ChartsScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-[8.4px] px-[11.2px] pb-[22.4px] pt-[11.2px]"
+          contentContainerClassName="gap-[8.4px] px-2.8 pb-[22.4px] pt-2.8"
           showsVerticalScrollIndicator={false}
         >
           <Card>
             <GranularityStrip value={granularity} onChange={setGranularity} />
-            <View accessibilityLabel={t("charts.byMember")} className="mt-[16.8px]">
+            <View accessibilityLabel={t("charts.byMember")} className="mt-4.2">
               <StackedBarSeries
                 points={chart.points}
                 series={chart.series}
@@ -131,12 +131,12 @@ export default function ChartsScreen() {
                 activeIndex={series.data?.currentBucketIndex}
               />
             </View>
-            <ChartLegend series={chart.series} className="mt-[11.2px] justify-center" />
+            <ChartLegend series={chart.series} className="mt-2.8 justify-center" />
           </Card>
 
           {budgetRows.length > 0 ? (
             <Card>
-              <View className="mb-[11.2px] flex-row items-baseline justify-between">
+              <View className="mb-2.8 flex-row items-baseline justify-between">
                 <Text className="text-[13px] font-fig-med text-fg">
                   {t("charts.groupBudgets", { month: monthNameLower(t, month) })}
                 </Text>
@@ -181,7 +181,7 @@ function GranularityStrip({
     day: t("charts.granularity.day"),
   };
   return (
-    <View className="flex-row justify-center gap-[16.8px]">
+    <View className="flex-row justify-center gap-4.2">
       {GRANULARITIES.map((option) => {
         const active = option === value;
         return (

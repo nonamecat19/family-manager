@@ -27,7 +27,7 @@ export function HomeGroupCard({
 }: HomeGroupCardProps) {
   return (
     <Card onPress={onPress} accessibilityLabel={name} padded={false}>
-      <View className="flex-row items-center gap-[11.2px] px-[11.2px] py-[11.2px]">
+      <View className="flex-row items-center gap-2.8 px-2.8 py-2.8">
         <IconCircle icon={icon} index={colorStep} size={34} />
         <View className="flex-1">
           <Text className="text-[14px] font-fig-med text-fg" numberOfLines={1}>
@@ -39,7 +39,7 @@ export function HomeGroupCard({
               limitMinor={budget.limitMinor}
               height={3}
               valueLabel=""
-              className="mt-[5.6px] w-[120px]"
+              className="mt-1.4 w-[120px]"
             />
           ) : meta ? (
             <Text className="mt-[2px] text-[10.5px] text-neutral-600" numberOfLines={1}>

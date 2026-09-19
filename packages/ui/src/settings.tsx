@@ -19,10 +19,10 @@ export function SettingsSection({
   const t = useTheme();
   return (
     <View className={className}>
-      <Kicker className="mb-[11px]">{title}</Kicker>
+      <Kicker className="mb-2.75">{title}</Kicker>
       {hint ? (
         <Text
-          className="mb-[12px] text-[14px] leading-[21px] text-neutral-600"
+          className="mb-3 text-[14px] leading-[21px] text-neutral-600"
           style={{ fontFamily: t.fonts?.body }}
         >
           {hint}
@@ -60,7 +60,7 @@ export function SettingsLinkRow({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 px-[16px] py-[14px] ${className}`}
+      className={`flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 px-[16px] py-3.5 ${className}`}
     >
       {icon ? (
         <Icon name={icon} size={18} color={iconTone === "accent" ? t.accent[600] : t.neutral[600]} />
@@ -102,7 +102,7 @@ export function SettingsChoiceRow({
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-row items-center justify-between py-[14px] ${divider ? "border-b border-divider" : ""}`}
+      className={`flex-row items-center justify-between py-3.5 ${divider ? "border-b border-divider" : ""}`}
     >
       <Text className="text-[15.5px] text-fg" style={{ fontFamily: t.fonts?.bold }}>
         {label}
@@ -142,7 +142,7 @@ export function SettingsToggleRow({
   const t = useTheme();
   return (
     <View
-      className={`flex-row items-center justify-between py-[14px] ${divider ? "border-b border-divider" : ""}`}
+      className={`flex-row items-center justify-between py-3.5 ${divider ? "border-b border-divider" : ""}`}
       style={indent > 0 ? { paddingLeft: indent } : undefined}
     >
       <Text

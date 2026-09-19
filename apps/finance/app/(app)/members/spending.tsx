@@ -101,10 +101,10 @@ export default function PerMemberSpendingScreen() {
 
           <View className="gap-[8.4px]">
             <Kicker className="ml-[2px]">{t("member.byGroup")}</Kicker>
-            <Card className="gap-[16.8px] border border-border">
+            <Card className="gap-4.2 border border-border">
               {(data?.groups ?? []).map((group) => (
                 <View key={group.groupId}>
-                  <View className="mb-[5.6px] flex-row items-baseline justify-between">
+                  <View className="mb-1.4 flex-row items-baseline justify-between">
                     <Text className="text-[12.5px] font-fig-med text-fg">{group.name}</Text>
                     <MoneyText value={fromWire(group.total, currency)} size={12.5} weight="regular" tone="muted" />
                   </View>
@@ -155,7 +155,7 @@ function MonthButton({ label, onPress }: { label: string; onPress: () => void })
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={8}
-      className="mt-[2.8px] flex-row items-center justify-end gap-[5.6px] self-end"
+      className="mt-[2.8px] flex-row items-center justify-end gap-1.4 self-end"
     >
       <Text className="text-[12px] text-neutral-600">{label}</Text>
       <Icon name="caret-down" size={10} color={organic.neutral[600]} />
@@ -176,7 +176,7 @@ function SplitCard({
 }) {
   return (
     <Card className="border border-border">
-      <View className="mb-[11.2px] flex-row items-baseline justify-between">
+      <View className="mb-2.8 flex-row items-baseline justify-between">
         <Text className="text-[13px] font-fig-med text-fg">{title}</Text>
         <MoneyText value={total} size={11} weight="regular" tone="muted" />
       </View>
@@ -191,7 +191,7 @@ function SplitCard({
           }),
         )}
       />
-      <View className="mt-[11.2px] flex-row flex-wrap gap-[16.8px]">
+      <View className="mt-2.8 flex-row flex-wrap gap-4.2">
         {members.map((member) => (
           <View key={member.id} className="min-w-[110px] flex-1 flex-row items-center gap-[8.4px]">
             <View
@@ -228,7 +228,7 @@ function InsightCard({
 }) {
   const body = insight.body || composeBody(insight, currency, month, t);
   return (
-    <Card className="flex-row items-start gap-[11.2px] border border-border">
+    <Card className="flex-row items-start gap-2.8 border border-border">
       <Icon name={iconOr(insight.icon, "trend-up")} size={18} color={organic.accent[600]} />
       <View className="flex-1">
         <Text className="mb-[2px] text-[12.5px] font-fig-med text-fg">{insight.title}</Text>

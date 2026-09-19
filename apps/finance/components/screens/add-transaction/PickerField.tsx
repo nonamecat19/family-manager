@@ -12,12 +12,12 @@ export interface PickerFieldProps {
 export function PickerField({ label, value, onPress, icon, avatar }: PickerFieldProps) {
   return (
     <View className="flex-1">
-      <Kicker className="mb-[5.6px]">{label}</Kicker>
+      <Kicker className="mb-1.4">{label}</Kicker>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value}`}
         onPress={onPress}
-        className="flex-row items-center gap-[5.6px] rounded-md bg-surface px-[8.4px] py-[8.4px]"
+        className="flex-row items-center gap-1.4 rounded-md bg-surface px-[8.4px] py-[8.4px]"
         style={({ pressed }) => ({
           borderWidth: 1,
           borderColor: organic.neutral[800],

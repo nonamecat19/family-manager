@@ -35,7 +35,7 @@ export default function CookScreen() {
             <View className="w-10" />
           </View>
 
-          <View className="mt-[22px] flex-row gap-[5px]">
+          <View className="mt-[22px] flex-row gap-1.25">
             {steps.map((s, i) => (
               <View
                 key={i}
@@ -58,7 +58,7 @@ export default function CookScreen() {
             )}
           </View>
 
-          <View className="flex-row gap-[12px]">
+          <View className="flex-row gap-3">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("cook.previousStep")}
@@ -126,7 +126,7 @@ function StepTimer({ seconds }: { seconds: number }) {
           setRunning((r) => !r);
         }
       }}
-      className={`flex-row items-center gap-[10px] self-start rounded-full px-[20px] py-[12px] ${
+      className={`flex-row items-center gap-[10px] self-start rounded-full px-[20px] py-3 ${
         done ? "bg-accent" : "bg-white/10"
       }`}
     >

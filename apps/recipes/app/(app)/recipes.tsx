@@ -94,7 +94,7 @@ export default function RecipeListScreen() {
         refreshing={list.isRefetching}
         onRefresh={() => void list.refetch()}
         ListHeaderComponent={
-          <View className="-mx-[22px] pb-[12px]">
+          <View className="-mx-[22px] pb-3">
             <View className="flex-row items-center justify-between gap-3 px-[22px] pt-[8px]">
               <View className="flex-1">
                 <Display size={28}>{category?.name ?? t("recipesList.allRecipes")}</Display>
@@ -106,7 +106,7 @@ export default function RecipeListScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t("recipesList.filter")}
                 onPress={() => setFilterOpen(true)}
-                className="flex-none flex-row items-center gap-[8px] rounded-full bg-accent px-[17px] py-[11px]"
+                className="flex-none flex-row items-center gap-[8px] rounded-full bg-accent px-[17px] py-2.75"
               >
                 <Icon name="filter" size={16} color={organic.accentFg} />
                 <Text className="font-fig-bold text-[14px] text-white">
@@ -142,7 +142,7 @@ export default function RecipeListScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerClassName="flex-row items-center gap-[9px] px-[22px] pb-[4px] pt-[14px]"
+              contentContainerClassName="flex-row items-center gap-[9px] px-[22px] pb-[4px] pt-3.5"
             >
               <Text className="font-fig-bold text-[13px] text-neutral-600">{t("recipesList.sort")}</Text>
               {SORTS.map((option) => {
@@ -261,7 +261,7 @@ export default function RecipeListScreen() {
           onChangeText={setIngredient}
           placeholder={t("recipesList.ingredientPlaceholder")}
           placeholderTextColor={organic.neutral[500]}
-          className="mb-[24px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-[11px] font-fig text-[14px] text-fg"
+          className="mb-[24px] rounded-full border border-neutral-300 bg-neutral-100 px-[16px] py-2.75 font-fig text-[14px] text-fg"
         />
 
         <View className="flex-row gap-[10px]">
@@ -301,7 +301,7 @@ function RecipeRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px] shadow-card"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-3 pl-3 pr-[16px] shadow-card"
     >
       {recipe.imageUrl !== "" ? (
         <Image

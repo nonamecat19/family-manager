@@ -56,7 +56,7 @@ export default function AccountsScreen() {
             </Text>
           ) : null}
 
-          <View className="mt-[16px] flex-row justify-center gap-[12px]">
+          <View className="mt-[16px] flex-row justify-center gap-3">
             <Button
               title={t("accounts.history")}
               tone="quiet"
@@ -107,7 +107,7 @@ export default function AccountsScreen() {
           ))}
 
           {privateOwn.length > 0 ? (
-            <View className="mb-[2.8px] mt-[11.2px] flex-row items-center justify-between px-[2.8px]">
+            <View className="mb-[2.8px] mt-2.8 flex-row items-center justify-between px-[2.8px]">
               <Kicker>{t("accounts.privateSection", { name: selfName }).trim()}</Kicker>
               <Icon name="eye-slash" size={14} color={organic.neutral[600]} />
             </View>

@@ -65,7 +65,7 @@ export function ScreenHeader({
 }) {
   const t = useTheme();
   return (
-    <View className="flex-row items-center gap-[12px]">
+    <View className="flex-row items-center gap-3">
       {onBack ? <RoundButton icon="back" label={backLabel} onPress={onBack} /> : null}
       <View className="flex-1">
         {kicker ? (
@@ -139,7 +139,7 @@ export function BootSplash({ title, label }: { title: string; label?: string }) 
 export function StatTile({ value, label }: { value: string; label: string }) {
   const t = useTheme();
   return (
-    <View className="flex-1 rounded-2xl bg-neutral-100 px-[14px] py-[15px]">
+    <View className="flex-1 rounded-2xl bg-neutral-100 px-3.5 py-[15px]">
       <Text className="text-[24px] text-accent-700" style={{ fontFamily: t.fonts?.display }}>
         {value}
       </Text>

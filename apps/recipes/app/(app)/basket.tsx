@@ -33,7 +33,7 @@ export default function ShoppingListScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]">
         <View>
           <Display size={28}>{t("shoppingList.title")}</Display>
-          <Text className="mt-[5px] font-fig-bold text-[13px] text-neutral-600">
+          <Text className="mt-1.25 font-fig-bold text-[13px] text-neutral-600">
             {totals.length === 0
               ? t("shoppingList.nothingToBuyYet")
               : t("shoppingList.fromRecipesInBasket", {
@@ -71,7 +71,7 @@ export default function ShoppingListScreen() {
                     accessibilityLabel={item.name}
                     accessibilityState={{ checked: on }}
                     onPress={() => basket.toggleChecked(key)}
-                    className={`flex-row items-center gap-[13px] py-[12px] ${
+                    className={`flex-row items-center gap-[13px] py-3 ${
                       i === group.items.length - 1 ? "" : "border-b border-divider"
                     }`}
                   >
@@ -101,7 +101,7 @@ export default function ShoppingListScreen() {
         ))}
 
         {totals.length === 0 ? (
-          <View className="gap-[12px] pt-[8px]">
+          <View className="gap-3 pt-[8px]">
             <Text className="font-fig text-[15px] leading-[22px] text-neutral-600">
               {t("shoppingList.emptyBody")}
             </Text>

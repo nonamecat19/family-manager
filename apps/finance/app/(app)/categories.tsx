@@ -148,7 +148,7 @@ export default function CategoriesScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-[8.4px] px-[11.2px] pb-[22.4px] pt-[8.4px]"
+          contentContainerClassName="gap-[8.4px] px-2.8 pb-[22.4px] pt-[8.4px]"
           showsVerticalScrollIndicator={false}
         >
           {groups.map((node, index) => {

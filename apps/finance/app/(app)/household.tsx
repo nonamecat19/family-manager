@@ -381,12 +381,12 @@ function MemberCard({
       padded={false}
       onPress={onPress}
       accessibilityLabel={name}
-      className={`p-[11.2px] border ${owner ? "border-accent" : "border-divider"}`}
+      className={`p-2.8 border ${owner ? "border-accent" : "border-divider"}`}
     >
       <View className="flex-row items-center gap-[8.4px]">
         <Avatar name={name} index={index} size={40} />
         <View className="flex-1">
-          <View className="flex-row items-center gap-[5.6px]">
+          <View className="flex-row items-center gap-1.4">
             <Text className="text-[14.5px] font-fig-med text-fg" numberOfLines={1}>
               {name}
             </Text>
@@ -399,8 +399,8 @@ function MemberCard({
         {onPress ? <Icon name="caret-right" size={14} color={organic.neutral[600]} /> : null}
       </View>
 
-      <View className="mt-[11.2px]"><Divider /></View>
-      <View className="mt-[11.2px] flex-row gap-[11.2px]">
+      <View className="mt-2.8"><Divider /></View>
+      <View className="mt-2.8 flex-row gap-2.8">
         <View className="flex-1">
           <Text className="text-[10.5px] uppercase text-neutral-600" style={{ letterSpacing: 0.8 }}>
             {t("household.spending")}

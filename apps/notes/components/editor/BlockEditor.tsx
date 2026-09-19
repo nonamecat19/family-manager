@@ -204,7 +204,7 @@ function BlockRow({
 
   if (block.type === BlockType.DIVIDER) {
     return wrap(
-      <View className="py-[14px]">
+      <View className="py-3.5">
         <Divider />
       </View>,
     );
@@ -279,7 +279,7 @@ function BlockRow({
   if (block.type === BlockType.BULLET) {
     return wrap(
       <View className="flex-row items-start gap-[10px] py-[2px]">
-        <View className="mt-[11px] h-[5px] w-[5px] flex-none rounded-full bg-neutral-600" />
+        <View className="mt-2.75 h-1.25 w-1.25 flex-none rounded-full bg-neutral-600" />
         {text}
       </View>,
     );
@@ -299,7 +299,7 @@ function BlockRow({
   if (block.type === BlockType.QUOTE) {
     return wrap(
       <View
-        className="my-[6px] flex-row pl-[14px]"
+        className="my-[6px] flex-row pl-3.5"
         style={{ borderLeftWidth: 2, borderLeftColor: organic.accent.DEFAULT }}
       >
         {text}
@@ -308,7 +308,7 @@ function BlockRow({
   }
 
   if (block.type === BlockType.CODE) {
-    return wrap(<View className="my-[6px] rounded-xl bg-surface px-[12px] py-[9px]">{text}</View>);
+    return wrap(<View className="my-[6px] rounded-xl bg-surface px-3 py-[9px]">{text}</View>);
   }
 
   return wrap(<View className="flex-row py-[2px]">{text}</View>);

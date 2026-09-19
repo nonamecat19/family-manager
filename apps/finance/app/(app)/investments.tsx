@@ -330,7 +330,7 @@ function InvestmentSheet({
         {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-[12px]">
+        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
           <Button
             title={investment.archived ? t("investments.unarchive") : t("investments.archive")}
             tone="quiet"

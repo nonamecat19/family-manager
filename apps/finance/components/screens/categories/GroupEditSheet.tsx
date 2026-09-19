@@ -202,7 +202,7 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-[12px]">
+        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
           {categoryCount > 0 ? (
             <>
               <Kicker>{t("categories.moveCategoriesTo")}</Kicker>

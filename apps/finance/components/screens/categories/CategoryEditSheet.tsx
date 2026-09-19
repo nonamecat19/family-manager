@@ -125,7 +125,7 @@ export function CategoryEditSheet({ category, groups, onClose }: CategoryEditShe
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={busy} />
 
-        <View className="mt-[8px] gap-[8px] border-t border-divider pt-[12px]">
+        <View className="mt-[8px] gap-[8px] border-t border-divider pt-3">
           <Kicker>{t("categories.moveTransactionsTo")}</Kicker>
           <View className="flex-row flex-wrap gap-[8px]">
             {others.map((other) => (

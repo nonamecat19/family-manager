@@ -146,7 +146,7 @@ export default function HomeScreen() {
     return (
       <Screen>
         {header}
-        <View className="flex-1 justify-center gap-[11.2px] px-[22.4px]">
+        <View className="flex-1 justify-center gap-2.8 px-[22.4px]">
           <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
             <Text className="text-[12px] text-neutral-600">
@@ -179,9 +179,9 @@ export default function HomeScreen() {
             onPrev={() => step(-1)}
             onNext={() => step(1)}
             nextDisabled={period.granularity === "custom" || window.to >= today}
-            className="mt-[11.2px]"
+            className="mt-2.8"
           />
-          <View className="mt-[11.2px] items-center">
+          <View className="mt-2.8 items-center">
             <DonutChart
               segments={segments}
               size={178}
@@ -228,7 +228,7 @@ export default function HomeScreen() {
             action={{ label: t("home.addTransaction"), onPress: () => router.push("/(app)/add") }}
           />
         ) : (
-          <View className="gap-[5.6px]">
+          <View className="gap-1.4">
             {groups.map((group) => {
               const status = group.budget;
               const limit = status?.budget?.limit ? fromWire(status.budget.limit, currency) : null;

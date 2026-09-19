@@ -67,7 +67,7 @@ export default function SettingsScreen() {
         <ScreenHeader title={strings.settings.title} />
 
         <SettingsSection title={strings.settings.family}>
-          <SettingsGroup className="py-[14px]">
+          <SettingsGroup className="py-3.5">
             <Text className="font-fig-bold text-[15.5px] text-fg">{family.data?.family?.name ?? ""}</Text>
           </SettingsGroup>
         </SettingsSection>
@@ -77,7 +77,7 @@ export default function SettingsScreen() {
             {members.map((member, i) => (
               <View
                 key={member.userId}
-                className={`flex-row items-center gap-[10px] py-[12px] ${
+                className={`flex-row items-center gap-[10px] py-3 ${
                   i === members.length - 1 ? "" : "border-b border-divider"
                 }`}
               >
@@ -94,7 +94,7 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title={strings.settings.offlineQueue}>
-          <SettingsGroup className="gap-[10px] py-[14px]">
+          <SettingsGroup className="gap-[10px] py-3.5">
             <Text className="font-fig text-[13.5px] text-neutral-700">
               {queue.pending.length === 0
                 ? strings.settings.queueEmpty
@@ -112,7 +112,7 @@ export default function SettingsScreen() {
 
         {queue.rejected.length > 0 ? (
           <SettingsSection title={offlineCopy.refusedTitle}>
-            <SettingsGroup className="gap-[12px] py-[14px]">
+            <SettingsGroup className="gap-3 py-3.5">
               <Text className="font-fig text-[13.5px] text-neutral-700">
                 {offlineCopy.refusedBody(queue.rejected.length)}
               </Text>

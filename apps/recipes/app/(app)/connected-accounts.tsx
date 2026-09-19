@@ -66,7 +66,7 @@ export default function ConnectedAccountsScreen() {
             {rows.map((identity) => (
               <View
                 key={`${identity.provider}:${identity.externalId}`}
-                className="flex-row items-center gap-[12px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]"
+                className="flex-row items-center gap-3 rounded-2xl bg-neutral-100 px-[16px] py-3.5"
               >
                 <View className="flex-1 gap-[3px]">
                   <Text className="font-fig-bold text-[15.5px] text-fg">
@@ -104,7 +104,7 @@ export default function ConnectedAccountsScreen() {
             accessibilityRole="button"
             accessibilityLabel={t("common.cancel")}
             onPress={() => setUnlinking(null)}
-            className="flex-1 items-center justify-center rounded-full border border-divider py-[12px]"
+            className="flex-1 items-center justify-center rounded-full border border-divider py-3"
           >
             <Text className="font-fig-bold text-[14px] text-fg">{t("common.cancel")}</Text>
           </Pressable>
@@ -118,7 +118,7 @@ export default function ConnectedAccountsScreen() {
                 { onSuccess: () => setUnlinking(null) },
               );
             }}
-            className="flex-1 items-center justify-center rounded-full py-[12px]"
+            className="flex-1 items-center justify-center rounded-full py-3"
             style={{ backgroundColor: organic.danger }}
           >
             <Text className="font-fig-bold text-[14px]" style={{ color: organic.dangerFg }}>

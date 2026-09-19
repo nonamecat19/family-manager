@@ -46,7 +46,7 @@ export function BlockBar({
     <View
       className={
         floating
-          ? "flex-row items-center gap-[2px] self-center rounded-2xl bg-surface px-[7px] py-[5px]"
+          ? "flex-row items-center gap-[2px] self-center rounded-2xl bg-surface px-[7px] py-1.25"
           : "flex-row items-center gap-[2px] border-t border-neutral-300 bg-surface px-[10px] py-[7px]"
       }
     >
@@ -118,7 +118,7 @@ function BarButton({
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      className={`items-center justify-center rounded-md p-[5px] ${disabled ? "opacity-40" : ""}`}
+      className={`items-center justify-center rounded-md p-1.25 ${disabled ? "opacity-40" : ""}`}
     >
       <Icon
         name={icon}
