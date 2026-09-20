@@ -68,7 +68,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
       />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View
-          className="gap-[14px] bg-surface px-[18px] pb-[22px] pt-[10px]"
+          className="gap-3.5 bg-surface px-[18px] pb-[22px] pt-[10px]"
           style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
         >
           <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
@@ -76,7 +76,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           <View className="flex-row items-center gap-[8px]">
             <Text className="font-fig-med text-[15px] text-fg">{strings.capture.title}</Text>
             <View
-              className="flex-row items-center gap-[5px] rounded-2xl px-[8px] py-[3px]"
+              className="flex-row items-center gap-1.25 rounded-2xl px-[8px] py-[3px]"
               style={{ backgroundColor: queue.online ? organic.accent[100] : organic.accent[200] }}
             >
               <Icon

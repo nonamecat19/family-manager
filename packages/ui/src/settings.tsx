@@ -60,7 +60,7 @@ export function SettingsLinkRow({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center gap-[14px] rounded-2xl bg-neutral-100 px-[16px] py-[14px] ${className}`}
+      className={`flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 px-[16px] py-[14px] ${className}`}
     >
       {icon ? (
         <Icon name={icon} size={18} color={iconTone === "accent" ? t.accent[600] : t.neutral[600]} />

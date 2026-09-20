@@ -102,7 +102,7 @@ export function SegTabs<T extends string>({
 }) {
   const t = useTheme();
   return (
-    <View className="flex-row gap-[6px] rounded-full bg-neutral-200 p-[5px]">
+    <View className="flex-row gap-[6px] rounded-full bg-neutral-200 p-1.25">
       {options.map((option) => {
         const active = option === value;
         return (
@@ -224,7 +224,7 @@ export function Stepper({
   return (
     <View
       className={`flex-none flex-row items-center rounded-full ${
-        compact ? "gap-[11px] bg-bg p-[5px]" : "gap-[14px] bg-neutral-100 px-[8px] py-[6px]"
+        compact ? "gap-2.75 bg-bg p-1.25" : "gap-3.5 bg-neutral-100 px-[8px] py-[6px]"
       }`}
     >
       <Pressable

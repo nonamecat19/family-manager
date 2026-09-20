@@ -24,7 +24,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="gap-[22px] px-[22px] pb-[24px] pt-[8px]">
-        <View className="flex-row items-start justify-between gap-[12px]">
+        <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
             <Kicker>{today(locale)}</Kicker>
             <Display size={33} className="mt-[7px]">
@@ -55,7 +55,7 @@ export default function HomeScreen() {
         </Pressable>
 
         {categories.data && categories.data.length > 0 && (
-          <View className="flex-row flex-wrap gap-[12px]">
+          <View className="flex-row flex-wrap gap-3">
             {categories.data.map((category, index) => (
               <CategoryCard
                 key={category.id}
@@ -84,7 +84,7 @@ export default function HomeScreen() {
               horizontal
               showsHorizontalScrollIndicator={false}
               className="-mx-[22px] -mt-[6px]"
-              contentContainerClassName="gap-[14px] px-[22px] pb-[8px] pt-[6px]"
+              contentContainerClassName="gap-3.5 px-[22px] pb-[8px] pt-[6px]"
             >
               {topRated.map((recipe, index) => (
                 <TopRatedCard

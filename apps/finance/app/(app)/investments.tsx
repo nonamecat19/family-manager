@@ -82,7 +82,7 @@ export default function InvestmentsScreen() {
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : investments.isError ? (
-          <View className="gap-[12px] py-[18px]">
+          <View className="gap-3 py-[18px]">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(investments.error, t("common.loadFailed")).message}
             </Text>
@@ -97,7 +97,7 @@ export default function InvestmentsScreen() {
         ) : (
           <>
             <Card>
-              <View className="flex-row gap-[12px]">
+              <View className="flex-row gap-3">
                 <Stat label={t("investments.invested")} value={formatMoney(money(investedTotal))} />
                 <Stat label={t("investments.value")} value={formatMoney(money(valueTotal))} />
                 <Stat
@@ -218,7 +218,7 @@ function NewInvestmentSheet({ visible, onClose }: { visible: boolean; onClose: (
 
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={t("investments.new")}>
-      <View className="gap-[14px] pt-[5.6px]">
+      <View className="gap-3.5 pt-1.4">
         <Field label={t("investments.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
         <View className="gap-[8px]">
           <Kicker>{t("investments.kind")}</Kicker>
@@ -307,8 +307,8 @@ function InvestmentSheet({
 
   return (
     <ScrollSheet visible onClose={onClose} title={investment.name}>
-      <View className="gap-[14px] pt-[5.6px]">
-        <View className="flex-row gap-[12px]">
+      <View className="gap-3.5 pt-1.4">
+        <View className="flex-row gap-3">
           <Stat label={t("investments.invested")} value={formatMoney(fromWire(investment.invested, code))} />
           <Stat
             label={t("investments.profit")}

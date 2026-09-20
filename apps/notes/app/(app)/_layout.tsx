@@ -307,7 +307,7 @@ export function RailSidebar() {
 
   return (
     <Rail
-      className="flex-none gap-[14px] px-[12px] py-[16px]"
+      className="flex-none gap-3.5 px-[12px] py-[16px]"
       style={{ width: PANE.rail }}
     >
       <View className="flex-row items-center gap-[9px] px-[4px]">
@@ -753,7 +753,7 @@ function NotebookDialog({
         style={SCRIM}
       />
       <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-[12px] rounded-2xl bg-surface p-[16px] shadow-card">
+        <View className="w-full max-w-[320px] gap-3 rounded-2xl bg-surface p-[16px] shadow-card">
           <Text className="font-fig-med text-[15px] text-fg">{title}</Text>
           <TextInput
             value={name}
@@ -1023,7 +1023,7 @@ function CardRow({
       accessibilityLabel={note.title || strings.common.untitled}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className="gap-[5px] border-b border-neutral-300 px-[16px] py-[13px]"
+      className="gap-1.25 border-b border-neutral-300 px-[16px] py-[13px]"
       style={
         selected
           ? {

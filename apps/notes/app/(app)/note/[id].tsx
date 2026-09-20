@@ -235,7 +235,7 @@ export default function NoteScreen() {
   if (desktop) {
     return (
       <View className="flex-1 bg-bg">
-        <View className="flex-row items-center gap-[12px] border-b border-neutral-300 px-[22px] py-[12px]">
+        <View className="flex-row items-center gap-3 border-b border-neutral-300 px-[22px] py-[12px]">
           <IconButton
             icon="arrow-left"
             label={strings.note.back}
@@ -250,7 +250,7 @@ export default function NoteScreen() {
             {note.title || strings.common.untitled}
           </Text>
 
-          <View className="ml-auto flex-row items-center gap-[14px]">
+          <View className="ml-auto flex-row items-center gap-3.5">
             {shareNames.length > 0 ? (
               <View
                 className="flex-row items-center gap-[7px] rounded-2xl py-[4px] pl-[5px] pr-[10px]"
@@ -383,7 +383,7 @@ export default function NoteScreen() {
           <Text className="font-fig text-[13px] text-neutral-700">
             {shell.notebooks.find((n) => n.id === note.notebookId)?.name ?? strings.list.title}
           </Text>
-          <View className="ml-auto flex-row items-center gap-[12px]">
+          <View className="ml-auto flex-row items-center gap-3">
             <AvatarStack names={shareNames} size={24} max={2} />
             <IconButton
               icon="user-plus"
@@ -750,7 +750,7 @@ function EditorRail({
 
       <Divider />
       <RailHeading label={strings.note.activity} />
-      <View className="gap-[11px]">
+      <View className="gap-2.75">
         {(activity.data ?? []).length === 0 ? (
           <Text className="font-fig text-[12px] text-neutral-600">{strings.activity.empty}</Text>
         ) : null}

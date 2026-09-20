@@ -145,7 +145,7 @@ export function GroupEditSheet({ node, otherGroups, currency, onClose }: GroupEd
 
   return (
     <ScrollSheet visible={node !== null} onClose={onClose} title={t("categories.editGroup")}>
-      <View className="gap-[14px] pt-[5.6px]">
+      <View className="gap-3.5 pt-1.4">
         <Field label={t("categories.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
 
         <View className="gap-[8px]">

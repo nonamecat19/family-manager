@@ -28,6 +28,14 @@ const spacing = {
   lg: "16px",
   xl: "24px",
   "2xl": "32px",
+
+  // numeric scale, n * 4px — covers fine-grained gaps that don't fit the named scale
+  "1.25": "5px",
+  "1.4": "5.6px",
+  "2.75": "11px",
+  "3": "12px",
+  "3.5": "14px",
+  "4.2": "16.8px",
 };
 
 const radius = {

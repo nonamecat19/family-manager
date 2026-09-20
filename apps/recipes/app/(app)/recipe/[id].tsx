@@ -132,16 +132,16 @@ export default function RecipeDetailScreen() {
                 </View>
               )}
               <Display size={29}>{r.title}</Display>
-              <View className="mt-[11px] flex-row items-center gap-[14px]">
+              <View className="mt-[11px] flex-row items-center gap-3.5">
                 {totalSeconds > 0 && (
-                  <View className="flex-row items-center gap-[5px]">
+                  <View className="flex-row items-center gap-1.25">
                     <ClockIcon />
                     <Text className="font-fig-bold text-[13.5px] text-neutral-700">
                       {formatDuration(totalSeconds, t)}
                     </Text>
                   </View>
                 )}
-                <View className="flex-row items-center gap-[5px]">
+                <View className="flex-row items-center gap-1.25">
                   <StarIcon size={15} />
                   <Text className="font-fig-bold text-[13.5px] text-accent-700">
                     {r.rating > 0 ? `${r.rating}.0` : t("recipeDetail.unrated")}
@@ -188,7 +188,7 @@ export default function RecipeDetailScreen() {
                   r.ingredients.map((ing, i) => (
                     <View
                       key={`${ing.name}-${i}`}
-                      className="flex-row items-baseline justify-between gap-[12px] border-b border-divider py-[11px]"
+                      className="flex-row items-baseline justify-between gap-3 border-b border-divider py-[11px]"
                     >
                       <Text className="font-fig-semi text-[15.5px] text-fg">{ing.name}</Text>
                       <Text className="font-fig-x text-[14px] text-accent-700">
@@ -201,12 +201,12 @@ export default function RecipeDetailScreen() {
             )}
 
             {tab === "Steps" && (
-              <View className="gap-[14px]">
+              <View className="gap-3.5">
                 {r.steps.length === 0 ? (
                   <Text className="font-fig text-[15px] text-neutral-600">{t("recipeDetail.noStepsYet")}</Text>
                 ) : (
                   r.steps.map((step, i) => (
-                    <View key={i} className="flex-row gap-[14px]">
+                    <View key={i} className="flex-row gap-3.5">
                       <View className="h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-accent2-300">
                         <Text className="font-cap text-[14px] text-accent2-900">{step.position}</Text>
                       </View>
@@ -227,7 +227,7 @@ export default function RecipeDetailScreen() {
             )}
 
             {tab === "Notes" && (
-              <View className="gap-[12px]">
+              <View className="gap-3">
                 {r.notes !== "" && (
                   <View className="rounded-2xl bg-accent2-100 px-[18px] py-[16px]">
                     <Kicker className="text-accent2-700">{t("recipeDetail.theCook")}</Kicker>

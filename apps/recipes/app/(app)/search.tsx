@@ -35,7 +35,7 @@ export default function SearchScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="gap-[20px] px-[22px] pb-[24px] pt-[8px]"
       >
-        <View className="flex-row items-center gap-[12px]">
+        <View className="flex-row items-center gap-3">
           <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
           <View className="flex-1 flex-row items-center gap-[10px] rounded-full border-2 border-accent bg-neutral-100 px-[18px] py-[9px]">
             <SearchIcon size={18} color={organic.accent[700]} />
@@ -114,7 +114,7 @@ function ResultRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-[14px] rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px]"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px]"
     >
       <Avatar initial={initialOf(recipe.title)} tint={tint} size={52} />
       <View className="min-w-0 flex-1">

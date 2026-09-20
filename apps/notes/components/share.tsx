@@ -66,7 +66,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
         style={SCRIM}
       />
       <View
-        className="max-h-[70%] gap-[14px] bg-surface px-[18px] pb-[24px] pt-[10px]"
+        className="max-h-[70%] gap-3.5 bg-surface px-[18px] pb-[24px] pt-[10px]"
         style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
       >
         <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />

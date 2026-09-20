@@ -113,7 +113,7 @@ export default function InstallmentsScreen() {
             <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
           </View>
         ) : installments.isError ? (
-          <View className="gap-[12px] py-[18px]">
+          <View className="gap-3 py-[18px]">
             <Text className="text-[13.5px] leading-[21px] text-neutral-600">
               {toDisplayError(installments.error, t("common.loadFailed")).message}
             </Text>
@@ -129,7 +129,7 @@ export default function InstallmentsScreen() {
           <>
             {active.length > 0 ? (
               <Card>
-                <View className="flex-row gap-[12px]">
+                <View className="flex-row gap-3">
                   <Stat label={t("installments.monthlyTotal")} value={formatMoney(money(monthlyTotal))} />
                   <Stat label={t("installments.remainingTotal")} value={formatMoney(money(remainingTotal))} />
                 </View>
@@ -271,7 +271,7 @@ function NewInstallmentSheet({
   return (
     <>
       <ScrollSheet visible={visible && !picking} onClose={onClose} title={t("installments.new")}>
-        <View className="gap-[12px] pt-[5.6px]">
+        <View className="gap-3 pt-1.4">
           <Field label={t("installments.name")} value={name} onChangeText={setName} autoCapitalize="sentences" />
 
           <View className="gap-[6px]">
@@ -407,8 +407,8 @@ function InstallmentSheet({
 
   return (
     <ScrollSheet visible onClose={onClose} title={installment.name}>
-      <View className="gap-[14px] pt-[5.6px]">
-        <View className="flex-row gap-[12px]">
+      <View className="gap-3.5 pt-1.4">
+        <View className="flex-row gap-3">
           <Stat label={t("installments.paid")} value={formatMoney(fromWire(installment.paid, code))} />
           <Stat label={t("installments.remaining")} value={formatMoney(fromWire(installment.remaining, code))} />
           <Stat label={t("installments.totalShort")} value={formatMoney(fromWire(installment.total, code))} />

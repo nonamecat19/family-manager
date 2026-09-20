@@ -34,7 +34,7 @@ export function NameSheet({
 
   return (
     <ScrollSheet visible={visible} onClose={onClose} title={title}>
-      <View className="gap-[16.8px] pt-[5.6px]">
+      <View className="gap-4.2 pt-1.4">
         <Field
           label={title}
           value={name}

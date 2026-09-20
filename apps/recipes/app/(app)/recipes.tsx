@@ -95,7 +95,7 @@ export default function RecipeListScreen() {
         onRefresh={() => void list.refetch()}
         ListHeaderComponent={
           <View className="-mx-[22px] pb-[12px]">
-            <View className="flex-row items-center justify-between gap-[12px] px-[22px] pt-[8px]">
+            <View className="flex-row items-center justify-between gap-3 px-[22px] pt-[8px]">
               <View className="flex-1">
                 <Display size={28}>{category?.name ?? t("recipesList.allRecipes")}</Display>
                 <Text className="mt-[4px] font-fig-bold text-[13px] text-neutral-600">
@@ -301,7 +301,7 @@ function RecipeRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-[14px] rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px] shadow-card"
+      className="flex-row items-center gap-3.5 rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px] shadow-card"
     >
       {recipe.imageUrl !== "" ? (
         <Image
