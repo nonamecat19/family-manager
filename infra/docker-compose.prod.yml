@@ -272,6 +272,7 @@ secrets:
 
 volumes:
   pgdata:
+    name: family-manager_pgdata18
   natsdata:
   caddydata:
   caddyconfig:
