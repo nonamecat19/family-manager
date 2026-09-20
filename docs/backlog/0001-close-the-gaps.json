@@ -30,7 +30,7 @@
       ],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -51,7 +51,7 @@
         "u2"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -71,7 +71,7 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -91,7 +91,7 @@
       ],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -111,7 +111,7 @@
         "u5"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -131,7 +131,7 @@
         "u5"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -150,7 +150,7 @@
         "u7"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -169,7 +169,7 @@
         "u5"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -191,7 +191,7 @@
         "u3"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -211,7 +211,7 @@
         "u8"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -232,7 +232,7 @@
         "u1"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -258,7 +258,7 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -268,5 +268,5 @@
       "acceptance": "just verify"
     }
   ],
-  "updated_at": "2026-10-03T22:01:06.366Z"
+  "updated_at": "2026-10-04T08:33:36.771Z"
 }
