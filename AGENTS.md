@@ -154,6 +154,7 @@ If a hook blocks you, it is right and the plan is wrong — fix the approach, do
 ```sh
 just tools         # buf, sqlc, air, golang-migrate (once)
 just up            # docker compose: postgres + minio + nats
+just up-all        # the above + every service, built from this tree
 just install       # pnpm install
 just dev-apps      # turbo dev (persistent)
 just proto         # buf generate libs/proto -> sdk/go + sdk/typescript

@@ -9,9 +9,17 @@ default:
 up:
     docker compose up -d
 
+# Start the backing stores and every application service.
+up-all:
+    docker compose -f docker-compose.yml -f docker-compose.services.yml up -d --build
+
 # Stop the local infrastructure containers.
 down:
     docker compose down
+
+# Stop the containers from both files.
+down-all:
+    docker compose -f docker-compose.yml -f docker-compose.services.yml down
 
 # ------------------------------------------------------------- node side ----
 

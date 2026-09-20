@@ -56,7 +56,7 @@ managed mode derives it (`libs/proto/buf.gen.yaml`).
 |---|---|---|
 | `services/auth/` | — | **done** — moved, module renamed to `github.com/nnc/family-manager/services/auth`, contract moved to `libs/proto/auth/v1` |
 | `postgres/init/` | `infra/postgres/` | pending |
-| `docker-compose.yml` | root, plus `infra/` overrides | keep at root |
+| `docker-compose.yml` (infra) + `docker-compose.services.yml` (services) | root, plus `infra/` overrides | keep both at root |
 | `notes-android/` | `apps/notes/` + `services/notes/` | **replaced** — Commonplace on `notes.v1`; the Flutter dir is dead weight, delete it in its own change |
 | `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired — nothing has replaced it yet |
 
@@ -89,7 +89,7 @@ the URL, whether or not the note was ever shared, and unsharing the note would n
 image back.
 
 So `services/notes` ships with **no `NOTES_STORAGE_*` environment at all** — not in
-`docker-compose.yml`, not in `infra/docker-compose.prod.yml`, not in its `.env.example`. With
+`docker-compose.services.yml`, not in `infra/docker-compose.prod.yml`, not in its `.env.example`. With
 `STORAGE_ENDPOINT` unset, `imagesOrNil` logs `image storage disabled` and returns nil, exactly
 as `services/recipes` does; the service boots, every procedure but one works, `UploadNoteImage`
 errors — and, the point of the whole arrangement, `EnsureBucket` is never called, so no notes
