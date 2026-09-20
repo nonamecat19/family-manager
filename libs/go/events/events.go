@@ -42,6 +42,10 @@ const (
 	SubjectNotesNoteCreated  Subject = "notes.note.created"
 	SubjectNotesNoteUpdated  Subject = "notes.note.updated"
 	SubjectNotesShareGranted Subject = "notes.share.granted"
+
+	SubjectTasksTaskAssigned     Subject = "tasks.task.assigned"
+	SubjectTasksTaskDue          Subject = "tasks.task.due"
+	SubjectTasksBirthdayUpcoming Subject = "tasks.birthday.upcoming"
 )
 
 var ErrBadSubject = errors.New("events: subject must be <domain>.<entity>.<verb>")

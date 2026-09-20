@@ -20,6 +20,9 @@ func TestSubjectValidate(t *testing.T) {
 		SubjectFinanceRecurringPosted,
 		SubjectRecipesRecipeCreated,
 		SubjectRecipesMealPlanned,
+		SubjectTasksTaskAssigned,
+		SubjectTasksTaskDue,
+		SubjectTasksBirthdayUpcoming,
 	}
 	for _, s := range valid {
 		if err := s.Validate(); err != nil {
@@ -41,6 +44,9 @@ func TestSubjectDomain(t *testing.T) {
 	}
 	if got := SubjectFamilyMemberJoined.Domain(); got != "family" {
 		t.Errorf("Domain() = %q, want family", got)
+	}
+	if got := SubjectTasksBirthdayUpcoming.Domain(); got != "tasks" {
+		t.Errorf("tasks domain = %q", got)
 	}
 	if got := SubjectFinanceBudgetExceeded.Domain(); got != "finance" {
 		t.Errorf("Domain() = %q, want finance", got)
