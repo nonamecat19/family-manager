@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package capture.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service CaptureService {
+  rpc SubmitNotifications(SubmitNotificationsRequest) returns (SubmitNotificationsResponse);
+
+  rpc ListSuggestions(ListSuggestionsRequest) returns (ListSuggestionsResponse);
+  rpc ConfirmSuggestion(ConfirmSuggestionRequest) returns (ConfirmSuggestionResponse);
+  rpc DismissSuggestion(DismissSuggestionRequest) returns (DismissSuggestionResponse);
+
+  rpc ListCapturedNotifications(ListCapturedNotificationsRequest) returns (ListCapturedNotificationsResponse);
+  rpc DeleteCapturedNotification(DeleteCapturedNotificationRequest) returns (DeleteCapturedNotificationResponse);
+
+  rpc GetCaptureSettings(GetCaptureSettingsRequest) returns (GetCaptureSettingsResponse);
+  rpc SetCaptureSettings(SetCaptureSettingsRequest) returns (SetCaptureSettingsResponse);
+}
+
+enum SuggestionStatus {
+  SUGGESTION_STATUS_UNSPECIFIED = 0;
+  SUGGESTION_STATUS_PENDING = 1;
+  SUGGESTION_STATUS_CONFIRMED = 2;
+  SUGGESTION_STATUS_DISMISSED = 3;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_DEBIT = 1;
+  DIRECTION_CREDIT = 2;
+}
+
+enum SubmitRejectReason {
+  SUBMIT_REJECT_REASON_UNSPECIFIED = 0;
+  SUBMIT_REJECT_REASON_NOT_ALLOWED = 1;
+  SUBMIT_REJECT_REASON_DISABLED = 2;
+  SUBMIT_REJECT_REASON_INVALID = 3;
+}
+
+enum SubmitResult {
+  SUBMIT_RESULT_UNSPECIFIED = 0;
+  SUBMIT_RESULT_ACCEPTED = 1;
+  SUBMIT_RESULT_DUPLICATE = 2;
+  SUBMIT_RESULT_REJECTED = 3;
+}
+
+message CapturedNotification {
+  string device_id = 1;
+  string notification_key = 2;
+  string package_name = 3;
+  string title = 4;
+  string text = 5;
+  google.protobuf.Timestamp posted_at = 6;
+}
+
+message StoredNotification {
+  string id = 1;
+  string device_id = 2;
+  string package_name = 3;
+  string title = 4;
+  string text = 5;
+  google.protobuf.Timestamp posted_at = 6;
+  google.protobuf.Timestamp received_at = 7;
+  string suggestion_id = 8;
+  bool text_purged = 9;
+  Suggestion suggestion = 10;
+}
+
+message Money {
+  int64 amount_minor = 1;
+  string currency_code = 2;
+}
+
+message Suggestion {
+  string id = 1;
+  string notification_id = 2;
+  SuggestionStatus status = 3;
+  Money amount = 4;
+  Direction direction = 5;
+  string merchant = 6;
+  string card_hint = 7;
+  optional Money balance = 8;
+  string parser_id = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+  string suggested_account_id = 11;
+  string suggested_category_id = 12;
+  string finance_transaction_id = 13;
+  string package_name = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp decided_at = 16;
+}
+
+message SubmitNotificationsRequest {
+  repeated CapturedNotification notifications = 1;
+}
+
+message SubmitItemResult {
+  string notification_key = 1;
+  SubmitResult result = 2;
+  string notification_id = 3;
+  string suggestion_id = 4;
+  SubmitRejectReason reject_reason = 5;
+}
+
+message SubmitNotificationsResponse {
+  repeated SubmitItemResult results = 1;
+}
+
+message ListSuggestionsRequest {
+  SuggestionStatus status = 1;
+  int32 page_size = 2;
+  string cursor = 3;
+}
+
+message ListSuggestionsResponse {
+  repeated Suggestion suggestions = 1;
+  string next_cursor = 2;
+  int32 pending_count = 3;
+}
+
+message ConfirmSuggestionRequest {
+  string suggestion_id = 1;
+  string finance_transaction_id = 2;
+  string account_id = 3;
+  string category_id = 4;
+}
+
+message ConfirmSuggestionResponse {
+  Suggestion suggestion = 1;
+}
+
+message DismissSuggestionRequest {
+  string suggestion_id = 1;
+}
+
+message DismissSuggestionResponse {
+  Suggestion suggestion = 1;
+}
+
+message ListCapturedNotificationsRequest {
+  int32 page_size = 1;
+  string cursor = 2;
+}
+
+message ListCapturedNotificationsResponse {
+  repeated StoredNotification notifications = 1;
+  string next_cursor = 2;
+}
+
+message DeleteCapturedNotificationRequest {
+  string notification_id = 1;
+}
+
+message DeleteCapturedNotificationResponse {}
+
+message CaptureSettings {
+  bool enabled = 1;
+  repeated string allowed_packages = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message GetCaptureSettingsRequest {}
+
+message GetCaptureSettingsResponse {
+  CaptureSettings settings = 1;
+}
+
+message SetCaptureSettingsRequest {
+  bool enabled = 1;
+  repeated string allowed_packages = 2;
+}
+
+message SetCaptureSettingsResponse {
+  CaptureSettings settings = 1;
+}

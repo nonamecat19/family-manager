@@ -326,7 +326,7 @@
       "title": "Handler base (caller, member scoping, fake store) + Get/SetCaptureSettings",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Caller from libs/go/auth claims like finance handler.go (family_id + user_id required, else PermissionDenied). fake_test.go implements EVERY db.Querier method so h2-h4 never edit it. Errors via rpc.Internal. Allow-list: at most 64 package ids, each validated as an Android package name, bounded in runes. Test: member B in the same family gets their own (empty) settings, never A's."
+      "notes": "Caller from libs/go/auth claims like finance handler.go (family_id + user_id required, else PermissionDenied). fake_test.go implements EVERY db.Querier method so h2-h4 never edit it. Errors via rpc.Internal. Allow-list: at most 64 package ids, each validated as an Android package name, bounded in runes. Test: member B in the same family gets their own (empty) settings, never A's. Contract semantics (c1 verify): SetCaptureSettings replaces the whole settings object; a member who never saved settings gets enabled=false with an empty allow-list."
     },
     {
       "nodes": [
@@ -350,7 +350,7 @@
       "title": "SubmitNotifications: batch, idempotent, sealed, parsed into suggestions",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go."
+      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go. Contract semantics (c1 verify): REJECTED is permanent for NOT_ALLOWED and INVALID, and the device drops those items; for DISABLED the device keeps the item queued until capture is re-enabled. amount_minor is always >= 0 and the sign comes from direction (DEBIT -> finance EXPENSE, CREDIT -> INCOME). occurred_at falls back to posted_at when the bank text has no time."
     },
     {
       "nodes": [
@@ -372,7 +372,7 @@
       "title": "ListSuggestions, ConfirmSuggestion, DismissSuggestion with transitions and prefill learning",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Transitions: pending->confirmed (stores finance_transaction_id, required, uuid), pending->dismissed; confirm/dismiss of a non-pending item is FailedPrecondition, except re-confirm with the same transaction id which is idempotent OK. Confirm upserts prefill_rules from account_id/category_id. Member scoping test: another member of the SAME family gets NotFound on list/confirm/dismiss. pending_count in the list response. Do not edit fake_test.go."
+      "notes": "Transitions: pending->confirmed (stores finance_transaction_id, required, uuid), pending->dismissed; confirm/dismiss of a non-pending item is FailedPrecondition, except re-confirm with the same transaction id which is idempotent OK. Confirm upserts prefill_rules from account_id/category_id. Member scoping test: another member of the SAME family gets NotFound on list/confirm/dismiss. pending_count in the list response. Do not edit fake_test.go. Contract semantics (c1 verify): ListSuggestions with status UNSPECIFIED returns all statuses; pending_count always counts the caller's PENDING suggestions regardless of the filter; order is occurred_at desc, id desc; cursor/next_cursor are opaque. In ConfirmSuggestion an empty category_id or account_id leaves that field of the learned prefill rule unchanged. Confirm is idempotent for the same finance_transaction_id."
     },
     {
       "nodes": [
@@ -395,7 +395,7 @@
       "title": "ListCapturedNotifications, DeleteCapturedNotification",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Opens sealed text for the owner only; purged items list with empty text and a purged flag. Delete removes the notification and its suggestion (cascade), any status. Same-family other member: NotFound on list and delete (test). Do not edit fake_test.go."
+      "notes": "Opens sealed text for the owner only; purged items list with empty text and a purged flag. Delete removes the notification and its suggestion (cascade), any status. Same-family other member: NotFound on list and delete (test). Do not edit fake_test.go. Contract semantics (c1 verify): StoredNotification.suggestion is filled whenever a suggestion exists (purged items still show the parsed summary). DeleteCapturedNotification keeps a tombstone of (member, device_id, notification_key) so a re-upload returns DUPLICATE and does not bring the item back."
     },
     {
       "nodes": [
@@ -659,7 +659,7 @@
       "title": "@fm/api: capture hooks (suggestions, pending count, confirm = CreateTransaction then ConfirmSuggestion, dismiss, captured list/delete, settings)",
       "kind": "package",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
-      "notes": "Confirm: finance CreateTransaction with the edited fields, then ConfirmSuggestion(transaction id, account, category); if ConfirmSuggestion fails after the transaction exists, retry it (never create a second transaction). Invalidate finance transaction keys and capture keys. Tests on the ordering/retry logic with fake clients."
+      "notes": "Confirm: finance CreateTransaction with the edited fields, then ConfirmSuggestion(transaction id, account, category); if ConfirmSuggestion fails after the transaction exists, retry it (never create a second transaction). Invalidate finance transaction keys and capture keys. Tests on the ordering/retry logic with fake clients. Contract semantics (c1 verify): confirm persists the created finance transaction id locally (keyed by suggestion id) before calling ConfirmSuggestion and reuses it on retry, so an app crash between CreateTransaction and ConfirmSuggestion never creates a second transaction. occurred_at becomes finance occurred_on in the device timezone."
     },
     {
       "nodes": [
@@ -704,7 +704,7 @@
       "title": "@fm/api: device capture queue (allow-list filter, batching, retry/backoff) + known bank package list",
       "kind": "package",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
-      "notes": "Storage injected (native module in the app). Items from packages not on the allow-list are dropped and never sent (test). Batches of <=50, ack only accepted/duplicate items, exponential backoff with cap on network errors, nothing lost across a failure (test). captureBanks: Monobank com.ftband.mono, Privat24 ua.privatbank.ap24, PUMB, Sense, A-Bank, Raiffeisen (unverified ids marked, hr2)."
+      "notes": "Storage injected (native module in the app). Items from packages not on the allow-list are dropped and never sent (test). Batches of <=50, ack only accepted/duplicate items, exponential backoff with cap on network errors, nothing lost across a failure (test). captureBanks: Monobank com.ftband.mono, Privat24 ua.privatbank.ap24, PUMB, Sense, A-Bank, Raiffeisen (unverified ids marked, hr2). Contract semantics (c1 verify): ack (remove from the queue) ACCEPTED, DUPLICATE, and REJECTED with reason NOT_ALLOWED or INVALID; keep REJECTED/DISABLED queued."
     },
     {
       "nodes": [
@@ -864,7 +864,7 @@
       "title": "Finance captured history screen (list, delete any item)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
-      "notes": "Member's own items only (server-scoped). Purged items show the parsed summary and a 'text removed' label. testIDs for Maestro."
+      "notes": "Member's own items only (server-scoped). Purged items show the parsed summary and a 'text removed' label. testIDs for Maestro. Uses StoredNotification.suggestion for the parsed summary of purged items."
     },
     {
       "nodes": [
