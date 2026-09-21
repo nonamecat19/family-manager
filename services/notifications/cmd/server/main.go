@@ -34,7 +34,7 @@ const maxRequestBytes = 64 << 10
 var healthcheck = flag.Bool("healthcheck", false,
 	"probe this container's own /healthz over loopback and exit")
 
-var consumedDomains = []string{"family", "finance", "recipes"}
+var consumedDomains = []string{"family", "finance", "recipes", "tasks"}
 
 func main() {
 	flag.Parse()

@@ -589,11 +589,13 @@ func TestSubscribeBindsOneDurablePerSubject(t *testing.T) {
 
 func TestSubscribeUnwindsOnFailure(t *testing.T) {
 	f := newFixture()
+	// RecipesRecipeCreated is at index 3, so 3 consumers before it
 	bus := &fakeBus{durables: map[events.Subject]string{}, failOn: events.SubjectRecipesRecipeCreated}
 	if _, err := f.n.Subscribe(context.Background(), bus); err == nil {
 		t.Fatal("Subscribe succeeded with a failing subject")
 	}
-	if bus.stopped != len(Subjects)-1 {
-		t.Errorf("stopped %d consumers, want %d", bus.stopped, len(Subjects)-1)
+	wantStopped := 3 // family.joined, family.removed, finance.budget.exceeded
+	if bus.stopped != wantStopped {
+		t.Errorf("stopped %d consumers, want %d", bus.stopped, wantStopped)
 	}
 }

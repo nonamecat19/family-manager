@@ -19,6 +19,7 @@ import (
 	familyv1 "github.com/nnc/family-manager/sdk/go/family/v1"
 	financev1 "github.com/nnc/family-manager/sdk/go/finance/v1"
 	recipesv1 "github.com/nnc/family-manager/sdk/go/recipes/v1"
+	tasksv1 "github.com/nnc/family-manager/sdk/go/tasks/v1"
 	"github.com/nnc/family-manager/services/notifications/db"
 	"github.com/nnc/family-manager/services/notifications/internal/expo"
 	"github.com/nnc/family-manager/services/notifications/internal/topics"
@@ -40,6 +41,9 @@ var Subjects = []events.Subject{
 	events.SubjectFamilyMemberRemoved,
 	events.SubjectFinanceBudgetExceeded,
 	events.SubjectRecipesRecipeCreated,
+	events.SubjectTasksTaskAssigned,
+	events.SubjectTasksTaskDue,
+	events.SubjectTasksBirthdayUpcoming,
 }
 
 type Bus interface {
@@ -251,6 +255,24 @@ func (n *Notifier) interpret(ctx context.Context, subject events.Subject, payloa
 			return nil, nil
 		}
 		return recipeCreated(&ev), nil
+	case events.SubjectTasksTaskAssigned:
+		var ev tasksv1.TaskAssignedEvent
+		if !n.decode(ctx, subject, payload, &ev) {
+			return nil, nil
+		}
+		return n.taskAssigned(ctx, &ev)
+	case events.SubjectTasksTaskDue:
+		var ev tasksv1.TaskDueEvent
+		if !n.decode(ctx, subject, payload, &ev) {
+			return nil, nil
+		}
+		return n.taskDue(ctx, &ev)
+	case events.SubjectTasksBirthdayUpcoming:
+		var ev tasksv1.BirthdayUpcomingEvent
+		if !n.decode(ctx, subject, payload, &ev) {
+			return nil, nil
+		}
+		return n.birthdayUpcoming(ctx, &ev)
 	default:
 		return nil, nil
 	}
@@ -330,6 +352,47 @@ func recipeCreated(ev *recipesv1.RecipeCreatedEvent) *notice {
 		familyID: ev.GetFamilyId(),
 		except:   ev.GetAuthorUserId(),
 	}
+}
+
+func (n *Notifier) taskAssigned(ctx context.Context, ev *tasksv1.TaskAssignedEvent) (*notice, error) {
+	familyID := ev.GetFamilyId()
+	assignees := ev.GetAssigneeUserIds()
+	if len(assignees) == 0 {
+		return nil, nil
+	}
+	return &notice{
+		topic:    topics.TasksTaskAssigned,
+		title:    "New task assigned",
+		body:     fmt.Sprintf("You were assigned: %s", ev.GetTitle()),
+		data:     map[string]string{"family_id": familyID, "task_id": ev.GetTaskId()},
+		familyID: familyID,
+	}, nil
+}
+
+func (n *Notifier) taskDue(ctx context.Context, ev *tasksv1.TaskDueEvent) (*notice, error) {
+	familyID := ev.GetFamilyId()
+	assignees := ev.GetAssigneeUserIds()
+	if len(assignees) == 0 {
+		return nil, nil
+	}
+	return &notice{
+		topic:    topics.TasksTaskDue,
+		title:    "Task due",
+		body:     fmt.Sprintf("%s is due %s.", ev.GetTitle(), ev.GetDueAt().AsTime().Format("2006-01-02 15:04")),
+		data:     map[string]string{"family_id": familyID, "task_id": ev.GetTaskId()},
+		familyID: familyID,
+	}, nil
+}
+
+func (n *Notifier) birthdayUpcoming(ctx context.Context, ev *tasksv1.BirthdayUpcomingEvent) (*notice, error) {
+	familyID := ev.GetFamilyId()
+	return &notice{
+		topic:    topics.TasksBirthdayUpcoming,
+		title:    "Birthday upcoming",
+		body:     fmt.Sprintf("%s's birthday is coming up.", ev.GetName()),
+		data:     map[string]string{"family_id": familyID, "birthday_id": ev.GetBirthdayId()},
+		familyID: familyID,
+	}, nil
 }
 
 func formatMoney(m *financev1.Money) string {
@@ -523,7 +586,7 @@ func (n *Notifier) unmuted(ctx context.Context, topic string, tokens []db.PushTo
 	return out, nil
 }
 
-var appRank = map[string]int{"finance": 0, "recipes": 1, "notes": 2}
+var appRank = map[string]int{"finance": 0, "recipes": 1, "notes": 2, "tasks": 3}
 
 func route(topic string, tokens []db.PushToken) []db.PushToken {
 	domain := topics.Domain(topic)

@@ -191,6 +191,8 @@ func AppFromProto(app notificationsv1.App) (string, bool) {
 		return "finance", true
 	case notificationsv1.App_APP_RECIPES:
 		return "recipes", true
+	case notificationsv1.App_APP_TASKS:
+		return "tasks", true
 	default:
 		return "", false
 	}
