@@ -77,6 +77,7 @@ const (
 	App_APP_NOTES       App = 1
 	App_APP_FINANCE     App = 2
 	App_APP_RECIPES     App = 3
+	App_APP_TASKS       App = 4
 )
 
 // Enum value maps for App.
@@ -86,12 +87,14 @@ var (
 		1: "APP_NOTES",
 		2: "APP_FINANCE",
 		3: "APP_RECIPES",
+		4: "APP_TASKS",
 	}
 	App_value = map[string]int32{
 		"APP_UNSPECIFIED": 0,
 		"APP_NOTES":       1,
 		"APP_FINANCE":     2,
 		"APP_RECIPES":     3,
+		"APP_TASKS":       4,
 	}
 )
 
@@ -562,12 +565,13 @@ const file_notifications_v1_notifications_proto_rawDesc = "" +
 	"\bPlatform\x12\x18\n" +
 	"\x14PLATFORM_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fPLATFORM_IOS\x10\x01\x12\x14\n" +
-	"\x10PLATFORM_ANDROID\x10\x02*K\n" +
+	"\x10PLATFORM_ANDROID\x10\x02*Z\n" +
 	"\x03App\x12\x13\n" +
 	"\x0fAPP_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tAPP_NOTES\x10\x01\x12\x0f\n" +
 	"\vAPP_FINANCE\x10\x02\x12\x0f\n" +
-	"\vAPP_RECIPES\x10\x032\xc2\x03\n" +
+	"\vAPP_RECIPES\x10\x03\x12\r\n" +
+	"\tAPP_TASKS\x10\x042\xc2\x03\n" +
 	"\x14NotificationsService\x12l\n" +
 	"\x11RegisterPushToken\x12*.notifications.v1.RegisterPushTokenRequest\x1a+.notifications.v1.RegisterPushTokenResponse\x12r\n" +
 	"\x13UnregisterPushToken\x12,.notifications.v1.UnregisterPushTokenRequest\x1a-.notifications.v1.UnregisterPushTokenResponse\x12c\n" +

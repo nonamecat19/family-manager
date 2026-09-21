@@ -21,6 +21,7 @@ enum App {
   APP_NOTES = 1;
   APP_FINANCE = 2;
   APP_RECIPES = 3;
+  APP_TASKS = 4;
 }
 
 message RegisterPushTokenRequest {

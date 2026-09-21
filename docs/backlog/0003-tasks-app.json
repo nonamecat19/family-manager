@@ -35,9 +35,9 @@
         "u01"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "4f54e71",
       "blocked_reason": null,
       "id": "u02",
       "title": "Generate tasks.v1 stubs into sdk/go and sdk/typescript",
@@ -56,7 +56,7 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1285,5 +1285,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:27:55.151Z"
+  "updated_at": "2026-10-05T19:28:59.101Z"
 }
