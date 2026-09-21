@@ -20,11 +20,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Extends {@link ResponseEntityExceptionHandler} so the framework's own failures — no handler,
- * wrong method, unreadable body — keep their real status instead of being swallowed by the
- * catch-all below and reported as 500.
- */
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -61,10 +56,6 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 "Unexpected server error.");
     }
 
-    /**
-     * Field errors are flattened to one message per field: a client fixing a form needs the
-     * first reason per input, not every constraint that fired on it.
-     */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,

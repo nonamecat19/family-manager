@@ -23,10 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Notes form a tree through {@code parent}. The children cascade, so deleting a note deletes
- * the subtree under it; the group does not, so deleting a group only unfiles its notes.
- */
 @Entity
 @Table(
         name = "notes",
@@ -62,11 +58,6 @@ public class Note extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Note parent;
 
-    /**
-     * Read-only from the Java side; {@code parent} is the owning end. Cascade, not orphan
-     * removal: children are deleted with their parent, but moving one to another parent is a
-     * foreign-key change, not a deletion.
-     */
     @Builder.Default
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Note> childNotes = new ArrayList<>();
@@ -83,7 +74,6 @@ public class Note extends BaseEntity {
                 .build();
     }
 
-    /** Unmodifiable: {@code parent} owns the association, so the collection is never written. */
     public List<Note> getChildNotes() {
         return Collections.unmodifiableList(childNotes);
     }
@@ -99,11 +89,6 @@ public class Note extends BaseEntity {
         this.group = group;
     }
 
-    /**
-     * Only safe once the caller has checked that {@code parent} is not this note or one of its
-     * descendants — {@code NoteService} does that before calling, and nothing else should call
-     * this. A loop closed here would make every later walk of the tree non-terminating.
-     */
     public void reparent(Note parent) {
         this.parent = parent;
     }

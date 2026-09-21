@@ -12,10 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Returns DTOs rather than entities. {@code open-in-view} is off, so anything mapped after the
- * method returns would be mapping a detached entity.
- */
 @Service
 @Transactional(readOnly = true)
 public class GroupService {
@@ -52,11 +48,6 @@ public class GroupService {
         return GroupResponse.from(groupRepository.saveAndFlush(group));
     }
 
-    /**
-     * Deleting a group keeps its notes and unfiles them. The foreign key would do the same on
-     * the database side, but the bulk update also evicts the now-stale notes from the
-     * persistence context, so a later read in the same transaction cannot see a dangling group.
-     */
     @Transactional
     public void delete(Long id) {
         Group group = require(id);

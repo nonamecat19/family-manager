@@ -142,7 +142,6 @@ class NoteServiceTest {
         verify(noteRepository, never()).delete(any());
     }
 
-    /** The id is generated, so a unit test has to plant one to exercise the ancestry walk. */
     private static Note noteWithId(Long id, String title) {
         Note note = Note.of(title, null, null);
         ReflectionTestUtils.setField(note, BaseEntity.class, "id", id, Long.class);

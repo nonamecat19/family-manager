@@ -5,6 +5,5 @@ public enum NoteStatus {
     COMPLETED,
     CANCELED;
 
-    /** Single source for the fallback, shared by the entity default and the create request. */
     public static final NoteStatus DEFAULT = ACTIVE;
 }

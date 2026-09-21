@@ -9,6 +9,5 @@ public enum GroupColor {
     ORANGE,
     BROWN;
 
-    /** Single source for the fallback, shared by the entity default and the create request. */
     public static final GroupColor DEFAULT = BLUE;
 }

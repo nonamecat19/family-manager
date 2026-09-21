@@ -1,6 +1,5 @@
 package com.example.notesjava.note.api.dto;
 
-
 import com.example.notesjava.group.domain.Group;
 import com.example.notesjava.note.domain.Note;
 import com.example.notesjava.note.domain.NotePriority;
