@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const currentTime = `-- name: CurrentTime :one
+SELECT NOW()::timestamptz
+`
+
+func (q *Queries) CurrentTime(ctx context.Context) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, currentTime)
+	var column_1 pgtype.Timestamptz
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const deletePushTickets = `-- name: DeletePushTickets :exec
 DELETE FROM push_tickets
 WHERE id = ANY($1::text[])

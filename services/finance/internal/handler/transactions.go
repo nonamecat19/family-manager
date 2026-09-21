@@ -344,8 +344,9 @@ func (h *Handler) UpdateTransaction(
 		OccurredAt:         h.timestamp(),
 	})
 	private := h.onPrivateAccount(ctx, c, row.AccountID)
-	h.announceBudgetChanges(ctx, c, beforeOld, afterOld, pgconv.UUIDString(row.ID), private)
-	h.announceBudgetChanges(ctx, c, beforeNew, after, pgconv.UUIDString(row.ID), private)
+	announced := map[string]bool{}
+	h.announceBudgetTransitions(ctx, c, beforeOld, afterOld, pgconv.UUIDString(row.ID), private, announced)
+	h.announceBudgetTransitions(ctx, c, beforeNew, after, pgconv.UUIDString(row.ID), private, announced)
 
 	return connect.NewResponse(&financev1.UpdateTransactionResponse{
 		Transaction:     toProtoTransaction(view),

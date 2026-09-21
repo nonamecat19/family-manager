@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getInstallId, useAuth } from "@fm/auth";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { Platform as RNPlatform } from "react-native";
 
 import type { App, Platform } from "@fm/sdk/notifications/v1/notifications_pb";
 
 import { useClients } from "./provider.tsx";
 import { queryKeys } from "./queryKeys.ts";
-import { unregisterOnSignOut } from "./pushSignOut.ts";
+import { PushRegistration } from "./pushRegistration.ts";
 import { appToProto, isExpoPushToken, platformToProto, type PushApp } from "./pushToken.ts";
 
 export interface RegisterPushTokenInput {
@@ -83,59 +83,36 @@ async function resolveExpoPushToken(): Promise<string | null> {
 export function usePushRegistration({ app }: { app: PushApp }): void {
   const { status, claims, registerBeforeSignOut } = useAuth();
   const { notifications } = useClients();
-  const register = useRegisterPushToken();
-  const registeredKey = useRef<string | null>(null);
-  const registeredToken = useRef<string | null>(null);
+
+  const registration = useMemo(
+    () =>
+      new PushRegistration({
+        resolveToken: resolveExpoPushToken,
+        register: async (token) =>
+          notifications.registerPushToken({
+            token,
+            platform: platformToProto(RNPlatform.OS),
+            app: appToProto(app),
+            deviceId: await getInstallId().catch(() => ""),
+          }),
+        unregister: (token) => notifications.unregisterPushToken({ token }),
+      }),
+    [notifications, app],
+  );
 
   useEffect(() => {
     if (RNPlatform.OS === "web") return;
-    return unregisterOnSignOut(
-      registerBeforeSignOut,
-      () => registeredToken.current,
-      (token) => notifications.unregisterPushToken({ token }),
-      () => {
-        registeredToken.current = null;
-        registeredKey.current = null;
-      },
-    );
-  }, [registerBeforeSignOut, notifications]);
+    return registerBeforeSignOut(() => registration.signOut());
+  }, [registerBeforeSignOut, registration]);
 
   useEffect(() => {
     if (RNPlatform.OS === "web") return;
-
     if (status !== "authenticated") {
-      registeredToken.current = null;
-      registeredKey.current = null;
+      registration.reset();
       return;
     }
-
-    const userId = claims?.userId ?? "";
-    let cancelled = false;
-
-    void (async () => {
-      const token = await resolveExpoPushToken();
-      if (!token || cancelled) return;
-
-      const key = `${userId}:${token}`;
-      if (registeredKey.current === key) return;
-
-      const deviceId = await getInstallId().catch(() => "");
-      if (cancelled) return;
-
-      registeredKey.current = key;
-      registeredToken.current = token;
-      register.mutate({
-        token,
-        platform: platformToProto(RNPlatform.OS),
-        app: appToProto(app),
-        deviceId,
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [status, claims?.userId, app]);
+    void registration.sync(claims?.userId ?? "");
+  }, [status, claims?.userId, registration]);
 }
 
 export type { Topic, GetPreferencesResponse } from "@fm/sdk/notifications/v1/notifications_pb";
