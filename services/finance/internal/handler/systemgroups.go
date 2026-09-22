@@ -94,3 +94,17 @@ func categoryInUse() error {
 	return connect.NewError(connect.CodeFailedPrecondition,
 		errors.New("this category belongs to an investment or an installment; archive or delete that first"))
 }
+
+const privateInstallmentCategory = "Особиста розстрочка"
+
+func (h *Handler) rejectOwnedCategory(ctx context.Context, id pgtype.UUID) error {
+	owned, err := h.q.IsCategoryOwned(ctx, id)
+	if err != nil {
+		return h.internal(ctx, err, "check category owner")
+	}
+	if owned {
+		return connect.NewError(connect.CodeFailedPrecondition,
+			errors.New("this category belongs to an investment or an installment; edit it there"))
+	}
+	return nil
+}

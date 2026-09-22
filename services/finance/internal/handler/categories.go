@@ -345,6 +345,9 @@ func (h *Handler) UpdateCategory(
 	if err != nil {
 		return nil, err
 	}
+	if err := h.rejectOwnedCategory(ctx, id); err != nil {
+		return nil, err
+	}
 	params := db.UpdateCategoryParams{ID: id, FamilyID: c.familyID}
 	if msg.Name != nil {
 		name := trimmed(msg.GetName())
@@ -389,6 +392,9 @@ func (h *Handler) MoveCategory(
 	}
 	id, err := requireUUID("category_id", req.Msg.GetCategoryId())
 	if err != nil {
+		return nil, err
+	}
+	if err := h.rejectOwnedCategory(ctx, id); err != nil {
 		return nil, err
 	}
 	target, err := requireUUID("target_group_id", req.Msg.GetTargetGroupId())

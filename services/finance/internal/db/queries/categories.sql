@@ -116,3 +116,7 @@ SET role = sqlc.arg('role')::text, archived = FALSE, updated_at = NOW()
 WHERE family_id = $1 AND kind = 'expense' AND role = ''
   AND lower(btrim(name)) = lower(btrim(sqlc.arg('name')::text))
 RETURNING *;
+
+-- name: IsCategoryOwned :one
+SELECT (EXISTS (SELECT 1 FROM investments inv WHERE inv.category_id = sqlc.arg('category_id')::uuid)
+     OR EXISTS (SELECT 1 FROM installments ins WHERE ins.category_id = sqlc.arg('category_id')::uuid))::bool AS owned;

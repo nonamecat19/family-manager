@@ -198,7 +198,11 @@ func (h *Handler) CreateInstallment(
 
 	var created db.Installment
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		category, err := createOwnedCategory(ctx, q, c.familyID, roleInstallments, name, "credit-card")
+		categoryName := name
+		if account.Visibility != visibilityShared {
+			categoryName = privateInstallmentCategory
+		}
+		category, err := createOwnedCategory(ctx, q, c.familyID, roleInstallments, categoryName, "credit-card")
 		if err != nil {
 			return err
 		}
@@ -310,11 +314,16 @@ func (h *Handler) UpdateInstallment(
 		params.DayOfMonth = &day
 	}
 
+	shared := false
+	if account, aerr := h.visibleAccount(ctx, c, inst.AccountID); aerr == nil {
+		shared = account.Visibility == visibilityShared
+	}
+
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
 		if _, err := q.UpdateInstallment(ctx, params); err != nil {
 			return err
 		}
-		if params.Name != nil {
+		if params.Name != nil && shared {
 			if _, err := q.UpdateCategory(ctx, db.UpdateCategoryParams{
 				ID: inst.CategoryID, FamilyID: c.familyID, Name: params.Name,
 			}); err != nil {

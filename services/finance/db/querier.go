@@ -60,6 +60,7 @@ type Querier interface {
 	GetVisibleRecurringPayment(ctx context.Context, arg GetVisibleRecurringPaymentParams) (RecurringPayment, error)
 	GetVisibleTransaction(ctx context.Context, arg GetVisibleTransactionParams) (GetVisibleTransactionRow, error)
 	GetWidget(ctx context.Context, arg GetWidgetParams) (WidgetInstance, error)
+	IsCategoryOwned(ctx context.Context, categoryID pgtype.UUID) (bool, error)
 	ListBudgets(ctx context.Context, arg ListBudgetsParams) ([]Budget, error)
 	ListBudgetsForCategory(ctx context.Context, arg ListBudgetsForCategoryParams) ([]Budget, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)

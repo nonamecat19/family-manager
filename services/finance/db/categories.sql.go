@@ -320,6 +320,18 @@ func (q *Queries) GetCategoryGroupByRole(ctx context.Context, arg GetCategoryGro
 	return i, err
 }
 
+const isCategoryOwned = `-- name: IsCategoryOwned :one
+SELECT (EXISTS (SELECT 1 FROM investments inv WHERE inv.category_id = $1::uuid)
+     OR EXISTS (SELECT 1 FROM installments ins WHERE ins.category_id = $1::uuid))::bool AS owned
+`
+
+func (q *Queries) IsCategoryOwned(ctx context.Context, categoryID pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, isCategoryOwned, categoryID)
+	var owned bool
+	err := row.Scan(&owned)
+	return owned, err
+}
+
 const listCategories = `-- name: ListCategories :many
 SELECT id, family_id, group_id, name, kind, icon, sort_order, archived, created_at, updated_at FROM categories
 WHERE family_id = $1

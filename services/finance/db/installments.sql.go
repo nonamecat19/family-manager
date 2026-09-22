@@ -263,10 +263,12 @@ JOIN categories c ON c.id = i.category_id
 LEFT JOIN LATERAL (
     SELECT SUM(t.amount_minor) AS paid_minor, COUNT(*) AS payments
     FROM transactions t
+    JOIN accounts ta ON ta.id = t.account_id
     WHERE t.family_id = i.family_id
       AND t.category_id = i.category_id
       AND t.type = 'expense'
       AND t.currency_code = i.currency_code
+      AND (ta.visibility = 'shared' OR ta.owner_member_id = $2::uuid)
 ) p ON TRUE
 WHERE i.family_id = $1
   AND (a.visibility = 'shared' OR a.owner_member_id = $2::uuid)

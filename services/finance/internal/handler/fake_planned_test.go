@@ -174,7 +174,7 @@ func (s *fakeStore) ListVisibleInstallments(_ context.Context, arg db.ListVisibl
 		if !arg.IncludeClosed && i.Status != installmentActive {
 			continue
 		}
-		paid, payments := s.categorySpend(id(i.FamilyID), id(i.CategoryID), i.CurrencyCode, nil)
+		paid, payments := s.categorySpend(id(i.FamilyID), id(i.CategoryID), i.CurrencyCode, &viewer)
 		out = append(out, db.ListVisibleInstallmentsRow{
 			Installment: i, GroupID: s.groupOf(i.CategoryID), PaidMinor: paid, Payments: payments,
 		})
@@ -288,4 +288,18 @@ func (s *fakeStore) AdvanceInstallment(_ context.Context, arg db.AdvanceInstallm
 	i.Status = arg.Status
 	s.installments[id(i.ID)] = i
 	return i, nil
+}
+
+func (s *fakeStore) IsCategoryOwned(_ context.Context, categoryID pgtype.UUID) (bool, error) {
+	for _, i := range s.investments {
+		if same(i.CategoryID, categoryID) {
+			return true, nil
+		}
+	}
+	for _, i := range s.installments {
+		if same(i.CategoryID, categoryID) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

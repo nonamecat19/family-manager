@@ -364,3 +364,49 @@ func TestOneHouseholdsBadTimezoneDoesNotBlockOthers(t *testing.T) {
 		t.Errorf("payments = %d, want 1 despite another household's bad timezone", n)
 	}
 }
+
+func TestPrivateInstallmentHidesItsNameAndOthersPrivatePayments(t *testing.T) {
+	h, store, _ := newTestHandler(t)
+	hers := seedAccount(store, "Олена", "card", visibilityPrivate, olena, 0)
+	resp, err := h.CreateInstallment(ctxOf(olena), connect.NewRequest(&financev1.CreateInstallmentRequest{
+		Name: "Подарунок Сергію", Total: &financev1.Money{AmountMinor: 600_00}, Months: 6,
+		AccountId: id(hers.ID), FirstDueOn: "2026-09-10",
+	}))
+	if err != nil {
+		t.Fatalf("CreateInstallment: %v", err)
+	}
+	if got := store.categories[resp.Msg.Installment.CategoryId].Name; got != privateInstallmentCategory {
+		t.Errorf("category name = %q, want the neutral %q", got, privateInstallmentCategory)
+	}
+
+	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	inst := createInstallment(t, h, shared, 1_200_00, 12, "2026-09-30")
+	seedTransaction(store, hers, store.categories[inst.CategoryId], olena, 300_00, "2026-08-20")
+	list, err := h.ListInstallments(ctxOf(sergiy), connect.NewRequest(&financev1.ListInstallmentsRequest{}))
+	if err != nil {
+		t.Fatalf("ListInstallments: %v", err)
+	}
+	if len(list.Msg.Installments) != 1 || list.Msg.Installments[0].Paid.AmountMinor != 0 {
+		t.Errorf("Sergiy sees %+v, want one installment with no visible payments", list.Msg.Installments)
+	}
+}
+
+func TestCategoryRPCsRefuseOwnedCategories(t *testing.T) {
+	h, store, _ := newTestHandler(t)
+	inv := createInvestment(t, h, "ETF")
+	other, _ := seedGroupAndCategory(store, "Дім", "Оренда")
+	name := "Інше"
+
+	_, err := h.UpdateCategory(ctxOf(sergiy), connect.NewRequest(&financev1.UpdateCategoryRequest{
+		CategoryId: inv.CategoryId, Name: &name,
+	}))
+	if got := codeOf(t, err); got != connect.CodeFailedPrecondition {
+		t.Errorf("UpdateCategory code = %v, want FailedPrecondition", got)
+	}
+	_, err = h.MoveCategory(ctxOf(sergiy), connect.NewRequest(&financev1.MoveCategoryRequest{
+		CategoryId: inv.CategoryId, TargetGroupId: id(other.ID),
+	}))
+	if got := codeOf(t, err); got != connect.CodeFailedPrecondition {
+		t.Errorf("MoveCategory code = %v, want FailedPrecondition", got)
+	}
+}
