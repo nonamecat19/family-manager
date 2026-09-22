@@ -55,11 +55,12 @@ type Handler struct {
 	throttle   *throttle.Throttle
 	decisions  *throttle.Throttle
 	starts     *ratelimit.Limiter
+	networks   *ratelimit.Limiter
 	maxPending int64
 	refreshTTL time.Duration
 	now        func() time.Time
 
-	trustedProxies  []netip.Prefix
+	trustsPeer      func(netip.Addr) bool
 	pendingWarnedAt atomic.Int64
 }
 
@@ -74,11 +75,12 @@ type Options struct {
 	Throttle   *throttle.Throttle
 	Decisions  *throttle.Throttle
 	Starts     *ratelimit.Limiter
+	Networks   *ratelimit.Limiter
 	MaxPending int64
 	RefreshTTL time.Duration
 	Now        func() time.Time
 
-	TrustedProxies []netip.Prefix
+	TrustsPeer func(netip.Addr) bool
 }
 
 func New(opts Options) *Handler {
@@ -93,11 +95,12 @@ func New(opts Options) *Handler {
 		throttle:   opts.Throttle,
 		decisions:  opts.Decisions,
 		starts:     opts.Starts,
+		networks:   opts.Networks,
 		maxPending: opts.MaxPending,
 		refreshTTL: opts.RefreshTTL,
 		now:        opts.Now,
 
-		trustedProxies: opts.TrustedProxies,
+		trustsPeer: opts.TrustsPeer,
 	}
 	if h.log == nil {
 		h.log = slog.Default()
@@ -113,6 +116,9 @@ func New(opts Options) *Handler {
 	}
 	if h.tx == nil {
 		h.tx = withoutTx{h.q}
+	}
+	if h.networks == nil {
+		h.networks = ratelimit.New(0, deviceLoginTTL, nil)
 	}
 	if h.decisions == nil {
 		h.decisions = throttle.New(throttle.DefaultParams(), nil)

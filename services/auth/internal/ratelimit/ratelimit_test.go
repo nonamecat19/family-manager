@@ -45,7 +45,7 @@ func TestSweepForgetsClosedWindows(t *testing.T) {
 	}
 }
 
-func TestZeroLimitDisables(t *testing.T) {
+func TestZeroLimitNeverRefuses(t *testing.T) {
 	l := New(0, time.Minute, nil)
 	for range 100 {
 		if l.Take("x") != 0 {
@@ -55,5 +55,24 @@ func TestZeroLimitDisables(t *testing.T) {
 	var nilLimiter *Limiter
 	if nilLimiter.Take("x") != 0 {
 		t.Fatal("a nil limiter refused")
+	}
+}
+
+func TestCountReportsTheCurrentWindow(t *testing.T) {
+	c := &clock{t: time.Unix(1_700_000_000, 0)}
+	l := New(0, time.Minute, c.now)
+
+	for range 3 {
+		l.Take("net")
+	}
+	if n := l.Count("net"); n != 3 {
+		t.Fatalf("count = %d, want 3 with no limit", n)
+	}
+	if n := l.Count("other"); n != 0 {
+		t.Fatalf("unseen key count = %d", n)
+	}
+	c.t = c.t.Add(time.Minute)
+	if n := l.Count("net"); n != 0 {
+		t.Fatalf("count after the window = %d, want 0", n)
 	}
 }

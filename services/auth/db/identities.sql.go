@@ -63,6 +63,17 @@ func (q *Queries) GetIdentity(ctx context.Context, arg GetIdentityParams) (Ident
 	return i, err
 }
 
+const isIdentityChain = `-- name: IsIdentityChain :one
+SELECT EXISTS (SELECT 1 FROM identities WHERE chain_id = $1)
+`
+
+func (q *Queries) IsIdentityChain(ctx context.Context, chainID pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, isIdentityChain, chainID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listIdentitiesForUser = `-- name: ListIdentitiesForUser :many
 SELECT id, user_id, provider, external_id, chain_id, created_at, updated_at FROM identities
 WHERE user_id = $1

@@ -194,6 +194,20 @@ func (q *Queries) DenyLoginGrant(ctx context.Context, arg DenyLoginGrantParams) 
 	return result.RowsAffected(), nil
 }
 
+const getChainRoot = `-- name: GetChainRoot :one
+SELECT COALESCE(
+  (SELECT g.root_chain_id FROM login_grants g WHERE g.chain_id = $1::uuid),
+  $1::uuid
+)::uuid AS root_chain_id
+`
+
+func (q *Queries) GetChainRoot(ctx context.Context, chainID pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getChainRoot, chainID)
+	var root_chain_id pgtype.UUID
+	err := row.Scan(&root_chain_id)
+	return root_chain_id, err
+}
+
 const getLoginGrantByDeviceCode = `-- name: GetLoginGrantByDeviceCode :one
 SELECT id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, root_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at FROM login_grants
 WHERE device_code_hash = $1

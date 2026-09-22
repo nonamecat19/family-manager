@@ -40,22 +40,32 @@ secrets, a kind (`device`, `telegram`), a ten-minute expiry, and a decision (`ap
   throttle is its own instance, separate from `Login`'s per-email throttle: they share no
   keyspace, so a `Login` attempt with the email `device-login:<uuid>` cannot lock a user out of
   approving, and wrong codes cannot lock an email out of `Login`.
-- **`StartDeviceLogin` is limited twice.** Per client, a fixed window
-  (`AUTH_DEVICE_LOGIN_PER_IP`, default 10 per `AUTH_DEVICE_LOGIN_WINDOW`, default 10 minutes)
-  answers `ResourceExhausted` past the limit. The client is keyed by its full IPv4 address, or
-  by its IPv6 /64 — one subscriber usually holds a whole /64, so per-address keys would let one
-  host rotate through 2⁶⁴ of them. The client address is the TCP peer unless the peer is in
-  `AUTH_TRUSTED_PROXIES` (default `10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8,
-  ::1, fc00::/7` — Caddy reaches `auth` over the compose network); only then is
-  `X-Forwarded-For` read, right to left, skipping trusted hops, and the first untrusted entry
-  is the client. A client-supplied `X-Forwarded-For` therefore never names the client: Caddy
-  appends the real peer after it. Behind that, a global ceiling on pending grants (neither
-  consumed nor denied, unexpired), `AUTH_DEVICE_LOGIN_MAX_ACTIVE`, default 100000, refuses with
-  `ResourceExhausted` before writing a row. It is a backstop that bounds the table, not the
-  primary limit — a low ceiling would let a few hundred addresses lock everyone out of device
-  login — so the service logs a warning (at most once a minute) from 80% of it, and refuses
-  only at the ceiling. The per-client limiter is in memory and per process, like the login
-  throttle.
+- **`StartDeviceLogin` is limited per client, per network, and under pressure.**
+  - Per client: a fixed window (`AUTH_DEVICE_LOGIN_PER_IP`, default 10 per
+    `AUTH_DEVICE_LOGIN_WINDOW`, default 10 minutes), keyed by the full IPv4 address or the IPv6
+    /64 — one subscriber usually holds a whole /64.
+  - Per network: a second window over the same period (`AUTH_DEVICE_LOGIN_PER_NETWORK`,
+    default 60), keyed by IPv4 /24 or IPv6 /48, so a /48's 65536 /64s cannot each take the
+    per-client allowance.
+  - Under pressure: when pending grants (neither consumed nor denied, unexpired) reach 80% of
+    `AUTH_DEVICE_LOGIN_MAX_ACTIVE` (default 100000), the service logs a warning (at most once a
+    minute) and refuses starts only from a network that has opened more than 10 grants in the
+    current window. It never refuses everyone: a quiet network still starts above the ceiling,
+    so an attacker can deny device login to their own networks only. What bounds the table then
+    is the per-network window times the networks an attacker holds, and expiry after ten
+    minutes.
+  - The client address is the TCP peer, unless the peer is trusted to forward. Then it is
+    exactly the right-most `X-Forwarded-For` entry — the one hop the trusted proxy appended —
+    with no walking past further hops; an unparseable entry falls back to the peer. Trust is
+    `AUTH_TRUSTED_PROXIES` (CIDRs, default empty) or `AUTH_TRUST_PEER_XFF=true` (every peer).
+    Production sets `AUTH_TRUST_PEER_XFF=true`: the prod compose file declares no networks, so
+    Caddy reaches `auth` over the project's default bridge network, whose subnet Docker picks
+    at creation and which no fixed CIDR list can name. That is sound because `auth` publishes
+    no port in prod — the only peers are Caddy and sibling containers, all first-party. In
+    development `auth` is published on the host as `:8081` and neither variable is set, so
+    `X-Forwarded-For` is ignored and every request from the host counts as the Docker gateway
+    address — one client for the limiter.
+  - The limiters are in memory and per process, like the login throttle.
 
 **Telegram approves as the linked user, never as the service.** The app starts a `telegram`
 grant and opens `t.me/<bot>?start=login_<code>`. Any bot's `/start login_<code>` resolves the
@@ -82,6 +92,20 @@ identity). Roots are denormalised, so every grant descended from a chain carries
 directly, however many approvals deep. A token with no `sid` is refused as `Unauthenticated`
 (only tokens minted before this change, which expire within one access TTL); the telegram
 service answers that by dropping its cached access token, refreshing, and retrying once.
+
+`ApproveDeviceLogin` locks the caller's `chains` row and refuses a revoked or missing chain as
+`Unauthenticated`, so an access token that outlives its chain's revocation (up to one access
+TTL) cannot approve.
+
+**Linking starts only from a first-party session.** `RedeemLinkToken` mints a fresh root chain,
+so a link token created from a session that descends from an identity would let that lineage
+escape `Unlink`: the Telegram chain, or a device it approved, could link a "new" identity and
+get an independent 30-day chain. `CreateLinkToken` therefore resolves the caller's chain from
+`sid`, locks it and refuses a revoked or missing chain (`Unauthenticated`), computes its root
+(the `root_chain_id` of the grant that minted it, else the chain itself), and refuses with
+`PermissionDenied` when the caller's chain or that root is a linked identity's `chain_id`.
+Linking works from a password login or from a device approved, at any depth, by a password
+login. No schema change: the checks read `login_grants` and `identities`.
 
 `PollDeviceLogin` picks the new session's chain id before consuming and writes it as `chain_id`
 in the same conditional `UPDATE` that consumes the grant. That `UPDATE` also requires the
@@ -132,10 +156,12 @@ the device-code phishing pattern. The prompt says to approve only a sign-in star
 - Access tokens grow a `sid` claim (the refresh chain id). Verifiers in other services ignore it.
 - `StartDeviceLogin` and `PollDeviceLogin` join the public procedure list in
   `services/auth/cmd/server/main.go` and in `packages/api`'s client.
-- `StartDeviceLogin` is unauthenticated and writes a row; it is bounded by the per-client
-  limit and the global pending ceiling above. The per-client limiter lives in one process, so
-  running more than one `auth` replica multiplies it by the replica count; the ceiling is
-  counted in Postgres and holds.
+- `StartDeviceLogin` is unauthenticated and writes a row; it is bounded by the per-client and
+  per-network windows and the pressure rule above. The windows live in one process, so running
+  more than one `auth` replica multiplies them by the replica count; the pending count that
+  triggers the pressure rule is read from Postgres.
+- `CreateLinkToken` now needs a session token carrying `sid` from a first-party lineage; apps
+  calling it from a Telegram-approved device get `PermissionDenied`.
 - `packages/api` exports `useStartDeviceLogin`, `usePollDeviceLogin`, `useApproveDeviceLogin`,
   `useDenyDeviceLogin` and `useTelegramLogin`; the login screens and an "approve a device" screen
   in the apps consume them.

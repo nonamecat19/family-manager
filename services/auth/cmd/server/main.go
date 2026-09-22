@@ -121,10 +121,11 @@ func run() error {
 		}, nil),
 		Decisions:  throttle.New(throttle.DefaultParams(), nil),
 		Starts:     ratelimit.New(cfg.DeviceLoginPerIP, cfg.DeviceLoginWindow, nil),
+		Networks:   ratelimit.New(cfg.DeviceLoginPerNetwork, cfg.DeviceLoginWindow, nil),
 		MaxPending: cfg.DeviceLoginMaxActive,
 		RefreshTTL: cfg.RefreshTTL,
 
-		TrustedProxies: cfg.TrustedProxies,
+		TrustsPeer: handler.TrustPeers(cfg.TrustPeerXFF, cfg.TrustedProxies),
 	})
 
 	go sweepExpiredTokens(ctx, db.New(pool), log, sweepInterval)

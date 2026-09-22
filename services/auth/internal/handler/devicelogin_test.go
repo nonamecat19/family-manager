@@ -18,7 +18,6 @@ import (
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
-	"github.com/nnc/family-manager/services/auth/internal/config"
 	"github.com/nnc/family-manager/services/auth/internal/ratelimit"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
@@ -467,7 +466,6 @@ func TestDecisionThrottleDoesNotShareLoginKeys(t *testing.T) {
 func TestStartDeviceLoginIsRateLimitedPerClient(t *testing.T) {
 	f := newFixture(t)
 	f.h.starts = ratelimit.New(2, time.Minute, nil)
-	f.h.trustedProxies = mustProxies(t, config.DefaultTrustedProxies)
 
 	for i := range 2 {
 		if _, err := f.h.StartDeviceLogin(context.Background(),
@@ -481,19 +479,59 @@ func TestStartDeviceLoginIsRateLimitedPerClient(t *testing.T) {
 	}
 }
 
-func TestStartDeviceLoginRefusesOnlyAboveTheCeiling(t *testing.T) {
+func TestStartDeviceLoginIsRateLimitedPerNetwork(t *testing.T) {
 	f := newFixture(t)
-	f.h.maxPending = 5
+	f.h.networks = ratelimit.New(2, time.Minute, nil)
 
-	for range 5 {
-		f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	for i := range 2 {
+		if _, err := f.h.StartDeviceLogin(context.Background(),
+			connect.NewRequest(&authv1.StartDeviceLoginRequest{})); err != nil {
+			t.Fatalf("start %d: %v", i, err)
+		}
 	}
 	_, err := f.h.StartDeviceLogin(context.Background(), connect.NewRequest(&authv1.StartDeviceLoginRequest{}))
 	if connect.CodeOf(err) != connect.CodeResourceExhausted {
-		t.Fatalf("start over the ceiling = %v, want resource_exhausted", connect.CodeOf(err))
+		t.Fatalf("third start from the same network = %v, want resource_exhausted", connect.CodeOf(err))
 	}
-	if n := len(f.store.grants); n != 5 {
-		t.Fatalf("grants = %d, want the ceiling of 5", n)
+}
+
+func TestPendingPressureRefusesOnlyACrowdedNetwork(t *testing.T) {
+	f := newFixture(t)
+	f.h.maxPending = 10
+
+	for i := range crowdedNetwork {
+		if _, err := f.h.StartDeviceLogin(context.Background(),
+			connect.NewRequest(&authv1.StartDeviceLoginRequest{})); err != nil {
+			t.Fatalf("start %d: %v", i, err)
+		}
+	}
+	_, err := f.h.StartDeviceLogin(context.Background(), connect.NewRequest(&authv1.StartDeviceLoginRequest{}))
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("start from a crowded network under pressure = %v, want resource_exhausted", connect.CodeOf(err))
+	}
+
+	for range 50 {
+		f.h.networks = ratelimit.New(0, time.Minute, nil)
+		f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	}
+	if n := len(f.store.grants); n <= int(f.h.maxPending) {
+		t.Fatalf("grants = %d, want the ceiling exceeded to prove nobody else is refused", n)
+	}
+	f.h.networks.Take("203.0.113.0/24")
+	if err := f.h.checkPendingPressure(context.Background(), "203.0.113.0/24"); err != nil {
+		t.Fatalf("a quiet network was refused over the ceiling: %v", err)
+	}
+}
+
+func TestPendingPressureLeavesBusyNetworksAloneBelowEightyPercent(t *testing.T) {
+	f := newFixture(t)
+	f.h.maxPending = 1000
+
+	for i := range crowdedNetwork + 5 {
+		if _, err := f.h.StartDeviceLogin(context.Background(),
+			connect.NewRequest(&authv1.StartDeviceLoginRequest{})); err != nil {
+			t.Fatalf("start %d without pressure: %v", i, err)
+		}
 	}
 }
 
@@ -515,35 +553,30 @@ func TestPendingCeilingWarnsAtEightyPercent(t *testing.T) {
 	}
 }
 
-func mustProxies(t *testing.T, list string) []netip.Prefix {
-	t.Helper()
-	p, err := config.ParseProxies(list)
-	if err != nil {
-		t.Fatalf("ParseProxies: %v", err)
-	}
-	return p
-}
-
-func TestClientIPHonoursForwardedForOnlyFromTrustedProxies(t *testing.T) {
-	trusted := mustProxies(t, config.DefaultTrustedProxies)
+func TestClientIPTakesOnlyTheRightmostHopFromATrustedPeer(t *testing.T) {
+	proxies := TrustPeers(false, []netip.Prefix{netip.MustParsePrefix("172.18.0.0/16")})
+	everyone := TrustPeers(true, nil)
 	cases := []struct {
-		name, forwarded, peer, want string
+		name, forwarded, peer string
+		trust                 func(netip.Addr) bool
+		want                  string
 	}{
-		{"caddy on the compose network", "203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
-		{"client-supplied hop before caddy's", "6.6.6.6, 203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
-		{"trusted hops are skipped", "203.0.113.7, 10.0.0.9", "172.18.0.5:41234", "203.0.113.7"},
-		{"untrusted peer is the client", "6.6.6.6", "198.51.100.4:5000", "198.51.100.4"},
-		{"no header", "", "172.18.0.5:41234", "172.18.0.5"},
-		{"garbage stops the walk", "not-an-ip", "172.18.0.5:41234", "172.18.0.5"},
-		{"ipv6 client", "2001:db8::1", "[::1]:80", "2001:db8::1"},
-		{"mapped ipv4 peer", "203.0.113.7", "[::ffff:172.18.0.5]:80", "203.0.113.7"},
+		{"trusted peer", "203.0.113.7", "172.18.0.5:41234", proxies, "203.0.113.7"},
+		{"client-supplied hop before caddy's", "6.6.6.6, 203.0.113.7", "172.18.0.5:41234", proxies, "203.0.113.7"},
+		{"no walking past a private hop", "203.0.113.7, 10.0.0.9", "172.18.0.5:41234", proxies, "10.0.0.9"},
+		{"untrusted peer is the client", "6.6.6.6", "198.51.100.4:5000", proxies, "198.51.100.4"},
+		{"no trust configured", "6.6.6.6", "172.18.0.5:41234", nil, "172.18.0.5"},
+		{"no header", "", "172.18.0.5:41234", proxies, "172.18.0.5"},
+		{"garbage falls back to the peer", "not-an-ip", "172.18.0.5:41234", proxies, "172.18.0.5"},
+		{"trust every peer", "203.0.113.7", "172.20.0.9:80", everyone, "203.0.113.7"},
+		{"ipv6 client", "2001:db8::1", "[::ffff:172.18.0.5]:80", proxies, "2001:db8::1"},
 	}
 	for _, c := range cases {
 		h := http.Header{}
 		if c.forwarded != "" {
 			h.Add("X-Forwarded-For", c.forwarded)
 		}
-		if got := clientIP(h, c.peer, trusted); got.String() != c.want {
+		if got := clientIP(h, c.peer, c.trust); got.String() != c.want {
 			t.Errorf("%s: clientIP = %v, want %s", c.name, got, c.want)
 		}
 	}
@@ -551,26 +584,28 @@ func TestClientIPHonoursForwardedForOnlyFromTrustedProxies(t *testing.T) {
 	h := http.Header{}
 	h.Add("X-Forwarded-For", "6.6.6.6")
 	h.Add("X-Forwarded-For", "203.0.113.7")
-	if got := clientIP(h, "172.18.0.5:1", trusted); got.String() != "203.0.113.7" {
+	if got := clientIP(h, "172.18.0.5:1", proxies); got.String() != "203.0.113.7" {
 		t.Errorf("repeated headers: clientIP = %v, want the last one", got)
-	}
-	if got := clientIP(h, "172.18.0.5:1", nil); got.String() != "172.18.0.5" {
-		t.Errorf("no trusted proxies: clientIP = %v, want the peer", got)
 	}
 }
 
-func TestStartLimitKeyGroupsAnIPv6Slash64(t *testing.T) {
-	a := startLimitKey(netip.MustParseAddr("2001:db8:1:2::1"))
-	b := startLimitKey(netip.MustParseAddr("2001:db8:1:2:ffff:ffff:ffff:ffff"))
-	c := startLimitKey(netip.MustParseAddr("2001:db8:1:3::1"))
-	if a != b || a == c {
-		t.Fatalf("keys %q %q %q: want one /64 to share a key and the next /64 not", a, b, c)
+func TestLimitKeysGroupClientsAndNetworks(t *testing.T) {
+	a := netip.MustParseAddr("2001:db8:1:2::1")
+	b := netip.MustParseAddr("2001:db8:1:2:ffff:ffff:ffff:ffff")
+	c := netip.MustParseAddr("2001:db8:1:3::1")
+	d := netip.MustParseAddr("2001:db8:2:3::1")
+	if startLimitKey(a) != startLimitKey(b) || startLimitKey(a) == startLimitKey(c) {
+		t.Fatal("client keys do not group by /64")
 	}
-	if k := startLimitKey(netip.MustParseAddr("203.0.113.7")); k != "203.0.113.7" {
-		t.Fatalf("ipv4 key = %q, want the full address", k)
+	if networkKey(a) != networkKey(c) || networkKey(a) == networkKey(d) {
+		t.Fatal("network keys do not group by /48")
 	}
-	if k := startLimitKey(netip.MustParseAddr("203.0.113.8")); k == "203.0.113.7" {
-		t.Fatal("neighbouring ipv4 addresses share a key")
+	v4a, v4b, v4c := netip.MustParseAddr("203.0.113.7"), netip.MustParseAddr("203.0.113.8"), netip.MustParseAddr("203.0.114.7")
+	if startLimitKey(v4a) == startLimitKey(v4b) {
+		t.Fatal("neighbouring ipv4 clients share a key")
+	}
+	if networkKey(v4a) != networkKey(v4b) || networkKey(v4a) == networkKey(v4c) {
+		t.Fatal("ipv4 network keys do not group by /24")
 	}
 }
 
@@ -583,4 +618,21 @@ func (f *fixture) onlyGrant(t *testing.T) db.LoginGrant {
 		return g
 	}
 	return db.LoginGrant{}
+}
+
+func TestApproveRefusesARevokedSession(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	access, chainID := f.sessionOf(ada)
+	if err := revokeChain(context.Background(), f.store, chainID); err != nil {
+		t.Fatalf("revoke: %v", err)
+	}
+
+	if err := f.approveAs(access, ada, start.GetUserCode()); connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("approve from a revoked session = %v, want unauthenticated", connect.CodeOf(err))
+	}
+	if f.onlyGrant(t).ApprovedAt.Valid {
+		t.Fatal("a revoked session approved the grant")
+	}
 }

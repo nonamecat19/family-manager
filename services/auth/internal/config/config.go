@@ -33,7 +33,10 @@ type Config struct {
 	DeviceLoginWindow    time.Duration
 	DeviceLoginMaxActive int64
 
+	DeviceLoginPerNetwork int
+
 	TrustedProxies []netip.Prefix
+	TrustPeerXFF   bool
 
 	LogLevel string
 	LogJSON  bool
@@ -53,7 +56,7 @@ func Load() (*Config, error) {
 	v.SetDefault("DEVICE_LOGIN_PER_IP", 10)
 	v.SetDefault("DEVICE_LOGIN_WINDOW", 10*time.Minute)
 	v.SetDefault("DEVICE_LOGIN_MAX_ACTIVE", 100000)
-	v.SetDefault("TRUSTED_PROXIES", DefaultTrustedProxies)
+	v.SetDefault("DEVICE_LOGIN_PER_NETWORK", 60)
 	v.SetDefault("LOG_LEVEL", "info")
 	v.SetDefault("LOG_JSON", false)
 
@@ -96,6 +99,8 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 	cfg.TrustedProxies = proxies
+	cfg.TrustPeerXFF = v.GetBool("TRUST_PEER_XFF")
+	cfg.DeviceLoginPerNetwork = v.GetInt("DEVICE_LOGIN_PER_NETWORK")
 
 	if cfg.DatabaseURL == "" {
 		return nil, fmt.Errorf("config: AUTH_DATABASE_URL is required")
@@ -107,8 +112,6 @@ func Load() (*Config, error) {
 	}
 	return cfg, nil
 }
-
-const DefaultTrustedProxies = "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,::1/128,fc00::/7"
 
 func ParseProxies(list string) ([]netip.Prefix, error) {
 	var out []netip.Prefix
