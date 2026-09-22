@@ -1,4 +1,4 @@
-package com.example.notesjava.group;
+package com.example.notesjava.group.domain;
 
 import com.example.notesjava.common.persistence.BaseEntity;
 import jakarta.persistence.Column;

@@ -1,7 +1,13 @@
-package com.example.notesjava.group;
+package com.example.notesjava.group.service;
 
 import com.example.notesjava.common.error.ResourceNotFoundException;
-import com.example.notesjava.note.NoteRepository;
+import com.example.notesjava.group.api.dto.CreateGroupRequest;
+import com.example.notesjava.group.api.dto.GroupResponse;
+import com.example.notesjava.group.api.dto.UpdateGroupRequest;
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.group.domain.GroupColor;
+import com.example.notesjava.group.repository.GroupRepository;
+import com.example.notesjava.note.repository.NoteRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

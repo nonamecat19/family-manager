@@ -1,6 +1,10 @@
-package com.example.notesjava.note;
+package com.example.notesjava.group.api;
 
 import com.example.notesjava.common.web.PageResponse;
+import com.example.notesjava.group.api.dto.CreateGroupRequest;
+import com.example.notesjava.group.api.dto.GroupResponse;
+import com.example.notesjava.group.api.dto.UpdateGroupRequest;
+import com.example.notesjava.group.service.GroupService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,54 +18,51 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/notes")
-public class NoteController {
+@RequestMapping("/api/groups")
+public class GroupController {
 
-    private final NoteService noteService;
+    private final GroupService groupService;
 
-    public NoteController(NoteService noteService) {
-        this.noteService = noteService;
+    public GroupController(GroupService groupService) {
+        this.groupService = groupService;
     }
 
     @GetMapping
-    public PageResponse<NoteResponse> list(
-            @RequestParam(required = false) Long groupId,
-            @RequestParam(required = false) NoteStatus status,
-            @PageableDefault(size = 20, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
+    public PageResponse<GroupResponse> list(
+            @PageableDefault(size = 20, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return PageResponse.of(noteService.list(groupId, status, pageable));
+        return PageResponse.of(groupService.list(pageable));
     }
 
     @GetMapping("/{id}")
-    public NoteResponse getById(@PathVariable Long id) {
-        return noteService.getById(id);
+    public GroupResponse getById(@PathVariable Long id) {
+        return groupService.getById(id);
     }
 
     @PostMapping
-    public ResponseEntity<NoteResponse> create(
-            @Valid @RequestBody CreateNoteRequest request,
+    public ResponseEntity<GroupResponse> create(
+            @Valid @RequestBody CreateGroupRequest request,
             UriComponentsBuilder uriBuilder
     ) {
-        NoteResponse created = noteService.create(request);
+        GroupResponse created = groupService.create(request);
         return ResponseEntity
-                .created(uriBuilder.path("/api/notes/{id}").build(created.id()))
+                .created(uriBuilder.path("/api/groups/{id}").build(created.id()))
                 .body(created);
     }
 
     @PutMapping("/{id}")
-    public NoteResponse update(@PathVariable Long id, @Valid @RequestBody UpdateNoteRequest request) {
-        return noteService.update(id, request);
+    public GroupResponse update(@PathVariable Long id, @Valid @RequestBody UpdateGroupRequest request) {
+        return groupService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        noteService.delete(id);
+        groupService.delete(id);
     }
 }

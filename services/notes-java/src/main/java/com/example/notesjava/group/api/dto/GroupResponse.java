@@ -1,5 +1,7 @@
-package com.example.notesjava.group;
+package com.example.notesjava.group.api.dto;
 
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.group.domain.GroupColor;
 import java.time.Instant;
 
 public record GroupResponse(
@@ -10,7 +12,7 @@ public record GroupResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
-    static GroupResponse from(Group group) {
+    public static GroupResponse from(Group group) {
         return new GroupResponse(
                 group.getId(),
                 group.getTitle(),

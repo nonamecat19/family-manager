@@ -1,9 +1,17 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.service;
 
 import com.example.notesjava.common.error.InvalidRequestException;
 import com.example.notesjava.common.error.ResourceNotFoundException;
 import com.example.notesjava.common.persistence.BaseEntity;
-import com.example.notesjava.group.GroupRepository;
+import com.example.notesjava.group.domain.Group;
+import com.example.notesjava.group.repository.GroupRepository;
+import com.example.notesjava.note.api.dto.CreateNoteRequest;
+import com.example.notesjava.note.api.dto.NoteResponse;
+import com.example.notesjava.note.api.dto.UpdateNoteRequest;
+import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NotePriority;
+import com.example.notesjava.note.domain.NoteStatus;
+import com.example.notesjava.note.repository.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

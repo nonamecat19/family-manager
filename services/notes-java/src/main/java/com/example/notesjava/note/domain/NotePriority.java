@@ -1,4 +1,4 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.domain;
 
 public enum NotePriority {
     LOW,

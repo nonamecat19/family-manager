@@ -1,6 +1,12 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.api;
 
 import com.example.notesjava.common.error.ResourceNotFoundException;
+import com.example.notesjava.note.api.dto.CreateNoteRequest;
+import com.example.notesjava.note.api.dto.NoteResponse;
+import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NotePriority;
+import com.example.notesjava.note.domain.NoteStatus;
+import com.example.notesjava.note.service.NoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

@@ -1,5 +1,7 @@
-package com.example.notesjava.note;
+package com.example.notesjava.note.repository;
 
+import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NoteStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
