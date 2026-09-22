@@ -210,6 +210,44 @@ services:
       retries: 3
       start_period: 30s
 
+  tasks:
+    build:
+      context: .
+      dockerfile: services/tasks/Dockerfile
+    environment:
+      TASKS_DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-root}@postgres:5432/tasks?sslmode=disable
+      TASKS_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      TASKS_NATS_URL: nats://nats:4222
+      TASKS_FAMILY_ADDR: http://family:9090
+      TASKS_FAMILY_PUBLIC_ADDR: http://family:8080
+      TASKS_HTTP_PORT: "8080"
+      TASKS_GRPC_PORT: "9090"
+      TASKS_DEFAULT_TIMEZONE: Europe/Kyiv
+      TASKS_GOOGLE_CLIENT_ID: ${TASKS_GOOGLE_CLIENT_ID:-}
+      TASKS_GOOGLE_CLIENT_SECRET: ${TASKS_GOOGLE_CLIENT_SECRET:-}
+      TASKS_GOOGLE_REDIRECT_URL: ${TASKS_GOOGLE_REDIRECT_URL:-}
+      TASKS_TOKEN_KEY: ${TASKS_TOKEN_KEY:-}
+      TASKS_REMINDER_TICK: 1m
+      TASKS_SYNC_TICK: 5m
+      TASKS_LOG_JSON: "true"
+    ports:
+      - "${TASKS_PORT:-8088}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      family:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
 secrets:
   auth-signing-key:
     file: ./infra/secrets/auth-signing-key.pem

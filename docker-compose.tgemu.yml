@@ -23,10 +23,16 @@ services:
       TELEGRAM_RECIPES_TOKEN: "1002:recipes"
       TELEGRAM_NOTES_TOKEN: "1003:notes"
       TELEGRAM_FAMILY_TOKEN: "1004:family"
+      TELEGRAM_TASKS_TOKEN: "1005:tasks"
+      TELEGRAM_TASKS_ADDR: http://tasks:8080
+      TELEGRAM_TASKS_TICK: 5s
       TELEGRAM_FINANCE_TOKEN_FILE: ""
       TELEGRAM_RECIPES_TOKEN_FILE: ""
       TELEGRAM_NOTES_TOKEN_FILE: ""
       TELEGRAM_FAMILY_TOKEN_FILE: ""
+      TELEGRAM_TASKS_TOKEN_FILE: ""
     depends_on:
       tgemu:
+        condition: service_healthy
+      tasks:
         condition: service_healthy

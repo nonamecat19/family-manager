@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+FROM golang:1.25-alpine AS build
+
+WORKDIR /src
+
+COPY go.work go.work.sum* ./
+COPY libs/go/ libs/go/
+COPY sdk/go/ sdk/go/
+COPY --parents services/*/go.mod services/*/go.sum ./
+COPY apps/tui/go.mod apps/tui/go.sum apps/tui/
+RUN go mod download all
+
+COPY services/tasks/ services/tasks/
+
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" \
+    -o /out/server ./services/tasks/cmd/server
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/server /server
+USER nonroot:nonroot
+EXPOSE 8080
+ENTRYPOINT ["/server"]

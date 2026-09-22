@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-SERVICE_DATABASES="auth family finance notes notifications recipes telegram"
+SERVICE_DATABASES="auth family finance notes notifications recipes telegram tasks"
 
 for db in ${SERVICE_DATABASES}; do
 	exists=$(psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB:-postgres}" -tAc \
