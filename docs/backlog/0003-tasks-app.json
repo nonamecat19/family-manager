@@ -12,9 +12,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "3b01ae2",
       "blocked_reason": null,
       "id": "u01",
       "title": "tasks.v1 contract: TasksService rpcs, messages and event payloads",
@@ -35,7 +35,7 @@
         "u01"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1285,5 +1285,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:26:03.102Z"
+  "updated_at": "2026-10-05T19:27:55.151Z"
 }
