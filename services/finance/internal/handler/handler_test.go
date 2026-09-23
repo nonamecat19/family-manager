@@ -1649,3 +1649,83 @@ func TestPeriodTotalsNetIncomeAgainstExpense(t *testing.T) {
 			got, feed.Msg.PeriodTotal.GetAmountMinor())
 	}
 }
+
+func TestBudgetExceededIgnoresPrivateSpending(t *testing.T) {
+	h, store, rec := newTestHandler(t)
+	group, category := seedGroupAndCategory(store, "Їжа", "Продукти")
+	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	hers := seedAccount(store, "Олена", "card", visibilityPrivate, olena, 0)
+	store.budgets["b"] = db.Budget{
+		ID:       pgconv.MustUUID("00000000-0000-4000-8000-0000000000b1"),
+		FamilyID: pgconv.MustUUID(testFamily), TargetKind: targetGroup, GroupID: group.ID,
+		LimitMinor: 100_00, CurrencyCode: "UAH", Period: budgetPeriodMonth,
+		StartOn: day("2026-08-01"), NotifyOnExceed: true,
+	}
+	seedTransaction(store, hers, category, olena, 90_00, "2026-08-10")
+
+	spend := func(account db.Account, amount int64) *financev1.CreateTransactionResponse {
+		t.Helper()
+		resp, err := h.CreateTransaction(ctxOf(olena), connect.NewRequest(&financev1.CreateTransactionRequest{
+			Type: financev1.TransactionType_TRANSACTION_TYPE_EXPENSE, AccountId: id(account.ID),
+			CategoryId: id(category.ID),
+			Amount:     &financev1.Money{AmountMinor: amount, CurrencyCode: "UAH"},
+			OccurredOn: "2026-08-15",
+		}))
+		if err != nil {
+			t.Fatalf("CreateTransaction: %v", err)
+		}
+		return resp.Msg
+	}
+
+	first := spend(shared, 20_00)
+	if !first.AffectedBudgets[0].Exceeded {
+		t.Error("the owner's own view counts her private spending, 110 of 100 must be exceeded")
+	}
+	if rec.sawSubject("finance.budget.exceeded") {
+		t.Fatal("budget.exceeded published on the strength of private spending")
+	}
+
+	spend(shared, 90_00)
+	var ev *financev1.BudgetExceededEvent
+	for i, s := range rec.subjects {
+		if s == "finance.budget.exceeded" {
+			ev = rec.messages[i].(*financev1.BudgetExceededEvent)
+		}
+	}
+	if ev == nil {
+		t.Fatal("budget.exceeded not published once shared spending crossed the limit")
+	}
+	if got := ev.GetSpent().GetAmountMinor(); got != 110_00 {
+		t.Errorf("event spent = %d, want 11000 (shared accounts only)", got)
+	}
+}
+
+func TestBudgetExceededNotPublishedForAPrivateTransaction(t *testing.T) {
+	h, store, rec := newTestHandler(t)
+	group, category := seedGroupAndCategory(store, "Їжа", "Продукти")
+	shared := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	hers := seedAccount(store, "Олена", "card", visibilityPrivate, olena, 0)
+	store.budgets["b"] = db.Budget{
+		ID:       pgconv.MustUUID("00000000-0000-4000-8000-0000000000b1"),
+		FamilyID: pgconv.MustUUID(testFamily), TargetKind: targetGroup, GroupID: group.ID,
+		LimitMinor: 100_00, CurrencyCode: "UAH", Period: budgetPeriodMonth,
+		StartOn: day("2026-08-01"), NotifyOnExceed: true,
+	}
+	seedTransaction(store, shared, category, sergiy, 90_00, "2026-08-10")
+
+	resp, err := h.CreateTransaction(ctxOf(olena), connect.NewRequest(&financev1.CreateTransactionRequest{
+		Type: financev1.TransactionType_TRANSACTION_TYPE_EXPENSE, AccountId: id(hers.ID),
+		CategoryId: id(category.ID),
+		Amount:     &financev1.Money{AmountMinor: 50_00, CurrencyCode: "UAH"},
+		OccurredOn: "2026-08-15",
+	}))
+	if err != nil {
+		t.Fatalf("CreateTransaction: %v", err)
+	}
+	if !resp.Msg.AffectedBudgets[0].Exceeded {
+		t.Error("the owner's own view must show 140 of 100 as exceeded")
+	}
+	if rec.sawSubject("finance.budget.exceeded") {
+		t.Error("budget.exceeded published for a transaction on a private account")
+	}
+}

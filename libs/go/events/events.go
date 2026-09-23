@@ -158,14 +158,20 @@ type ackable interface {
 	Headers() nats.Header
 	Ack() error
 	NakWithDelay(delay time.Duration) error
+	InProgress() error
 	Metadata() (*jetstream.MsgMetadata, error)
 }
 
 func dispatch(ctx context.Context, h Handler, m ackable) {
+	dispatchWith(ctx, h, m, SubscribeOptions{})
+}
+
+func dispatchWith(ctx context.Context, h Handler, m ackable, opts SubscribeOptions) {
 	if id := m.Headers().Get(RequestIDHeader); id != "" {
 		ctx = logger.WithRequestID(ctx, id)
 	}
 
+	stop := heartbeat(m, opts.Heartbeat)
 	err := func() (err error) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -174,6 +180,7 @@ func dispatch(ctx context.Context, h Handler, m ackable) {
 		}()
 		return h(ctx, Subject(m.Subject()), m.Data())
 	}()
+	stop()
 
 	if err == nil {
 		_ = m.Ack()
@@ -194,9 +201,44 @@ func backoffFor(m ackable) time.Duration {
 	return redeliveryBackoff[i]
 }
 
+func heartbeat(m ackable, every time.Duration) func() {
+	if every <= 0 {
+		return func() {}
+	}
+	done := make(chan struct{})
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		ticker := time.NewTicker(every)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				_ = m.InProgress()
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		<-finished
+	}
+}
+
 type Handler func(ctx context.Context, subject Subject, payload []byte) error
 
+type SubscribeOptions struct {
+	Heartbeat time.Duration
+}
+
 func (b *Bus) Subscribe(ctx context.Context, subject Subject, durable string, h Handler) (func(), error) {
+	return b.SubscribeWith(ctx, subject, durable, h, SubscribeOptions{})
+}
+
+func (b *Bus) SubscribeWith(
+	ctx context.Context, subject Subject, durable string, h Handler, opts SubscribeOptions,
+) (func(), error) {
 	if err := subject.Validate(); err != nil {
 		return nil, err
 	}
@@ -215,7 +257,7 @@ func (b *Bus) Subscribe(ctx context.Context, subject Subject, durable string, h 
 		return nil, fmt.Errorf("events: consumer %s: %w", durable, err)
 	}
 
-	cc, err := cons.Consume(func(m jetstream.Msg) { dispatch(ctx, h, m) })
+	cc, err := cons.Consume(func(m jetstream.Msg) { dispatchWith(ctx, h, m, opts) })
 	if err != nil {
 		return nil, fmt.Errorf("events: consume %s: %w", durable, err)
 	}

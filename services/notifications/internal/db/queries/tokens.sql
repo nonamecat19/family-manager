@@ -1,4 +1,4 @@
--- name: UpsertPushToken :exec
+-- name: UpsertPushToken :execrows
 INSERT INTO push_tokens (token, user_id, family_id, platform, app, device_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (token) DO UPDATE
@@ -7,15 +7,22 @@ SET user_id    = EXCLUDED.user_id,
     platform   = EXCLUDED.platform,
     app        = EXCLUDED.app,
     device_id  = EXCLUDED.device_id,
-    updated_at = NOW();
+    updated_at = NOW()
+WHERE push_tokens.user_id = EXCLUDED.user_id
+   OR (push_tokens.device_id <> '' AND push_tokens.device_id = EXCLUDED.device_id);
 
 -- name: DeleteUserPushToken :execrows
 DELETE FROM push_tokens
 WHERE token = $1 AND user_id = $2;
 
--- name: DeletePushTokens :execrows
-DELETE FROM push_tokens
-WHERE token = ANY(@tokens::text[]);
+-- name: DeleteDeadPushTokens :execrows
+DELETE FROM push_tokens p
+USING (
+    SELECT unnest(@tokens::text[]) AS token,
+           unnest(@sent_at::timestamptz[]) AS sent_at
+) d
+WHERE p.token = d.token
+  AND p.updated_at < d.sent_at;
 
 -- name: ListFamilyPushTokens :many
 SELECT * FROM push_tokens

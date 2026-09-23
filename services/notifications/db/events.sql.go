@@ -11,31 +11,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const isEventProcessed = `-- name: IsEventProcessed :one
-SELECT EXISTS (SELECT 1 FROM processed_events WHERE event_id = $1)
+const claimEvent = `-- name: ClaimEvent :execrows
+INSERT INTO processed_events (event_id, subject, status, claimed_at)
+VALUES ($1, $2, 'claimed', NOW())
+ON CONFLICT (event_id) DO UPDATE
+SET claimed_at = NOW()
+WHERE processed_events.status = 'claimed'
+  AND processed_events.claimed_at < $3
 `
 
-func (q *Queries) IsEventProcessed(ctx context.Context, eventID string) (bool, error) {
-	row := q.db.QueryRow(ctx, isEventProcessed, eventID)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
+type ClaimEventParams struct {
+	EventID     string
+	Subject     string
+	StaleBefore pgtype.Timestamptz
 }
 
-const markEventProcessed = `-- name: MarkEventProcessed :exec
-INSERT INTO processed_events (event_id, subject)
-VALUES ($1, $2)
-ON CONFLICT DO NOTHING
+func (q *Queries) ClaimEvent(ctx context.Context, arg ClaimEventParams) (int64, error) {
+	result, err := q.db.Exec(ctx, claimEvent, arg.EventID, arg.Subject, arg.StaleBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const completeEvent = `-- name: CompleteEvent :exec
+UPDATE processed_events
+SET status = 'done', processed_at = NOW()
+WHERE event_id = $1
 `
 
-type MarkEventProcessedParams struct {
-	EventID string
-	Subject string
-}
-
-func (q *Queries) MarkEventProcessed(ctx context.Context, arg MarkEventProcessedParams) error {
-	_, err := q.db.Exec(ctx, markEventProcessed, arg.EventID, arg.Subject)
+func (q *Queries) CompleteEvent(ctx context.Context, eventID string) error {
+	_, err := q.db.Exec(ctx, completeEvent, eventID)
 	return err
+}
+
+const eventStatus = `-- name: EventStatus :one
+SELECT status FROM processed_events
+WHERE event_id = $1
+`
+
+func (q *Queries) EventStatus(ctx context.Context, eventID string) (string, error) {
+	row := q.db.QueryRow(ctx, eventStatus, eventID)
+	var status string
+	err := row.Scan(&status)
+	return status, err
 }
 
 const pruneProcessedEvents = `-- name: PruneProcessedEvents :execrows
@@ -49,4 +68,14 @@ func (q *Queries) PruneProcessedEvents(ctx context.Context, processedAt pgtype.T
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const releaseEvent = `-- name: ReleaseEvent :exec
+DELETE FROM processed_events
+WHERE event_id = $1 AND status = 'claimed'
+`
+
+func (q *Queries) ReleaseEvent(ctx context.Context, eventID string) error {
+	_, err := q.db.Exec(ctx, releaseEvent, eventID)
+	return err
 }

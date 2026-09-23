@@ -301,7 +301,8 @@ func (h *Handler) LogTemplate(
 	if err != nil {
 		return nil, err
 	}
-	if _, err := h.visibleAccount(ctx, c, tpl.AccountID); err != nil {
+	account, err := h.visibleAccount(ctx, c, tpl.AccountID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -348,10 +349,11 @@ func (h *Handler) LogTemplate(
 		TransactionId: pgconv.UUIDString(row.ID),
 		OccurredAt:    h.timestamp(),
 	})
-	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(row.ID))
+	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(row.ID),
+		account.Visibility != visibilityShared)
 
 	return connect.NewResponse(&financev1.LogTemplateResponse{
 		Transaction:     toProtoTransaction(view),
-		AffectedBudgets: after,
+		AffectedBudgets: after.visible,
 	}), nil
 }

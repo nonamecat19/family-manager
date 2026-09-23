@@ -31,6 +31,23 @@ func (h *Handler) budgetStatus(
 	return budgetStatusFrom(b, window, spent, h.today(hh)), nil
 }
 
+func (h *Handler) sharedBudgetStatus(
+	ctx context.Context, c caller, hh household, b db.Budget, asOf time.Time,
+) (*financev1.BudgetStatus, error) {
+	window := budgetWindow(b.Period, b.StartOn.Time, asOf)
+
+	spent, err := h.q.SumSharedBudgetSpend(ctx, db.SumSharedBudgetSpendParams{
+		FamilyID: c.familyID,
+		FromDate: pgDate(window.from), ToDate: pgDate(window.to),
+		CurrencyCode: b.CurrencyCode,
+		GroupID:      b.GroupID, CategoryID: b.CategoryID, MemberID: b.MemberID,
+	})
+	if err != nil {
+		return nil, h.internal(ctx, err, "sum shared budget spend")
+	}
+	return budgetStatusFrom(b, window, spent, h.today(hh)), nil
+}
+
 func budgetStatusFrom(b db.Budget, window dayRange, spent int64, today time.Time) *financev1.BudgetStatus {
 	share := 0.0
 	if b.LimitMinor > 0 {
@@ -301,41 +318,62 @@ func (h *Handler) DeleteBudget(
 	return connect.NewResponse(&financev1.DeleteBudgetResponse{}), nil
 }
 
+type budgetImpact struct {
+	visible []*financev1.BudgetStatus
+	shared  []*financev1.BudgetStatus
+}
+
 func (h *Handler) affectedBudgets(
 	ctx context.Context, c caller, hh household, categoryID pgtype.UUID, occurredOn time.Time,
-) ([]*financev1.BudgetStatus, error) {
+) (budgetImpact, error) {
 	if !categoryID.Valid {
-		return nil, nil
+		return budgetImpact{}, nil
 	}
 	rows, err := h.q.ListBudgetsForCategory(ctx, db.ListBudgetsForCategoryParams{
 		FamilyID: c.familyID, CategoryID: categoryID,
 	})
 	if err != nil {
-		return nil, h.internal(ctx, err, "list budgets for category")
+		return budgetImpact{}, h.internal(ctx, err, "list budgets for category")
 	}
-	out := make([]*financev1.BudgetStatus, 0, len(rows))
+	out := budgetImpact{
+		visible: make([]*financev1.BudgetStatus, 0, len(rows)),
+		shared:  make([]*financev1.BudgetStatus, 0, len(rows)),
+	}
 	for _, b := range rows {
 		status, err := h.budgetStatus(ctx, c, hh, b, occurredOn)
 		if err != nil {
-			return nil, err
+			return budgetImpact{}, err
 		}
-		out = append(out, status)
+		shared, err := h.sharedBudgetStatus(ctx, c, hh, b, occurredOn)
+		if err != nil {
+			return budgetImpact{}, err
+		}
+		out.visible = append(out.visible, status)
+		out.shared = append(out.shared, shared)
 	}
 	return out, nil
 }
 
+func (h *Handler) onPrivateAccount(ctx context.Context, c caller, accountID pgtype.UUID) bool {
+	account, err := h.visibleAccount(ctx, c, accountID)
+	if err != nil {
+		return true
+	}
+	return account.Visibility != visibilityShared
+}
+
 func (h *Handler) announceBudgetChanges(
-	ctx context.Context, c caller, before, after []*financev1.BudgetStatus, triggeringTxID string,
+	ctx context.Context, c caller, before, after budgetImpact, triggeringTxID string, private bool,
 ) {
-	was := make(map[string]bool, len(before))
-	for _, s := range before {
+	was := make(map[string]bool, len(before.shared))
+	for _, s := range before.shared {
 		was[s.GetBudget().GetId()] = s.GetExceeded()
 	}
-	for _, s := range after {
+	for _, s := range after.shared {
 		id := s.GetBudget().GetId()
 		switch {
 		case s.GetExceeded() && !was[id]:
-			if !s.GetBudget().GetNotifyOnExceed() {
+			if private || !s.GetBudget().GetNotifyOnExceed() {
 				continue
 			}
 			h.publish(ctx, subjectBudgetExceeded, &financev1.BudgetExceededEvent{

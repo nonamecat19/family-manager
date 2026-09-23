@@ -166,6 +166,21 @@ WHERE t.family_id = $1
   AND (sqlc.narg('category_id')::uuid IS NULL OR t.category_id = @category_id)
   AND (sqlc.narg('member_id')::uuid IS NULL OR t.member_id = @member_id);
 
+-- name: SumSharedBudgetSpend :one
+SELECT COALESCE(SUM(t.amount_minor), 0)::bigint AS total_minor
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND a.visibility = 'shared'
+  AND t.occurred_on >= sqlc.arg('from_date')::date
+  AND t.occurred_on <= sqlc.arg('to_date')::date
+  AND t.type = 'expense'
+  AND t.currency_code = sqlc.arg('currency_code')::text
+  AND (sqlc.narg('group_id')::uuid IS NULL OR c.group_id = @group_id)
+  AND (sqlc.narg('category_id')::uuid IS NULL OR t.category_id = @category_id)
+  AND (sqlc.narg('member_id')::uuid IS NULL OR t.member_id = @member_id);
+
 -- name: CountTransactionsForRecurringOccurrence :one
 SELECT COUNT(*) FROM transactions
 WHERE family_id = $1 AND recurring_id = $2 AND occurred_on = $3;

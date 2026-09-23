@@ -82,6 +82,43 @@ func TestRegisterMovesATokenToItsNewOwner(t *testing.T) {
 	}
 }
 
+func TestRegisterDoesNotMoveATokenFromAnotherDevice(t *testing.T) {
+	h, store := newHandler()
+	_, _ = h.RegisterPushToken(asUser(alice, family), register(tokenA, notificationsv1.App_APP_NOTES))
+
+	stolen := register(tokenA, notificationsv1.App_APP_NOTES)
+	stolen.Msg.DeviceId = "attacker-phone"
+	_, err := h.RegisterPushToken(asUser(bob, ""), stolen)
+	if codeOf(err) != connect.CodePermissionDenied {
+		t.Fatalf("err = %v, want permission denied", err)
+	}
+
+	blank := register(tokenA, notificationsv1.App_APP_NOTES)
+	blank.Msg.DeviceId = ""
+	if _, err := h.RegisterPushToken(asUser(bob, ""), blank); codeOf(err) != connect.CodePermissionDenied {
+		t.Fatalf("without a device id: err = %v, want permission denied", err)
+	}
+
+	got := store.Tokens[tokenA]
+	if pgconv.UUIDString(got.UserID) != alice || pgconv.UUIDString(got.FamilyID) != family {
+		t.Errorf("token rebound to %s / %s", pgconv.UUIDString(got.UserID), pgconv.UUIDString(got.FamilyID))
+	}
+}
+
+func TestRegisterLetsTheOwnerUpdateTheirToken(t *testing.T) {
+	h, store := newHandler()
+	_, _ = h.RegisterPushToken(asUser(alice, family), register(tokenA, notificationsv1.App_APP_NOTES))
+
+	again := register(tokenA, notificationsv1.App_APP_FINANCE)
+	again.Msg.DeviceId = "reinstalled"
+	if _, err := h.RegisterPushToken(asUser(alice, family), again); err != nil {
+		t.Fatalf("RegisterPushToken: %v", err)
+	}
+	if got := store.Tokens[tokenA]; got.App != "finance" || got.DeviceID != "reinstalled" {
+		t.Errorf("stored %+v", got)
+	}
+}
+
 func TestRegisterValidates(t *testing.T) {
 	h, store := newHandler()
 	cases := map[string]*notificationsv1.RegisterPushTokenRequest{

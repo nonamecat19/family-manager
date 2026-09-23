@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/proto"
 
@@ -26,7 +27,13 @@ import (
 const (
 	receiptRetention   = 24 * time.Hour
 	processedRetention = 60 * 24 * time.Hour
+	handleTimeout      = 45 * time.Second
+	claimTimeout       = 60 * time.Second
+	heartbeat          = 10 * time.Second
+	statusDone         = "done"
 )
+
+var errInFlight = errors.New("event is being handled by another delivery")
 
 var Subjects = []events.Subject{
 	events.SubjectFamilyMemberJoined,
@@ -36,7 +43,9 @@ var Subjects = []events.Subject{
 }
 
 type Bus interface {
-	Subscribe(ctx context.Context, subject events.Subject, durable string, h events.Handler) (func(), error)
+	SubscribeWith(
+		ctx context.Context, subject events.Subject, durable string, h events.Handler, opts events.SubscribeOptions,
+	) (func(), error)
 }
 
 type Sender interface {
@@ -96,7 +105,8 @@ func (n *Notifier) Subscribe(ctx context.Context, bus Bus) (func(), error) {
 	}
 	for _, subject := range Subjects {
 		durable := "notifications-" + strings.ReplaceAll(string(subject), ".", "-")
-		stop, err := bus.Subscribe(ctx, subject, durable, n.Handle)
+		stop, err := bus.SubscribeWith(ctx, subject, durable, n.Handle,
+			events.SubscribeOptions{Heartbeat: heartbeat})
 		if err != nil {
 			stopAll()
 			return nil, err
@@ -124,30 +134,93 @@ type notice struct {
 	except   string
 }
 
-func (n *Notifier) Handle(ctx context.Context, subject events.Subject, payload []byte) error {
-	id := EventID(subject, payload)
-	done, err := n.q.IsEventProcessed(ctx, id)
+type claim struct {
+	n         *Notifier
+	id        string
+	accepted  bool
+	completed bool
+}
+
+func (n *Notifier) claim(ctx context.Context, subject events.Subject, id string) (*claim, error) {
+	rows, err := n.q.ClaimEvent(ctx, db.ClaimEventParams{
+		EventID: id, Subject: string(subject),
+		StaleBefore: pgconv.TimestampFrom(n.now().Add(-claimTimeout)),
+	})
 	if err != nil {
-		return fmt.Errorf("is event processed: %w", err)
+		return nil, fmt.Errorf("claim event: %w", err)
 	}
-	if done {
+	if rows > 0 {
+		return &claim{n: n, id: id}, nil
+	}
+	status, err := n.q.EventStatus(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, errInFlight
+	}
+	if err != nil {
+		return nil, fmt.Errorf("event status: %w", err)
+	}
+	if status == statusDone {
+		return nil, nil
+	}
+	return nil, errInFlight
+}
+
+func (c *claim) accept(ctx context.Context) {
+	c.accepted = true
+	if err := c.complete(ctx); err != nil {
+		c.n.log.ErrorContext(ctx, "could not record an accepted delivery",
+			slog.String("event_id", c.id), slog.String("error", err.Error()))
+	}
+}
+
+func (c *claim) complete(ctx context.Context) error {
+	if c.completed {
 		return nil
+	}
+	if err := c.n.q.CompleteEvent(context.WithoutCancel(ctx), c.id); err != nil {
+		return fmt.Errorf("complete event: %w", err)
+	}
+	c.completed = true
+	return nil
+}
+
+func (c *claim) release(ctx context.Context) {
+	if err := c.n.q.ReleaseEvent(context.WithoutCancel(ctx), c.id); err != nil {
+		c.n.log.WarnContext(ctx, "could not release an event claim; it expires on its own",
+			slog.String("event_id", c.id), slog.String("error", err.Error()))
+	}
+}
+
+func (n *Notifier) Handle(ctx context.Context, subject events.Subject, payload []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, handleTimeout)
+	defer cancel()
+
+	c, err := n.claim(ctx, subject, EventID(subject, payload))
+	if err != nil || c == nil {
+		return err
 	}
 
 	nt, err := n.interpret(ctx, subject, payload)
-	if err != nil {
-		return err
+	if err == nil && nt != nil {
+		err = n.deliver(ctx, nt, c)
 	}
-	if nt != nil {
-		if err := n.deliver(ctx, nt); err != nil {
+	if err != nil {
+		if !c.accepted {
+			c.release(ctx)
 			return err
 		}
+		n.log.ErrorContext(ctx, "delivery failed after expo accepted part of it; not retried",
+			slog.String("subject", string(subject)), slog.String("error", err.Error()))
 	}
 
-	if err := n.q.MarkEventProcessed(ctx, db.MarkEventProcessedParams{
-		EventID: id, Subject: string(subject),
-	}); err != nil {
-		return fmt.Errorf("mark event processed: %w", err)
+	if err := c.complete(ctx); err != nil {
+		if c.accepted {
+			n.log.ErrorContext(ctx, "could not record an accepted delivery",
+				slog.String("event_id", c.id), slog.String("error", err.Error()))
+			return nil
+		}
+		c.release(ctx)
+		return err
 	}
 	return nil
 }
@@ -269,7 +342,7 @@ func formatMoney(m *financev1.Money) string {
 	return strings.TrimSpace(fmt.Sprintf("%s%d.%02d %s", sign, minor/100, minor%100, m.GetCurrencyCode()))
 }
 
-func (n *Notifier) deliver(ctx context.Context, nt *notice) error {
+func (n *Notifier) deliver(ctx context.Context, nt *notice, c *claim) error {
 	tokens, err := n.recipients(ctx, nt)
 	if err != nil {
 		return err
@@ -288,17 +361,19 @@ func (n *Notifier) deliver(ctx context.Context, nt *notice) error {
 		data[k] = v
 	}
 
-	var dead []string
+	var dead deadTokens
 	for start := 0; start < len(tokens); start += expo.MaxBatch {
 		chunk := tokens[start:min(start+expo.MaxBatch, len(tokens))]
 		msgs := make([]expo.Message, len(chunk))
 		for i, t := range chunk {
 			msgs[i] = expo.Message{To: t.Token, Title: nt.title, Body: nt.body, Data: data, Sound: "default"}
 		}
+		sentAt := n.now()
 		tickets, err := n.sender.Send(ctx, msgs)
 		if err != nil {
-			return fmt.Errorf("send push: %w", err)
+			return errors.Join(fmt.Errorf("send push: %w", err), n.dropDead(ctx, dead))
 		}
+		c.accept(ctx)
 		for i, ticket := range tickets {
 			if i >= len(chunk) {
 				break
@@ -308,10 +383,10 @@ func (n *Notifier) deliver(ctx context.Context, nt *notice) error {
 				if err := n.q.InsertPushTicket(ctx, db.InsertPushTicketParams{
 					ID: ticket.ID, Token: chunk[i].Token,
 				}); err != nil {
-					return fmt.Errorf("insert push ticket: %w", err)
+					return errors.Join(fmt.Errorf("insert push ticket: %w", err), n.dropDead(ctx, dead))
 				}
 			case ticket.Error == expo.DeviceNotRegistered:
-				dead = append(dead, chunk[i].Token)
+				dead.add(chunk[i].Token, sentAt)
 			case ticket.Status == expo.StatusError:
 				n.log.WarnContext(ctx, "push rejected",
 					slog.String("topic", nt.topic), slog.String("error", ticket.Error),
@@ -320,12 +395,30 @@ func (n *Notifier) deliver(ctx context.Context, nt *notice) error {
 		}
 	}
 
-	if len(dead) > 0 {
-		if _, err := n.q.DeletePushTokens(ctx, dead); err != nil {
-			return fmt.Errorf("delete dead tokens: %w", err)
-		}
-		n.log.InfoContext(ctx, "dropped unregistered push tokens", slog.Int("count", len(dead)))
+	return n.dropDead(ctx, dead)
+}
+
+type deadTokens struct {
+	tokens []string
+	sentAt []pgtype.Timestamptz
+}
+
+func (d *deadTokens) add(token string, sentAt time.Time) {
+	d.tokens = append(d.tokens, token)
+	d.sentAt = append(d.sentAt, pgconv.TimestampFrom(sentAt))
+}
+
+func (n *Notifier) dropDead(ctx context.Context, dead deadTokens) error {
+	if len(dead.tokens) == 0 {
+		return nil
 	}
+	count, err := n.q.DeleteDeadPushTokens(ctx, db.DeleteDeadPushTokensParams{
+		Tokens: dead.tokens, SentAt: dead.sentAt,
+	})
+	if err != nil {
+		return fmt.Errorf("delete dead tokens: %w", err)
+	}
+	n.log.InfoContext(ctx, "dropped unregistered push tokens", slog.Int64("count", count))
 	return nil
 }
 
@@ -484,7 +577,8 @@ func (n *Notifier) CheckReceipts(ctx context.Context) error {
 		return fmt.Errorf("fetch receipts: %w", err)
 	}
 
-	var done, dead []string
+	var done []string
+	var dead deadTokens
 	for _, t := range due {
 		r, ok := receipts[t.ID]
 		if !ok {
@@ -498,18 +592,15 @@ func (n *Notifier) CheckReceipts(ctx context.Context) error {
 			continue
 		}
 		if r.Error == expo.DeviceNotRegistered {
-			dead = append(dead, t.Token)
+			dead.add(t.Token, t.CreatedAt.Time)
 			continue
 		}
 		n.log.WarnContext(ctx, "push receipt error",
 			slog.String("error", r.Error), slog.String("message", r.Message))
 	}
 
-	if len(dead) > 0 {
-		if _, err := n.q.DeletePushTokens(ctx, dead); err != nil {
-			return fmt.Errorf("delete dead tokens: %w", err)
-		}
-		n.log.InfoContext(ctx, "dropped unregistered push tokens", slog.Int("count", len(dead)))
+	if err := n.dropDead(ctx, dead); err != nil {
+		return err
 	}
 	if len(done) > 0 {
 		if err := n.q.DeletePushTickets(ctx, done); err != nil {

@@ -969,6 +969,14 @@ func (s *fakeStore) SumBudgetSpend(_ context.Context, arg db.SumBudgetSpendParam
 	return total, nil
 }
 
+func (s *fakeStore) SumSharedBudgetSpend(ctx context.Context, arg db.SumSharedBudgetSpendParams) (int64, error) {
+	return s.SumBudgetSpend(ctx, db.SumBudgetSpendParams{
+		FamilyID: arg.FamilyID, FromDate: arg.FromDate, ToDate: arg.ToDate,
+		CurrencyCode: arg.CurrencyCode, GroupID: arg.GroupID, CategoryID: arg.CategoryID,
+		MemberID: arg.MemberID,
+	})
+}
+
 func (s *fakeStore) CountTransactionsForRecurringOccurrence(_ context.Context, arg db.CountTransactionsForRecurringOccurrenceParams) (int64, error) {
 	var n int64
 	for _, t := range s.transactions {

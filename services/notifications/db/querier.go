@@ -11,23 +11,25 @@ import (
 )
 
 type Querier interface {
+	ClaimEvent(ctx context.Context, arg ClaimEventParams) (int64, error)
 	ClearUserFamily(ctx context.Context, arg ClearUserFamilyParams) error
+	CompleteEvent(ctx context.Context, eventID string) error
+	DeleteDeadPushTokens(ctx context.Context, arg DeleteDeadPushTokensParams) (int64, error)
 	DeleteMutes(ctx context.Context, userID pgtype.UUID) error
 	DeletePushTickets(ctx context.Context, ids []string) error
-	DeletePushTokens(ctx context.Context, tokens []string) (int64, error)
 	DeleteUserPushToken(ctx context.Context, arg DeleteUserPushTokenParams) (int64, error)
+	EventStatus(ctx context.Context, eventID string) (string, error)
 	InsertMute(ctx context.Context, arg InsertMuteParams) error
 	InsertPushTicket(ctx context.Context, arg InsertPushTicketParams) error
-	IsEventProcessed(ctx context.Context, eventID string) (bool, error)
 	ListDuePushTickets(ctx context.Context, arg ListDuePushTicketsParams) ([]PushTicket, error)
 	ListFamilyPushTokens(ctx context.Context, familyID pgtype.UUID) ([]PushToken, error)
 	ListMutes(ctx context.Context, userID pgtype.UUID) ([]string, error)
 	ListMutesForUsers(ctx context.Context, userIds []pgtype.UUID) ([]ListMutesForUsersRow, error)
 	ListUserPushTokens(ctx context.Context, userID pgtype.UUID) ([]PushToken, error)
-	MarkEventProcessed(ctx context.Context, arg MarkEventProcessedParams) error
 	PruneProcessedEvents(ctx context.Context, processedAt pgtype.Timestamptz) (int64, error)
+	ReleaseEvent(ctx context.Context, eventID string) error
 	SetUserFamily(ctx context.Context, arg SetUserFamilyParams) error
-	UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams) error
+	UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

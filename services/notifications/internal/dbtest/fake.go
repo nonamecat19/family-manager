@@ -7,19 +7,27 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	"github.com/nnc/family-manager/services/notifications/db"
 )
 
+type Event struct {
+	Subject     string
+	Status      string
+	ClaimedAt   time.Time
+	ProcessedAt time.Time
+}
+
 type Fake struct {
 	mu sync.Mutex
 
-	Tokens    map[string]db.PushToken
-	Mutes     map[string]map[string]bool
-	Processed map[string]time.Time
-	Tickets   map[string]db.PushTicket
+	Tokens  map[string]db.PushToken
+	Mutes   map[string]map[string]bool
+	Events  map[string]Event
+	Tickets map[string]db.PushTicket
 
 	Now    func() time.Time
 	FailOn map[string]error
@@ -29,12 +37,12 @@ type Fake struct {
 
 func New() *Fake {
 	return &Fake{
-		Tokens:    map[string]db.PushToken{},
-		Mutes:     map[string]map[string]bool{},
-		Processed: map[string]time.Time{},
-		Tickets:   map[string]db.PushTicket{},
-		Now:       time.Now,
-		FailOn:    map[string]error{},
+		Tokens:  map[string]db.PushToken{},
+		Mutes:   map[string]map[string]bool{},
+		Events:  map[string]Event{},
+		Tickets: map[string]db.PushTicket{},
+		Now:     time.Now,
+		FailOn:  map[string]error{},
 	}
 }
 
@@ -44,21 +52,25 @@ func (f *Fake) InTx(_ context.Context, fn func(q db.Querier) error) error {
 	return fn(f)
 }
 
-func (f *Fake) UpsertPushToken(_ context.Context, arg db.UpsertPushTokenParams) error {
+func (f *Fake) UpsertPushToken(_ context.Context, arg db.UpsertPushTokenParams) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if err := f.fail("UpsertPushToken"); err != nil {
-		return err
+		return 0, err
 	}
 	t, ok := f.Tokens[arg.Token]
+	if ok && t.UserID != arg.UserID && (t.DeviceID == "" || t.DeviceID != arg.DeviceID) {
+		return 0, nil
+	}
 	if !ok {
 		f.seq++
 		t.CreatedAt = pgtype.Timestamptz{Time: time.Unix(int64(f.seq), 0), Valid: true}
 	}
+	t.UpdatedAt = pgtype.Timestamptz{Time: f.Now(), Valid: true}
 	t.Token, t.UserID, t.FamilyID = arg.Token, arg.UserID, arg.FamilyID
 	t.Platform, t.App, t.DeviceID = arg.Platform, arg.App, arg.DeviceID
 	f.Tokens[arg.Token] = t
-	return nil
+	return 1, nil
 }
 
 func (f *Fake) DeleteUserPushToken(_ context.Context, arg db.DeleteUserPushTokenParams) (int64, error) {
@@ -72,13 +84,17 @@ func (f *Fake) DeleteUserPushToken(_ context.Context, arg db.DeleteUserPushToken
 	return 1, nil
 }
 
-func (f *Fake) DeletePushTokens(_ context.Context, tokens []string) (int64, error) {
+func (f *Fake) DeleteDeadPushTokens(_ context.Context, arg db.DeleteDeadPushTokensParams) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if err := f.fail("DeleteDeadPushTokens"); err != nil {
+		return 0, err
+	}
 	var n int64
-	for _, t := range tokens {
-		if _, ok := f.Tokens[t]; ok {
-			delete(f.Tokens, t)
+	for i, token := range arg.Tokens {
+		t, ok := f.Tokens[token]
+		if ok && t.UpdatedAt.Time.Before(arg.SentAt[i].Time) {
+			delete(f.Tokens, token)
 			n++
 		}
 	}
@@ -188,29 +204,69 @@ func (f *Fake) InsertMute(_ context.Context, arg db.InsertMuteParams) error {
 	return nil
 }
 
-func (f *Fake) IsEventProcessed(_ context.Context, eventID string) (bool, error) {
+func (f *Fake) ClaimEvent(_ context.Context, arg db.ClaimEventParams) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	_, ok := f.Processed[eventID]
-	return ok, nil
+	if err := f.fail("ClaimEvent"); err != nil {
+		return 0, err
+	}
+	e, ok := f.Events[arg.EventID]
+	if ok && (e.Status != "claimed" || !e.ClaimedAt.Before(arg.StaleBefore.Time)) {
+		return 0, nil
+	}
+	if !ok {
+		e = Event{Subject: arg.Subject, ProcessedAt: f.Now()}
+	}
+	e.Status, e.ClaimedAt = "claimed", f.Now()
+	f.Events[arg.EventID] = e
+	return 1, nil
 }
 
-func (f *Fake) MarkEventProcessed(_ context.Context, arg db.MarkEventProcessedParams) error {
+func (f *Fake) EventStatus(_ context.Context, eventID string) (string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if _, ok := f.Processed[arg.EventID]; !ok {
-		f.Processed[arg.EventID] = f.Now()
+	e, ok := f.Events[eventID]
+	if !ok {
+		return "", pgx.ErrNoRows
+	}
+	return e.Status, nil
+}
+
+func (f *Fake) CompleteEvent(_ context.Context, eventID string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if err := f.fail("CompleteEvent"); err != nil {
+		return err
+	}
+	if e, ok := f.Events[eventID]; ok {
+		e.Status, e.ProcessedAt = "done", f.Now()
+		f.Events[eventID] = e
 	}
 	return nil
+}
+
+func (f *Fake) ReleaseEvent(_ context.Context, eventID string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if e, ok := f.Events[eventID]; ok && e.Status == "claimed" {
+		delete(f.Events, eventID)
+	}
+	return nil
+}
+
+func (f *Fake) Processed(eventID string) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.Events[eventID].Status == "done"
 }
 
 func (f *Fake) PruneProcessedEvents(_ context.Context, before pgtype.Timestamptz) (int64, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	var n int64
-	for id, at := range f.Processed {
-		if at.Before(before.Time) {
-			delete(f.Processed, id)
+	for id, e := range f.Events {
+		if e.ProcessedAt.Before(before.Time) {
+			delete(f.Events, id)
 			n++
 		}
 	}

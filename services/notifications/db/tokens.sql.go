@@ -27,13 +27,23 @@ func (q *Queries) ClearUserFamily(ctx context.Context, arg ClearUserFamilyParams
 	return err
 }
 
-const deletePushTokens = `-- name: DeletePushTokens :execrows
-DELETE FROM push_tokens
-WHERE token = ANY($1::text[])
+const deleteDeadPushTokens = `-- name: DeleteDeadPushTokens :execrows
+DELETE FROM push_tokens p
+USING (
+    SELECT unnest($1::text[]) AS token,
+           unnest($2::timestamptz[]) AS sent_at
+) d
+WHERE p.token = d.token
+  AND p.updated_at < d.sent_at
 `
 
-func (q *Queries) DeletePushTokens(ctx context.Context, tokens []string) (int64, error) {
-	result, err := q.db.Exec(ctx, deletePushTokens, tokens)
+type DeleteDeadPushTokensParams struct {
+	Tokens []string
+	SentAt []pgtype.Timestamptz
+}
+
+func (q *Queries) DeleteDeadPushTokens(ctx context.Context, arg DeleteDeadPushTokensParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteDeadPushTokens, arg.Tokens, arg.SentAt)
 	if err != nil {
 		return 0, err
 	}
@@ -144,7 +154,7 @@ func (q *Queries) SetUserFamily(ctx context.Context, arg SetUserFamilyParams) er
 	return err
 }
 
-const upsertPushToken = `-- name: UpsertPushToken :exec
+const upsertPushToken = `-- name: UpsertPushToken :execrows
 INSERT INTO push_tokens (token, user_id, family_id, platform, app, device_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (token) DO UPDATE
@@ -154,6 +164,8 @@ SET user_id    = EXCLUDED.user_id,
     app        = EXCLUDED.app,
     device_id  = EXCLUDED.device_id,
     updated_at = NOW()
+WHERE push_tokens.user_id = EXCLUDED.user_id
+   OR (push_tokens.device_id <> '' AND push_tokens.device_id = EXCLUDED.device_id)
 `
 
 type UpsertPushTokenParams struct {
@@ -165,8 +177,8 @@ type UpsertPushTokenParams struct {
 	DeviceID string
 }
 
-func (q *Queries) UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams) error {
-	_, err := q.db.Exec(ctx, upsertPushToken,
+func (q *Queries) UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams) (int64, error) {
+	result, err := q.db.Exec(ctx, upsertPushToken,
 		arg.Token,
 		arg.UserID,
 		arg.FamilyID,
@@ -174,5 +186,8 @@ func (q *Queries) UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams
 		arg.App,
 		arg.DeviceID,
 	)
-	return err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -78,6 +78,7 @@ type Querier interface {
 	SumByMember(ctx context.Context, arg SumByMemberParams) ([]SumByMemberRow, error)
 	SumDailyTotals(ctx context.Context, arg SumDailyTotalsParams) ([]SumDailyTotalsRow, error)
 	SumFamilyBalances(ctx context.Context, arg SumFamilyBalancesParams) (SumFamilyBalancesRow, error)
+	SumSharedBudgetSpend(ctx context.Context, arg SumSharedBudgetSpendParams) (int64, error)
 	SumVisibleTransactions(ctx context.Context, arg SumVisibleTransactionsParams) (SumVisibleTransactionsRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateBudget(ctx context.Context, arg UpdateBudgetParams) (Budget, error)

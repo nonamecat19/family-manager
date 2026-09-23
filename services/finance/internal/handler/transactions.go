@@ -109,11 +109,12 @@ func (h *Handler) CreateTransaction(
 		return nil, err
 	}
 	h.announceTransactionCreated(ctx, c, view)
-	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(row.ID))
+	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(row.ID),
+		account.Visibility != visibilityShared)
 
 	return connect.NewResponse(&financev1.CreateTransactionResponse{
 		Transaction:     toProtoTransaction(view),
-		AffectedBudgets: after,
+		AffectedBudgets: after.visible,
 	}), nil
 }
 
@@ -342,12 +343,13 @@ func (h *Handler) UpdateTransaction(
 		ActorUserId:        c.user,
 		OccurredAt:         h.timestamp(),
 	})
-	h.announceBudgetChanges(ctx, c, beforeOld, afterOld, pgconv.UUIDString(row.ID))
-	h.announceBudgetChanges(ctx, c, beforeNew, after, pgconv.UUIDString(row.ID))
+	private := h.onPrivateAccount(ctx, c, row.AccountID)
+	h.announceBudgetChanges(ctx, c, beforeOld, afterOld, pgconv.UUIDString(row.ID), private)
+	h.announceBudgetChanges(ctx, c, beforeNew, after, pgconv.UUIDString(row.ID), private)
 
 	return connect.NewResponse(&financev1.UpdateTransactionResponse{
 		Transaction:     toProtoTransaction(view),
-		AffectedBudgets: after,
+		AffectedBudgets: after.visible,
 	}), nil
 }
 
@@ -410,9 +412,10 @@ func (h *Handler) DeleteTransaction(
 		ActorUserId:   c.user,
 		OccurredAt:    h.timestamp(),
 	})
-	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(existing.ID))
+	h.announceBudgetChanges(ctx, c, before, after, pgconv.UUIDString(existing.ID),
+		h.onPrivateAccount(ctx, c, existing.AccountID))
 
-	return connect.NewResponse(&financev1.DeleteTransactionResponse{AffectedBudgets: after}), nil
+	return connect.NewResponse(&financev1.DeleteTransactionResponse{AffectedBudgets: after.visible}), nil
 }
 
 func (h *Handler) ListTransactions(

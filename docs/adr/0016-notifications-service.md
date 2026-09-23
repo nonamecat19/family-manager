@@ -20,8 +20,16 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
 - **Contract.** `NotificationsService` with four authenticated rpcs:
   `RegisterPushToken(token, platform, app, device_id)`, `UnregisterPushToken(token)`,
   `GetPreferences()` → `muted` + the `topics` catalogue, `SetPreferences(muted)`. A token is
-  owned by the caller; registering a token another user held moves it (the device changed
-  account). Only Expo tokens (`ExponentPushToken[…]`, `ExpoPushToken[…]`) are accepted.
+  owned by the caller. Registering a token another user holds moves it only when the request
+  carries the same non-empty `device_id` the token was stored with (the same install changed
+  account); anything else is `PermissionDenied`, so knowing a token is not enough to take it.
+  Clients send a random per-install id, minted once and kept in secure storage
+  (`getInstallId` in `@fm/auth`). Only Expo tokens (`ExponentPushToken[…]`, `ExpoPushToken[…]`)
+  are accepted.
+- **Sign-out.** The client unregisters its token from a before-sign-out hook in `@fm/auth`
+  (`registerBeforeSignOut`), which runs while the access token is still valid and before the
+  refresh token is revoked. Sign-out waits for it at most 3 seconds and never fails because of
+  it.
 - **Preferences are a mute list, not a matrix.** Each entry is a domain (`finance`) or a topic
   key (`finance.budget.exceeded`); the default is everything on. `SetPreferences` replaces the
   list. The catalogue is served by `GetPreferences` so an app renders toggles without hardcoding
@@ -30,11 +38,21 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
   `notifications-<domain>-<entity>-<verb>`, through `libs/go/events`. Today:
   `family.member.joined` (tell the other members), `family.member.removed` (tell the removed
   member, only when an admin removed them), `finance.budget.exceeded` (every member),
-  `recipes.recipe.created` (every member but the author). Events nobody should be woken for —
+  `recipes.recipe.created` (every member but the author). `finance.budget.exceeded` is
+  computed by finance over shared-visibility accounts only, and is not published when the
+  triggering transaction is on a private account — the amounts in it go to every member.
+  Consumers send `InProgress` every 10 seconds while a handler runs
+  (`events.SubscribeOptions.Heartbeat`), so a slow delivery is not redelivered underneath
+  itself. Events nobody should be woken for —
   transaction edits, account changes, recipe updates — are deliberately not consumed.
 - **Idempotency without an event id on the wire.** Event payloads carry no id, so the service
   keys `processed_events` on `sha256(subject ∥ payload)`; every payload carries `occurred_at`,
-  so two real events never collide. An event is marked processed only after delivery succeeds.
+  so two real events never collide. A delivery first claims the event (insert with
+  `status = 'claimed'`, `ON CONFLICT DO NOTHING`); a concurrent delivery that finds a fresh
+  claim is nacked and retried, and a claim older than 60 seconds (past the 45-second handler
+  timeout) is taken over. If the handler fails before Expo accepted anything the claim is
+  released and redelivery retries; once Expo accepted any batch the event is marked `done` and
+  never retried.
 - **Audience.** Tokens carry the `family_id` from the caller's token at registration; joined and
   removed events keep it current. Before a family-wide send, each candidate is re-checked with
   the family service's internal `GetUserMembership` (gRPC on `family:9090`, via `sdk/go`) and a
@@ -46,7 +64,8 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
 - **Expo.** `POST https://exp.host/--/api/v2/push/send` in batches of at most 100. A ticket with
   `DeviceNotRegistered` deletes its token immediately; successful tickets are stored and a
   background loop fetches receipts after 15 minutes (`/getReceipts`, up to 1000 ids) and deletes
-  tokens whose receipt says `DeviceNotRegistered`. Tickets with no receipt after 24 hours are
+  tokens whose receipt says `DeviceNotRegistered`. Either way a token is deleted only if it was
+  not registered again after the send (`updated_at` earlier than the ticket). Tickets with no receipt after 24 hours are
   dropped — Expo no longer has them. `NOTIFICATIONS_EXPO_ACCESS_TOKEN` is sent when set, for
   projects with enhanced push security. The sender is an interface; tests use a fake.
 - **The bus is required.** Unlike the publishers, which log "events disabled" and keep serving,
@@ -69,8 +88,16 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
 
 ## Consequences
 
-- At-least-once, not exactly-once: if Expo accepts the first batch and the second fails, the
-  redelivery re-sends the first. Accepted for audiences of a family.
+- At-most-once once Expo accepted a batch: if the first batch is accepted and the second
+  fails, the second is not retried (the alternative re-sends the first). Families fit in one
+  batch, so in practice this is all-or-nothing.
+- **Known limitation: a session revoked server-side cannot unregister its token.** The
+  before-sign-out hook covers a user signing out on the device. A session revoked from
+  elsewhere (another device, an admin, refresh-token reuse detection) leaves the device's
+  token registered, and it keeps receiving the family's pushes until the app next signs in or
+  Expo reports the token dead. Follow-up: `services/auth` publishes an `auth.session.revoked`
+  event; notifications stores the session identifier with each token at registration and
+  deletes the tokens of a revoked session. Not implemented here.
 - Message text is English, fixed in the service. Localising needs the user's locale
   (`family.GetUserSettings`) and a catalogue; a follow-up, not a blocker.
 - Notes publishes no events yet, so the notes app receives only family notices. A
