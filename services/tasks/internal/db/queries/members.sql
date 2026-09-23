@@ -24,3 +24,7 @@ WHERE family_id = $1 AND user_id = $2;
 SELECT * FROM known_members
 WHERE family_id = $1
 ORDER BY user_id;
+
+-- name: DeleteTaskAssigneesForUser :exec
+DELETE FROM task_assignees
+WHERE family_id = $1 AND user_id = $2;

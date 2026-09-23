@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/proto"
+
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -15,8 +17,11 @@ import (
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/rpc"
+	"github.com/nnc/family-manager/sdk/go/tasks/v1/tasksv1connect"
 	"github.com/nnc/family-manager/services/tasks/db"
+	"github.com/nnc/family-manager/services/tasks/internal/crypto"
 	"github.com/nnc/family-manager/services/tasks/internal/family"
+	"github.com/nnc/family-manager/services/tasks/internal/gcal"
 )
 
 type Tx interface {
@@ -25,10 +30,21 @@ type Tx interface {
 
 type EventBus interface {
 	EnsureStream(ctx context.Context, domain string) error
-	Publish(ctx context.Context, subject events.Subject, msg any) error
+	Publish(ctx context.Context, subject events.Subject, msg proto.Message) error
+}
+
+type CalendarSync interface {
+	PushTask(context.Context, pgtype.UUID, pgtype.UUID) error
+	PushBirthday(context.Context, pgtype.UUID, pgtype.UUID) error
+	MutateTask(context.Context, pgtype.UUID, pgtype.UUID, func() (bool, error)) error
+	MutateBirthday(context.Context, pgtype.UUID, pgtype.UUID, func() error) error
+	GoogleClient() gcal.Client
+	Box() *crypto.Box
+	SwitchCalendar(ctx context.Context, familyID, userID pgtype.UUID) error
 }
 
 type Handler struct {
+	tasksv1connect.UnimplementedTasksServiceHandler
 	q         db.Querier
 	tx        Tx
 	bus       EventBus
@@ -36,6 +52,7 @@ type Handler struct {
 	now       func() time.Time
 	family    *family.Client
 	familyPub *family.Client
+	calendar  CalendarSync
 }
 
 type Options struct {
@@ -44,6 +61,7 @@ type Options struct {
 	Bus          EventBus
 	Family       *family.Client
 	FamilyPublic *family.Client
+	Calendar     CalendarSync
 	Log          *slog.Logger
 	Now          func() time.Time
 }
@@ -57,6 +75,7 @@ func New(opts Options) *Handler {
 		now:       opts.Now,
 		family:    opts.Family,
 		familyPub: opts.FamilyPublic,
+		calendar:  opts.Calendar,
 	}
 	if h.log == nil {
 		h.log = slog.Default()
@@ -73,14 +92,49 @@ func New(opts Options) *Handler {
 	return h
 }
 
+func (h *Handler) pushTask(ctx context.Context, familyID, taskID pgtype.UUID) {
+	if h.calendar == nil {
+		return
+	}
+	if err := h.calendar.PushTask(ctx, familyID, taskID); err != nil {
+		h.log.WarnContext(ctx, "push task to calendar", slog.String("error", err.Error()))
+	}
+}
+
+func (h *Handler) pushBirthday(ctx context.Context, familyID, birthdayID pgtype.UUID) {
+	if h.calendar == nil {
+		return
+	}
+	if err := h.calendar.PushBirthday(ctx, familyID, birthdayID); err != nil {
+		h.log.WarnContext(ctx, "push birthday to calendar", slog.String("error", err.Error()))
+	}
+}
+
+func (h *Handler) mutateTask(ctx context.Context, familyID, taskID pgtype.UUID, write func() (bool, error)) error {
+	if h.calendar != nil {
+		return h.calendar.MutateTask(ctx, familyID, taskID, write)
+	}
+	_, err := write()
+	return err
+}
+
+func (h *Handler) mutateBirthday(ctx context.Context, familyID, birthdayID pgtype.UUID, write func() error) error {
+	if h.calendar != nil {
+		return h.calendar.MutateBirthday(ctx, familyID, birthdayID, write)
+	}
+	return write()
+}
+
 type withoutTx struct{ q db.Querier }
 
 func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { return fn(w.q) }
 
 type noopBus struct{}
 
-func (noopBus) EnsureStream(ctx context.Context, domain string) error              { return nil }
-func (noopBus) Publish(ctx context.Context, subject events.Subject, msg any) error { return nil }
+func (noopBus) EnsureStream(ctx context.Context, domain string) error { return nil }
+func (noopBus) Publish(ctx context.Context, subject events.Subject, msg proto.Message) error {
+	return nil
+}
 
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
 	return rpc.Internal(ctx, h.log, err, what)

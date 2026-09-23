@@ -36,7 +36,13 @@ func TestEveryTableIsScopedByFamily(t *testing.T) {
 	if len(tables) < 10 {
 		t.Fatalf("expected at least ten tables, found %d", len(tables))
 	}
+	exempt := map[string]bool{
+		"processed_events": true, // global event idempotency table
+	}
 	for _, m := range tables {
+		if exempt[m[1]] {
+			continue
+		}
 		if !strings.Contains(m[2], "family_id ") {
 			t.Errorf("table %s has no family_id column", m[1])
 		}

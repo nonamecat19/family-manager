@@ -14,7 +14,9 @@ type Querier interface {
 	AckReminder(ctx context.Context, arg AckReminderParams) (int64, error)
 	AddAssignee(ctx context.Context, arg AddAssigneeParams) error
 	CalendarLinkedInFamily(ctx context.Context, arg CalendarLinkedInFamilyParams) (bool, error)
+	ClaimEvent(ctx context.Context, arg ClaimEventParams) (int64, error)
 	ClearDeliveries(ctx context.Context, arg ClearDeliveriesParams) error
+	CompleteEvent(ctx context.Context, eventID string) error
 	CompleteTask(ctx context.Context, arg CompleteTaskParams) (Task, error)
 	CreateBirthday(ctx context.Context, arg CreateBirthdayParams) (Birthday, error)
 	CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error)
@@ -27,7 +29,10 @@ type Querier interface {
 	DeleteKnownMembersExcept(ctx context.Context, arg DeleteKnownMembersExceptParams) error
 	DeletePendingRemindersForItem(ctx context.Context, arg DeletePendingRemindersForItemParams) error
 	DeletePendingRemindersForItemExcept(ctx context.Context, arg DeletePendingRemindersForItemExceptParams) error
+	DeletePendingRemindersForUser(ctx context.Context, arg DeletePendingRemindersForUserParams) error
 	DeleteTask(ctx context.Context, arg DeleteTaskParams) (int64, error)
+	DeleteTaskAssigneesForUser(ctx context.Context, arg DeleteTaskAssigneesForUserParams) error
+	EventStatus(ctx context.Context, eventID string) (string, error)
 	GetBirthday(ctx context.Context, arg GetBirthdayParams) (Birthday, error)
 	GetCalendarLink(ctx context.Context, arg GetCalendarLinkParams) (CalendarLink, error)
 	GetCalendarLinkByEvent(ctx context.Context, arg GetCalendarLinkByEventParams) (CalendarLink, error)
@@ -43,6 +48,7 @@ type Querier interface {
 	ListAssignees(ctx context.Context, arg ListAssigneesParams) ([]ListAssigneesRow, error)
 	ListBirthdays(ctx context.Context, familyID pgtype.UUID) ([]Birthday, error)
 	ListCalendarLinksForItem(ctx context.Context, arg ListCalendarLinksForItemParams) ([]CalendarLink, error)
+	ListCalendarLinksForUser(ctx context.Context, arg ListCalendarLinksForUserParams) ([]CalendarLink, error)
 	ListDueReminders(ctx context.Context, arg ListDueRemindersParams) ([]TaskReminder, error)
 	ListDueRemindersForUser(ctx context.Context, arg ListDueRemindersForUserParams) ([]TaskReminder, error)
 	ListFamilyGoogleConnections(ctx context.Context, familyID pgtype.UUID) ([]GoogleConnection, error)
@@ -52,11 +58,13 @@ type Querier interface {
 	ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, error)
 	MarkDigestSent(ctx context.Context, arg MarkDigestSentParams) error
 	RecordDelivery(ctx context.Context, arg RecordDeliveryParams) error
+	ReleaseEvent(ctx context.Context, eventID string) error
 	ReopenTask(ctx context.Context, arg ReopenTaskParams) (Task, error)
 	SetFamilyTimezone(ctx context.Context, arg SetFamilyTimezoneParams) (FamilySetting, error)
 	SetGoogleCalendar(ctx context.Context, arg SetGoogleCalendarParams) (GoogleConnection, error)
 	SetGoogleError(ctx context.Context, arg SetGoogleErrorParams) error
 	SetGoogleSyncState(ctx context.Context, arg SetGoogleSyncStateParams) error
+	SetGoogleSyncToken(ctx context.Context, arg SetGoogleSyncTokenParams) error
 	SnoozeReminder(ctx context.Context, arg SnoozeReminderParams) (TaskReminder, error)
 	TouchKnownMember(ctx context.Context, arg TouchKnownMemberParams) error
 	UpdateBirthday(ctx context.Context, arg UpdateBirthdayParams) (Birthday, error)

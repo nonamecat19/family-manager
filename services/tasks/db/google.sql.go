@@ -230,6 +230,46 @@ func (q *Queries) ListCalendarLinksForItem(ctx context.Context, arg ListCalendar
 	return items, nil
 }
 
+const listCalendarLinksForUser = `-- name: ListCalendarLinksForUser :many
+SELECT family_id, user_id, kind, item_id, calendar_id, event_id, etag, synced_at FROM calendar_links
+WHERE family_id = $1 AND user_id = $2
+ORDER BY kind, item_id
+`
+
+type ListCalendarLinksForUserParams struct {
+	FamilyID pgtype.UUID
+	UserID   pgtype.UUID
+}
+
+func (q *Queries) ListCalendarLinksForUser(ctx context.Context, arg ListCalendarLinksForUserParams) ([]CalendarLink, error) {
+	rows, err := q.db.Query(ctx, listCalendarLinksForUser, arg.FamilyID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CalendarLink
+	for rows.Next() {
+		var i CalendarLink
+		if err := rows.Scan(
+			&i.FamilyID,
+			&i.UserID,
+			&i.Kind,
+			&i.ItemID,
+			&i.CalendarID,
+			&i.EventID,
+			&i.Etag,
+			&i.SyncedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listFamilyGoogleConnections = `-- name: ListFamilyGoogleConnections :many
 SELECT family_id, user_id, email, refresh_token, calendar_id, calendar_name, sync_token, last_synced_at, last_error, created_at, updated_at FROM google_connections
 WHERE family_id = $1 AND calendar_id <> ''
@@ -271,7 +311,7 @@ func (q *Queries) ListFamilyGoogleConnections(ctx context.Context, familyID pgty
 const listOrphanCalendarLinks = `-- name: ListOrphanCalendarLinks :many
 SELECT l.family_id, l.user_id, l.kind, l.item_id, l.calendar_id, l.event_id, l.etag, l.synced_at FROM calendar_links l
 WHERE l.family_id = $1 AND l.user_id = $2
-  AND ((l.kind = 'task' AND NOT EXISTS (SELECT 1 FROM tasks t WHERE t.id = l.item_id AND t.family_id = l.family_id))
+  AND ((l.kind = 'task' AND NOT EXISTS (SELECT 1 FROM tasks t WHERE t.id = l.item_id AND t.family_id = l.family_id AND t.due_on IS NOT NULL))
     OR (l.kind = 'birthday' AND NOT EXISTS (SELECT 1 FROM birthdays b WHERE b.id = l.item_id AND b.family_id = l.family_id)))
 `
 
@@ -424,6 +464,23 @@ func (q *Queries) SetGoogleSyncState(ctx context.Context, arg SetGoogleSyncState
 		arg.LastSyncedAt,
 		arg.LastError,
 	)
+	return err
+}
+
+const setGoogleSyncToken = `-- name: SetGoogleSyncToken :exec
+UPDATE google_connections
+SET sync_token = $3, updated_at = NOW()
+WHERE family_id = $1 AND user_id = $2
+`
+
+type SetGoogleSyncTokenParams struct {
+	FamilyID  pgtype.UUID
+	UserID    pgtype.UUID
+	SyncToken string
+}
+
+func (q *Queries) SetGoogleSyncToken(ctx context.Context, arg SetGoogleSyncTokenParams) error {
+	_, err := q.db.Exec(ctx, setGoogleSyncToken, arg.FamilyID, arg.UserID, arg.SyncToken)
 	return err
 }
 

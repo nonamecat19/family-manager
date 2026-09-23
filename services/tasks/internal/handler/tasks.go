@@ -16,6 +16,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	tasksv1 "github.com/nnc/family-manager/sdk/go/tasks/v1"
 	"github.com/nnc/family-manager/services/tasks/db"
+	taskevents "github.com/nnc/family-manager/services/tasks/internal/events"
 	"github.com/nnc/family-manager/services/tasks/internal/family"
 	"github.com/nnc/family-manager/services/tasks/internal/schedule"
 )
@@ -188,6 +189,8 @@ func (h *Handler) CreateTask(
 	if err != nil {
 		return nil, err
 	}
+	h.pushTask(ctx, c.familyID, task.ID)
+	h.publishAssigned(ctx, task, uuidStrings(assignees), c.user)
 
 	return connect.NewResponse(&tasksv1.CreateTaskResponse{
 		Task: toProtoTask(task, uuidStrings(assignees), now, loc),
@@ -246,93 +249,119 @@ func (h *Handler) UpdateTask(
 
 	var task db.Task
 	var assignees []pgtype.UUID
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		existing, innerErr := q.GetTaskForUpdate(ctx, db.GetTaskForUpdateParams{ID: taskID, FamilyID: c.familyID})
-		if errors.Is(innerErr, pgx.ErrNoRows) {
-			return notFound("task")
-		}
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "get task for update")
-		}
-
-		title := existing.Title
-		if msg.Title != nil {
-			title = msg.GetTitle()
-		}
-		notes := existing.Notes
-		if msg.Notes != nil {
-			notes = msg.GetNotes()
-		}
-		priority := existing.Priority
-		if msg.Priority != nil {
-			priority = newPriority
-		}
-		dl, innerErr := mergeDeadline(deadlineOf(existing), msg.DueOn, msg.DueTime)
-		if innerErr != nil {
-			return innerErr
-		}
-		dueOn, dueTime, dueAt := deadlineColumns(dl, loc)
-
-		if replaceAssignees {
-			if innerErr = refreshKnownMembers(ctx, q, c, members); innerErr != nil {
-				return h.internal(ctx, innerErr, "refresh known members")
+	var newlyAssigned []string
+	var restoredDeadline bool
+	err = h.mutateTask(ctx, c.familyID, taskID, func() (bool, error) {
+		txErr := h.tx.InTx(ctx, func(q db.Querier) error {
+			existing, innerErr := q.GetTaskForUpdate(ctx, db.GetTaskForUpdateParams{ID: taskID, FamilyID: c.familyID})
+			if errors.Is(innerErr, pgx.ErrNoRows) {
+				return notFound("task")
 			}
-			if innerErr = h.requireMembers(ctx, q, c, newAssignees); innerErr != nil {
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "get task for update")
+			}
+
+			title := existing.Title
+			if msg.Title != nil {
+				title = msg.GetTitle()
+			}
+			notes := existing.Notes
+			if msg.Notes != nil {
+				notes = msg.GetNotes()
+			}
+			priority := existing.Priority
+			if msg.Priority != nil {
+				priority = newPriority
+			}
+			dl, innerErr := mergeDeadline(deadlineOf(existing), msg.DueOn, msg.DueTime)
+			if innerErr != nil {
 				return innerErr
 			}
-		}
+			dueOn, dueTime, dueAt := deadlineColumns(dl, loc)
+			restoredDeadline = !existing.DueOn.Valid && dueOn.Valid
 
-		task, innerErr = q.UpdateTask(ctx, db.UpdateTaskParams{
-			ID:       taskID,
-			FamilyID: c.familyID,
-			Title:    title,
-			Notes:    notes,
-			Priority: priority,
-			DueOn:    dueOn,
-			DueTime:  dueTime,
-			DueAt:    dueAt,
-		})
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "update task")
-		}
-
-		if replaceAssignees {
-			if innerErr = q.DeleteAssignees(ctx, db.DeleteAssigneesParams{TaskID: taskID, FamilyID: c.familyID}); innerErr != nil {
-				return h.internal(ctx, innerErr, "delete assignees")
-			}
-			for _, a := range newAssignees {
-				if innerErr = q.AddAssignee(ctx, db.AddAssigneeParams{
-					TaskID: taskID, FamilyID: c.familyID, UserID: a,
-				}); innerErr != nil {
-					return h.internal(ctx, innerErr, "add assignee")
+			if replaceAssignees {
+				if innerErr = refreshKnownMembers(ctx, q, c, members); innerErr != nil {
+					return h.internal(ctx, innerErr, "refresh known members")
+				}
+				if innerErr = h.requireMembers(ctx, q, c, newAssignees); innerErr != nil {
+					return innerErr
 				}
 			}
-			assignees = newAssignees
-		} else {
-			current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
-			if innerErr != nil {
-				return h.internal(ctx, innerErr, "list assignees")
-			}
-			if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
-				return h.internal(ctx, innerErr, "parse assignees")
-			}
-		}
 
-		if task.Status != "open" {
+			task, innerErr = q.UpdateTask(ctx, db.UpdateTaskParams{
+				ID:       taskID,
+				FamilyID: c.familyID,
+				Title:    title,
+				Notes:    notes,
+				Priority: priority,
+				DueOn:    dueOn,
+				DueTime:  dueTime,
+				DueAt:    dueAt,
+			})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "update task")
+			}
+
+			if replaceAssignees {
+				previous, err := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
+				if err != nil {
+					return h.internal(ctx, err, "list previous assignees")
+				}
+				old := make(map[string]bool, len(previous[id(taskID)]))
+				for _, user := range previous[id(taskID)] {
+					old[user] = true
+				}
+				for _, user := range newAssignees {
+					if !old[id(user)] {
+						newlyAssigned = append(newlyAssigned, id(user))
+					}
+				}
+				if innerErr = q.DeleteAssignees(ctx, db.DeleteAssigneesParams{TaskID: taskID, FamilyID: c.familyID}); innerErr != nil {
+					return h.internal(ctx, innerErr, "delete assignees")
+				}
+				for _, a := range newAssignees {
+					if innerErr = q.AddAssignee(ctx, db.AddAssigneeParams{
+						TaskID: taskID, FamilyID: c.familyID, UserID: a,
+					}); innerErr != nil {
+						return h.internal(ctx, innerErr, "add assignee")
+					}
+				}
+				assignees = newAssignees
+			} else {
+				current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
+				if innerErr != nil {
+					return h.internal(ctx, innerErr, "list assignees")
+				}
+				if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
+					return h.internal(ctx, innerErr, "parse assignees")
+				}
+			}
+
+			if task.Status != "open" {
+				return nil
+			}
+			if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
+				return h.internal(ctx, innerErr, "schedule task reminders")
+			}
 			return nil
-		}
-		if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
-			return h.internal(ctx, innerErr, "schedule task reminders")
-		}
-		return nil
+		})
+		return restoredDeadline, txErr
 	})
 	if err != nil {
 		return nil, err
 	}
+	h.publishAssigned(ctx, task, newlyAssigned, c.user)
 
 	return connect.NewResponse(&tasksv1.UpdateTaskResponse{
 		Task: toProtoTask(task, uuidStrings(assignees), now, loc),
 	}), nil
+}
+
+func (h *Handler) publishAssigned(ctx context.Context, task db.Task, users []string, assignedBy string) {
+	if err := taskevents.NewPublisher(h.bus).Assigned(ctx, task, users, assignedBy, h.now()); err != nil {
+		h.log.WarnContext(ctx, "publish task assignment", slog.String("error", err.Error()))
+	}
 }
 
 func (h *Handler) CompleteTask(
@@ -354,29 +383,32 @@ func (h *Handler) CompleteTask(
 	now := h.now()
 	var task db.Task
 	var assignees map[string][]string
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		var innerErr error
-		task, innerErr = q.CompleteTask(ctx, db.CompleteTaskParams{
-			CompletedAt:       pgTimestamptz(now),
-			CompletedByUserID: c.userID,
-			ID:                taskID,
-			FamilyID:          c.familyID,
+	err = h.mutateTask(ctx, c.familyID, taskID, func() (bool, error) {
+		txErr := h.tx.InTx(ctx, func(q db.Querier) error {
+			var innerErr error
+			task, innerErr = q.CompleteTask(ctx, db.CompleteTaskParams{
+				CompletedAt:       pgTimestamptz(now),
+				CompletedByUserID: c.userID,
+				ID:                taskID,
+				FamilyID:          c.familyID,
+			})
+			if errors.Is(innerErr, pgx.ErrNoRows) {
+				return notFound("task")
+			}
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "complete task")
+			}
+			if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
+				FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
+			}); innerErr != nil {
+				return h.internal(ctx, innerErr, "delete task reminders")
+			}
+			if assignees, innerErr = assigneesOf(ctx, q, c, []pgtype.UUID{taskID}); innerErr != nil {
+				return h.internal(ctx, innerErr, "list assignees")
+			}
+			return nil
 		})
-		if errors.Is(innerErr, pgx.ErrNoRows) {
-			return notFound("task")
-		}
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "complete task")
-		}
-		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
-		}); innerErr != nil {
-			return h.internal(ctx, innerErr, "delete task reminders")
-		}
-		if assignees, innerErr = assigneesOf(ctx, q, c, []pgtype.UUID{taskID}); innerErr != nil {
-			return h.internal(ctx, innerErr, "list assignees")
-		}
-		return nil
+		return false, txErr
 	})
 	if err != nil {
 		return nil, err
@@ -411,26 +443,29 @@ func (h *Handler) ReopenTask(
 
 	var task db.Task
 	var assignees []pgtype.UUID
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		var innerErr error
-		task, innerErr = q.ReopenTask(ctx, db.ReopenTaskParams{ID: taskID, FamilyID: c.familyID})
-		if errors.Is(innerErr, pgx.ErrNoRows) {
-			return notFound("task")
-		}
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "reopen task")
-		}
-		current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "list assignees")
-		}
-		if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
-			return h.internal(ctx, innerErr, "parse assignees")
-		}
-		if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
-			return h.internal(ctx, innerErr, "schedule task reminders")
-		}
-		return nil
+	err = h.mutateTask(ctx, c.familyID, taskID, func() (bool, error) {
+		txErr := h.tx.InTx(ctx, func(q db.Querier) error {
+			var innerErr error
+			task, innerErr = q.ReopenTask(ctx, db.ReopenTaskParams{ID: taskID, FamilyID: c.familyID})
+			if errors.Is(innerErr, pgx.ErrNoRows) {
+				return notFound("task")
+			}
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "reopen task")
+			}
+			current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "list assignees")
+			}
+			if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
+				return h.internal(ctx, innerErr, "parse assignees")
+			}
+			if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
+				return h.internal(ctx, innerErr, "schedule task reminders")
+			}
+			return nil
+		})
+		return false, txErr
 	})
 	if err != nil {
 		return nil, err
@@ -457,20 +492,23 @@ func (h *Handler) DeleteTask(
 		return nil, err
 	}
 
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		rows, innerErr := q.DeleteTask(ctx, db.DeleteTaskParams{ID: taskID, FamilyID: c.familyID})
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "delete task")
-		}
-		if rows == 0 {
-			return notFound("task")
-		}
-		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
-		}); innerErr != nil {
-			return h.internal(ctx, innerErr, "delete task reminders")
-		}
-		return nil
+	err = h.mutateTask(ctx, c.familyID, taskID, func() (bool, error) {
+		txErr := h.tx.InTx(ctx, func(q db.Querier) error {
+			rows, innerErr := q.DeleteTask(ctx, db.DeleteTaskParams{ID: taskID, FamilyID: c.familyID})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "delete task")
+			}
+			if rows == 0 {
+				return notFound("task")
+			}
+			if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
+				FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
+			}); innerErr != nil {
+				return h.internal(ctx, innerErr, "delete task reminders")
+			}
+			return nil
+		})
+		return false, txErr
 	})
 	if err != nil {
 		return nil, err

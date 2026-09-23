@@ -42,6 +42,21 @@ func (q *Queries) DeleteKnownMembersExcept(ctx context.Context, arg DeleteKnownM
 	return err
 }
 
+const deleteTaskAssigneesForUser = `-- name: DeleteTaskAssigneesForUser :exec
+DELETE FROM task_assignees
+WHERE family_id = $1 AND user_id = $2
+`
+
+type DeleteTaskAssigneesForUserParams struct {
+	FamilyID pgtype.UUID
+	UserID   pgtype.UUID
+}
+
+func (q *Queries) DeleteTaskAssigneesForUser(ctx context.Context, arg DeleteTaskAssigneesForUserParams) error {
+	_, err := q.db.Exec(ctx, deleteTaskAssigneesForUser, arg.FamilyID, arg.UserID)
+	return err
+}
+
 const listKnownMembers = `-- name: ListKnownMembers :many
 SELECT family_id, user_id, display_name, email, seen_at FROM known_members
 WHERE family_id = $1

@@ -101,6 +101,7 @@ func (h *Handler) CreateBirthday(
 	if err != nil {
 		return nil, h.internal(ctx, err, "create birthday")
 	}
+	h.pushBirthday(ctx, c.familyID, birthday.ID)
 
 	return connect.NewResponse(&tasksv1.CreateBirthdayResponse{Birthday: toProtoBirthday(birthday, now, loc)}), nil
 }
@@ -136,66 +137,68 @@ func (h *Handler) UpdateBirthday(
 	members := h.fetchMembers(ctx, c, req.Header())
 
 	var birthday db.Birthday
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		existing, innerErr := q.GetBirthday(ctx, db.GetBirthdayParams{ID: birthdayID, FamilyID: c.familyID})
-		if errors.Is(innerErr, pgx.ErrNoRows) {
-			return notFound("birthday")
-		}
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "get birthday")
-		}
+	err = h.mutateBirthday(ctx, c.familyID, birthdayID, func() error {
+		return h.tx.InTx(ctx, func(q db.Querier) error {
+			existing, innerErr := q.GetBirthday(ctx, db.GetBirthdayParams{ID: birthdayID, FamilyID: c.familyID})
+			if errors.Is(innerErr, pgx.ErrNoRows) {
+				return notFound("birthday")
+			}
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "get birthday")
+			}
 
-		name := existing.Name
-		if msg.Name != nil {
-			name = newName
-		}
-		day, month := int(existing.Day), int(existing.Month)
-		if msg.Day != nil {
-			day = int(msg.GetDay())
-		}
-		if msg.Month != nil {
-			month = int(msg.GetMonth())
-		}
-		year := 0
-		if existing.Year != nil {
-			year = int(*existing.Year)
-		}
-		if msg.Year != nil {
-			year = int(msg.GetYear())
-		}
-		remindDays := int(existing.RemindDaysBefore)
-		if msg.RemindDaysBefore != nil {
-			remindDays = int(msg.GetRemindDaysBefore())
-		}
+			name := existing.Name
+			if msg.Name != nil {
+				name = newName
+			}
+			day, month := int(existing.Day), int(existing.Month)
+			if msg.Day != nil {
+				day = int(msg.GetDay())
+			}
+			if msg.Month != nil {
+				month = int(msg.GetMonth())
+			}
+			year := 0
+			if existing.Year != nil {
+				year = int(*existing.Year)
+			}
+			if msg.Year != nil {
+				year = int(msg.GetYear())
+			}
+			remindDays := int(existing.RemindDaysBefore)
+			if msg.RemindDaysBefore != nil {
+				remindDays = int(msg.GetRemindDaysBefore())
+			}
 
-		if err := schedule.ValidateBirthday(day, month, year, remindDays, now.In(loc)); err != nil {
-			return invalid("%v", err)
-		}
+			if err := schedule.ValidateBirthday(day, month, year, remindDays, now.In(loc)); err != nil {
+				return invalid("%v", err)
+			}
 
-		birthday, innerErr = q.UpdateBirthday(ctx, db.UpdateBirthdayParams{
-			ID:               birthdayID,
-			FamilyID:         c.familyID,
-			Name:             name,
-			Day:              int32(day),
-			Month:            int32(month),
-			Year:             yearPtr(year),
-			RemindDaysBefore: int32(remindDays),
+			birthday, innerErr = q.UpdateBirthday(ctx, db.UpdateBirthdayParams{
+				ID:               birthdayID,
+				FamilyID:         c.familyID,
+				Name:             name,
+				Day:              int32(day),
+				Month:            int32(month),
+				Year:             yearPtr(year),
+				RemindDaysBefore: int32(remindDays),
+			})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "update birthday")
+			}
+			if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
+				FamilyID: c.familyID, Kind: kindBirthday, ItemID: birthdayID,
+			}); innerErr != nil {
+				return h.internal(ctx, innerErr, "delete birthday reminders")
+			}
+			if innerErr = refreshKnownMembers(ctx, q, c, members); innerErr != nil {
+				return h.internal(ctx, innerErr, "refresh known members")
+			}
+			if innerErr = scheduleBirthdayReminders(ctx, q, c, birthday, now, loc); innerErr != nil {
+				return h.internal(ctx, innerErr, "schedule birthday reminders")
+			}
+			return nil
 		})
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "update birthday")
-		}
-		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: kindBirthday, ItemID: birthdayID,
-		}); innerErr != nil {
-			return h.internal(ctx, innerErr, "delete birthday reminders")
-		}
-		if innerErr = refreshKnownMembers(ctx, q, c, members); innerErr != nil {
-			return h.internal(ctx, innerErr, "refresh known members")
-		}
-		if innerErr = scheduleBirthdayReminders(ctx, q, c, birthday, now, loc); innerErr != nil {
-			return h.internal(ctx, innerErr, "schedule birthday reminders")
-		}
-		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -220,20 +223,22 @@ func (h *Handler) DeleteBirthday(
 		return nil, err
 	}
 
-	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		rows, innerErr := q.DeleteBirthday(ctx, db.DeleteBirthdayParams{ID: birthdayID, FamilyID: c.familyID})
-		if innerErr != nil {
-			return h.internal(ctx, innerErr, "delete birthday")
-		}
-		if rows == 0 {
-			return notFound("birthday")
-		}
-		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: kindBirthday, ItemID: birthdayID,
-		}); innerErr != nil {
-			return h.internal(ctx, innerErr, "delete birthday reminders")
-		}
-		return nil
+	err = h.mutateBirthday(ctx, c.familyID, birthdayID, func() error {
+		return h.tx.InTx(ctx, func(q db.Querier) error {
+			rows, innerErr := q.DeleteBirthday(ctx, db.DeleteBirthdayParams{ID: birthdayID, FamilyID: c.familyID})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "delete birthday")
+			}
+			if rows == 0 {
+				return notFound("birthday")
+			}
+			if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
+				FamilyID: c.familyID, Kind: kindBirthday, ItemID: birthdayID,
+			}); innerErr != nil {
+				return h.internal(ctx, innerErr, "delete birthday reminders")
+			}
+			return nil
+		})
 	})
 	if err != nil {
 		return nil, err

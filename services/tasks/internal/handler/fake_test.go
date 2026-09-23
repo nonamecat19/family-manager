@@ -147,6 +147,9 @@ func (s *fakeStore) DeleteKnownMember(_ context.Context, arg db.DeleteKnownMembe
 }
 
 func (s *fakeStore) DeleteKnownMembersExcept(_ context.Context, arg db.DeleteKnownMembersExceptParams) error {
+	if len(arg.Keep) == 0 {
+		return nil
+	}
 	keep := make(map[string]bool)
 	for _, u := range arg.Keep {
 		keep[id(arg.FamilyID)+"|"+id(u)] = true
@@ -192,8 +195,8 @@ func (s *fakeStore) GetTask(_ context.Context, arg db.GetTaskParams) (db.Task, e
 	return t, nil
 }
 
-func (s *fakeStore) GetTaskForUpdate(_ context.Context, arg db.GetTaskForUpdateParams) (db.Task, error) {
-	return s.GetTask(context.Background(), db.GetTaskParams{ID: arg.ID, FamilyID: arg.FamilyID})
+func (s *fakeStore) GetTaskForUpdate(ctx context.Context, arg db.GetTaskForUpdateParams) (db.Task, error) {
+	return s.GetTask(ctx, db.GetTaskParams{ID: arg.ID, FamilyID: arg.FamilyID})
 }
 
 func (s *fakeStore) UpdateTask(_ context.Context, arg db.UpdateTaskParams) (db.Task, error) {
@@ -577,6 +580,9 @@ func (s *fakeStore) ListBirthdays(_ context.Context, familyID pgtype.UUID) ([]db
 func (s *fakeStore) ListCalendarLinksForItem(_ context.Context, arg db.ListCalendarLinksForItemParams) ([]db.CalendarLink, error) {
 	return nil, nil
 }
+func (s *fakeStore) ListCalendarLinksForUser(_ context.Context, arg db.ListCalendarLinksForUserParams) ([]db.CalendarLink, error) {
+	return nil, nil
+}
 func (s *fakeStore) ListFamilyGoogleConnections(_ context.Context, familyID pgtype.UUID) ([]db.GoogleConnection, error) {
 	return nil, nil
 }
@@ -603,6 +609,34 @@ func (s *fakeStore) UpdateBirthday(_ context.Context, arg db.UpdateBirthdayParam
 	return db.Birthday{}, nil
 }
 
+func (s *fakeStore) ClaimEvent(_ context.Context, arg db.ClaimEventParams) (int64, error) {
+	return 1, nil
+}
+
+func (s *fakeStore) EventStatus(_ context.Context, eventID string) (string, error) {
+	return "", pgx.ErrNoRows
+}
+
+func (s *fakeStore) CompleteEvent(_ context.Context, eventID string) error {
+	return nil
+}
+
+func (s *fakeStore) ReleaseEvent(_ context.Context, eventID string) error {
+	return nil
+}
+
+func (s *fakeStore) DeleteTaskAssigneesForUser(_ context.Context, arg db.DeleteTaskAssigneesForUserParams) error {
+	return nil
+}
+
+func (s *fakeStore) DeletePendingRemindersForUser(_ context.Context, arg db.DeletePendingRemindersForUserParams) error {
+	return nil
+}
+
+func (s *fakeStore) SetGoogleSyncToken(_ context.Context, arg db.SetGoogleSyncTokenParams) error {
+	return nil
+}
+
 type recorder struct {
 	subjects []string
 	messages []proto.Message
@@ -610,11 +644,9 @@ type recorder struct {
 
 func (r *recorder) EnsureStream(_ context.Context, domain string) error { return nil }
 
-func (r *recorder) Publish(_ context.Context, subject events.Subject, msg any) error {
+func (r *recorder) Publish(_ context.Context, subject events.Subject, msg proto.Message) error {
 	r.subjects = append(r.subjects, string(subject))
-	if pm, ok := msg.(proto.Message); ok {
-		r.messages = append(r.messages, pm)
-	}
+	r.messages = append(r.messages, msg)
 	return nil
 }
 

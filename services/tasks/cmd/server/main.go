@@ -15,10 +15,21 @@ import (
 	"connectrpc.com/connect"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
+	"github.com/nnc/family-manager/libs/go/database"
+	"github.com/nnc/family-manager/libs/go/events"
 	"github.com/nnc/family-manager/libs/go/logger"
 	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/sdk/go/tasks/v1/tasksv1connect"
 	"github.com/nnc/family-manager/services/tasks/internal/config"
+	"github.com/nnc/family-manager/services/tasks/internal/calsync"
+	"github.com/nnc/family-manager/services/tasks/internal/crypto"
+	"github.com/nnc/family-manager/services/tasks/internal/family"
+	"github.com/nnc/family-manager/services/tasks/internal/gcal"
+	"github.com/nnc/family-manager/services/tasks/internal/handler"
+	"github.com/nnc/family-manager/services/tasks/internal/members"
+	"github.com/nnc/family-manager/services/tasks/internal/schedule"
+	"github.com/nnc/family-manager/services/tasks/internal/store"
+	dbfs "github.com/nnc/family-manager/services/tasks/internal/db"
 )
 
 var healthcheck = flag.Bool("healthcheck", false,
@@ -49,10 +60,6 @@ func probe() error {
 	return rpc.Probe(cfg.HTTPPort, 0)
 }
 
-type unimplemented struct {
-	tasksv1connect.UnimplementedTasksServiceHandler
-}
-
 func run() error {
 	cfg, err := config.Load()
 	if err != nil {
@@ -65,6 +72,30 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	pool, err := database.Connect(ctx, database.Config{URL: cfg.DatabaseURL})
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	applied, err := database.Migrate(ctx, pool, dbfs.Migrations, dbfs.MigrationsDir)
+	if err != nil {
+		return err
+	}
+	if len(applied) > 0 {
+		log.Info("migrations applied", slog.Any("versions", applied))
+	}
+
+	bus, err := events.Connect(events.Config{URL: cfg.NATSURL, Name: "tasks"})
+	if err != nil {
+		log.Warn("events disabled", slog.String("error", err.Error()))
+	} else {
+		defer bus.Close()
+		if err := bus.EnsureStream(ctx, "tasks"); err != nil {
+			log.Warn("ensure stream failed", slog.String("error", err.Error()))
+		}
+	}
+
 	verifier, err := fmauth.NewVerifier(fmauth.VerifierConfig{
 		JWKSURL:  cfg.JWKSURL,
 		Issuer:   cfg.Issuer,
@@ -74,9 +105,54 @@ func run() error {
 		return err
 	}
 
-	h := unimplemented{}
-	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, log))
-	internalSrv := newServer(cfg.GRPCPort, internalMux(h, log))
+	familyPub := family.New(cfg.FamilyPublicAddr, cfg.FamilyAddr, 2*time.Second)
+	familyInternal := family.New(cfg.FamilyAddr, cfg.FamilyAddr, 2*time.Second)
+
+	st := store.New(pool)
+	h := handler.New(handler.Options{
+		Queries:      st.Queries(),
+		Tx:           st,
+		Bus:          busOrNil(bus),
+		Family:       familyInternal,
+		FamilyPublic: familyPub,
+		Log:          log,
+		Now:          time.Now,
+	})
+
+	if bus != nil {
+		stopMembers, err := members.New(st.Queries(), log).Subscribe(ctx, bus)
+		if err != nil {
+			log.Warn("member removed subscriber disabled", slog.String("error", err.Error()))
+		} else {
+			defer stopMembers()
+		}
+	}
+
+	reminderPoster := schedule.NewReminderPoster(st.Queries(), bus, time.Now, log)
+	go schedule.NewReminders(reminderPoster, cfg.ReminderTick, log).Run(ctx)
+
+	if bus != nil && cfg.GoogleClientID != "" {
+		googleClient := gcal.NewHTTP(gcal.HTTPOptions{
+			ClientID:     cfg.GoogleClientID,
+			ClientSecret: cfg.GoogleClientSecret,
+		})
+		box, err := crypto.NewBox(cfg.TokenKey)
+		if err != nil {
+			log.Error("create crypto box", slog.String("error", err.Error()))
+		} else {
+			go calsync.NewPuller(calsync.PullerOptions{
+				Queries: st.Queries(),
+				Bus:     bus,
+				Google:  googleClient,
+				Box:     box,
+				Tick:    cfg.SyncTick,
+				Log:     log,
+			}).Run(ctx)
+		}
+	}
+
+	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool, log))
+	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool, log))
 
 	errc := make(chan error, 2)
 	serve := func(srv *http.Server, name string) {
@@ -102,11 +178,7 @@ func run() error {
 	}
 }
 
-func healthz(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-}
-
-func publicMux(h tasksv1connect.TasksServiceHandler, verifier *fmauth.Verifier, log *slog.Logger) *http.ServeMux {
+func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := tasksv1connect.NewTasksServiceHandler(
 		h,
@@ -114,11 +186,11 @@ func publicMux(h tasksv1connect.TasksServiceHandler, verifier *fmauth.Verifier, 
 		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log), fmauth.Interceptor(verifier)),
 	)
 	mux.Handle(path, svc)
-	mux.HandleFunc("GET /healthz", healthz)
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }
 
-func internalMux(h tasksv1connect.TasksServiceHandler, log *slog.Logger) *http.ServeMux {
+func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 	path, svc := tasksv1connect.NewTasksServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
@@ -126,7 +198,7 @@ func internalMux(h tasksv1connect.TasksServiceHandler, log *slog.Logger) *http.S
 	)
 	mux.Handle(path, svc)
 	mux.Handle("GET "+rpc.MetricsPath, rpc.MetricsHandler())
-	mux.HandleFunc("GET /healthz", healthz)
+	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }
 
@@ -140,6 +212,13 @@ func newServer(port string, mux *http.ServeMux) *http.Server {
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
+}
+
+func busOrNil(bus *events.Bus) handler.EventBus {
+	if bus == nil {
+		return nil
+	}
+	return bus
 }
 
 func h1AndUnencryptedH2() *http.Protocols {

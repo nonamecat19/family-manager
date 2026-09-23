@@ -69,6 +69,14 @@ type KnownMember struct {
 	SeenAt      pgtype.Timestamptz
 }
 
+type ProcessedEvent struct {
+	EventID     string
+	Subject     string
+	Status      string
+	ClaimedAt   pgtype.Timestamptz
+	ProcessedAt pgtype.Timestamptz
+}
+
 type ReminderDelivery struct {
 	ReminderID  pgtype.UUID
 	FamilyID    pgtype.UUID

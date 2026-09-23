@@ -87,6 +87,21 @@ func (q *Queries) DeletePendingRemindersForItemExcept(ctx context.Context, arg D
 	return err
 }
 
+const deletePendingRemindersForUser = `-- name: DeletePendingRemindersForUser :exec
+DELETE FROM task_reminders
+WHERE family_id = $1 AND user_id = $2 AND acked_at IS NULL
+`
+
+type DeletePendingRemindersForUserParams struct {
+	FamilyID pgtype.UUID
+	UserID   pgtype.UUID
+}
+
+func (q *Queries) DeletePendingRemindersForUser(ctx context.Context, arg DeletePendingRemindersForUserParams) error {
+	_, err := q.db.Exec(ctx, deletePendingRemindersForUser, arg.FamilyID, arg.UserID)
+	return err
+}
+
 const getDigestSent = `-- name: GetDigestSent :one
 SELECT EXISTS (
     SELECT 1 FROM digest_sends WHERE family_id = $1 AND user_id = $2 AND sent_on = $3

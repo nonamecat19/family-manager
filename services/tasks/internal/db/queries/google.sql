@@ -29,6 +29,11 @@ UPDATE google_connections
 SET last_error = $3, updated_at = NOW()
 WHERE family_id = $1 AND user_id = $2;
 
+-- name: SetGoogleSyncToken :exec
+UPDATE google_connections
+SET sync_token = $3, updated_at = NOW()
+WHERE family_id = $1 AND user_id = $2;
+
 -- name: DeleteGoogleConnection :execrows
 DELETE FROM google_connections
 WHERE family_id = $1 AND user_id = $2;
@@ -67,6 +72,11 @@ SELECT * FROM calendar_links
 WHERE family_id = $1 AND kind = $2 AND item_id = $3
 ORDER BY user_id;
 
+-- name: ListCalendarLinksForUser :many
+SELECT * FROM calendar_links
+WHERE family_id = $1 AND user_id = $2
+ORDER BY kind, item_id;
+
 -- name: CalendarLinkedInFamily :one
 SELECT EXISTS (
     SELECT 1 FROM calendar_links
@@ -80,5 +90,5 @@ WHERE family_id = $1 AND user_id = $2;
 -- name: ListOrphanCalendarLinks :many
 SELECT l.* FROM calendar_links l
 WHERE l.family_id = $1 AND l.user_id = $2
-  AND ((l.kind = 'task' AND NOT EXISTS (SELECT 1 FROM tasks t WHERE t.id = l.item_id AND t.family_id = l.family_id))
+  AND ((l.kind = 'task' AND NOT EXISTS (SELECT 1 FROM tasks t WHERE t.id = l.item_id AND t.family_id = l.family_id AND t.due_on IS NOT NULL))
     OR (l.kind = 'birthday' AND NOT EXISTS (SELECT 1 FROM birthdays b WHERE b.id = l.item_id AND b.family_id = l.family_id)));

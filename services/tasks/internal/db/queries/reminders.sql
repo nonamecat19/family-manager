@@ -62,3 +62,7 @@ SELECT EXISTS (
 INSERT INTO digest_sends (family_id, user_id, sent_on)
 VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING;
+
+-- name: DeletePendingRemindersForUser :exec
+DELETE FROM task_reminders
+WHERE family_id = $1 AND user_id = $2 AND acked_at IS NULL;

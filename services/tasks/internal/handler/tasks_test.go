@@ -242,8 +242,15 @@ func TestCreateTask(t *testing.T) {
 		t.Errorf("status = %v, want OPEN", task.Status)
 	}
 
-	if len(rec.subjects) != 0 {
-		t.Errorf("published %v, want nothing (u15 owns tasks.task.assigned)", rec.subjects)
+	if len(rec.subjects) != 1 || rec.subjects[0] != "tasks.task.assigned" {
+		t.Errorf("published %v, want one task assignment", rec.subjects)
+	}
+	if len(rec.messages) != 1 {
+		t.Fatalf("messages = %d, want 1", len(rec.messages))
+	}
+	assigned := rec.messages[0].(*tasksv1.TaskAssignedEvent)
+	if len(assigned.AssigneeUserIds) != 2 || assigned.TaskId != task.Id || assigned.AssignedByUserId != sergiy {
+		t.Errorf("assignment = %+v", assigned)
 	}
 
 	// Check assignees stored
@@ -358,6 +365,33 @@ func TestUpdateTaskClearsAssignees(t *testing.T) {
 	}
 	if len(store.assignees) != 0 {
 		t.Errorf("assignees stored = %d, want 0", len(store.assignees))
+	}
+}
+
+func TestUpdateTaskPublishesOnlyNewAssignees(t *testing.T) {
+	h, store, rec := newTestHandler(t)
+	task := seedTask(store, "Shared", sergiy)
+	_, err := h.UpdateTask(ctxOf(sergiy), connect.NewRequest(&tasksv1.UpdateTaskRequest{
+		TaskId: id(task.ID), Assignees: &tasksv1.AssigneeList{UserIds: []string{sergiy, olena}},
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rec.messages) != 1 {
+		t.Fatalf("events = %d, want 1", len(rec.messages))
+	}
+	assigned := rec.messages[0].(*tasksv1.TaskAssignedEvent)
+	if len(assigned.AssigneeUserIds) != 1 || assigned.AssigneeUserIds[0] != olena {
+		t.Errorf("new assignees = %v, want [%s]", assigned.AssigneeUserIds, olena)
+	}
+	_, err = h.UpdateTask(ctxOf(sergiy), connect.NewRequest(&tasksv1.UpdateTaskRequest{
+		TaskId: id(task.ID), Assignees: &tasksv1.AssigneeList{UserIds: []string{sergiy, olena}},
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rec.messages) != 1 {
+		t.Errorf("reassigning same users published %d events, want 1", len(rec.messages))
 	}
 }
 
