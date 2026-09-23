@@ -4,7 +4,6 @@ import (
 	"context"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -246,48 +245,38 @@ func (s *fakeStore) DeleteInstallment(_ context.Context, arg db.DeleteInstallmen
 	return 1, nil
 }
 
-func (s *fakeStore) todayIn(familyID string, at time.Time) time.Time {
-	loc := time.UTC
-	if st, ok := s.settings[familyID]; ok {
-		if l, err := time.LoadLocation(st.Timezone); err == nil {
-			loc = l
-		}
-	}
-	return calendarDay(at.In(loc))
-}
-
 func (s *fakeStore) ListDueInstallments(_ context.Context, arg db.ListDueInstallmentsParams) ([]db.ListDueInstallmentsRow, error) {
 	var out []db.ListDueInstallmentsRow
 	for _, i := range s.installments {
-		if _, ok := s.settings[id(i.FamilyID)]; !ok || i.Status != installmentActive {
+		if i.Status != installmentActive || i.NextDueOn.Time.After(arg.LatestDueOn.Time) {
 			continue
 		}
-		if calendarDay(i.NextDueOn.Time).After(s.todayIn(id(i.FamilyID), arg.Now.Time)) {
-			continue
-		}
-		out = append(out, db.ListDueInstallmentsRow{ID: i.ID, FamilyID: i.FamilyID})
+		out = append(out, db.ListDueInstallmentsRow{
+			ID: i.ID, FamilyID: i.FamilyID, CategoryID: i.CategoryID, NextDueOn: i.NextDueOn,
+		})
 	}
 	return out, nil
 }
 
-func (s *fakeStore) LockDueInstallment(_ context.Context, installmentID pgtype.UUID) (db.LockDueInstallmentRow, error) {
+func (s *fakeStore) GetInstallmentByID(_ context.Context, installmentID pgtype.UUID) (db.Installment, error) {
+	i, ok := s.installments[id(installmentID)]
+	if !ok {
+		return db.Installment{}, pgx.ErrNoRows
+	}
+	return i, nil
+}
+
+func (s *fakeStore) LockDueInstallment(_ context.Context, installmentID pgtype.UUID) (db.Installment, error) {
 	i, ok := s.installments[id(installmentID)]
 	if !ok || i.Status != installmentActive {
-		return db.LockDueInstallmentRow{}, pgx.ErrNoRows
+		return db.Installment{}, pgx.ErrNoRows
 	}
-	st, ok := s.settings[id(i.FamilyID)]
-	if !ok {
-		return db.LockDueInstallmentRow{}, pgx.ErrNoRows
-	}
-	paid, payments := s.categorySpend(id(i.FamilyID), id(i.CategoryID), i.CurrencyCode, nil)
-	return db.LockDueInstallmentRow{
-		ID: i.ID, FamilyID: i.FamilyID, Name: i.Name, TotalMinor: i.TotalMinor,
-		MonthlyMinor: i.MonthlyMinor, Months: i.Months, CurrencyCode: i.CurrencyCode,
-		AccountID: i.AccountID, CategoryID: i.CategoryID, MemberID: i.MemberID,
-		CreatedByUserID: i.CreatedByUserID, PurchasedOn: i.PurchasedOn, DayOfMonth: i.DayOfMonth,
-		NextDueOn: i.NextDueOn, Status: i.Status, CreatedAt: i.CreatedAt, UpdatedAt: i.UpdatedAt,
-		Timezone: st.Timezone, PaidMinor: paid, Payments: payments,
-	}, nil
+	return i, nil
+}
+
+func (s *fakeStore) SumInstallmentPayments(_ context.Context, arg db.SumInstallmentPaymentsParams) (db.SumInstallmentPaymentsRow, error) {
+	paid, payments := s.categorySpend(id(arg.FamilyID), id(arg.CategoryID), arg.CurrencyCode, nil)
+	return db.SumInstallmentPaymentsRow{PaidMinor: paid, Payments: payments}, nil
 }
 
 func (s *fakeStore) AdvanceInstallment(_ context.Context, arg db.AdvanceInstallmentParams) (db.Installment, error) {

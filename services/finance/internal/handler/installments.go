@@ -292,6 +292,19 @@ func (h *Handler) UpdateInstallment(
 		if !ok {
 			return nil, invalid("next_due_on must be a date as YYYY-MM-DD")
 		}
+		current := calendarDay(inst.NextDueOn.Time)
+		monthStart := time.Date(current.Year(), current.Month(), 1, 0, 0, 0, 0, time.UTC)
+		if calendarDay(next).Before(monthStart) {
+			sums, err := h.q.SumInstallmentPayments(ctx, db.SumInstallmentPaymentsParams{
+				FamilyID: inst.FamilyID, CategoryID: inst.CategoryID, CurrencyCode: inst.CurrencyCode,
+			})
+			if err != nil {
+				return nil, h.internal(ctx, err, "sum installment payments")
+			}
+			if sums.Payments > 0 {
+				return nil, invalid("next_due_on must not move back into a month that is already paid")
+			}
+		}
 		params.NextDueOn = pgDate(next)
 		day := int32(next.Day())
 		params.DayOfMonth = &day
@@ -410,8 +423,9 @@ type postedInstallment struct {
 }
 
 func (h *Handler) PostDueInstallments(ctx context.Context) (int, error) {
+	latest := calendarDay(h.now().UTC()).AddDate(0, 0, 1)
 	due, err := h.q.ListDueInstallments(ctx, db.ListDueInstallmentsParams{
-		Now: pgtype.Timestamptz{Time: h.now(), Valid: true}, MaxRows: dueBatchSize,
+		LatestDueOn: pgDate(latest), MaxRows: dueBatchSize,
 	})
 	if err != nil {
 		return 0, err
@@ -423,33 +437,78 @@ func (h *Handler) PostDueInstallments(ctx context.Context) (int, error) {
 	return posted, nil
 }
 
+type postOutcome int
+
+const (
+	postStop postOutcome = iota
+	postDone
+	postRetry
+)
+
 func (h *Handler) catchUpInstallment(ctx context.Context, id pgtype.UUID) int {
 	posted := 0
 	for range maxInstallmentMonths + 1 {
-		ok, err := h.postNextInstallment(ctx, id)
+		outcome, err := h.postNextInstallment(ctx, id)
 		if err != nil {
 			h.log.ErrorContext(ctx, "post installment",
 				slog.String("installment_id", pgconv.UUIDString(id)), slog.String("error", err.Error()))
 			break
 		}
-		if !ok {
+		if outcome == postStop {
 			break
 		}
-		posted++
+		if outcome == postDone {
+			posted++
+		}
 	}
 	return posted
 }
 
-var errInstallmentMoved = errors.New("installment advanced concurrently")
+var errInstallmentMoved = errors.New("installment changed since it was read")
 
 func calendarDay(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-func (h *Handler) postNextInstallment(ctx context.Context, id pgtype.UUID) (bool, error) {
+func (h *Handler) postNextInstallment(ctx context.Context, id pgtype.UUID) (postOutcome, error) {
+	pre, err := h.q.GetInstallmentByID(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return postStop, nil
+	}
+	if err != nil {
+		return postStop, err
+	}
+	if pre.Status != installmentActive {
+		return postStop, nil
+	}
+	settings, err := h.q.GetFinanceSettings(ctx, pre.FamilyID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return postStop, nil
+	}
+	if err != nil {
+		return postStop, err
+	}
+	loc, lerr := time.LoadLocation(settings.Timezone)
+	if lerr != nil {
+		loc = time.UTC
+	}
+	hh := household{settings: settings, loc: loc}
+	due := calendarDay(pre.NextDueOn.Time)
+	if due.After(calendarDay(h.now().In(loc))) {
+		return postStop, nil
+	}
+
+	c := caller{
+		family: pgconv.UUIDString(pre.FamilyID), user: pgconv.UUIDString(pre.CreatedByUserID),
+		familyID: pre.FamilyID, userID: pre.CreatedByUserID,
+	}
+	before, err := h.affectedBudgets(ctx, c, hh, pre.CategoryID, due)
+	if err != nil {
+		return postStop, err
+	}
+
 	var out *postedInstallment
-	var c caller
-	err := h.tx.InTx(ctx, func(q db.Querier) error {
+	err = h.tx.InTx(ctx, func(q db.Querier) error {
 		row, err := q.LockDueInstallment(ctx, id)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
@@ -457,40 +516,29 @@ func (h *Handler) postNextInstallment(ctx context.Context, id pgtype.UUID) (bool
 		if err != nil {
 			return err
 		}
-		settings, err := q.GetFinanceSettings(ctx, row.FamilyID)
+		if !row.NextDueOn.Time.Equal(pre.NextDueOn.Time) || row.MonthlyMinor != pre.MonthlyMinor {
+			return errInstallmentMoved
+		}
+		sums, err := q.SumInstallmentPayments(ctx, db.SumInstallmentPaymentsParams{
+			FamilyID: row.FamilyID, CategoryID: row.CategoryID, CurrencyCode: row.CurrencyCode,
+		})
 		if err != nil {
 			return err
 		}
-		loc, lerr := time.LoadLocation(settings.Timezone)
-		if lerr != nil {
-			loc = time.UTC
-		}
-		hh := household{settings: settings, loc: loc}
-		due := calendarDay(row.NextDueOn.Time)
-		if due.After(calendarDay(h.now().In(loc))) {
-			return nil
-		}
 
-		c = caller{
-			family: pgconv.UUIDString(row.FamilyID), user: pgconv.UUIDString(row.CreatedByUserID),
-			familyID: row.FamilyID, userID: row.CreatedByUserID,
-		}
-		remaining := row.TotalMinor - row.PaidMinor
+		remaining := row.TotalMinor - sums.PaidMinor
 		amount := min(row.MonthlyMinor, remaining)
 		status := installmentActive
 		if amount >= remaining {
 			status = installmentPaidOff
 		}
-		result := &postedInstallment{paidOff: status == installmentPaidOff, hh: hh}
+		result := &postedInstallment{paidOff: status == installmentPaidOff, hh: hh, before: before}
 
 		if amount > 0 {
-			if result.before, err = h.affectedBudgets(ctx, c, hh, row.CategoryID, due); err != nil {
-				return err
-			}
 			result.transaction, err = q.CreateTransaction(ctx, db.CreateTransactionParams{
 				FamilyID: row.FamilyID, Type: kindExpense, AccountID: row.AccountID,
 				CategoryID: row.CategoryID, AmountMinor: amount, CurrencyCode: row.CurrencyCode,
-				Note:       fmt.Sprintf("%s %d/%d", row.Name, row.Payments+1, row.Months),
+				Note:       fmt.Sprintf("%s %d/%d", row.Name, sums.Payments+1, row.Months),
 				OccurredOn: pgDate(due), MemberID: row.MemberID, CreatedByUserID: row.CreatedByUserID,
 			})
 			if err != nil {
@@ -519,13 +567,13 @@ func (h *Handler) postNextInstallment(ctx context.Context, id pgtype.UUID) (bool
 		return nil
 	})
 	if errors.Is(err, errInstallmentMoved) {
-		return false, nil
+		return postRetry, nil
 	}
 	if err != nil || out == nil {
-		return false, err
+		return postStop, err
 	}
 	h.announceInstallmentPosting(ctx, c, out)
-	return true, nil
+	return postDone, nil
 }
 
 func (h *Handler) announceInstallmentPosting(ctx context.Context, c caller, p *postedInstallment) {

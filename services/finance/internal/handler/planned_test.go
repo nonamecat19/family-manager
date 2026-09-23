@@ -317,3 +317,50 @@ func TestInstallmentOnAnotherMembersPrivateAccountIsHidden(t *testing.T) {
 		t.Errorf("code = %v, want NotFound", got)
 	}
 }
+
+func TestUpdateInstallmentRefusesToMoveBackIntoAPaidMonth(t *testing.T) {
+	h, store, _ := newTestHandler(t)
+	account := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	inst := createInstallment(t, h, account, 1_200_00, 12, "2026-08-05")
+	if got := pgconv.DateString(store.installments[inst.Id].NextDueOn); got != "2026-09-05" {
+		t.Fatalf("next_due_on = %s, want 2026-09-05 after the August payment", got)
+	}
+
+	back := "2026-08-20"
+	_, err := h.UpdateInstallment(ctxOf(sergiy), connect.NewRequest(&financev1.UpdateInstallmentRequest{
+		InstallmentId: inst.Id, NextDueOn: &back,
+	}))
+	if got := codeOf(t, err); got != connect.CodeInvalidArgument {
+		t.Errorf("code = %v, want InvalidArgument", got)
+	}
+
+	later := "2026-09-01"
+	if _, err := h.UpdateInstallment(ctxOf(sergiy), connect.NewRequest(&financev1.UpdateInstallmentRequest{
+		InstallmentId: inst.Id, NextDueOn: &later,
+	})); err != nil {
+		t.Fatalf("UpdateInstallment within the unpaid month: %v", err)
+	}
+}
+
+func TestOneHouseholdsBadTimezoneDoesNotBlockOthers(t *testing.T) {
+	h, store, _ := newTestHandler(t)
+	account := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	inst := createInstallment(t, h, account, 1_200_00, 12, "2026-09-30")
+
+	other := pgconv.MustUUID(otherFam)
+	store.settings[otherFam] = db.FinanceSetting{FamilyID: other, BaseCurrencyCode: "UAH", Timezone: "Not/AZone"}
+	store.installments["bogus"] = db.Installment{
+		ID: store.newUUID(), FamilyID: other, Status: installmentActive, NextDueOn: day("2026-08-01"),
+		TotalMinor: 100, MonthlyMinor: 100, Months: 1, CurrencyCode: "UAH",
+	}
+
+	installment := store.installments[inst.Id]
+	installment.NextDueOn = day("2026-08-30")
+	store.installments[inst.Id] = installment
+	if _, err := h.PostDueInstallments(ctxOf(sergiy)); err != nil {
+		t.Fatalf("PostDueInstallments: %v", err)
+	}
+	if n := len(installmentTransactions(store, inst.CategoryId)); n != 1 {
+		t.Errorf("payments = %d, want 1 despite another household's bad timezone", n)
+	}
+}

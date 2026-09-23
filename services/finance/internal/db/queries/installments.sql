@@ -50,32 +50,22 @@ DELETE FROM installments
 WHERE id = $1 AND family_id = $2;
 
 -- name: ListDueInstallments :many
-SELECT i.id, i.family_id
-FROM installments i
-JOIN finance_settings s ON s.family_id = i.family_id
-WHERE i.status = 'active'
-  AND i.next_due_on <= (sqlc.arg('now')::timestamptz AT TIME ZONE s.timezone)::date
-ORDER BY i.next_due_on
+SELECT id, family_id, category_id, next_due_on
+FROM installments
+WHERE status = 'active'
+  AND next_due_on <= sqlc.arg('latest_due_on')::date
+ORDER BY next_due_on
 LIMIT sqlc.arg('max_rows')::int;
 
 -- name: LockDueInstallment :one
-SELECT i.*, s.timezone,
-    COALESCE((
-        SELECT SUM(t.amount_minor)
-        FROM transactions t
-        WHERE t.family_id = i.family_id
-          AND t.category_id = i.category_id
-          AND t.type = 'expense'
-          AND t.currency_code = i.currency_code
-    ), 0)::bigint AS paid_minor,
-    (SELECT COUNT(*) FROM transactions t
-     WHERE t.family_id = i.family_id AND t.category_id = i.category_id AND t.type = 'expense'
-       AND t.currency_code = i.currency_code
-    )::bigint AS payments
-FROM installments i
-JOIN finance_settings s ON s.family_id = i.family_id
-WHERE i.id = $1 AND i.status = 'active'
-FOR UPDATE OF i SKIP LOCKED;
+SELECT * FROM installments
+WHERE id = $1 AND status = 'active'
+FOR UPDATE SKIP LOCKED;
+
+-- name: SumInstallmentPayments :one
+SELECT COALESCE(SUM(amount_minor), 0)::bigint AS paid_minor, COUNT(*)::bigint AS payments
+FROM transactions
+WHERE family_id = $1 AND category_id = $2 AND type = 'expense' AND currency_code = $3;
 
 -- name: AdvanceInstallment :one
 UPDATE installments
@@ -84,3 +74,7 @@ SET next_due_on = sqlc.arg('next_due_on')::date,
     updated_at  = NOW()
 WHERE id = $1 AND next_due_on = sqlc.arg('expected_due_on')::date AND status = 'active'
 RETURNING *;
+
+-- name: GetInstallmentByID :one
+SELECT * FROM installments
+WHERE id = $1;

@@ -137,6 +137,36 @@ func (q *Queries) DeleteInstallment(ctx context.Context, arg DeleteInstallmentPa
 	return result.RowsAffected(), nil
 }
 
+const getInstallmentByID = `-- name: GetInstallmentByID :one
+SELECT id, family_id, name, total_minor, monthly_minor, months, currency_code, account_id, category_id, member_id, created_by_user_id, purchased_on, day_of_month, next_due_on, status, created_at, updated_at FROM installments
+WHERE id = $1
+`
+
+func (q *Queries) GetInstallmentByID(ctx context.Context, id pgtype.UUID) (Installment, error) {
+	row := q.db.QueryRow(ctx, getInstallmentByID, id)
+	var i Installment
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.TotalMinor,
+		&i.MonthlyMinor,
+		&i.Months,
+		&i.CurrencyCode,
+		&i.AccountID,
+		&i.CategoryID,
+		&i.MemberID,
+		&i.CreatedByUserID,
+		&i.PurchasedOn,
+		&i.DayOfMonth,
+		&i.NextDueOn,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getVisibleInstallment = `-- name: GetVisibleInstallment :one
 SELECT i.id, i.family_id, i.name, i.total_minor, i.monthly_minor, i.months, i.currency_code, i.account_id, i.category_id, i.member_id, i.created_by_user_id, i.purchased_on, i.day_of_month, i.next_due_on, i.status, i.created_at, i.updated_at
 FROM installments i
@@ -178,27 +208,28 @@ func (q *Queries) GetVisibleInstallment(ctx context.Context, arg GetVisibleInsta
 }
 
 const listDueInstallments = `-- name: ListDueInstallments :many
-SELECT i.id, i.family_id
-FROM installments i
-JOIN finance_settings s ON s.family_id = i.family_id
-WHERE i.status = 'active'
-  AND i.next_due_on <= ($1::timestamptz AT TIME ZONE s.timezone)::date
-ORDER BY i.next_due_on
+SELECT id, family_id, category_id, next_due_on
+FROM installments
+WHERE status = 'active'
+  AND next_due_on <= $1::date
+ORDER BY next_due_on
 LIMIT $2::int
 `
 
 type ListDueInstallmentsParams struct {
-	Now     pgtype.Timestamptz
-	MaxRows int32
+	LatestDueOn pgtype.Date
+	MaxRows     int32
 }
 
 type ListDueInstallmentsRow struct {
-	ID       pgtype.UUID
-	FamilyID pgtype.UUID
+	ID         pgtype.UUID
+	FamilyID   pgtype.UUID
+	CategoryID pgtype.UUID
+	NextDueOn  pgtype.Date
 }
 
 func (q *Queries) ListDueInstallments(ctx context.Context, arg ListDueInstallmentsParams) ([]ListDueInstallmentsRow, error) {
-	rows, err := q.db.Query(ctx, listDueInstallments, arg.Now, arg.MaxRows)
+	rows, err := q.db.Query(ctx, listDueInstallments, arg.LatestDueOn, arg.MaxRows)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +237,12 @@ func (q *Queries) ListDueInstallments(ctx context.Context, arg ListDueInstallmen
 	var items []ListDueInstallmentsRow
 	for rows.Next() {
 		var i ListDueInstallmentsRow
-		if err := rows.Scan(&i.ID, &i.FamilyID); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.FamilyID,
+			&i.CategoryID,
+			&i.NextDueOn,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -293,51 +329,14 @@ func (q *Queries) ListVisibleInstallments(ctx context.Context, arg ListVisibleIn
 }
 
 const lockDueInstallment = `-- name: LockDueInstallment :one
-SELECT i.id, i.family_id, i.name, i.total_minor, i.monthly_minor, i.months, i.currency_code, i.account_id, i.category_id, i.member_id, i.created_by_user_id, i.purchased_on, i.day_of_month, i.next_due_on, i.status, i.created_at, i.updated_at, s.timezone,
-    COALESCE((
-        SELECT SUM(t.amount_minor)
-        FROM transactions t
-        WHERE t.family_id = i.family_id
-          AND t.category_id = i.category_id
-          AND t.type = 'expense'
-          AND t.currency_code = i.currency_code
-    ), 0)::bigint AS paid_minor,
-    (SELECT COUNT(*) FROM transactions t
-     WHERE t.family_id = i.family_id AND t.category_id = i.category_id AND t.type = 'expense'
-       AND t.currency_code = i.currency_code
-    )::bigint AS payments
-FROM installments i
-JOIN finance_settings s ON s.family_id = i.family_id
-WHERE i.id = $1 AND i.status = 'active'
-FOR UPDATE OF i SKIP LOCKED
+SELECT id, family_id, name, total_minor, monthly_minor, months, currency_code, account_id, category_id, member_id, created_by_user_id, purchased_on, day_of_month, next_due_on, status, created_at, updated_at FROM installments
+WHERE id = $1 AND status = 'active'
+FOR UPDATE SKIP LOCKED
 `
 
-type LockDueInstallmentRow struct {
-	ID              pgtype.UUID
-	FamilyID        pgtype.UUID
-	Name            string
-	TotalMinor      int64
-	MonthlyMinor    int64
-	Months          int32
-	CurrencyCode    string
-	AccountID       pgtype.UUID
-	CategoryID      pgtype.UUID
-	MemberID        pgtype.UUID
-	CreatedByUserID pgtype.UUID
-	PurchasedOn     pgtype.Date
-	DayOfMonth      int32
-	NextDueOn       pgtype.Date
-	Status          string
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
-	Timezone        string
-	PaidMinor       int64
-	Payments        int64
-}
-
-func (q *Queries) LockDueInstallment(ctx context.Context, id pgtype.UUID) (LockDueInstallmentRow, error) {
+func (q *Queries) LockDueInstallment(ctx context.Context, id pgtype.UUID) (Installment, error) {
 	row := q.db.QueryRow(ctx, lockDueInstallment, id)
-	var i LockDueInstallmentRow
+	var i Installment
 	err := row.Scan(
 		&i.ID,
 		&i.FamilyID,
@@ -356,10 +355,31 @@ func (q *Queries) LockDueInstallment(ctx context.Context, id pgtype.UUID) (LockD
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Timezone,
-		&i.PaidMinor,
-		&i.Payments,
 	)
+	return i, err
+}
+
+const sumInstallmentPayments = `-- name: SumInstallmentPayments :one
+SELECT COALESCE(SUM(amount_minor), 0)::bigint AS paid_minor, COUNT(*)::bigint AS payments
+FROM transactions
+WHERE family_id = $1 AND category_id = $2 AND type = 'expense' AND currency_code = $3
+`
+
+type SumInstallmentPaymentsParams struct {
+	FamilyID     pgtype.UUID
+	CategoryID   pgtype.UUID
+	CurrencyCode string
+}
+
+type SumInstallmentPaymentsRow struct {
+	PaidMinor int64
+	Payments  int64
+}
+
+func (q *Queries) SumInstallmentPayments(ctx context.Context, arg SumInstallmentPaymentsParams) (SumInstallmentPaymentsRow, error) {
+	row := q.db.QueryRow(ctx, sumInstallmentPayments, arg.FamilyID, arg.CategoryID, arg.CurrencyCode)
+	var i SumInstallmentPaymentsRow
+	err := row.Scan(&i.PaidMinor, &i.Payments)
 	return i, err
 }
 
