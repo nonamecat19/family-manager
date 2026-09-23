@@ -2,7 +2,10 @@ package gcal
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base32"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -17,6 +20,7 @@ var (
 	ErrMissingRefresh     = errors.New("gcal: google returned no refresh token")
 	ErrBadTimeRange       = errors.New("gcal: event end must be after its start")
 	ErrUnexpectedResponse = errors.New("gcal: unexpected response from google")
+	ErrConflict           = errors.New("gcal: an event with that id already exists")
 )
 
 const (
@@ -28,6 +32,13 @@ const (
 	ScopeCalendarEvents = "https://www.googleapis.com/auth/calendar.events"
 	ScopeEmail          = "email"
 )
+
+var eventIDEncoding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding)
+
+func EventID(familyID, userID, kind, itemID, calendarID string) string {
+	sum := sha256.Sum256([]byte(strings.Join([]string{familyID, userID, kind, itemID, calendarID}, "\x00")))
+	return eventIDEncoding.EncodeToString(sum[:])
+}
 
 type Token struct {
 	AccessToken  string

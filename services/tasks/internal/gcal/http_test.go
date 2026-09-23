@@ -391,3 +391,118 @@ func TestFakeMatchesGoogleSemantics(t *testing.T) {
 		t.Fatalf("missing calendar scope: %v", err)
 	}
 }
+
+func TestEventIDIsStableAndGoogleSafe(t *testing.T) {
+	id := EventID("fam1", "user1", "task", "item1", "primary@example.com")
+	if id != EventID("fam1", "user1", "task", "item1", "primary@example.com") {
+		t.Fatal("the same inputs must give the same id")
+	}
+	if len(id) < 5 || len(id) > 1024 {
+		t.Fatalf("length %d outside 5-1024", len(id))
+	}
+	for _, r := range id {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'v') {
+			t.Fatalf("id %q has %q outside a-v0-9", id, r)
+		}
+	}
+	others := []string{
+		EventID("fam2", "user1", "task", "item1", "primary@example.com"),
+		EventID("fam1", "user2", "task", "item1", "primary@example.com"),
+		EventID("fam1", "user1", "birthday", "item1", "primary@example.com"),
+		EventID("fam1", "user1", "task", "item2", "primary@example.com"),
+		EventID("fam1", "user1", "task", "item1", "family@group.calendar.google.com"),
+		EventID("fam1user1", "", "task", "item1", "primary@example.com"),
+	}
+	seen := map[string]bool{id: true}
+	for i, o := range others {
+		if seen[o] {
+			t.Fatalf("variant %d collides: %s", i, o)
+		}
+		seen[o] = true
+	}
+}
+
+func TestInsertSendsClientEventID(t *testing.T) {
+	g, c := newGoogle(t, func(_ *google, w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, 200, map[string]any{"id": "abc123", "status": "confirmed"})
+	})
+	id := EventID("f", "u", "task", "t1", "primary")
+	_, err := c.InsertEvent(context.Background(), "at", "primary", Event{ID: id, AllDay: true, StartDate: "2026-10-05", EndDate: "2026-10-06"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.lastBody["id"] != id {
+		t.Fatalf("body id %v, want %s", g.lastBody["id"], id)
+	}
+	_, err = c.InsertEvent(context.Background(), "at", "primary", Event{AllDay: true, StartDate: "2026-10-05", EndDate: "2026-10-06"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, present := g.lastBody["id"]; present {
+		t.Fatalf("id must be omitted when unset: %v", g.lastBody)
+	}
+}
+
+func TestUpdateDoesNotSendEventID(t *testing.T) {
+	g, c := newGoogle(t, func(_ *google, w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, 200, map[string]any{"id": "e1"})
+	})
+	_, err := c.UpdateEvent(context.Background(), "at", "primary", "e1", Event{ID: "other", AllDay: true, StartDate: "2026-10-05", EndDate: "2026-10-06"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, present := g.lastBody["id"]; present {
+		t.Fatalf("update body must not carry an id: %v", g.lastBody)
+	}
+}
+
+func TestInsertConflictIsErrConflict(t *testing.T) {
+	_, c := newGoogle(t, func(_ *google, w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, 409, map[string]any{"error": map[string]any{"code": 409, "errors": []any{map[string]any{"reason": "duplicate"}}}})
+	})
+	_, err := c.InsertEvent(context.Background(), "at", "primary", Event{ID: EventID("f", "u", "task", "t1", "primary"), AllDay: true, StartDate: "2026-10-05", EndDate: "2026-10-06"})
+	if !errors.Is(err, ErrConflict) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestFakeClientEventIDsAndConflicts(t *testing.T) {
+	ctx := context.Background()
+	f := NewFake()
+	f.AddCode("code", "ver", "ann@example.com")
+	tok, err := f.Exchange(ctx, "code", "ver", "r")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cal := "primary@example.com"
+	day := Event{Summary: "x", AllDay: true, StartDate: "2026-10-05", EndDate: "2026-10-06"}
+	auto, err := f.InsertEvent(ctx, tok.AccessToken, cal, day)
+	if err != nil || auto.ID != "evt1" {
+		t.Fatalf("without an id the fake assigns evtN: %+v %v", auto, err)
+	}
+	withID := day
+	withID.ID = EventID("f", "u", "task", "t1", cal)
+	got, err := f.InsertEvent(ctx, tok.AccessToken, cal, withID)
+	if err != nil || got.ID != withID.ID {
+		t.Fatalf("client id not used: %+v %v", got, err)
+	}
+	if _, err := f.InsertEvent(ctx, tok.AccessToken, cal, withID); !errors.Is(err, ErrConflict) {
+		t.Fatalf("live duplicate: %v", err)
+	}
+	f.DeleteInGoogle(cal, withID.ID)
+	if _, err := f.InsertEvent(ctx, tok.AccessToken, cal, withID); !errors.Is(err, ErrConflict) {
+		t.Fatalf("cancelled duplicate: %v", err)
+	}
+	other := withID
+	other.ID = EventID("f", "u", "task", "t1", "family@group")
+	if _, err := f.InsertEvent(ctx, "", "family@group", other); !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("auth still checked: %v", err)
+	}
+	if _, err := f.InsertEvent(ctx, tok.AccessToken, "family@group", withID); err != nil {
+		t.Fatalf("ids are scoped per calendar: %v", err)
+	}
+	next, err := f.InsertEvent(ctx, tok.AccessToken, cal, day)
+	if err != nil || next.ID != "evt2" {
+		t.Fatalf("evtN sequence must not be consumed by client ids: %+v %v", next, err)
+	}
+}

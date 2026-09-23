@@ -218,8 +218,14 @@ func (f *Fake) InsertEvent(_ context.Context, accessToken, calendarID string, e 
 	if !e.validRange() {
 		return Event{}, ErrBadTimeRange
 	}
-	f.nextID++
-	e.ID = "evt" + strconv.Itoa(f.nextID)
+	if e.ID != "" {
+		if _, exists := f.calendar(calendarID)[e.ID]; exists {
+			return Event{}, ErrConflict
+		}
+	} else {
+		f.nextID++
+		e.ID = "evt" + strconv.Itoa(f.nextID)
+	}
 	e.Status = "confirmed"
 	return f.store(calendarID, e), nil
 }

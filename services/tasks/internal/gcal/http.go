@@ -254,6 +254,8 @@ func (c *HTTPClient) do(ctx context.Context, method, path, accessToken string, q
 			return ErrSyncTokenExpired
 		}
 		return ErrNotFound
+	case res.StatusCode == http.StatusConflict:
+		return ErrConflict
 	case res.StatusCode == http.StatusTooManyRequests:
 		return ErrRateLimited
 	case res.StatusCode >= 300:
@@ -386,8 +388,10 @@ func (c *HTTPClient) InsertEvent(ctx context.Context, accessToken, calendarID st
 	if !e.validRange() {
 		return Event{}, ErrBadTimeRange
 	}
+	w := toWire(e)
+	w.ID = e.ID
 	var out wireEvent
-	if err := c.do(ctx, http.MethodPost, calendarPath(calendarID)+"/events", accessToken, nil, toWire(e), &out); err != nil {
+	if err := c.do(ctx, http.MethodPost, calendarPath(calendarID)+"/events", accessToken, nil, w, &out); err != nil {
 		return Event{}, err
 	}
 	return fromWire(out), nil
