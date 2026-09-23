@@ -33,3 +33,30 @@ Decision (2026-10-04): ship brief 0001 now, fix in a follow-up.
 - `login_grants.sql:53` — drop the unreachable `approver_chain_id IS NULL` consume branch.
 
 Decision (2026-10-04): ship brief 0001 now, fix in a follow-up.
+
+## E3 — 0003/p1: scaffold apps/tasks (open, gate: workspace dependency change)
+
+Unit p1 creates `apps/tasks` and adds its native dependencies
+(`@react-native-community/datetimepicker`, `expo-auth-session`, `expo-web-browser`, `expo-crypto`,
+`expo-notifications`) in one change to `pnpm-lock.yaml`, which gate-check treats as a
+workspace-wide dependency change (STOP). Every app unit (p2-p9) depends on it.
+
+To unblock: approve here ("p1: approved") and run `/escalations`; the run then scaffolds the app
+from `apps/finance` as described in the unit notes. Or scaffold it yourself and mark p1 done.
+
+## E4 — 0003/h1: Google OAuth client for the tasks service (open, credential)
+
+Create an OAuth client in Google Cloud (type: Web application; redirect URI: the tasks app's
+custom scheme `fmtasks:/oauthredirect` and, for production, `https://tasks.<domain>/oauth/google`),
+enable the Google Calendar API, then put the values in the repo-root `.env` (never committed):
+
+    TASKS_GOOGLE_CLIENT_ID=...
+    TASKS_GOOGLE_CLIENT_SECRET=...
+
+Nothing depends on this unit: every test uses a fake Google API. Without it the service starts
+and "Connect Google Calendar" answers FailedPrecondition.
+
+## E5 — 0003/h2: BotFather token for the tasks bot (open, credential)
+
+Create the bot with @BotFather and add `TELEGRAM_TASKS_TOKEN=<id>:<secret>` to the repo-root
+`.env` (never committed). Nothing depends on it: the e2e suite uses the tgemu fake token.

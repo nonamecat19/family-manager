@@ -1,0 +1,354 @@
+syntax = "proto3";
+
+package tasks.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service TasksService {
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+  rpc CompleteTask(CompleteTaskRequest) returns (CompleteTaskResponse);
+  rpc ReopenTask(ReopenTaskRequest) returns (ReopenTaskResponse);
+  rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+
+  rpc ListBirthdays(ListBirthdaysRequest) returns (ListBirthdaysResponse);
+  rpc CreateBirthday(CreateBirthdayRequest) returns (CreateBirthdayResponse);
+  rpc UpdateBirthday(UpdateBirthdayRequest) returns (UpdateBirthdayResponse);
+  rpc DeleteBirthday(DeleteBirthdayRequest) returns (DeleteBirthdayResponse);
+
+  rpc GetFamilySettings(GetFamilySettingsRequest) returns (GetFamilySettingsResponse);
+  rpc SetFamilySettings(SetFamilySettingsRequest) returns (SetFamilySettingsResponse);
+
+  rpc GetGoogleConnection(GetGoogleConnectionRequest) returns (GetGoogleConnectionResponse);
+  rpc ConnectGoogle(ConnectGoogleRequest) returns (ConnectGoogleResponse);
+  rpc DisconnectGoogle(DisconnectGoogleRequest) returns (DisconnectGoogleResponse);
+  rpc ListGoogleCalendars(ListGoogleCalendarsRequest) returns (ListGoogleCalendarsResponse);
+  rpc SetGoogleCalendar(SetGoogleCalendarRequest) returns (SetGoogleCalendarResponse);
+
+  rpc ListMyDueReminders(ListMyDueRemindersRequest) returns (ListMyDueRemindersResponse);
+  rpc AckReminder(AckReminderRequest) returns (AckReminderResponse);
+  rpc SnoozeReminder(SnoozeReminderRequest) returns (SnoozeReminderResponse);
+  rpc GetDigest(GetDigestRequest) returns (GetDigestResponse);
+  rpc MarkDigestSent(MarkDigestSentRequest) returns (MarkDigestSentResponse);
+}
+
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_LOW = 1;
+  PRIORITY_MEDIUM = 2;
+  PRIORITY_HIGH = 3;
+  PRIORITY_URGENT = 4;
+}
+
+enum TaskStatus {
+  TASK_STATUS_UNSPECIFIED = 0;
+  TASK_STATUS_OPEN = 1;
+  TASK_STATUS_DONE = 2;
+}
+
+enum TaskFilter {
+  TASK_FILTER_UNSPECIFIED = 0;
+  TASK_FILTER_OPEN = 1;
+  TASK_FILTER_MINE = 2;
+  TASK_FILTER_DONE = 3;
+  TASK_FILTER_ALL = 4;
+}
+
+message Task {
+  string id = 1;
+  string family_id = 2;
+  string title = 3;
+  string notes = 4;
+  Priority priority = 5;
+  TaskStatus status = 6;
+  string due_on = 7;
+  string due_time = 8;
+  repeated string assignee_user_ids = 9;
+  string created_by_user_id = 10;
+  string completed_by_user_id = 11;
+  google.protobuf.Timestamp due_at = 12;
+  google.protobuf.Timestamp completed_at = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+  bool overdue = 16;
+}
+
+message AssigneeList {
+  repeated string user_ids = 1;
+}
+
+message ListTasksRequest {
+  TaskFilter filter = 1;
+}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+}
+
+message GetTaskRequest {
+  string task_id = 1;
+}
+
+message GetTaskResponse {
+  Task task = 1;
+}
+
+message CreateTaskRequest {
+  string title = 1;
+  string notes = 2;
+  Priority priority = 3;
+  string due_on = 4;
+  string due_time = 5;
+  repeated string assignee_user_ids = 6;
+}
+
+message CreateTaskResponse {
+  Task task = 1;
+}
+
+message UpdateTaskRequest {
+  string task_id = 1;
+  optional string title = 2;
+  optional string notes = 3;
+  optional Priority priority = 4;
+  optional string due_on = 5;
+  optional string due_time = 6;
+  AssigneeList assignees = 7;
+}
+
+message UpdateTaskResponse {
+  Task task = 1;
+}
+
+message CompleteTaskRequest {
+  string task_id = 1;
+}
+
+message CompleteTaskResponse {
+  Task task = 1;
+}
+
+message ReopenTaskRequest {
+  string task_id = 1;
+}
+
+message ReopenTaskResponse {
+  Task task = 1;
+}
+
+message DeleteTaskRequest {
+  string task_id = 1;
+}
+
+message DeleteTaskResponse {}
+
+message Birthday {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  int32 day = 4;
+  int32 month = 5;
+  int32 year = 6;
+  int32 remind_days_before = 7;
+  string next_on = 8;
+  int32 days_until = 9;
+  int32 turning_age = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message ListBirthdaysRequest {}
+
+message ListBirthdaysResponse {
+  repeated Birthday birthdays = 1;
+}
+
+message CreateBirthdayRequest {
+  string name = 1;
+  int32 day = 2;
+  int32 month = 3;
+  int32 year = 4;
+  int32 remind_days_before = 5;
+}
+
+message CreateBirthdayResponse {
+  Birthday birthday = 1;
+}
+
+message UpdateBirthdayRequest {
+  string birthday_id = 1;
+  optional string name = 2;
+  optional int32 day = 3;
+  optional int32 month = 4;
+  optional int32 year = 5;
+  optional int32 remind_days_before = 6;
+}
+
+message UpdateBirthdayResponse {
+  Birthday birthday = 1;
+}
+
+message DeleteBirthdayRequest {
+  string birthday_id = 1;
+}
+
+message DeleteBirthdayResponse {}
+
+message FamilySettings {
+  string timezone = 1;
+  string digest_time = 2;
+}
+
+message GetFamilySettingsRequest {
+  string device_timezone = 1;
+}
+
+message GetFamilySettingsResponse {
+  FamilySettings settings = 1;
+}
+
+message SetFamilySettingsRequest {
+  optional string timezone = 1;
+}
+
+message SetFamilySettingsResponse {
+  FamilySettings settings = 1;
+}
+
+message GoogleConnection {
+  bool configured = 1;
+  bool connected = 2;
+  string client_id = 3;
+  string email = 4;
+  string calendar_id = 5;
+  string calendar_name = 6;
+  google.protobuf.Timestamp last_synced_at = 7;
+  string last_error = 8;
+}
+
+message GetGoogleConnectionRequest {}
+
+message GetGoogleConnectionResponse {
+  GoogleConnection connection = 1;
+}
+
+message ConnectGoogleRequest {
+  string code = 1;
+  string code_verifier = 2;
+  string redirect_uri = 3;
+}
+
+message ConnectGoogleResponse {
+  GoogleConnection connection = 1;
+}
+
+message DisconnectGoogleRequest {}
+
+message DisconnectGoogleResponse {}
+
+message GoogleCalendar {
+  string id = 1;
+  string name = 2;
+  bool primary = 3;
+}
+
+message ListGoogleCalendarsRequest {}
+
+message ListGoogleCalendarsResponse {
+  repeated GoogleCalendar calendars = 1;
+}
+
+message SetGoogleCalendarRequest {
+  string calendar_id = 1;
+}
+
+message SetGoogleCalendarResponse {
+  GoogleConnection connection = 1;
+}
+
+enum ReminderKind {
+  REMINDER_KIND_UNSPECIFIED = 0;
+  REMINDER_KIND_TASK_DUE = 1;
+  REMINDER_KIND_BIRTHDAY = 2;
+}
+
+enum SnoozeOption {
+  SNOOZE_OPTION_UNSPECIFIED = 0;
+  SNOOZE_OPTION_ONE_HOUR = 1;
+  SNOOZE_OPTION_TOMORROW_MORNING = 2;
+}
+
+message Reminder {
+  string id = 1;
+  ReminderKind kind = 2;
+  Task task = 3;
+  Birthday birthday = 4;
+  google.protobuf.Timestamp remind_at = 5;
+}
+
+message ListMyDueRemindersRequest {}
+
+message ListMyDueRemindersResponse {
+  repeated Reminder reminders = 1;
+}
+
+message AckReminderRequest {
+  string reminder_id = 1;
+}
+
+message AckReminderResponse {}
+
+message SnoozeReminderRequest {
+  string reminder_id = 1;
+  SnoozeOption option = 2;
+}
+
+message SnoozeReminderResponse {
+  google.protobuf.Timestamp remind_at = 1;
+}
+
+message GetDigestRequest {}
+
+message GetDigestResponse {
+  string date = 1;
+  bool due = 2;
+  repeated Task today = 3;
+  repeated Task overdue = 4;
+  repeated Birthday upcoming_birthdays = 5;
+}
+
+message MarkDigestSentRequest {
+  string date = 1;
+}
+
+message MarkDigestSentResponse {}
+
+message TaskAssignedEvent {
+  string family_id = 1;
+  string task_id = 2;
+  string title = 3;
+  repeated string assignee_user_ids = 4;
+  string assigned_by_user_id = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+message TaskDueEvent {
+  string family_id = 1;
+  string task_id = 2;
+  string title = 3;
+  repeated string assignee_user_ids = 4;
+  google.protobuf.Timestamp due_at = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+message BirthdayUpcomingEvent {
+  string family_id = 1;
+  string birthday_id = 2;
+  string name = 3;
+  string next_on = 4;
+  int32 days_until = 5;
+  int32 turning_age = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+}

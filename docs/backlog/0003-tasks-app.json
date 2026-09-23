@@ -1,6 +1,6 @@
 {
   "brief": "0003-tasks-app",
-  "base": null,
+  "base": "ae5c7a24b17ef4b307fde9d1c1fe6a26752628b8",
   "created_at": "2026-10-05T19:19:50.573Z",
   "units": [
     {
@@ -12,7 +12,7 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -992,10 +992,10 @@
       ],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate: scaffold changes pnpm-lock.yaml (workspace-wide dependency change, STOP)",
       "id": "p1",
       "title": "Scaffold apps/tasks (configs, app.config.js endpoints :8088, root layout) + pnpm-lock",
       "kind": "app",
@@ -1200,10 +1200,10 @@
       "files": [],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate: Google OAuth client id/secret (credential)",
       "id": "h1",
       "title": "Provision Google OAuth Web client (redirect URI + fmtasks scheme) into local .env",
       "kind": "infra",
@@ -1217,10 +1217,10 @@
       "files": [],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate: BotFather token for the tasks bot (credential)",
       "id": "h2",
       "title": "Provision BotFather token for the tasks bot",
       "kind": "infra",
@@ -1285,5 +1285,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:19:51.620Z"
+  "updated_at": "2026-10-05T19:26:03.102Z"
 }
