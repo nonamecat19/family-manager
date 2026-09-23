@@ -77,6 +77,7 @@ Every cross-boundary call is a protobuf method in `libs/proto/<domain>/v1/`. buf
 | `sdk/go/<domain>/v1/*.pb.go` | protoc-gen-go | services |
 | `sdk/go/<domain>/v1/<d>v1connect/*.connect.go` | protoc-gen-connect-go | service servers + Go clients |
 | `sdk/typescript/<domain>/v1/*_pb.ts` | protoc-gen-es (v2) | `packages/api` via `createClient` |
+| `sdk/java/**` (notes only) | protoc-gen-java | `services/notes`, which serves `notes.v1` from Spring ([ADR 0012](adr/0012-notes-connect-java.md)) |
 
 connect-es v2 needs no separate client plugin: `protoc-gen-es` emits the service descriptor and
 `@connectrpc/connect` builds the client from it. Generated code is never hand-edited.

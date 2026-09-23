@@ -57,7 +57,7 @@ managed mode derives it (`libs/proto/buf.gen.yaml`).
 | `services/auth/` | — | **done** — moved, module renamed to `github.com/nnc/family-manager/services/auth`, contract moved to `libs/proto/auth/v1` |
 | `postgres/init/` | `infra/postgres/` | pending |
 | `docker-compose.yml` (infra) + `docker-compose.services.yml` (services) | root, plus `infra/` overrides | keep both at root |
-| `notes-android/` | `apps/notes/` + `services/notes/` | **replaced** — Commonplace on `notes.v1`; the Flutter dir is dead weight, delete it in its own change |
+| `notes-android/` | `apps/notes/` + `services/notes/` | **replaced** — Commonplace on `notes.v1`; the Flutter dir is dead weight, delete it in its own change. `services/notes` is a Spring service and serves `notes.v1` over Connect ([ADR 0012](adr/0012-notes-connect-java.md)); sharing, comments, activity and image upload answer `unimplemented` for now |
 | `notifications-android/` | replaced by `apps/*` (Expo) | Flutter, being retired — nothing has replaced it yet |
 
 Nothing in the table is moved automatically. Each move is its own change, and it must end with
