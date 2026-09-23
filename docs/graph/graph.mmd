@@ -8,6 +8,7 @@ graph LR
     pkg__fm_api["pkg:@fm/api"]
     pkg__fm_auth["pkg:@fm/auth"]
     pkg__fm_config["pkg:@fm/config"]
+    pkg__fm_i18n["pkg:@fm/i18n"]
     pkg__fm_sdk["pkg:@fm/sdk"]
     pkg__fm_theme["pkg:@fm/theme"]
     pkg__fm_ui["pkg:@fm/ui"]
@@ -81,6 +82,7 @@ graph LR
   app_finance -->|DEPENDS_ON| pkg__fm_api
   app_finance -->|DEPENDS_ON| pkg__fm_auth
   app_finance -->|DEPENDS_ON| pkg__fm_config
+  app_finance -->|DEPENDS_ON| pkg__fm_i18n
   app_finance -->|DEPENDS_ON| pkg__fm_sdk
   app_finance -->|DEPENDS_ON| pkg__fm_theme
   app_finance -->|DEPENDS_ON| pkg__fm_ui
@@ -93,6 +95,7 @@ graph LR
   app_recipes -->|DEPENDS_ON| pkg__fm_api
   app_recipes -->|DEPENDS_ON| pkg__fm_auth
   app_recipes -->|DEPENDS_ON| pkg__fm_config
+  app_recipes -->|DEPENDS_ON| pkg__fm_i18n
   app_recipes -->|DEPENDS_ON| pkg__fm_sdk
   app_recipes -->|DEPENDS_ON| pkg__fm_theme
   app_recipes -->|DEPENDS_ON| pkg__fm_ui
@@ -103,6 +106,7 @@ graph LR
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_api -->|DEPENDS_ON| pkg__fm_sdk
   pkg__fm_auth -->|DEPENDS_ON| pkg__fm_config
+  pkg__fm_i18n -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_theme -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_ui -->|DEPENDS_ON| pkg__fm_config
   pkg__fm_ui -->|DEPENDS_ON| pkg__fm_theme
