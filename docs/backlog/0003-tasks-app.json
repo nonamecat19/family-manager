@@ -1,0 +1,1289 @@
+{
+  "brief": "0003-tasks-app",
+  "base": null,
+  "created_at": "2026-10-05T19:19:50.573Z",
+  "units": [
+    {
+      "nodes": [
+        "proto:libs/proto/tasks/v1/tasks.proto"
+      ],
+      "files": [
+        "libs/proto/tasks/v1/tasks.proto"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u01",
+      "title": "tasks.v1 contract: TasksService rpcs, messages and event payloads",
+      "kind": "contract",
+      "acceptance": "just proto-check",
+      "notes": "Package tasks.v1, no go_package. Task (title, notes, priority LOW/MEDIUM/HIGH/URGENT, deadline as date + optional local time, status OPEN/DONE, assignee user ids), Birthday (name, day, month, optional year, remind_days_before). RPCs: List/Create/Update/Complete/Reopen/DeleteTask, List/Create/Update/DeleteBirthday, Get/SetFamilySettings (IANA timezone, default from device), ConnectGoogle (auth code + PKCE verifier + redirect uri), DisconnectGoogle, ListGoogleCalendars, SetGoogleCalendar, GetGoogleConnection, ListMyDueReminders / AckReminder / SnoozeReminder (1h | tomorrow 09:00) / GetDigest for the telegram scheduler. Event messages TaskAssignedEvent, TaskDueEvent, BirthdayUpcomingEvent. Brief defaults adopted for every open question."
+    },
+    {
+      "nodes": [
+        "proto:libs/proto/tasks/v1/tasks.proto"
+      ],
+      "files": [
+        "sdk/go/tasks/v1/tasks.pb.go",
+        "sdk/go/tasks/v1/tasksv1connect/tasks.connect.go",
+        "sdk/typescript/src/tasks/v1/tasks_pb.ts"
+      ],
+      "depends_on": [
+        "u01"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u02",
+      "title": "Generate tasks.v1 stubs into sdk/go and sdk/typescript",
+      "kind": "contract",
+      "acceptance": "cd sdk/go && go vet ./tasks/...",
+      "notes": "just proto. Commit only the tasks outputs."
+    },
+    {
+      "nodes": [
+        "proto:libs/proto/notifications/v1/notifications.proto"
+      ],
+      "files": [
+        "libs/proto/notifications/v1/notifications.proto",
+        "sdk/go/notifications/v1/notifications.pb.go",
+        "sdk/typescript/src/notifications/v1/notifications_pb.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u03",
+      "title": "notifications.v1: additive APP_TASKS enum value + regenerated stubs",
+      "kind": "contract",
+      "acceptance": "just proto-check",
+      "notes": "APP_TASKS = 4, fresh number, additive. Lets the tasks app register push tokens."
+    },
+    {
+      "nodes": [
+        "golib:libs/go/events"
+      ],
+      "files": [
+        "libs/go/events/events.go",
+        "libs/go/events/events_test.go"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u04",
+      "title": "libs/go/events: tasks subjects (task.assigned, task.due, birthday.upcoming)",
+      "kind": "package",
+      "acceptance": "cd libs/go/events && go test -race ./...",
+      "notes": "Constants only, no dependency change: tasks.task.assigned, tasks.task.due, tasks.birthday.upcoming."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/go.mod",
+        "services/tasks/go.sum",
+        "services/tasks/cmd/server/main.go",
+        "services/tasks/internal/config/config.go",
+        "services/tasks/internal/config/config_test.go"
+      ],
+      "depends_on": [
+        "u02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u05",
+      "title": "Scaffold services/tasks module: go.mod with replaces, viper config, server main",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./...",
+      "notes": "Mirror services/finance. Config TASKS_* incl. GOOGLE_CLIENT_ID/SECRET/REDIRECT_URL and TOKEN_KEY with no defaults; FAMILY_ADDR. main mounts tasksv1connect handler (Unimplemented embed) with rpc.Recover, rpc.Observe, auth interceptor. Built with GOWORK=off until u25 registers go.work."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/Dockerfile",
+        "services/tasks/.air.toml",
+        "services/tasks/.env.example"
+      ],
+      "depends_on": [
+        "u05",
+        "u25"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u06",
+      "title": "services/tasks Dockerfile, .air.toml, .env.example",
+      "kind": "service",
+      "acceptance": "docker build -f services/tasks/Dockerfile -t fm-tasks:check .",
+      "notes": "Dockerfile copies go.work, so the image build needs u25. .env.example carries keys with empty values only."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/db/migrations/000001_init.up.sql",
+        "services/tasks/internal/db/migrations/000001_init.down.sql",
+        "services/tasks/internal/db/embed.go",
+        "services/tasks/internal/db/embed_test.go",
+        "services/tasks/go.mod"
+      ],
+      "depends_on": [
+        "u05"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u07",
+      "title": "tasks migration 000001: tasks, assignees, birthdays, family settings, Google connections, calendar links, sync state, reminder deliveries",
+      "kind": "migration",
+      "acceptance": "cd services/tasks && GOWORK=off go test ./internal/db/...",
+      "notes": "New tables only (additive). Every row scoped by family_id. Refresh token column holds ciphertext. reminder_deliveries keyed by (reminder key, channel) so push and telegram dedupe independently. Test parses migrations via database.LoadMigrations. go.sum also updated."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/sqlc.yaml",
+        "services/tasks/internal/db/queries/",
+        "services/tasks/db/",
+        "services/tasks/go.mod",
+        "services/tasks/go.sum"
+      ],
+      "depends_on": [
+        "u07"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u08",
+      "title": "tasks sqlc queries + generated db package",
+      "kind": "service",
+      "acceptance": "cd services/tasks && sqlc diff && GOWORK=off go build ./...",
+      "notes": "queries: tasks.sql, birthdays.sql, settings.sql, google.sql, reminders.sql. Every query filters by family_id."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "service:family"
+      ],
+      "files": [
+        "services/tasks/internal/store/tx.go",
+        "services/tasks/internal/family/client.go",
+        "services/tasks/internal/family/client_test.go"
+      ],
+      "depends_on": [
+        "u08"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u09",
+      "title": "tasks store InTx + family gRPC client (membership, ListMembers)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/store/... ./internal/family/...",
+      "notes": "Read-only use of family.v1 via sdk/go; pattern from services/notifications/internal/family."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/schedule/deadline.go",
+        "services/tasks/internal/schedule/deadline_test.go",
+        "services/tasks/internal/schedule/birthday.go",
+        "services/tasks/internal/schedule/birthday_test.go"
+      ],
+      "depends_on": [
+        "u05"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u10",
+      "title": "Domain: deadline timezone handling, birthday next occurrence and age (29 Feb)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/schedule/...",
+      "notes": "Pure stdlib. 29 Feb observed on 28 Feb in non-leap years; DST edge cases in tests."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/schedule/reminders.go",
+        "services/tasks/internal/schedule/reminders_test.go"
+      ],
+      "depends_on": [
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u11",
+      "title": "Domain: reminder schedule (deadline lead, birthday N days before, 08:00 digest, snooze)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/schedule/...",
+      "notes": "Family timezone drives today, digest 08:00 and snooze 'tomorrow 09:00' (brief defaults)."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/handler.go",
+        "services/tasks/internal/handler/tasks.go",
+        "services/tasks/internal/handler/tasks_test.go",
+        "services/tasks/internal/grpc/server.go",
+        "services/tasks/internal/grpc/tasks.go"
+      ],
+      "depends_on": [
+        "u08",
+        "u09",
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u12",
+      "title": "Task handlers + Connect layer with family scoping and assignee restriction",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "notes": "Tests: family A cannot read/change family B tasks; assignees must be members of caller's family. Titles/notes bounded in runes. Errors via rpc.Internal."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/birthdays.go",
+        "services/tasks/internal/handler/birthdays_test.go",
+        "services/tasks/internal/grpc/birthdays.go"
+      ],
+      "depends_on": [
+        "u12"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u13",
+      "title": "Birthday handlers + Connect layer",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "notes": "Family scoping tests for birthdays; age/next occurrence from u10."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/settings.go",
+        "services/tasks/internal/handler/settings_test.go",
+        "services/tasks/internal/grpc/settings.go"
+      ],
+      "depends_on": [
+        "u12"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u14",
+      "title": "Family settings (timezone) handlers + Connect layer",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "notes": "Validate IANA zone; first write wins as initialisation from device."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "golib:libs/go/events"
+      ],
+      "files": [
+        "services/tasks/internal/events/publisher.go",
+        "services/tasks/internal/events/publisher_test.go",
+        "services/tasks/internal/handler/tasks.go",
+        "services/tasks/go.mod",
+        "services/tasks/go.sum"
+      ],
+      "depends_on": [
+        "u04",
+        "u12"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u15",
+      "title": "Event publisher + tasks.task.assigned on create/update",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/events/... ./internal/handler/...",
+      "notes": "Request id as NATS header per ADR 0008. Publish only for newly added assignees."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/scheduler/reminders.go",
+        "services/tasks/internal/scheduler/reminders_test.go"
+      ],
+      "depends_on": [
+        "u11",
+        "u15"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u16",
+      "title": "Reminder scheduler loop publishing tasks.task.due and tasks.birthday.upcoming",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/scheduler/...",
+      "notes": "Injected clock; dedupe via reminder_deliveries (channel=push)."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/reminders.go",
+        "services/tasks/internal/handler/reminders_test.go",
+        "services/tasks/internal/handler/digest.go",
+        "services/tasks/internal/handler/digest_test.go",
+        "services/tasks/internal/grpc/reminders.go"
+      ],
+      "depends_on": [
+        "u11",
+        "u12"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u17",
+      "title": "Reminder and digest RPCs for the telegram scheduler (ListMyDueReminders, Ack, Snooze, GetDigest)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/gcal/client.go",
+        "services/tasks/internal/gcal/http.go",
+        "services/tasks/internal/gcal/http_test.go",
+        "services/tasks/internal/gcal/fake.go"
+      ],
+      "depends_on": [
+        "u05"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u18",
+      "title": "Google Calendar + OAuth client (stdlib HTTP) with in-memory fake",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/gcal/...",
+      "notes": "No new go.mod deps (keeps go.mod single-writer): code exchange with PKCE, refresh, calendarList, events insert/patch/delete, events.list with syncToken (410 -> full resync). http_test runs against an httptest fake Google."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/crypto/seal.go",
+        "services/tasks/internal/crypto/seal_test.go"
+      ],
+      "depends_on": [
+        "u05"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u19",
+      "title": "Refresh-token sealing at rest (AES-GCM)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/crypto/...",
+      "notes": "Stdlib only; key from TASKS_TOKEN_KEY."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/google.go",
+        "services/tasks/internal/handler/google_test.go",
+        "services/tasks/internal/grpc/google.go"
+      ],
+      "depends_on": [
+        "u12",
+        "u18",
+        "u19"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u20",
+      "title": "Google connect / disconnect / list + pick calendar RPCs; FailedPrecondition when OAuth unset",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "notes": "Per-member connection. With client id/secret empty: service starts, ConnectGoogle returns FailedPrecondition with a clear message (tested)."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/calsync/mapping.go",
+        "services/tasks/internal/calsync/push.go",
+        "services/tasks/internal/calsync/push_test.go"
+      ],
+      "depends_on": [
+        "u08",
+        "u18"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u21",
+      "title": "Calendar push sync: task/birthday -> Google event create/update/delete",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/calsync/...",
+      "notes": "Completed task keeps its event with a check-mark title prefix (brief default). Birthdays as yearly all-day events. Tests use gcal fake."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/tasks.go",
+        "services/tasks/internal/handler/birthdays.go",
+        "services/tasks/internal/handler/calsync_test.go"
+      ],
+      "depends_on": [
+        "u13",
+        "u15",
+        "u21"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u22",
+      "title": "Hook calendar push into task and birthday handlers",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Create/edit/complete/delete task with deadline and create/edit/delete birthday drive the fake Google calendar; failures logged and retried by the pull loop, never fail the write."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/calsync/pull.go",
+        "services/tasks/internal/calsync/pull_test.go"
+      ],
+      "depends_on": [
+        "u21"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u23",
+      "title": "Calendar pull sync: incremental syncToken polling applies Google edits/deletes",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/calsync/...",
+      "notes": "No watch channels (non-goal). Event edited in Google updates title/deadline; deleted event deletes task/birthday."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/cmd/server/main.go",
+        "services/tasks/internal/config/config.go"
+      ],
+      "depends_on": [
+        "u09",
+        "u14",
+        "u16",
+        "u17",
+        "u20",
+        "u22",
+        "u23"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u24",
+      "title": "Wire tasks main: pool + migrations, family client, publisher, reminder scheduler, calendar pull loop",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go vet ./... && GOWORK=off go test -race ./...",
+      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "gomod:services/tasks"
+      ],
+      "files": [
+        "go.work",
+        "go.work.sum"
+      ],
+      "depends_on": [
+        "u05"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u25",
+      "title": "Register services/tasks in go.work",
+      "kind": "infra",
+      "acceptance": "just check-go",
+      "notes": "STOP by gate-check PATH_RULES (go.work = workspace-wide dependency change), although the brief lists go.work only as touched. Needed for the graph node and the Docker image build."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "service:telegram",
+        "infra:docker-compose.services.yml"
+      ],
+      "files": [
+        "docker-compose.services.yml",
+        "docker-compose.tgemu.yml",
+        "infra/postgres/init/init-services.sh",
+        ".env.example"
+      ],
+      "depends_on": [
+        "u06",
+        "u24"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u26",
+      "title": "Local runtime wiring: tasks in compose, tasks DB init, telegram TASKS addr/token, tgemu fake token",
+      "kind": "infra",
+      "acceptance": "just tg-up && curl -fsS http://localhost:8088/healthz",
+      "notes": "STOP: compose + infra/** + .env*. tasks on host port 8088; TASKS_GOOGLE_* passed through empty by default; TELEGRAM_TASKS_ADDR=http://tasks:8080; tgemu TELEGRAM_TASKS_TOKEN='1005:tasks', TOKEN_FILE '', short TELEGRAM_TASKS_TICK for e2e. An existing pgdata volume does not re-run init: createdb tasks by hand. Proves migrations apply to the local DB."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/internal/config/config.go",
+        "services/telegram/internal/config/config_test.go"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t1",
+      "title": "telegram config: tasks bot name and TELEGRAM_TASKS_ADDR",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./internal/config/...",
+      "notes": "Also TELEGRAM_TASKS_TICK (scheduler interval)."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/internal/i18n/keys.go",
+        "services/telegram/internal/i18n/en.go",
+        "services/telegram/internal/i18n/uk.go"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t2",
+      "title": "telegram i18n strings for the tasks bot (en, uk)",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./internal/i18n/...",
+      "notes": "All keys for commands, reminders, digest and buttons up front."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/internal/bots/tasks/tasks.go",
+        "services/telegram/internal/bots/tasks/ui.go",
+        "services/telegram/internal/bots/tasks/tasks_test.go",
+        "services/telegram/internal/bots/tasks/fake_test.go"
+      ],
+      "depends_on": [
+        "u02",
+        "t2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t3",
+      "title": "tasks bot: /add, /today, /mine, /done",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./internal/bots/tasks/...",
+      "notes": "Mirror bots/finance. Talks to tasks only through sdk/go tasksv1connect."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/internal/bots/tasks/buttons.go",
+        "services/telegram/internal/bots/tasks/buttons_test.go"
+      ],
+      "depends_on": [
+        "t3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t4",
+      "title": "tasks bot: Done / Snooze (1h, tomorrow 09:00) callback buttons",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./internal/bots/tasks/..."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/internal/scheduler/tasks.go",
+        "services/telegram/internal/scheduler/tasks_test.go"
+      ],
+      "depends_on": [
+        "t4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t5",
+      "title": "telegram reminder + 08:00 digest scheduler for linked users",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./internal/scheduler/...",
+      "notes": "Ticks every TELEGRAM_TASKS_TICK; per linked user calls ListMyDueReminders / GetDigest, sends with t4 keyboard, then AckReminder. Injected clock in tests."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/cmd/server/main.go"
+      ],
+      "depends_on": [
+        "t1",
+        "t4",
+        "t5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t6",
+      "title": "telegram main: register tasks bot and start its scheduler",
+      "kind": "service",
+      "acceptance": "cd services/telegram && go test -race ./..."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [
+        "services/telegram/e2e/tasks_test.go",
+        "services/telegram/e2e/e2e_test.go"
+      ],
+      "depends_on": [
+        "t6",
+        "u26"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t7",
+      "title": "tgemu e2e for the tasks bot (commands, reminder, digest, buttons, no non-200 Bot API calls)",
+      "kind": "test",
+      "acceptance": "just tg-up && just test-telegram",
+      "notes": "Add tasks to the E2E_BOTS default; TASKS_URL envOr http://localhost:8088 to seed deadlines that fall inside the next tick."
+    },
+    {
+      "nodes": [
+        "service:notifications"
+      ],
+      "files": [
+        "services/notifications/internal/topics/topics.go",
+        "services/notifications/internal/topics/topics_test.go"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n1",
+      "title": "notifications topics catalog: tasks domain topics",
+      "kind": "service",
+      "acceptance": "cd services/notifications && go test -race ./internal/topics/...",
+      "notes": "tasks.task.assigned, tasks.task.due, tasks.birthday.upcoming, domain tasks."
+    },
+    {
+      "nodes": [
+        "service:notifications"
+      ],
+      "files": [
+        "services/notifications/internal/handler/handler.go",
+        "services/notifications/internal/handler/handler_test.go"
+      ],
+      "depends_on": [
+        "u03"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n2",
+      "title": "notifications: accept APP_TASKS push tokens",
+      "kind": "service",
+      "acceptance": "cd services/notifications && go test -race ./internal/handler/..."
+    },
+    {
+      "nodes": [
+        "service:notifications"
+      ],
+      "files": [
+        "services/notifications/internal/notify/notify.go",
+        "services/notifications/internal/notify/notify_test.go"
+      ],
+      "depends_on": [
+        "u02",
+        "u04",
+        "n1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n3",
+      "title": "notifications: subscribe to tasks events, render and push to the tasks app",
+      "kind": "service",
+      "acceptance": "cd services/notifications && go test -race ./internal/notify/...",
+      "notes": "Add subjects to Subjects, 'tasks' to appRank; assigned -> new assignees only, due -> assignees, birthday -> whole family."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/ui",
+        "app:finance",
+        "app:recipes"
+      ],
+      "files": [
+        "packages/ui/src/labels.tsx",
+        "apps/finance/components/i18n/translations/en.ts",
+        "apps/finance/components/i18n/translations/uk.ts",
+        "apps/recipes/components/i18n/translations/en.ts",
+        "apps/recipes/components/i18n/translations/uk.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "l1",
+      "title": "Human labels for tasks topics in @fm/ui defaults and finance/recipes dictionaries",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/ui --filter=@fm/app-finance --filter=@fm/app-recipes",
+      "notes": "Strings only; no screen change. Blast radius of @fm/ui: the 3 apps."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/client.ts",
+        "packages/api/src/pushToken.ts",
+        "packages/api/src/pushToken.test.ts",
+        "packages/api/src/queryKeys.ts",
+        "packages/api/src/queryKeys.test.ts"
+      ],
+      "depends_on": [
+        "u02",
+        "u03"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a1",
+      "title": "@fm/api: tasks client, 'tasks' push app, tasks query keys",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "tasks URL optional so finance/notes/recipes (no tasks endpoint) keep working. All tasks/birthdays/settings keys defined here so a2-a4 stay disjoint."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/tasks.ts",
+        "packages/api/src/tasks.test.ts"
+      ],
+      "depends_on": [
+        "a1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a2",
+      "title": "@fm/api: task hooks + deadline-then-priority sort and mine/all/done filters",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/birthdays.ts",
+        "packages/api/src/birthdays.test.ts"
+      ],
+      "depends_on": [
+        "a1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a3",
+      "title": "@fm/api: birthday hooks + age display helpers",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/tasksSettings.ts",
+        "packages/api/src/tasksSettings.test.ts"
+      ],
+      "depends_on": [
+        "a1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a4",
+      "title": "@fm/api: family timezone + Google connection/calendar hooks",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/index.ts"
+      ],
+      "depends_on": [
+        "a2",
+        "a3",
+        "a4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a5",
+      "title": "@fm/api: export tasks, birthdays, tasksSettings from the entry point",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/package.json",
+        "apps/tasks/app.config.js",
+        "apps/tasks/app/_layout.tsx",
+        "apps/tasks/",
+        "pnpm-lock.yaml"
+      ],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p1",
+      "title": "Scaffold apps/tasks (configs, app.config.js endpoints :8088, root layout) + pnpm-lock",
+      "kind": "app",
+      "acceptance": "pnpm install --frozen-lockfile && pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "STOP by gate-check (pnpm-lock.yaml). Copy apps/finance config files verbatim (babel, metro, tailwind, tsconfig, eslint, global.css, d.ts, assets). Add ALL native deps now so later units never touch the lockfile: @react-native-community/datetimepicker, expo-auth-session, expo-web-browser, expo-crypto, expo-notifications. scheme fmtasks; emulator endpoint http://10.0.2.2:8088. Larger than 5 files because the template is one indivisible scaffold."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/components/i18n/index.tsx",
+        "apps/tasks/components/i18n/translations/schema.ts",
+        "apps/tasks/components/i18n/translations/en.ts",
+        "apps/tasks/components/i18n/translations/uk.ts"
+      ],
+      "depends_on": [
+        "p1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p2",
+      "title": "apps/tasks i18n dictionaries (en, uk) for every planned screen",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "All keys for p3-p7 and topic labels up front, so screen units never share a dictionary file."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/_layout.tsx",
+        "apps/tasks/app/(auth)/_layout.tsx",
+        "apps/tasks/app/(auth)/login.tsx",
+        "apps/tasks/app/(app)/_layout.tsx",
+        "apps/tasks/app/(app)/onboarding.tsx"
+      ],
+      "depends_on": [
+        "p2",
+        "a5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p3",
+      "title": "apps/tasks shell: providers, auth group, tab layout, onboarding/create family, push + timezone init",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/(app)/index.tsx",
+        "apps/tasks/components/tasks/TaskRow.tsx",
+        "apps/tasks/components/tasks/Filters.tsx"
+      ],
+      "depends_on": [
+        "p3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p4",
+      "title": "apps/tasks task list (mine/all/done, deadline then priority)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "testIDs for Maestro. No colour literals."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/(app)/task/[id].tsx",
+        "apps/tasks/components/tasks/DeadlineField.tsx",
+        "apps/tasks/components/tasks/AssigneePicker.tsx",
+        "apps/tasks/components/tasks/PriorityPicker.tsx"
+      ],
+      "depends_on": [
+        "p3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p5",
+      "title": "apps/tasks create/edit task: priority, deadline date + optional time, multi-select assignees",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "Pickers live in the app, not @fm/ui, to keep @fm/ui untouched (brief: only if missing; native dep would hit the lockfile)."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/(app)/birthdays/index.tsx",
+        "apps/tasks/app/(app)/birthdays/[id].tsx",
+        "apps/tasks/components/birthdays/BirthdayRow.tsx"
+      ],
+      "depends_on": [
+        "p3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p6",
+      "title": "apps/tasks birthdays list (with age) and editor",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/(app)/settings.tsx",
+        "apps/tasks/app/(app)/connected-accounts.tsx",
+        "apps/tasks/components/settings/GoogleCalendarSection.tsx"
+      ],
+      "depends_on": [
+        "p3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p7",
+      "title": "apps/tasks settings: language, notifications, Google Calendar connect/disconnect/pick, connected accounts",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "expo-auth-session code + PKCE -> ConnectGoogle; FailedPrecondition shown as 'Google Calendar not configured'."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "justfile"
+      ],
+      "depends_on": [
+        "p4",
+        "p5",
+        "p6",
+        "p7"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p8",
+      "title": "justfile: build/install release APK per app (default recipes)",
+      "kind": "app",
+      "acceptance": "just build-apk-release emulator tasks",
+      "notes": "build-apk-release env='production' app='recipes', install-apk-release app='recipes': existing callers unchanged."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        ".maestro/flows/tasks/config.yaml",
+        ".maestro/flows/tasks/smoke-launch.yaml",
+        ".maestro/flows/tasks/auth-register.yaml",
+        ".maestro/flows/tasks/task-lifecycle.yaml",
+        ".maestro/flows/tasks/birthday.yaml"
+      ],
+      "depends_on": [
+        "p8",
+        "u26"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "p9",
+      "title": "Maestro suite .maestro/flows/tasks: register, family, task with two assignees, mine, complete, birthday with age",
+      "kind": "test",
+      "acceptance": "just install-apk-release tasks && just test-android tasks",
+      "notes": "Second assignee: seed a second member through runScript against auth/family ConnectRPC (invite + accept), no UI for it."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h1",
+      "title": "Provision Google OAuth Web client (redirect URI + fmtasks scheme) into local .env",
+      "kind": "infra",
+      "acceptance": "grep -qE '^TASKS_GOOGLE_CLIENT_ID=.+' .env && grep -qE '^TASKS_GOOGLE_CLIENT_SECRET=.+' .env",
+      "notes": "Credential values, human only. Nothing committed. No unit depends on it: all tests use the fake Google API."
+    },
+    {
+      "nodes": [
+        "service:telegram"
+      ],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h2",
+      "title": "Provision BotFather token for the tasks bot",
+      "kind": "infra",
+      "acceptance": "grep -qE '^TELEGRAM_TASKS_TOKEN=[0-9]+:.+' .env",
+      "notes": "Credential value, human only. e2e uses the tgemu fake token."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "service:telegram"
+      ],
+      "files": [
+        "infra/Caddyfile",
+        "infra/docker-compose.prod.yml",
+        "infra/README.md"
+      ],
+      "depends_on": [
+        "u06"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h3",
+      "title": "Prod deploy surface: Caddy host tasks.<domain>, tasks + telegram TASKS env in prod compose",
+      "kind": "infra",
+      "acceptance": "docker compose -f infra/docker-compose.prod.yml config -q",
+      "notes": "STOP: infra/**. Includes tasks DB in prod postgres init and image tag. Deploy itself stays a human push."
+    },
+    {
+      "nodes": [
+        "service:tasks",
+        "app:tasks",
+        "proto:libs/proto/tasks/v1/tasks.proto"
+      ],
+      "files": [
+        "docs/graph/graph.json",
+        "docs/graph/graph.mmd"
+      ],
+      "depends_on": [
+        "u24",
+        "u25",
+        "t6",
+        "n2",
+        "n3",
+        "l1",
+        "p4",
+        "p5",
+        "p6",
+        "p7"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "g1",
+      "title": "Regenerate knowledge graph (service:tasks, app:tasks, tasks.v1) and run full verify",
+      "kind": "docs",
+      "acceptance": "just verify",
+      "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
+    }
+  ],
+  "updated_at": "2026-10-05T19:19:51.620Z"
+}
