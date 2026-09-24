@@ -71,3 +71,13 @@ response and were silently never committed.
   future migration to UUID note ids would be a breaking change for stored client state.
 - Search is `LIKE` over title and flattened text. It is honest for a family's notes and will not
   survive a large corpus.
+- **Sharing.** `ShareNote` and `ShareNotebook` accept any well-formed UUID as `member_user_id`;
+  the service has no family roster to check it against. A member share to a user outside the
+  family is stored but inert: visibility also requires the note's `family_id` to equal the
+  caller's token family, so the grant takes effect only if that user joins the family. Note
+  images are public-read objects per ADR 0007, so their URLs stay readable to anyone who has
+  them; `Unshare` revokes access to the note, not to images already seen. Both are accepted
+  as-is for now, not oversights.
+- Connect request bodies are capped at 12 MB (an 8 MB image as base64 JSON, plus headroom).
+  The cap is checked against `Content-Length` before reading and enforced by a bounded read for
+  chunked bodies; over it the call answers `resource_exhausted`.

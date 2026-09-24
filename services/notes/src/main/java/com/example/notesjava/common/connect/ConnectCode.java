@@ -8,6 +8,7 @@ public enum ConnectCode {
     PERMISSION_DENIED("permission_denied", HttpStatus.FORBIDDEN),
     NOT_FOUND("not_found", HttpStatus.NOT_FOUND),
     FAILED_PRECONDITION("failed_precondition", HttpStatus.PRECONDITION_FAILED),
+    RESOURCE_EXHAUSTED("resource_exhausted", HttpStatus.TOO_MANY_REQUESTS),
     UNIMPLEMENTED("unimplemented", HttpStatus.NOT_IMPLEMENTED),
     UNAVAILABLE("unavailable", HttpStatus.SERVICE_UNAVAILABLE),
     INTERNAL("internal", HttpStatus.INTERNAL_SERVER_ERROR);

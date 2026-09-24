@@ -70,11 +70,6 @@ public class Share extends BaseEntity {
         return share;
     }
 
-    public void regrant(short permission, UUID grantedBy) {
-        this.permission = permission;
-        this.grantedByUserId = grantedBy;
-    }
-
     public boolean reaches(UUID userId) {
         return subject == FAMILY || (userId != null && userId.equals(memberUserId));
     }

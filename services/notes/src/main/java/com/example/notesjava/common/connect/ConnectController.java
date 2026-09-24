@@ -6,6 +6,7 @@ import com.example.notesjava.common.error.ResourceNotFoundException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -13,10 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 public class ConnectController {
 
     private static final Logger log = LoggerFactory.getLogger(ConnectController.class);
+
+    public static final int MAX_BODY_BYTES = 12 << 20;
 
     private static final String PROTO_CONTENT_TYPE = "application/proto";
 
@@ -53,7 +56,7 @@ public class ConnectController {
             @PathVariable String service,
             @PathVariable String method,
             @RequestHeader(value = HttpHeaders.CONTENT_TYPE, required = false) String contentType,
-            @RequestBody(required = false) byte[] body) {
+            HttpServletRequest http) {
         boolean binary = contentType != null && contentType.toLowerCase().contains("proto");
 
         try {
@@ -63,7 +66,7 @@ public class ConnectController {
             }
 
             ConnectService.Procedure<?, ?> procedure = target.procedure(method);
-            Message request = parse(procedure.prototype(), body, binary);
+            Message request = parse(procedure.prototype(), body(http), binary);
             Message response = procedure.invoke(request);
 
             return binary
@@ -77,6 +80,8 @@ public class ConnectController {
             return error(ex.code(), ex.getMessage());
         } catch (InvalidProtocolBufferException ex) {
             return error(ConnectCode.INVALID_ARGUMENT, "the request body does not match this procedure");
+        } catch (IOException ex) {
+            return error(ConnectCode.INVALID_ARGUMENT, "the request body could not be read");
         } catch (MissingFamilyException ex) {
             return error(ConnectCode.FAILED_PRECONDITION, ex.getMessage());
         } catch (ResourceNotFoundException ex) {
@@ -87,6 +92,21 @@ public class ConnectController {
             log.error("connect procedure {}/{} failed", service, method, ex);
             return error(ConnectCode.INTERNAL, "internal error");
         }
+    }
+
+    private static byte[] body(HttpServletRequest http) throws IOException {
+        if (http.getContentLengthLong() > MAX_BODY_BYTES) {
+            throw tooLarge();
+        }
+        byte[] body = http.getInputStream().readNBytes(MAX_BODY_BYTES + 1);
+        if (body.length > MAX_BODY_BYTES) {
+            throw tooLarge();
+        }
+        return body;
+    }
+
+    private static ConnectException tooLarge() {
+        return ConnectException.resourceExhausted("the request body exceeds " + (MAX_BODY_BYTES >> 20) + "MB");
     }
 
     private static Message parse(Message prototype, byte[] body, boolean binary)

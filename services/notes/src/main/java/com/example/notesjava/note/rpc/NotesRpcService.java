@@ -84,6 +84,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -364,6 +365,7 @@ public class NotesRpcService extends ConnectService {
                 AccessSpecifications.visibleNotes(viewer.familyId(), viewer.userId()).and(matching(needle)),
                 PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "updatedAt"))).getContent();
 
+        Map<Long, Boolean> notebookVisible = new HashMap<>();
         for (Note note : hits) {
             List<Block> blocks = BlockCodec.decode(note.getBlocks(), note.getContent());
             SearchHit.Builder hit = SearchHit.newBuilder()
@@ -374,8 +376,12 @@ public class NotesRpcService extends ConnectService {
                     .setTitle(note.getTitle())
                     .setSnippet(BlockCodec.preview(blocks));
             if (note.getGroup() != null) {
-                hit.setNotebookId(String.valueOf(note.getGroup().getId()));
-                hit.setContext(note.getGroup().getTitle());
+                Group group = note.getGroup();
+                hit.setNotebookId(String.valueOf(group.getId()));
+                if (notebookVisible.computeIfAbsent(group.getId(),
+                        id -> access.notebook(viewer.familyId(), viewer.userId(), group).visible())) {
+                    hit.setContext(group.getTitle());
+                }
             }
             if (note.getUpdatedAt() != null) {
                 hit.setUpdatedAt(NotesMapper.timestamp(note.getUpdatedAt()));
