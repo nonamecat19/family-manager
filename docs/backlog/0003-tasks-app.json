@@ -299,9 +299,9 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "72586a1",
       "blocked_reason": null,
       "id": "u13",
       "title": "Birthday handlers + Connect layer",
@@ -1351,5 +1351,5 @@
       "notes": "E8 decision 1 (2026-10-06): u12 shipped short of its notes. Meet every rule in u12 notes: CreateTask/UpdateTask set due_at via schedule.Deadline.At(family tz) whenever due_on is set, so task_due reminders are created; assignees must be members (refresh via family.Client.ListMembers with the REQUEST bearer token, upsert known_members + DeleteKnownMembersExcept in one InTx; reuse fetchMembers/refreshKnownMembers from u13 birthdays.go); remove the tasks.task.assigned publish (u15 owns it); touchKnownMember uses TouchKnownMember (keeps display_name). fake_test.go may gain real birthday methods replacing the u13 birthdayStore wrapper only if trivial."
     }
   ],
-  "updated_at": "2026-10-06T08:13:29.036Z"
+  "updated_at": "2026-10-06T08:15:55.280Z"
 }
