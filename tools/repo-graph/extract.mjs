@@ -186,6 +186,25 @@ function extractProto(localModules) {
   }
 }
 
+// Services are not all Go: a JVM service is a services/<name>/ with a Gradle build and no go.mod.
+function extractJvm() {
+  const servicesDir = path.join(ROOT, "services");
+  if (!fs.existsSync(servicesDir)) return;
+
+  for (const entry of fs.readdirSync(servicesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const dir = `services/${entry.name}`;
+    if (nodes.has(`service:${entry.name}`)) continue;
+
+    const build = ["build.gradle", "build.gradle.kts", "pom.xml"]
+      .find((f) => fs.existsSync(path.join(ROOT, dir, f)));
+    if (!build) continue;
+
+    addNode(`service:${entry.name}`, "service", { dir, runtime: "jvm", aliases: [dir, entry.name] },
+      { source: `${dir}/${build}` });
+  }
+}
+
 function extractSql() {
   const owners = [...nodes.values()].filter((n) => n.type === "service");
   const sqlFiles = owners.flatMap((svc) => walk(path.join(ROOT, svc.props.dir), (p) => p.endsWith(".sql")).map((f) => [svc, f]));
@@ -287,6 +306,7 @@ function impact(graph, target) {
 const args = process.argv.slice(2);
 extractNode();
 const localModules = extractGo();
+extractJvm();
 extractProto(localModules);
 extractSql();
 extractInfra();
