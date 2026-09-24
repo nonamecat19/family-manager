@@ -81,6 +81,8 @@ function Gate() {
       <Tabs.Screen name="household" options={{ href: null }} />
       <Tabs.Screen name="templates" options={{ href: null }} />
       <Tabs.Screen name="recurring" options={{ href: null }} />
+      <Tabs.Screen name="investments" options={{ href: null }} />
+      <Tabs.Screen name="installments" options={{ href: null }} />
       <Tabs.Screen name="reminders" options={{ href: null }} />
       <Tabs.Screen name="widgets" options={{ href: null }} />
       <Tabs.Screen name="connected-accounts" options={{ href: null }} />

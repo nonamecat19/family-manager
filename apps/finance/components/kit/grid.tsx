@@ -15,6 +15,7 @@ export interface CategoryIconGridProps {
   items: readonly CategoryGridItem[];
   selectedId?: string;
   onSelect: (item: CategoryGridItem) => void;
+  onLongPress?: (item: CategoryGridItem) => void;
   columns?: number;
   more?: { label: string; onPress: () => void };
   className?: string;
@@ -24,6 +25,7 @@ export function CategoryIconGrid({
   items,
   selectedId,
   onSelect,
+  onLongPress,
   columns = 4,
   more,
   className = "",
@@ -41,6 +43,7 @@ export function CategoryIconGrid({
             accessibilityLabel={item.label}
             accessibilityState={{ selected }}
             onPress={() => onSelect(item)}
+            onLongPress={onLongPress ? () => onLongPress(item) : undefined}
             className="items-center py-[8.4px]"
             style={{ width }}
           >

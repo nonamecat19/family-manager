@@ -16,8 +16,11 @@ export interface FilterSheetProps {
   accounts: readonly FilterOption[];
   memberIds: readonly string[];
   accountIds: readonly string[];
+  groups: readonly FilterOption[];
+  groupIds: readonly string[];
   onToggleMember: (id: string) => void;
   onToggleAccount: (id: string) => void;
+  onToggleGroup: (id: string) => void;
   onClear: () => void;
 }
 
@@ -28,8 +31,11 @@ export function FilterSheet({
   accounts,
   memberIds,
   accountIds,
+  groups,
+  groupIds,
   onToggleMember,
   onToggleAccount,
+  onToggleGroup,
   onClear,
 }: FilterSheetProps) {
   const { t } = useI18n();
@@ -63,6 +69,22 @@ export function FilterSheet({
             ))}
           </View>
         </View>
+
+        {groups.length > 0 ? (
+          <View className="gap-[8px]">
+            <Kicker>{t("transactions.groups")}</Kicker>
+            <View className="flex-row flex-wrap gap-[8px]">
+              {groups.map((group) => (
+                <Chip
+                  key={group.id}
+                  label={group.label}
+                  active={groupIds.includes(group.id)}
+                  onPress={() => onToggleGroup(group.id)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         <View className="flex-row gap-[8px]">
           <Button title={t("common.all")} tone="quiet" onPress={onClear} />

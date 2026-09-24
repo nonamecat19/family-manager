@@ -60,6 +60,7 @@ export default function TransactionsScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [memberIds, setMemberIds] = useState<readonly string[]>([]);
   const [accountIds, setAccountIds] = useState<readonly string[]>([]);
+  const [groupIds, setGroupIds] = useState<readonly string[]>([]);
 
   const settings = useFinanceSettings();
   const members = useFinanceMembers();
@@ -76,7 +77,7 @@ export default function TransactionsScreen() {
     kind: kind === "income" ? TransactionKind.INCOME : TransactionKind.EXPENSE,
     memberIds,
     accountIds,
-    groupIds: focusGroupId === "" ? [] : [focusGroupId],
+    groupIds: focusGroupId === "" || groupIds.includes(focusGroupId) ? groupIds : [...groupIds, focusGroupId],
     categoryIds: focusCategoryId === "" ? [] : [focusCategoryId],
     query: query.trim(),
   });
@@ -149,6 +150,14 @@ export default function TransactionsScreen() {
     () => (members.data ?? []).map((member) => ({ id: member.userId, label: member.displayName })),
     [members.data],
   );
+  const groupKind = kind === "income" ? TransactionKind.INCOME : TransactionKind.EXPENSE;
+  const groupOptions = useMemo(
+    () =>
+      (tree.data ?? [])
+        .filter((node) => node.group?.kind === groupKind)
+        .map((node) => ({ id: node.group?.id ?? "", label: node.group?.name ?? "" })),
+    [tree.data, groupKind],
+  );
 
   const steppable = period.granularity !== "custom" ? (period as SteppablePeriod) : null;
   const atToday = range.to >= toISODate(new Date());
@@ -200,7 +209,7 @@ export default function TransactionsScreen() {
                 icon="funnel"
                 label={t("transactions.filter")}
                 onPress={() => setFilterOpen(true)}
-                badge={memberIds.length + accountIds.length > 0}
+                badge={memberIds.length + accountIds.length + groupIds.length > 0}
               />
             </>
           }
@@ -334,11 +343,15 @@ export default function TransactionsScreen() {
         accounts={sharedAccountOptions}
         memberIds={memberIds}
         accountIds={accountIds}
+        groups={groupOptions}
+        groupIds={groupIds}
         onToggleMember={(id) => setMemberIds((current) => toggle(current, id))}
         onToggleAccount={(id) => setAccountIds((current) => toggle(current, id))}
+        onToggleGroup={(id) => setGroupIds((current) => toggle(current, id))}
         onClear={() => {
           setMemberIds([]);
           setAccountIds([]);
+          setGroupIds([]);
         }}
       />
 

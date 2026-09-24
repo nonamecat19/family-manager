@@ -47,9 +47,10 @@ const RECENT_DAYS = 14;
 export default function AddTransactionScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  const params = useLocalSearchParams<{ templateId?: string; transactionId?: string }>();
+  const params = useLocalSearchParams<{ templateId?: string; transactionId?: string; categoryId?: string }>();
   const editingId = typeof params.transactionId === "string" ? params.transactionId : "";
   const seedTemplateId = typeof params.templateId === "string" ? params.templateId : "";
+  const seedCategoryId = typeof params.categoryId === "string" ? params.categoryId : "";
 
   const [pickedKind, setPickedKind] = useState<Kind | null>(null);
   const [typedAmount, setTypedAmount] = useState<string | null>(null);
@@ -154,7 +155,7 @@ export default function AddTransactionScreen() {
   const accountId = pickedAccountId || seed?.accountId || selectableAccounts[0]?.id || "";
   const account = selectableAccounts.find((a) => a.id === accountId);
 
-  const chosenCategoryId = pickedCategoryId ?? seed?.categoryId ?? "";
+  const chosenCategoryId = pickedCategoryId ?? seed?.categoryId ?? seedCategoryId;
   const owningGroupId =
     groups.find((node) => node.categories.some((category) => category.id === chosenCategoryId))
       ?.group?.id ?? "";

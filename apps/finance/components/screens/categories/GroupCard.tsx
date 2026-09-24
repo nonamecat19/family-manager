@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
 import { Card, type CategoryGridItem, CategoryIconGrid, IconCircle, tintFor } from "@/components/kit";
-import { Icon, organic } from "@fm/ui";
+import { Icon, IconButton, organic } from "@fm/ui";
 
 export interface GroupCardProps {
   name: string;
@@ -14,6 +14,9 @@ export interface GroupCardProps {
   addLabel: string;
   onAddCategory: () => void;
   onSelectCategory: (item: CategoryGridItem) => void;
+  onLongPressCategory?: (item: CategoryGridItem) => void;
+  editLabel?: string;
+  onEdit?: () => void;
 }
 
 export function GroupCard({
@@ -27,6 +30,9 @@ export function GroupCard({
   addLabel,
   onAddCategory,
   onSelectCategory,
+  onLongPressCategory,
+  editLabel,
+  onEdit,
 }: GroupCardProps) {
   return (
     <Card padded={false} className="overflow-hidden border border-border">
@@ -47,6 +53,9 @@ export function GroupCard({
             {meta}
           </Text>
         </View>
+{onEdit ? (
+          <IconButton icon="pencil-simple" label={editLabel ?? name} size={16} onPress={onEdit} />
+        ) : null}
         <Icon
           name={expanded ? "caret-up" : "caret-down"}
           size={14}
@@ -58,6 +67,7 @@ export function GroupCard({
         <CategoryIconGrid
           items={categories}
           onSelect={onSelectCategory}
+          onLongPress={onLongPressCategory}
           more={{ label: addLabel, onPress: onAddCategory }}
           className="px-[8.4px] pb-[11.2px]"
         />
