@@ -20,7 +20,8 @@ type Config struct {
 	BaseCurrency string
 	Timezone     string
 
-	InstallmentTick time.Duration
+	InstallmentTick  time.Duration
+	SubscriptionTick time.Duration
 
 	LogLevel string
 	LogJSON  bool
@@ -41,20 +42,22 @@ func Load() (*Config, error) {
 	v.SetDefault("BASE_CURRENCY", "UAH")
 	v.SetDefault("TIMEZONE", "Europe/Kyiv")
 	v.SetDefault("INSTALLMENT_TICK", "1h")
+	v.SetDefault("SUBSCRIPTION_TICK", "1h")
 
 	cfg := &Config{
-		DatabaseURL:     v.GetString("DATABASE_URL"),
-		HTTPPort:        v.GetString("HTTP_PORT"),
-		GRPCPort:        v.GetString("GRPC_PORT"),
-		NATSURL:         v.GetString("NATS_URL"),
-		JWKSURL:         v.GetString("JWKS_URL"),
-		Issuer:          v.GetString("ISSUER"),
-		Audience:        v.GetString("AUDIENCE"),
-		BaseCurrency:    v.GetString("BASE_CURRENCY"),
-		Timezone:        v.GetString("TIMEZONE"),
-		InstallmentTick: v.GetDuration("INSTALLMENT_TICK"),
-		LogLevel:        v.GetString("LOG_LEVEL"),
-		LogJSON:         v.GetBool("LOG_JSON"),
+		DatabaseURL:      v.GetString("DATABASE_URL"),
+		HTTPPort:         v.GetString("HTTP_PORT"),
+		GRPCPort:         v.GetString("GRPC_PORT"),
+		NATSURL:          v.GetString("NATS_URL"),
+		JWKSURL:          v.GetString("JWKS_URL"),
+		Issuer:           v.GetString("ISSUER"),
+		Audience:         v.GetString("AUDIENCE"),
+		BaseCurrency:     v.GetString("BASE_CURRENCY"),
+		Timezone:         v.GetString("TIMEZONE"),
+		InstallmentTick:  v.GetDuration("INSTALLMENT_TICK"),
+		SubscriptionTick: v.GetDuration("SUBSCRIPTION_TICK"),
+		LogLevel:         v.GetString("LOG_LEVEL"),
+		LogJSON:          v.GetBool("LOG_JSON"),
 	}
 
 	if cfg.DatabaseURL == "" {

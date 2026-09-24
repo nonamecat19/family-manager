@@ -57,6 +57,8 @@ export default function CategoriesScreen() {
       ? "/(app)/investments"
       : node.group?.role === CategoryGroupRole.INSTALLMENTS
         ? "/(app)/installments"
+        : node.group?.role === CategoryGroupRole.SUBSCRIPTIONS
+          ? "/(app)/subscriptions"
         : null;
   const ids = groups.map((node) => node.group?.id ?? "");
   const open = openIds ?? ids.slice(0, 1);

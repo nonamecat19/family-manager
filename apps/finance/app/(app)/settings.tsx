@@ -169,6 +169,12 @@ export default function SettingsScreen() {
             onPress={() => router.push("/(app)/installments")}
           />
           <SettingsLinkRow
+            icon="credit-card"
+            iconTone="accent"
+            label={t("subscriptions.title")}
+            onPress={() => router.push("/(app)/subscriptions")}
+          />
+          <SettingsLinkRow
             icon="bell"
             iconTone="accent"
             label={t("nav.reminders")}

@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	roleInvestments  = "investments"
-	roleInstallments = "installments"
+	roleInvestments   = "investments"
+	roleInstallments  = "installments"
+	roleSubscriptions = "subscriptions"
 )
 
 type systemGroup struct {
@@ -26,8 +27,9 @@ type systemGroup struct {
 }
 
 var systemGroups = map[string]systemGroup{
-	roleInvestments:  {name: "Інвестиції", icon: "trend-up", colorStep: 6},
-	roleInstallments: {name: "Розстрочки", icon: "credit-card", colorStep: 7},
+	roleInvestments:   {name: "Інвестиції", icon: "trend-up", colorStep: 6},
+	roleInstallments:  {name: "Розстрочки", icon: "credit-card", colorStep: 7},
+	roleSubscriptions: {name: "Підписки", icon: "credit-card", colorStep: 8},
 }
 
 func ensureSystemGroup(ctx context.Context, q db.Querier, familyID pgtype.UUID, role string) (db.CategoryGroup, error) {

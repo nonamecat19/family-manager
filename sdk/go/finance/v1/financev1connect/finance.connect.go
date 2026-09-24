@@ -237,6 +237,27 @@ const (
 	// FinanceServiceDeleteInstallmentProcedure is the fully-qualified name of the FinanceService's
 	// DeleteInstallment RPC.
 	FinanceServiceDeleteInstallmentProcedure = "/finance.v1.FinanceService/DeleteInstallment"
+	// FinanceServiceListSubscriptionsProcedure is the fully-qualified name of the FinanceService's
+	// ListSubscriptions RPC.
+	FinanceServiceListSubscriptionsProcedure = "/finance.v1.FinanceService/ListSubscriptions"
+	// FinanceServiceCreateSubscriptionProcedure is the fully-qualified name of the FinanceService's
+	// CreateSubscription RPC.
+	FinanceServiceCreateSubscriptionProcedure = "/finance.v1.FinanceService/CreateSubscription"
+	// FinanceServiceUpdateSubscriptionProcedure is the fully-qualified name of the FinanceService's
+	// UpdateSubscription RPC.
+	FinanceServiceUpdateSubscriptionProcedure = "/finance.v1.FinanceService/UpdateSubscription"
+	// FinanceServiceCancelSubscriptionProcedure is the fully-qualified name of the FinanceService's
+	// CancelSubscription RPC.
+	FinanceServiceCancelSubscriptionProcedure = "/finance.v1.FinanceService/CancelSubscription"
+	// FinanceServiceDeleteSubscriptionProcedure is the fully-qualified name of the FinanceService's
+	// DeleteSubscription RPC.
+	FinanceServiceDeleteSubscriptionProcedure = "/finance.v1.FinanceService/DeleteSubscription"
+	// FinanceServicePostSubscriptionOccurrenceProcedure is the fully-qualified name of the
+	// FinanceService's PostSubscriptionOccurrence RPC.
+	FinanceServicePostSubscriptionOccurrenceProcedure = "/finance.v1.FinanceService/PostSubscriptionOccurrence"
+	// FinanceServiceSkipSubscriptionOccurrenceProcedure is the fully-qualified name of the
+	// FinanceService's SkipSubscriptionOccurrence RPC.
+	FinanceServiceSkipSubscriptionOccurrenceProcedure = "/finance.v1.FinanceService/SkipSubscriptionOccurrence"
 )
 
 // FinanceServiceClient is a client for the finance.v1.FinanceService service.
@@ -309,6 +330,13 @@ type FinanceServiceClient interface {
 	UpdateInstallment(context.Context, *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error)
 	CancelInstallment(context.Context, *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error)
 	DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error)
+	ListSubscriptions(context.Context, *connect.Request[v1.ListSubscriptionsRequest]) (*connect.Response[v1.ListSubscriptionsResponse], error)
+	CreateSubscription(context.Context, *connect.Request[v1.CreateSubscriptionRequest]) (*connect.Response[v1.CreateSubscriptionResponse], error)
+	UpdateSubscription(context.Context, *connect.Request[v1.UpdateSubscriptionRequest]) (*connect.Response[v1.UpdateSubscriptionResponse], error)
+	CancelSubscription(context.Context, *connect.Request[v1.CancelSubscriptionRequest]) (*connect.Response[v1.CancelSubscriptionResponse], error)
+	DeleteSubscription(context.Context, *connect.Request[v1.DeleteSubscriptionRequest]) (*connect.Response[v1.DeleteSubscriptionResponse], error)
+	PostSubscriptionOccurrence(context.Context, *connect.Request[v1.PostSubscriptionOccurrenceRequest]) (*connect.Response[v1.PostSubscriptionOccurrenceResponse], error)
+	SkipSubscriptionOccurrence(context.Context, *connect.Request[v1.SkipSubscriptionOccurrenceRequest]) (*connect.Response[v1.SkipSubscriptionOccurrenceResponse], error)
 }
 
 // NewFinanceServiceClient constructs a client for the finance.v1.FinanceService service. By
@@ -730,79 +758,128 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("DeleteInstallment")),
 			connect.WithClientOptions(opts...),
 		),
+		listSubscriptions: connect.NewClient[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse](
+			httpClient,
+			baseURL+FinanceServiceListSubscriptionsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListSubscriptions")),
+			connect.WithClientOptions(opts...),
+		),
+		createSubscription: connect.NewClient[v1.CreateSubscriptionRequest, v1.CreateSubscriptionResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateSubscriptionProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		updateSubscription: connect.NewClient[v1.UpdateSubscriptionRequest, v1.UpdateSubscriptionResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateSubscriptionProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		cancelSubscription: connect.NewClient[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse](
+			httpClient,
+			baseURL+FinanceServiceCancelSubscriptionProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CancelSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteSubscription: connect.NewClient[v1.DeleteSubscriptionRequest, v1.DeleteSubscriptionResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteSubscriptionProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		postSubscriptionOccurrence: connect.NewClient[v1.PostSubscriptionOccurrenceRequest, v1.PostSubscriptionOccurrenceResponse](
+			httpClient,
+			baseURL+FinanceServicePostSubscriptionOccurrenceProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("PostSubscriptionOccurrence")),
+			connect.WithClientOptions(opts...),
+		),
+		skipSubscriptionOccurrence: connect.NewClient[v1.SkipSubscriptionOccurrenceRequest, v1.SkipSubscriptionOccurrenceResponse](
+			httpClient,
+			baseURL+FinanceServiceSkipSubscriptionOccurrenceProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("SkipSubscriptionOccurrence")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // financeServiceClient implements FinanceServiceClient.
 type financeServiceClient struct {
-	bootstrapHousehold        *connect.Client[v1.BootstrapHouseholdRequest, v1.BootstrapHouseholdResponse]
-	getHouseholdOverview      *connect.Client[v1.GetHouseholdOverviewRequest, v1.GetHouseholdOverviewResponse]
-	getFinanceSettings        *connect.Client[v1.GetFinanceSettingsRequest, v1.GetFinanceSettingsResponse]
-	updateFinanceSettings     *connect.Client[v1.UpdateFinanceSettingsRequest, v1.UpdateFinanceSettingsResponse]
-	setOverspendNotifications *connect.Client[v1.SetOverspendNotificationsRequest, v1.SetOverspendNotificationsResponse]
-	listMembers               *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
-	listAccounts              *connect.Client[v1.ListAccountsRequest, v1.ListAccountsResponse]
-	getAccount                *connect.Client[v1.GetAccountRequest, v1.GetAccountResponse]
-	createAccount             *connect.Client[v1.CreateAccountRequest, v1.CreateAccountResponse]
-	updateAccount             *connect.Client[v1.UpdateAccountRequest, v1.UpdateAccountResponse]
-	archiveAccount            *connect.Client[v1.ArchiveAccountRequest, v1.ArchiveAccountResponse]
-	deleteAccount             *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
-	reorderAccounts           *connect.Client[v1.ReorderAccountsRequest, v1.ReorderAccountsResponse]
-	transferBetweenAccounts   *connect.Client[v1.TransferBetweenAccountsRequest, v1.TransferBetweenAccountsResponse]
-	listCategoryTree          *connect.Client[v1.ListCategoryTreeRequest, v1.ListCategoryTreeResponse]
-	createCategoryGroup       *connect.Client[v1.CreateCategoryGroupRequest, v1.CreateCategoryGroupResponse]
-	updateCategoryGroup       *connect.Client[v1.UpdateCategoryGroupRequest, v1.UpdateCategoryGroupResponse]
-	deleteCategoryGroup       *connect.Client[v1.DeleteCategoryGroupRequest, v1.DeleteCategoryGroupResponse]
-	reorderCategoryGroups     *connect.Client[v1.ReorderCategoryGroupsRequest, v1.ReorderCategoryGroupsResponse]
-	createCategory            *connect.Client[v1.CreateCategoryRequest, v1.CreateCategoryResponse]
-	updateCategory            *connect.Client[v1.UpdateCategoryRequest, v1.UpdateCategoryResponse]
-	moveCategory              *connect.Client[v1.MoveCategoryRequest, v1.MoveCategoryResponse]
-	deleteCategory            *connect.Client[v1.DeleteCategoryRequest, v1.DeleteCategoryResponse]
-	reorderCategories         *connect.Client[v1.ReorderCategoriesRequest, v1.ReorderCategoriesResponse]
-	createTransaction         *connect.Client[v1.CreateTransactionRequest, v1.CreateTransactionResponse]
-	getTransaction            *connect.Client[v1.GetTransactionRequest, v1.GetTransactionResponse]
-	updateTransaction         *connect.Client[v1.UpdateTransactionRequest, v1.UpdateTransactionResponse]
-	deleteTransaction         *connect.Client[v1.DeleteTransactionRequest, v1.DeleteTransactionResponse]
-	listTransactions          *connect.Client[v1.ListTransactionsRequest, v1.ListTransactionsResponse]
-	listTemplates             *connect.Client[v1.ListTemplatesRequest, v1.ListTemplatesResponse]
-	createTemplate            *connect.Client[v1.CreateTemplateRequest, v1.CreateTemplateResponse]
-	updateTemplate            *connect.Client[v1.UpdateTemplateRequest, v1.UpdateTemplateResponse]
-	deleteTemplate            *connect.Client[v1.DeleteTemplateRequest, v1.DeleteTemplateResponse]
-	reorderTemplates          *connect.Client[v1.ReorderTemplatesRequest, v1.ReorderTemplatesResponse]
-	logTemplate               *connect.Client[v1.LogTemplateRequest, v1.LogTemplateResponse]
-	listBudgets               *connect.Client[v1.ListBudgetsRequest, v1.ListBudgetsResponse]
-	createBudget              *connect.Client[v1.CreateBudgetRequest, v1.CreateBudgetResponse]
-	updateBudget              *connect.Client[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse]
-	deleteBudget              *connect.Client[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse]
-	getHomeSummary            *connect.Client[v1.GetHomeSummaryRequest, v1.GetHomeSummaryResponse]
-	getGroupBreakdown         *connect.Client[v1.GetGroupBreakdownRequest, v1.GetGroupBreakdownResponse]
-	getMemberBreakdown        *connect.Client[v1.GetMemberBreakdownRequest, v1.GetMemberBreakdownResponse]
-	getSpendingSeries         *connect.Client[v1.GetSpendingSeriesRequest, v1.GetSpendingSeriesResponse]
-	listInsights              *connect.Client[v1.ListInsightsRequest, v1.ListInsightsResponse]
-	listRecurringPayments     *connect.Client[v1.ListRecurringPaymentsRequest, v1.ListRecurringPaymentsResponse]
-	createRecurringPayment    *connect.Client[v1.CreateRecurringPaymentRequest, v1.CreateRecurringPaymentResponse]
-	updateRecurringPayment    *connect.Client[v1.UpdateRecurringPaymentRequest, v1.UpdateRecurringPaymentResponse]
-	deleteRecurringPayment    *connect.Client[v1.DeleteRecurringPaymentRequest, v1.DeleteRecurringPaymentResponse]
-	postRecurringOccurrence   *connect.Client[v1.PostRecurringOccurrenceRequest, v1.PostRecurringOccurrenceResponse]
-	skipRecurringOccurrence   *connect.Client[v1.SkipRecurringOccurrenceRequest, v1.SkipRecurringOccurrenceResponse]
-	listReminders             *connect.Client[v1.ListRemindersRequest, v1.ListRemindersResponse]
-	upsertReminder            *connect.Client[v1.UpsertReminderRequest, v1.UpsertReminderResponse]
-	deleteReminder            *connect.Client[v1.DeleteReminderRequest, v1.DeleteReminderResponse]
-	listWidgets               *connect.Client[v1.ListWidgetsRequest, v1.ListWidgetsResponse]
-	addWidget                 *connect.Client[v1.AddWidgetRequest, v1.AddWidgetResponse]
-	updateWidget              *connect.Client[v1.UpdateWidgetRequest, v1.UpdateWidgetResponse]
-	removeWidget              *connect.Client[v1.RemoveWidgetRequest, v1.RemoveWidgetResponse]
-	getWidgetData             *connect.Client[v1.GetWidgetDataRequest, v1.GetWidgetDataResponse]
-	listInvestments           *connect.Client[v1.ListInvestmentsRequest, v1.ListInvestmentsResponse]
-	createInvestment          *connect.Client[v1.CreateInvestmentRequest, v1.CreateInvestmentResponse]
-	updateInvestment          *connect.Client[v1.UpdateInvestmentRequest, v1.UpdateInvestmentResponse]
-	setInvestmentValue        *connect.Client[v1.SetInvestmentValueRequest, v1.SetInvestmentValueResponse]
-	deleteInvestment          *connect.Client[v1.DeleteInvestmentRequest, v1.DeleteInvestmentResponse]
-	listInstallments          *connect.Client[v1.ListInstallmentsRequest, v1.ListInstallmentsResponse]
-	createInstallment         *connect.Client[v1.CreateInstallmentRequest, v1.CreateInstallmentResponse]
-	updateInstallment         *connect.Client[v1.UpdateInstallmentRequest, v1.UpdateInstallmentResponse]
-	cancelInstallment         *connect.Client[v1.CancelInstallmentRequest, v1.CancelInstallmentResponse]
-	deleteInstallment         *connect.Client[v1.DeleteInstallmentRequest, v1.DeleteInstallmentResponse]
+	bootstrapHousehold         *connect.Client[v1.BootstrapHouseholdRequest, v1.BootstrapHouseholdResponse]
+	getHouseholdOverview       *connect.Client[v1.GetHouseholdOverviewRequest, v1.GetHouseholdOverviewResponse]
+	getFinanceSettings         *connect.Client[v1.GetFinanceSettingsRequest, v1.GetFinanceSettingsResponse]
+	updateFinanceSettings      *connect.Client[v1.UpdateFinanceSettingsRequest, v1.UpdateFinanceSettingsResponse]
+	setOverspendNotifications  *connect.Client[v1.SetOverspendNotificationsRequest, v1.SetOverspendNotificationsResponse]
+	listMembers                *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
+	listAccounts               *connect.Client[v1.ListAccountsRequest, v1.ListAccountsResponse]
+	getAccount                 *connect.Client[v1.GetAccountRequest, v1.GetAccountResponse]
+	createAccount              *connect.Client[v1.CreateAccountRequest, v1.CreateAccountResponse]
+	updateAccount              *connect.Client[v1.UpdateAccountRequest, v1.UpdateAccountResponse]
+	archiveAccount             *connect.Client[v1.ArchiveAccountRequest, v1.ArchiveAccountResponse]
+	deleteAccount              *connect.Client[v1.DeleteAccountRequest, v1.DeleteAccountResponse]
+	reorderAccounts            *connect.Client[v1.ReorderAccountsRequest, v1.ReorderAccountsResponse]
+	transferBetweenAccounts    *connect.Client[v1.TransferBetweenAccountsRequest, v1.TransferBetweenAccountsResponse]
+	listCategoryTree           *connect.Client[v1.ListCategoryTreeRequest, v1.ListCategoryTreeResponse]
+	createCategoryGroup        *connect.Client[v1.CreateCategoryGroupRequest, v1.CreateCategoryGroupResponse]
+	updateCategoryGroup        *connect.Client[v1.UpdateCategoryGroupRequest, v1.UpdateCategoryGroupResponse]
+	deleteCategoryGroup        *connect.Client[v1.DeleteCategoryGroupRequest, v1.DeleteCategoryGroupResponse]
+	reorderCategoryGroups      *connect.Client[v1.ReorderCategoryGroupsRequest, v1.ReorderCategoryGroupsResponse]
+	createCategory             *connect.Client[v1.CreateCategoryRequest, v1.CreateCategoryResponse]
+	updateCategory             *connect.Client[v1.UpdateCategoryRequest, v1.UpdateCategoryResponse]
+	moveCategory               *connect.Client[v1.MoveCategoryRequest, v1.MoveCategoryResponse]
+	deleteCategory             *connect.Client[v1.DeleteCategoryRequest, v1.DeleteCategoryResponse]
+	reorderCategories          *connect.Client[v1.ReorderCategoriesRequest, v1.ReorderCategoriesResponse]
+	createTransaction          *connect.Client[v1.CreateTransactionRequest, v1.CreateTransactionResponse]
+	getTransaction             *connect.Client[v1.GetTransactionRequest, v1.GetTransactionResponse]
+	updateTransaction          *connect.Client[v1.UpdateTransactionRequest, v1.UpdateTransactionResponse]
+	deleteTransaction          *connect.Client[v1.DeleteTransactionRequest, v1.DeleteTransactionResponse]
+	listTransactions           *connect.Client[v1.ListTransactionsRequest, v1.ListTransactionsResponse]
+	listTemplates              *connect.Client[v1.ListTemplatesRequest, v1.ListTemplatesResponse]
+	createTemplate             *connect.Client[v1.CreateTemplateRequest, v1.CreateTemplateResponse]
+	updateTemplate             *connect.Client[v1.UpdateTemplateRequest, v1.UpdateTemplateResponse]
+	deleteTemplate             *connect.Client[v1.DeleteTemplateRequest, v1.DeleteTemplateResponse]
+	reorderTemplates           *connect.Client[v1.ReorderTemplatesRequest, v1.ReorderTemplatesResponse]
+	logTemplate                *connect.Client[v1.LogTemplateRequest, v1.LogTemplateResponse]
+	listBudgets                *connect.Client[v1.ListBudgetsRequest, v1.ListBudgetsResponse]
+	createBudget               *connect.Client[v1.CreateBudgetRequest, v1.CreateBudgetResponse]
+	updateBudget               *connect.Client[v1.UpdateBudgetRequest, v1.UpdateBudgetResponse]
+	deleteBudget               *connect.Client[v1.DeleteBudgetRequest, v1.DeleteBudgetResponse]
+	getHomeSummary             *connect.Client[v1.GetHomeSummaryRequest, v1.GetHomeSummaryResponse]
+	getGroupBreakdown          *connect.Client[v1.GetGroupBreakdownRequest, v1.GetGroupBreakdownResponse]
+	getMemberBreakdown         *connect.Client[v1.GetMemberBreakdownRequest, v1.GetMemberBreakdownResponse]
+	getSpendingSeries          *connect.Client[v1.GetSpendingSeriesRequest, v1.GetSpendingSeriesResponse]
+	listInsights               *connect.Client[v1.ListInsightsRequest, v1.ListInsightsResponse]
+	listRecurringPayments      *connect.Client[v1.ListRecurringPaymentsRequest, v1.ListRecurringPaymentsResponse]
+	createRecurringPayment     *connect.Client[v1.CreateRecurringPaymentRequest, v1.CreateRecurringPaymentResponse]
+	updateRecurringPayment     *connect.Client[v1.UpdateRecurringPaymentRequest, v1.UpdateRecurringPaymentResponse]
+	deleteRecurringPayment     *connect.Client[v1.DeleteRecurringPaymentRequest, v1.DeleteRecurringPaymentResponse]
+	postRecurringOccurrence    *connect.Client[v1.PostRecurringOccurrenceRequest, v1.PostRecurringOccurrenceResponse]
+	skipRecurringOccurrence    *connect.Client[v1.SkipRecurringOccurrenceRequest, v1.SkipRecurringOccurrenceResponse]
+	listReminders              *connect.Client[v1.ListRemindersRequest, v1.ListRemindersResponse]
+	upsertReminder             *connect.Client[v1.UpsertReminderRequest, v1.UpsertReminderResponse]
+	deleteReminder             *connect.Client[v1.DeleteReminderRequest, v1.DeleteReminderResponse]
+	listWidgets                *connect.Client[v1.ListWidgetsRequest, v1.ListWidgetsResponse]
+	addWidget                  *connect.Client[v1.AddWidgetRequest, v1.AddWidgetResponse]
+	updateWidget               *connect.Client[v1.UpdateWidgetRequest, v1.UpdateWidgetResponse]
+	removeWidget               *connect.Client[v1.RemoveWidgetRequest, v1.RemoveWidgetResponse]
+	getWidgetData              *connect.Client[v1.GetWidgetDataRequest, v1.GetWidgetDataResponse]
+	listInvestments            *connect.Client[v1.ListInvestmentsRequest, v1.ListInvestmentsResponse]
+	createInvestment           *connect.Client[v1.CreateInvestmentRequest, v1.CreateInvestmentResponse]
+	updateInvestment           *connect.Client[v1.UpdateInvestmentRequest, v1.UpdateInvestmentResponse]
+	setInvestmentValue         *connect.Client[v1.SetInvestmentValueRequest, v1.SetInvestmentValueResponse]
+	deleteInvestment           *connect.Client[v1.DeleteInvestmentRequest, v1.DeleteInvestmentResponse]
+	listInstallments           *connect.Client[v1.ListInstallmentsRequest, v1.ListInstallmentsResponse]
+	createInstallment          *connect.Client[v1.CreateInstallmentRequest, v1.CreateInstallmentResponse]
+	updateInstallment          *connect.Client[v1.UpdateInstallmentRequest, v1.UpdateInstallmentResponse]
+	cancelInstallment          *connect.Client[v1.CancelInstallmentRequest, v1.CancelInstallmentResponse]
+	deleteInstallment          *connect.Client[v1.DeleteInstallmentRequest, v1.DeleteInstallmentResponse]
+	listSubscriptions          *connect.Client[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse]
+	createSubscription         *connect.Client[v1.CreateSubscriptionRequest, v1.CreateSubscriptionResponse]
+	updateSubscription         *connect.Client[v1.UpdateSubscriptionRequest, v1.UpdateSubscriptionResponse]
+	cancelSubscription         *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
+	deleteSubscription         *connect.Client[v1.DeleteSubscriptionRequest, v1.DeleteSubscriptionResponse]
+	postSubscriptionOccurrence *connect.Client[v1.PostSubscriptionOccurrenceRequest, v1.PostSubscriptionOccurrenceResponse]
+	skipSubscriptionOccurrence *connect.Client[v1.SkipSubscriptionOccurrenceRequest, v1.SkipSubscriptionOccurrenceResponse]
 }
 
 // BootstrapHousehold calls finance.v1.FinanceService.BootstrapHousehold.
@@ -1145,6 +1222,41 @@ func (c *financeServiceClient) DeleteInstallment(ctx context.Context, req *conne
 	return c.deleteInstallment.CallUnary(ctx, req)
 }
 
+// ListSubscriptions calls finance.v1.FinanceService.ListSubscriptions.
+func (c *financeServiceClient) ListSubscriptions(ctx context.Context, req *connect.Request[v1.ListSubscriptionsRequest]) (*connect.Response[v1.ListSubscriptionsResponse], error) {
+	return c.listSubscriptions.CallUnary(ctx, req)
+}
+
+// CreateSubscription calls finance.v1.FinanceService.CreateSubscription.
+func (c *financeServiceClient) CreateSubscription(ctx context.Context, req *connect.Request[v1.CreateSubscriptionRequest]) (*connect.Response[v1.CreateSubscriptionResponse], error) {
+	return c.createSubscription.CallUnary(ctx, req)
+}
+
+// UpdateSubscription calls finance.v1.FinanceService.UpdateSubscription.
+func (c *financeServiceClient) UpdateSubscription(ctx context.Context, req *connect.Request[v1.UpdateSubscriptionRequest]) (*connect.Response[v1.UpdateSubscriptionResponse], error) {
+	return c.updateSubscription.CallUnary(ctx, req)
+}
+
+// CancelSubscription calls finance.v1.FinanceService.CancelSubscription.
+func (c *financeServiceClient) CancelSubscription(ctx context.Context, req *connect.Request[v1.CancelSubscriptionRequest]) (*connect.Response[v1.CancelSubscriptionResponse], error) {
+	return c.cancelSubscription.CallUnary(ctx, req)
+}
+
+// DeleteSubscription calls finance.v1.FinanceService.DeleteSubscription.
+func (c *financeServiceClient) DeleteSubscription(ctx context.Context, req *connect.Request[v1.DeleteSubscriptionRequest]) (*connect.Response[v1.DeleteSubscriptionResponse], error) {
+	return c.deleteSubscription.CallUnary(ctx, req)
+}
+
+// PostSubscriptionOccurrence calls finance.v1.FinanceService.PostSubscriptionOccurrence.
+func (c *financeServiceClient) PostSubscriptionOccurrence(ctx context.Context, req *connect.Request[v1.PostSubscriptionOccurrenceRequest]) (*connect.Response[v1.PostSubscriptionOccurrenceResponse], error) {
+	return c.postSubscriptionOccurrence.CallUnary(ctx, req)
+}
+
+// SkipSubscriptionOccurrence calls finance.v1.FinanceService.SkipSubscriptionOccurrence.
+func (c *financeServiceClient) SkipSubscriptionOccurrence(ctx context.Context, req *connect.Request[v1.SkipSubscriptionOccurrenceRequest]) (*connect.Response[v1.SkipSubscriptionOccurrenceResponse], error) {
+	return c.skipSubscriptionOccurrence.CallUnary(ctx, req)
+}
+
 // FinanceServiceHandler is an implementation of the finance.v1.FinanceService service.
 type FinanceServiceHandler interface {
 	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
@@ -1215,6 +1327,13 @@ type FinanceServiceHandler interface {
 	UpdateInstallment(context.Context, *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error)
 	CancelInstallment(context.Context, *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error)
 	DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error)
+	ListSubscriptions(context.Context, *connect.Request[v1.ListSubscriptionsRequest]) (*connect.Response[v1.ListSubscriptionsResponse], error)
+	CreateSubscription(context.Context, *connect.Request[v1.CreateSubscriptionRequest]) (*connect.Response[v1.CreateSubscriptionResponse], error)
+	UpdateSubscription(context.Context, *connect.Request[v1.UpdateSubscriptionRequest]) (*connect.Response[v1.UpdateSubscriptionResponse], error)
+	CancelSubscription(context.Context, *connect.Request[v1.CancelSubscriptionRequest]) (*connect.Response[v1.CancelSubscriptionResponse], error)
+	DeleteSubscription(context.Context, *connect.Request[v1.DeleteSubscriptionRequest]) (*connect.Response[v1.DeleteSubscriptionResponse], error)
+	PostSubscriptionOccurrence(context.Context, *connect.Request[v1.PostSubscriptionOccurrenceRequest]) (*connect.Response[v1.PostSubscriptionOccurrenceResponse], error)
+	SkipSubscriptionOccurrence(context.Context, *connect.Request[v1.SkipSubscriptionOccurrenceRequest]) (*connect.Response[v1.SkipSubscriptionOccurrenceResponse], error)
 }
 
 // NewFinanceServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -1632,6 +1751,48 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("DeleteInstallment")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceListSubscriptionsHandler := connect.NewUnaryHandler(
+		FinanceServiceListSubscriptionsProcedure,
+		svc.ListSubscriptions,
+		connect.WithSchema(financeServiceMethods.ByName("ListSubscriptions")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateSubscriptionHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateSubscriptionProcedure,
+		svc.CreateSubscription,
+		connect.WithSchema(financeServiceMethods.ByName("CreateSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateSubscriptionHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateSubscriptionProcedure,
+		svc.UpdateSubscription,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCancelSubscriptionHandler := connect.NewUnaryHandler(
+		FinanceServiceCancelSubscriptionProcedure,
+		svc.CancelSubscription,
+		connect.WithSchema(financeServiceMethods.ByName("CancelSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteSubscriptionHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteSubscriptionProcedure,
+		svc.DeleteSubscription,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServicePostSubscriptionOccurrenceHandler := connect.NewUnaryHandler(
+		FinanceServicePostSubscriptionOccurrenceProcedure,
+		svc.PostSubscriptionOccurrence,
+		connect.WithSchema(financeServiceMethods.ByName("PostSubscriptionOccurrence")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceSkipSubscriptionOccurrenceHandler := connect.NewUnaryHandler(
+		FinanceServiceSkipSubscriptionOccurrenceProcedure,
+		svc.SkipSubscriptionOccurrence,
+		connect.WithSchema(financeServiceMethods.ByName("SkipSubscriptionOccurrence")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/finance.v1.FinanceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case FinanceServiceBootstrapHouseholdProcedure:
@@ -1770,6 +1931,20 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 			financeServiceCancelInstallmentHandler.ServeHTTP(w, r)
 		case FinanceServiceDeleteInstallmentProcedure:
 			financeServiceDeleteInstallmentHandler.ServeHTTP(w, r)
+		case FinanceServiceListSubscriptionsProcedure:
+			financeServiceListSubscriptionsHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateSubscriptionProcedure:
+			financeServiceCreateSubscriptionHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateSubscriptionProcedure:
+			financeServiceUpdateSubscriptionHandler.ServeHTTP(w, r)
+		case FinanceServiceCancelSubscriptionProcedure:
+			financeServiceCancelSubscriptionHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteSubscriptionProcedure:
+			financeServiceDeleteSubscriptionHandler.ServeHTTP(w, r)
+		case FinanceServicePostSubscriptionOccurrenceProcedure:
+			financeServicePostSubscriptionOccurrenceHandler.ServeHTTP(w, r)
+		case FinanceServiceSkipSubscriptionOccurrenceProcedure:
+			financeServiceSkipSubscriptionOccurrenceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -2049,4 +2224,32 @@ func (UnimplementedFinanceServiceHandler) CancelInstallment(context.Context, *co
 
 func (UnimplementedFinanceServiceHandler) DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteInstallment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListSubscriptions(context.Context, *connect.Request[v1.ListSubscriptionsRequest]) (*connect.Response[v1.ListSubscriptionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListSubscriptions is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateSubscription(context.Context, *connect.Request[v1.CreateSubscriptionRequest]) (*connect.Response[v1.CreateSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateSubscription is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateSubscription(context.Context, *connect.Request[v1.UpdateSubscriptionRequest]) (*connect.Response[v1.UpdateSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateSubscription is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CancelSubscription(context.Context, *connect.Request[v1.CancelSubscriptionRequest]) (*connect.Response[v1.CancelSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CancelSubscription is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteSubscription(context.Context, *connect.Request[v1.DeleteSubscriptionRequest]) (*connect.Response[v1.DeleteSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteSubscription is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) PostSubscriptionOccurrence(context.Context, *connect.Request[v1.PostSubscriptionOccurrenceRequest]) (*connect.Response[v1.PostSubscriptionOccurrenceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.PostSubscriptionOccurrence is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) SkipSubscriptionOccurrence(context.Context, *connect.Request[v1.SkipSubscriptionOccurrenceRequest]) (*connect.Response[v1.SkipSubscriptionOccurrenceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.SkipSubscriptionOccurrence is not implemented"))
 }

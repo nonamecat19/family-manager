@@ -184,6 +184,10 @@ export const queryKeys = {
   financeInstallmentsList: (includeClosed = false) =>
     ["finance", "installments", "list", includeClosed] as const,
 
+  financeSubscriptions: ["finance", "subscriptions"] as const,
+  financeSubscriptionsList: (includeInactive = false) =>
+    ["finance", "subscriptions", "list", includeInactive] as const,
+
   financeReminders: ["finance", "reminders"] as const,
   financeRemindersList: (includeDisabled = false) =>
     ["finance", "reminders", "list", includeDisabled] as const,
@@ -195,4 +199,45 @@ export const queryKeys = {
 
   notifications: ["notifications"] as const,
   notificationPreferences: () => ["notifications", "preferences"] as const,
+
+  tasks: ["tasks"] as const,
+  tasksList: (filters: TaskListFilters = {}) => ["tasks", "list", normalizeTaskFilters(filters)] as const,
+  task: (id: string) => ["tasks", "detail", id] as const,
+  birthdaysList: (filters: BirthdayListFilters = {}) => ["tasks", "birthdays", "list", normalizeBirthdayFilters(filters)] as const,
+  birthday: (id: string) => ["tasks", "birthdays", "detail", id] as const,
+  taskSettings: (filters: TaskSettingsFilters = {}) => ["tasks", "settings", normalizeTaskSettingsFilters(filters)] as const,
 } as const;
+
+export interface TaskListFilters {
+  scope?: ScopeInput;
+  filter?: "mine" | "all" | "done";
+  pageSize?: number;
+}
+
+export interface BirthdayListFilters {
+  pageSize?: number;
+}
+
+export interface TaskSettingsFilters {
+  includeGoogle?: boolean;
+}
+
+function normalizeTaskFilters(filters: TaskListFilters = {}) {
+  return {
+    scope: scopeKey(filters.scope),
+    filter: filters.filter ?? "mine",
+    pageSize: filters.pageSize ?? 0,
+  } as const;
+}
+
+function normalizeBirthdayFilters(filters: BirthdayListFilters = {}) {
+  return {
+    pageSize: filters.pageSize ?? 0,
+  } as const;
+}
+
+function normalizeTaskSettingsFilters(filters: TaskSettingsFilters = {}) {
+  return {
+    includeGoogle: filters.includeGoogle ?? false,
+  } as const;
+}

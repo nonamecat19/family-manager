@@ -16,6 +16,7 @@ import {
   ReminderKind,
   ScopeKind,
   SeriesStacking,
+  SubscriptionStatus,
   TransactionKind,
   TransactionType,
   Weekday,
@@ -44,6 +45,8 @@ import {
 } from "./queryKeys.ts";
 import { familyScope, type PeriodGranularityInput, type PeriodInput, type ScopeInput } from "./scope.ts";
 import { toWireGranularity, toWirePeriod, toWireScope } from "./scopeWire.ts";
+
+export { useClients };
 
 
 
@@ -1191,6 +1194,127 @@ export function useDeleteInstallment() {
 }
 
 
+export function useSubscriptions(includeInactive = false) {
+  const { finance } = useClients();
+  return useQuery({
+    queryKey: queryKeys.financeSubscriptionsList(includeInactive),
+    queryFn: async () => (await finance.listSubscriptions({ includeInactive })).subscriptions,
+  });
+}
+
+export interface CreateSubscriptionInput {
+  name: string;
+  amount: Money;
+  type: TransactionType;
+  categoryId: string;
+  accountId: string;
+  memberId?: string;
+  cadence: CadenceInput;
+  dayOfMonth: number;
+  nextDueOn: string;
+  endOn?: string;
+  autoPost?: boolean;
+}
+
+export function useCreateSubscription() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateSubscriptionInput) =>
+      (
+        await finance.createSubscription({
+          name: input.name,
+          amount: toWire(input.amount),
+          type: input.type,
+          categoryId: input.categoryId,
+          accountId: input.accountId,
+          memberId: input.memberId ?? "",
+          cadence: cadenceRequest(input.cadence),
+          dayOfMonth: input.dayOfMonth,
+          nextDueOn: input.nextDueOn,
+          endOn: input.endOn ?? "",
+          autoPost: input.autoPost ?? false,
+        })
+      ).subscription ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export interface UpdateSubscriptionInput {
+  subscriptionId: string;
+  name?: string;
+  amount?: Money;
+  categoryId?: string;
+  accountId?: string;
+  memberId?: string;
+  cadence?: CadenceInput;
+  dayOfMonth?: number;
+  nextDueOn?: string;
+  endOn?: string;
+  autoPost?: boolean;
+  active?: boolean;
+}
+
+export function useUpdateSubscription() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ amount, cadence, ...rest }: UpdateSubscriptionInput) =>
+      (
+        await finance.updateSubscription({
+          ...rest,
+          amount: amount ? toWire(amount) : undefined,
+          cadence: cadence ? cadenceRequest(cadence) : undefined,
+        })
+      ).subscription ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.financeSubscriptions }),
+  });
+}
+
+export function useCancelSubscription() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (subscriptionId: string) =>
+      (await finance.cancelSubscription({ subscriptionId })).subscription ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.financeSubscriptions }),
+  });
+}
+
+export function useDeleteSubscription() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (subscriptionId: string) => finance.deleteSubscription({ subscriptionId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.financeSubscriptions }),
+  });
+}
+
+export function usePostSubscriptionOccurrence() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { subscriptionId: string; dueOn: string; amountOverride?: Money }) =>
+      finance.postSubscriptionOccurrence({
+        subscriptionId: input.subscriptionId,
+        dueOn: input.dueOn,
+        amountOverride: input.amountOverride ? toWire(input.amountOverride) : undefined,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useSkipSubscriptionOccurrence() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { subscriptionId: string; dueOn: string }) =>
+      finance.skipSubscriptionOccurrence(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.financeSubscriptions }),
+  });
+}
+
+
 export function useReminders(includeDisabled = false) {
   const { finance } = useClients();
   return useQuery({
@@ -1331,6 +1455,7 @@ export {
   ReminderKind,
   ScopeKind,
   SeriesStacking,
+  SubscriptionStatus,
   TransactionKind,
   TransactionType,
   Weekday,
@@ -1368,6 +1493,8 @@ export type {
   Reminder,
   SeriesBucket,
   SeriesSegment,
+  Subscription,
+  SubscriptionStatusView,
   Transaction,
   WidgetInstance,
   WidgetPayload,

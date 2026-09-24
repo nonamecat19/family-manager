@@ -85,6 +85,14 @@ service FinanceService {
   rpc UpdateInstallment(UpdateInstallmentRequest) returns (UpdateInstallmentResponse);
   rpc CancelInstallment(CancelInstallmentRequest) returns (CancelInstallmentResponse);
   rpc DeleteInstallment(DeleteInstallmentRequest) returns (DeleteInstallmentResponse);
+
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+  rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
+  rpc DeleteSubscription(DeleteSubscriptionRequest) returns (DeleteSubscriptionResponse);
+  rpc PostSubscriptionOccurrence(PostSubscriptionOccurrenceRequest) returns (PostSubscriptionOccurrenceResponse);
+  rpc SkipSubscriptionOccurrence(SkipSubscriptionOccurrenceRequest) returns (SkipSubscriptionOccurrenceResponse);
 }
 
 
@@ -228,6 +236,7 @@ enum CategoryGroupRole {
   CATEGORY_GROUP_ROLE_UNSPECIFIED = 0;
   CATEGORY_GROUP_ROLE_INVESTMENTS = 1;
   CATEGORY_GROUP_ROLE_INSTALLMENTS = 2;
+  CATEGORY_GROUP_ROLE_SUBSCRIPTIONS = 3;
 }
 
 enum InvestmentKind {
@@ -245,6 +254,12 @@ enum InstallmentStatus {
   INSTALLMENT_STATUS_ACTIVE = 1;
   INSTALLMENT_STATUS_PAID_OFF = 2;
   INSTALLMENT_STATUS_CANCELLED = 3;
+}
+
+enum SubscriptionStatus {
+  SUBSCRIPTION_STATUS_UNSPECIFIED = 0;
+  SUBSCRIPTION_STATUS_ACTIVE = 1;
+  SUBSCRIPTION_STATUS_CANCELLED = 2;
 }
 
 
@@ -483,6 +498,33 @@ message Installment {
   InstallmentStatus status = 17;
   google.protobuf.Timestamp created_at = 18;
   google.protobuf.Timestamp updated_at = 19;
+}
+
+message Subscription {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  Money amount = 4;
+  TransactionType type = 5;
+  string category_id = 6;
+  string account_id = 7;
+  string member_id = 8;
+  Cadence cadence = 9;
+  int32 day_of_month = 10;
+  string next_due_on = 11;
+  string end_on = 12;
+  bool auto_post = 13;
+  bool active = 14;
+  SubscriptionStatus status = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp updated_at = 17;
+}
+
+message SubscriptionStatusView {
+  Subscription subscription = 1;
+  string next_due_on = 2;
+  bool overdue = 3;
+  Money monthly_approximate = 4;
 }
 
 message Reminder {
@@ -1209,6 +1251,79 @@ message DeleteInstallmentRequest {
 message DeleteInstallmentResponse {}
 
 
+message ListSubscriptionsRequest {
+  bool include_inactive = 1;
+}
+message ListSubscriptionsResponse {
+  repeated SubscriptionStatusView subscriptions = 1;
+}
+
+message CreateSubscriptionRequest {
+  string name = 1;
+  Money amount = 2;
+  TransactionType type = 3;
+  string category_id = 4;
+  string account_id = 5;
+  string member_id = 6;
+  Cadence cadence = 7;
+  int32 day_of_month = 8;
+  string next_due_on = 9;
+  string end_on = 10;
+  bool auto_post = 11;
+}
+message CreateSubscriptionResponse {
+  Subscription subscription = 1;
+}
+
+message UpdateSubscriptionRequest {
+  string subscription_id = 1;
+  optional string name = 2;
+  optional string category_id = 3;
+  optional string account_id = 4;
+  optional string member_id = 5;
+  optional int32 day_of_month = 6;
+  optional string next_due_on = 7;
+  optional string end_on = 8;
+  optional bool auto_post = 9;
+  optional bool active = 10;
+  Money amount = 11;
+  Cadence cadence = 12;
+}
+message UpdateSubscriptionResponse {
+  Subscription subscription = 1;
+}
+
+message CancelSubscriptionRequest {
+  string subscription_id = 1;
+}
+message CancelSubscriptionResponse {
+  Subscription subscription = 1;
+}
+
+message DeleteSubscriptionRequest {
+  string subscription_id = 1;
+}
+message DeleteSubscriptionResponse {}
+
+message PostSubscriptionOccurrenceRequest {
+  string subscription_id = 1;
+  string due_on = 2;
+  Money amount_override = 3;
+}
+message PostSubscriptionOccurrenceResponse {
+  Transaction transaction = 1;
+  string next_due_on = 2;
+}
+
+message SkipSubscriptionOccurrenceRequest {
+  string subscription_id = 1;
+  string due_on = 2;
+}
+message SkipSubscriptionOccurrenceResponse {
+  string next_due_on = 1;
+}
+
+
 message ListRemindersRequest {
   bool include_disabled = 1;
 }
@@ -1462,6 +1577,23 @@ message InstallmentPaidOffEvent {
   string installment_id = 2;
   string name = 3;
   Money total = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+message SubscriptionPostedEvent {
+  string family_id = 1;
+  string subscription_id = 2;
+  string transaction_id = 3;
+  string due_on = 4;
+  string next_due_on = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+message SubscriptionSkippedEvent {
+  string family_id = 1;
+  string subscription_id = 2;
+  string due_on = 3;
+  string next_due_on = 4;
   google.protobuf.Timestamp occurred_at = 5;
 }
 

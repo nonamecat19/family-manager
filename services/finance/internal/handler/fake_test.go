@@ -17,19 +17,21 @@ import (
 )
 
 type fakeStore struct {
-	settings     map[string]db.FinanceSetting
-	members      map[string]db.FinanceMember
-	accounts     map[string]db.Account
-	groups       map[string]db.CategoryGroup
-	categories   map[string]db.Category
-	transactions map[string]db.Transaction
-	budgets      map[string]db.Budget
-	templates    map[string]db.QuickTemplate
-	recurring    map[string]db.RecurringPayment
-	reminders    map[string]db.Reminder
-	widgets      map[string]db.WidgetInstance
-	investments  map[string]db.Investment
-	installments map[string]db.Installment
+	settings                map[string]db.FinanceSetting
+	members                 map[string]db.FinanceMember
+	accounts                map[string]db.Account
+	groups                  map[string]db.CategoryGroup
+	categories              map[string]db.Category
+	transactions            map[string]db.Transaction
+	budgets                 map[string]db.Budget
+	templates               map[string]db.QuickTemplate
+	recurring               map[string]db.RecurringPayment
+	reminders               map[string]db.Reminder
+	widgets                 map[string]db.WidgetInstance
+	investments             map[string]db.Investment
+	installments            map[string]db.Installment
+	subscriptions           map[string]db.Subscription
+	subscriptionOccurrences map[string]bool
 
 	failOn map[string]error
 	seq    int
@@ -37,20 +39,22 @@ type fakeStore struct {
 
 func newFakeStore() *fakeStore {
 	return &fakeStore{
-		settings:     map[string]db.FinanceSetting{},
-		members:      map[string]db.FinanceMember{},
-		accounts:     map[string]db.Account{},
-		groups:       map[string]db.CategoryGroup{},
-		categories:   map[string]db.Category{},
-		transactions: map[string]db.Transaction{},
-		budgets:      map[string]db.Budget{},
-		templates:    map[string]db.QuickTemplate{},
-		recurring:    map[string]db.RecurringPayment{},
-		reminders:    map[string]db.Reminder{},
-		widgets:      map[string]db.WidgetInstance{},
-		investments:  map[string]db.Investment{},
-		installments: map[string]db.Installment{},
-		failOn:       map[string]error{},
+		settings:                map[string]db.FinanceSetting{},
+		members:                 map[string]db.FinanceMember{},
+		accounts:                map[string]db.Account{},
+		groups:                  map[string]db.CategoryGroup{},
+		categories:              map[string]db.Category{},
+		transactions:            map[string]db.Transaction{},
+		budgets:                 map[string]db.Budget{},
+		templates:               map[string]db.QuickTemplate{},
+		recurring:               map[string]db.RecurringPayment{},
+		reminders:               map[string]db.Reminder{},
+		widgets:                 map[string]db.WidgetInstance{},
+		investments:             map[string]db.Investment{},
+		installments:            map[string]db.Installment{},
+		subscriptions:           map[string]db.Subscription{},
+		subscriptionOccurrences: map[string]bool{},
+		failOn:                  map[string]error{},
 	}
 }
 
@@ -1235,6 +1239,29 @@ func (s *fakeStore) CreateRecurringPayment(_ context.Context, arg db.CreateRecur
 	return r, nil
 }
 
+func (s *fakeStore) CreateSubscription(_ context.Context, arg db.CreateSubscriptionParams) (db.Subscription, error) {
+	sub := db.Subscription{
+		ID: s.newUUID(), FamilyID: arg.FamilyID, Name: arg.Name, AmountMinor: arg.AmountMinor,
+		CurrencyCode: arg.CurrencyCode, Type: arg.Type, CategoryID: arg.CategoryID,
+		AccountID: arg.AccountID, MemberID: arg.MemberID,
+		CreatedByUserID: arg.CreatedByUserID, IntervalCount: arg.IntervalCount,
+		IntervalUnit: arg.IntervalUnit, DayOfMonth: arg.DayOfMonth, DayOfWeek: arg.DayOfWeek,
+		NextDueOn: arg.NextDueOn, EndOn: arg.EndOn, AutoPost: arg.AutoPost, Active: true, Status: "active",
+		CreatedAt: now(), UpdatedAt: now(),
+	}
+	s.subscriptions[id(sub.ID)] = sub
+	return sub, nil
+}
+
+func (s *fakeStore) ClaimSubscriptionOccurrence(_ context.Context, arg db.ClaimSubscriptionOccurrenceParams) (int64, error) {
+	key := id(arg.SubscriptionID) + "/" + arg.DueOn.Time.Format("2006-01-02")
+	if s.subscriptionOccurrences[key] {
+		return 0, nil
+	}
+	s.subscriptionOccurrences[key] = true
+	return 1, nil
+}
+
 func (s *fakeStore) UpdateRecurringPayment(_ context.Context, arg db.UpdateRecurringPaymentParams) (db.RecurringPayment, error) {
 	r, ok := s.recurring[id(arg.ID)]
 	if !ok || !same(r.FamilyID, arg.FamilyID) {
@@ -1295,6 +1322,169 @@ func (s *fakeStore) AdvanceRecurringPayment(_ context.Context, arg db.AdvanceRec
 	r.LastPostedOn = arg.LastPostedOn
 	s.recurring[id(r.ID)] = r
 	return r, nil
+}
+
+func (s *fakeStore) AdvanceSubscription(_ context.Context, arg db.AdvanceSubscriptionParams) (db.Subscription, error) {
+	sub, ok := s.subscriptions[id(arg.ID)]
+	if !ok {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	sub.NextDueOn = arg.NextDueOn
+	sub.LastPostedOn = arg.LastPostedOn
+	s.subscriptions[id(sub.ID)] = sub
+	return sub, nil
+}
+
+func (s *fakeStore) DeleteSubscription(_ context.Context, arg db.DeleteSubscriptionParams) (int64, error) {
+	sub, ok := s.subscriptions[id(arg.ID)]
+	if !ok || !same(sub.FamilyID, arg.FamilyID) {
+		return 0, nil
+	}
+	delete(s.subscriptions, id(arg.ID))
+	return 1, nil
+}
+
+func (s *fakeStore) GetSubscriptionByID(_ context.Context, uuid pgtype.UUID) (db.Subscription, error) {
+	sub, ok := s.subscriptions[id(uuid)]
+	if !ok {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	return sub, nil
+}
+
+func (s *fakeStore) GetVisibleSubscription(_ context.Context, arg db.GetVisibleSubscriptionParams) (db.Subscription, error) {
+	sub, ok := s.subscriptions[id(arg.ID)]
+	if !ok || !same(sub.FamilyID, arg.FamilyID) {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	acc, ok := s.accounts[id(sub.AccountID)]
+	if !ok || !s.visible(acc, arg.ViewerMemberID) {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	return sub, nil
+}
+
+func (s *fakeStore) ListDueSubscriptions(_ context.Context, arg db.ListDueSubscriptionsParams) ([]db.ListDueSubscriptionsRow, error) {
+	var out []db.ListDueSubscriptionsRow
+	for _, sub := range s.subscriptions {
+		if sub.Status == "active" && sub.Active && sub.AutoPost && sub.NextDueOn.Valid {
+			if arg.LatestDueOn.Valid && sub.NextDueOn.Time.After(arg.LatestDueOn.Time) {
+				continue
+			}
+			if sub.EndOn.Valid && sub.EndOn.Time.Before(sub.NextDueOn.Time) {
+				continue
+			}
+			out = append(out, db.ListDueSubscriptionsRow{
+				ID: sub.ID, FamilyID: sub.FamilyID, CategoryID: sub.CategoryID,
+				NextDueOn: sub.NextDueOn, AmountMinor: sub.AmountMinor, CurrencyCode: sub.CurrencyCode,
+				Type: sub.Type, AccountID: sub.AccountID, MemberID: sub.MemberID,
+				CreatedByUserID: sub.CreatedByUserID, IntervalCount: sub.IntervalCount,
+				IntervalUnit: sub.IntervalUnit, DayOfMonth: sub.DayOfMonth, DayOfWeek: sub.DayOfWeek,
+				Name: sub.Name,
+			})
+		}
+	}
+	return out, nil
+}
+
+func (s *fakeStore) ListVisibleSubscriptions(_ context.Context, arg db.ListVisibleSubscriptionsParams) ([]db.ListVisibleSubscriptionsRow, error) {
+	var out []db.ListVisibleSubscriptionsRow
+	for _, sub := range s.subscriptions {
+		if !same(sub.FamilyID, arg.FamilyID) {
+			continue
+		}
+		acc, ok := s.accounts[id(sub.AccountID)]
+		if !ok || !s.visible(acc, arg.ViewerMemberID) {
+			continue
+		}
+		if !arg.IncludeInactive && sub.Status != "active" {
+			continue
+		}
+		cat, ok := s.categories[id(sub.CategoryID)]
+		if !ok {
+			continue
+		}
+		out = append(out, db.ListVisibleSubscriptionsRow{
+			Subscription: sub,
+			GroupID:      cat.GroupID,
+			PaidMinor:    0,
+			Payments:     0,
+		})
+	}
+	return out, nil
+}
+
+func (s *fakeStore) LockDueSubscription(_ context.Context, uuid pgtype.UUID) (db.Subscription, error) {
+	sub, ok := s.subscriptions[id(uuid)]
+	if !ok || sub.Status != "active" || !sub.Active {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	return sub, nil
+}
+
+func (s *fakeStore) SumSubscriptionPayments(_ context.Context, arg db.SumSubscriptionPaymentsParams) (db.SumSubscriptionPaymentsRow, error) {
+	var paid int64
+	var count int64
+	for _, t := range s.transactions {
+		if same(t.FamilyID, arg.FamilyID) && same(t.CategoryID, arg.CategoryID) &&
+			t.Type == "expense" && t.CurrencyCode == arg.CurrencyCode {
+			paid += t.AmountMinor
+			count++
+		}
+	}
+	return db.SumSubscriptionPaymentsRow{PaidMinor: paid, Payments: count}, nil
+}
+
+func (s *fakeStore) UpdateSubscription(_ context.Context, arg db.UpdateSubscriptionParams) (db.Subscription, error) {
+	sub, ok := s.subscriptions[id(arg.ID)]
+	if !ok || !same(sub.FamilyID, arg.FamilyID) {
+		return db.Subscription{}, pgx.ErrNoRows
+	}
+	if arg.Name != nil {
+		sub.Name = *arg.Name
+	}
+	if arg.AmountMinor != nil {
+		sub.AmountMinor = *arg.AmountMinor
+	}
+	if arg.CategoryID.Valid {
+		sub.CategoryID = arg.CategoryID
+	}
+	if arg.AccountID.Valid {
+		sub.AccountID = arg.AccountID
+	}
+	if arg.MemberID.Valid {
+		sub.MemberID = arg.MemberID
+	}
+	if arg.IntervalCount != nil {
+		sub.IntervalCount = *arg.IntervalCount
+	}
+	if arg.IntervalUnit != nil {
+		sub.IntervalUnit = *arg.IntervalUnit
+	}
+	if arg.DayOfMonth != nil {
+		sub.DayOfMonth = *arg.DayOfMonth
+	}
+	if arg.DayOfWeek != nil {
+		sub.DayOfWeek = *arg.DayOfWeek
+	}
+	if arg.NextDueOn.Valid {
+		sub.NextDueOn = arg.NextDueOn
+	}
+	if arg.EndOn.Valid {
+		sub.EndOn = arg.EndOn
+	}
+	if arg.AutoPost != nil {
+		sub.AutoPost = *arg.AutoPost
+	}
+	if arg.Active != nil {
+		sub.Active = *arg.Active
+	}
+	if arg.Status != nil {
+		sub.Status = *arg.Status
+	}
+	sub.UpdatedAt = now()
+	s.subscriptions[id(sub.ID)] = sub
+	return sub, nil
 }
 
 func (s *fakeStore) DeleteRecurringPayment(_ context.Context, arg db.DeleteRecurringPaymentParams) (int64, error) {

@@ -121,6 +121,7 @@ func run() error {
 	}
 
 	go scheduler.NewInstallments(h, cfg.InstallmentTick, log).Run(ctx)
+	go scheduler.NewSubscriptions(h, cfg.SubscriptionTick, log).Run(ctx)
 
 	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool, log))
 	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool, log))

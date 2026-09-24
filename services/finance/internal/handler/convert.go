@@ -455,6 +455,8 @@ func groupRoleToProto(s string) financev1.CategoryGroupRole {
 		return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_INVESTMENTS
 	case roleInstallments:
 		return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_INSTALLMENTS
+	case roleSubscriptions:
+		return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_SUBSCRIPTIONS
 	}
 	return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_UNSPECIFIED
 }

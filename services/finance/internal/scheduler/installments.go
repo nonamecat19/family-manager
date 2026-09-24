@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const maxTick = 10 * time.Minute
-
 type Poster interface {
 	PostDueInstallments(ctx context.Context) (int, error)
 }
@@ -40,7 +38,7 @@ func (s *Installments) Run(ctx context.Context) {
 }
 
 func (s *Installments) tick(parent context.Context) {
-	ctx, cancel := context.WithTimeout(parent, min(s.every, maxTick))
+	ctx, cancel := context.WithTimeout(parent, min(s.every, maxSchedulerTick))
 	defer cancel()
 	posted, err := s.poster.PostDueInstallments(ctx)
 	if err != nil {

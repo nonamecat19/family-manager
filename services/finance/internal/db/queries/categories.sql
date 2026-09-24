@@ -119,4 +119,5 @@ RETURNING *;
 
 -- name: IsCategoryOwned :one
 SELECT (EXISTS (SELECT 1 FROM investments inv WHERE inv.category_id = sqlc.arg('category_id')::uuid)
-     OR EXISTS (SELECT 1 FROM installments ins WHERE ins.category_id = sqlc.arg('category_id')::uuid))::bool AS owned;
+     OR EXISTS (SELECT 1 FROM installments ins WHERE ins.category_id = sqlc.arg('category_id')::uuid)
+     OR EXISTS (SELECT 1 FROM subscriptions sub WHERE sub.category_id = sqlc.arg('category_id')::uuid))::bool AS owned;

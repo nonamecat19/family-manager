@@ -185,6 +185,36 @@ type Reminder struct {
 	UpdatedAt      pgtype.Timestamptz
 }
 
+type Subscription struct {
+	ID              pgtype.UUID
+	FamilyID        pgtype.UUID
+	Name            string
+	AmountMinor     int64
+	CurrencyCode    string
+	Type            string
+	CategoryID      pgtype.UUID
+	AccountID       pgtype.UUID
+	MemberID        pgtype.UUID
+	CreatedByUserID pgtype.UUID
+	IntervalCount   int32
+	IntervalUnit    string
+	DayOfMonth      int32
+	DayOfWeek       string
+	NextDueOn       pgtype.Date
+	EndOn           pgtype.Date
+	LastPostedOn    pgtype.Date
+	AutoPost        bool
+	Active          bool
+	Status          string
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+}
+
+type SubscriptionOccurrence struct {
+	SubscriptionID pgtype.UUID
+	DueOn          pgtype.Date
+}
+
 type Transaction struct {
 	ID                   pgtype.UUID
 	FamilyID             pgtype.UUID
