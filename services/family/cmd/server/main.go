@@ -140,6 +140,7 @@ func run() error {
 var internalOnly = []string{
 	familyv1connect.FamilyServiceGetUserMembershipProcedure,
 	familyv1connect.FamilyServiceCheckMembershipProcedure,
+	familyv1connect.FamilyServiceGetUserSettingsProcedure,
 }
 
 func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {

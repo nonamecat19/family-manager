@@ -11,6 +11,7 @@ type Claims struct {
 	UserID   string
 	FamilyID string
 	Email    string
+	Locale   string
 }
 
 type ctxKey int
@@ -63,6 +64,9 @@ func claimsFromJWT(mc jwt.MapClaims) (*Claims, error) {
 	}
 	if v, ok := mc["email"].(string); ok {
 		c.Email = v
+	}
+	if v, ok := mc["locale"].(string); ok {
+		c.Locale = v
 	}
 	return c, nil
 }

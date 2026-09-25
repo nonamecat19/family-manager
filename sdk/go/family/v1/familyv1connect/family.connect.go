@@ -68,6 +68,15 @@ const (
 	// FamilyServiceGetUserMembershipProcedure is the fully-qualified name of the FamilyService's
 	// GetUserMembership RPC.
 	FamilyServiceGetUserMembershipProcedure = "/family.v1.FamilyService/GetUserMembership"
+	// FamilyServiceGetUserSettingsProcedure is the fully-qualified name of the FamilyService's
+	// GetUserSettings RPC.
+	FamilyServiceGetUserSettingsProcedure = "/family.v1.FamilyService/GetUserSettings"
+	// FamilyServiceGetMySettingsProcedure is the fully-qualified name of the FamilyService's
+	// GetMySettings RPC.
+	FamilyServiceGetMySettingsProcedure = "/family.v1.FamilyService/GetMySettings"
+	// FamilyServiceUpdateMySettingsProcedure is the fully-qualified name of the FamilyService's
+	// UpdateMySettings RPC.
+	FamilyServiceUpdateMySettingsProcedure = "/family.v1.FamilyService/UpdateMySettings"
 )
 
 // FamilyServiceClient is a client for the family.v1.FamilyService service.
@@ -84,6 +93,9 @@ type FamilyServiceClient interface {
 	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
 	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
+	GetUserSettings(context.Context, *connect.Request[v1.GetUserSettingsRequest]) (*connect.Response[v1.GetUserSettingsResponse], error)
+	GetMySettings(context.Context, *connect.Request[v1.GetMySettingsRequest]) (*connect.Response[v1.GetMySettingsResponse], error)
+	UpdateMySettings(context.Context, *connect.Request[v1.UpdateMySettingsRequest]) (*connect.Response[v1.UpdateMySettingsResponse], error)
 }
 
 // NewFamilyServiceClient constructs a client for the family.v1.FamilyService service. By default,
@@ -169,6 +181,24 @@ func NewFamilyServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(familyServiceMethods.ByName("GetUserMembership")),
 			connect.WithClientOptions(opts...),
 		),
+		getUserSettings: connect.NewClient[v1.GetUserSettingsRequest, v1.GetUserSettingsResponse](
+			httpClient,
+			baseURL+FamilyServiceGetUserSettingsProcedure,
+			connect.WithSchema(familyServiceMethods.ByName("GetUserSettings")),
+			connect.WithClientOptions(opts...),
+		),
+		getMySettings: connect.NewClient[v1.GetMySettingsRequest, v1.GetMySettingsResponse](
+			httpClient,
+			baseURL+FamilyServiceGetMySettingsProcedure,
+			connect.WithSchema(familyServiceMethods.ByName("GetMySettings")),
+			connect.WithClientOptions(opts...),
+		),
+		updateMySettings: connect.NewClient[v1.UpdateMySettingsRequest, v1.UpdateMySettingsResponse](
+			httpClient,
+			baseURL+FamilyServiceUpdateMySettingsProcedure,
+			connect.WithSchema(familyServiceMethods.ByName("UpdateMySettings")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -186,6 +216,9 @@ type familyServiceClient struct {
 	listInvitations   *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
 	checkMembership   *connect.Client[v1.CheckMembershipRequest, v1.CheckMembershipResponse]
 	getUserMembership *connect.Client[v1.GetUserMembershipRequest, v1.GetUserMembershipResponse]
+	getUserSettings   *connect.Client[v1.GetUserSettingsRequest, v1.GetUserSettingsResponse]
+	getMySettings     *connect.Client[v1.GetMySettingsRequest, v1.GetMySettingsResponse]
+	updateMySettings  *connect.Client[v1.UpdateMySettingsRequest, v1.UpdateMySettingsResponse]
 }
 
 // CreateFamily calls family.v1.FamilyService.CreateFamily.
@@ -248,6 +281,21 @@ func (c *familyServiceClient) GetUserMembership(ctx context.Context, req *connec
 	return c.getUserMembership.CallUnary(ctx, req)
 }
 
+// GetUserSettings calls family.v1.FamilyService.GetUserSettings.
+func (c *familyServiceClient) GetUserSettings(ctx context.Context, req *connect.Request[v1.GetUserSettingsRequest]) (*connect.Response[v1.GetUserSettingsResponse], error) {
+	return c.getUserSettings.CallUnary(ctx, req)
+}
+
+// GetMySettings calls family.v1.FamilyService.GetMySettings.
+func (c *familyServiceClient) GetMySettings(ctx context.Context, req *connect.Request[v1.GetMySettingsRequest]) (*connect.Response[v1.GetMySettingsResponse], error) {
+	return c.getMySettings.CallUnary(ctx, req)
+}
+
+// UpdateMySettings calls family.v1.FamilyService.UpdateMySettings.
+func (c *familyServiceClient) UpdateMySettings(ctx context.Context, req *connect.Request[v1.UpdateMySettingsRequest]) (*connect.Response[v1.UpdateMySettingsResponse], error) {
+	return c.updateMySettings.CallUnary(ctx, req)
+}
+
 // FamilyServiceHandler is an implementation of the family.v1.FamilyService service.
 type FamilyServiceHandler interface {
 	CreateFamily(context.Context, *connect.Request[v1.CreateFamilyRequest]) (*connect.Response[v1.CreateFamilyResponse], error)
@@ -262,6 +310,9 @@ type FamilyServiceHandler interface {
 	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
 	CheckMembership(context.Context, *connect.Request[v1.CheckMembershipRequest]) (*connect.Response[v1.CheckMembershipResponse], error)
 	GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error)
+	GetUserSettings(context.Context, *connect.Request[v1.GetUserSettingsRequest]) (*connect.Response[v1.GetUserSettingsResponse], error)
+	GetMySettings(context.Context, *connect.Request[v1.GetMySettingsRequest]) (*connect.Response[v1.GetMySettingsResponse], error)
+	UpdateMySettings(context.Context, *connect.Request[v1.UpdateMySettingsRequest]) (*connect.Response[v1.UpdateMySettingsResponse], error)
 }
 
 // NewFamilyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -343,6 +394,24 @@ func NewFamilyServiceHandler(svc FamilyServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(familyServiceMethods.ByName("GetUserMembership")),
 		connect.WithHandlerOptions(opts...),
 	)
+	familyServiceGetUserSettingsHandler := connect.NewUnaryHandler(
+		FamilyServiceGetUserSettingsProcedure,
+		svc.GetUserSettings,
+		connect.WithSchema(familyServiceMethods.ByName("GetUserSettings")),
+		connect.WithHandlerOptions(opts...),
+	)
+	familyServiceGetMySettingsHandler := connect.NewUnaryHandler(
+		FamilyServiceGetMySettingsProcedure,
+		svc.GetMySettings,
+		connect.WithSchema(familyServiceMethods.ByName("GetMySettings")),
+		connect.WithHandlerOptions(opts...),
+	)
+	familyServiceUpdateMySettingsHandler := connect.NewUnaryHandler(
+		FamilyServiceUpdateMySettingsProcedure,
+		svc.UpdateMySettings,
+		connect.WithSchema(familyServiceMethods.ByName("UpdateMySettings")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/family.v1.FamilyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case FamilyServiceCreateFamilyProcedure:
@@ -369,6 +438,12 @@ func NewFamilyServiceHandler(svc FamilyServiceHandler, opts ...connect.HandlerOp
 			familyServiceCheckMembershipHandler.ServeHTTP(w, r)
 		case FamilyServiceGetUserMembershipProcedure:
 			familyServiceGetUserMembershipHandler.ServeHTTP(w, r)
+		case FamilyServiceGetUserSettingsProcedure:
+			familyServiceGetUserSettingsHandler.ServeHTTP(w, r)
+		case FamilyServiceGetMySettingsProcedure:
+			familyServiceGetMySettingsHandler.ServeHTTP(w, r)
+		case FamilyServiceUpdateMySettingsProcedure:
+			familyServiceUpdateMySettingsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -424,4 +499,16 @@ func (UnimplementedFamilyServiceHandler) CheckMembership(context.Context, *conne
 
 func (UnimplementedFamilyServiceHandler) GetUserMembership(context.Context, *connect.Request[v1.GetUserMembershipRequest]) (*connect.Response[v1.GetUserMembershipResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.GetUserMembership is not implemented"))
+}
+
+func (UnimplementedFamilyServiceHandler) GetUserSettings(context.Context, *connect.Request[v1.GetUserSettingsRequest]) (*connect.Response[v1.GetUserSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.GetUserSettings is not implemented"))
+}
+
+func (UnimplementedFamilyServiceHandler) GetMySettings(context.Context, *connect.Request[v1.GetMySettingsRequest]) (*connect.Response[v1.GetMySettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.GetMySettings is not implemented"))
+}
+
+func (UnimplementedFamilyServiceHandler) UpdateMySettings(context.Context, *connect.Request[v1.UpdateMySettingsRequest]) (*connect.Response[v1.UpdateMySettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("family.v1.FamilyService.UpdateMySettings is not implemented"))
 }

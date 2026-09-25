@@ -22,6 +22,9 @@ service FamilyService {
   rpc CheckMembership(CheckMembershipRequest) returns (CheckMembershipResponse);
 
   rpc GetUserMembership(GetUserMembershipRequest) returns (GetUserMembershipResponse);
+  rpc GetUserSettings(GetUserSettingsRequest) returns (GetUserSettingsResponse);
+  rpc GetMySettings(GetMySettingsRequest) returns (GetMySettingsResponse);
+  rpc UpdateMySettings(UpdateMySettingsRequest) returns (UpdateMySettingsResponse);
 }
 
 enum Role {
@@ -186,4 +189,34 @@ message MemberRemovedEvent {
   string user_id = 2;
   string removed_by_user_id = 3;
   google.protobuf.Timestamp occurred_at = 4;
+}
+
+message UserSettings {
+  string user_id = 1;
+  string locale = 2;
+  string timezone = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message GetUserSettingsRequest {
+  string user_id = 1;
+}
+
+message GetUserSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message GetMySettingsRequest {}
+
+message GetMySettingsResponse {
+  UserSettings settings = 1;
+}
+
+message UpdateMySettingsRequest {
+  string locale = 1;
+  string timezone = 2;
+}
+
+message UpdateMySettingsResponse {
+  UserSettings settings = 1;
 }
