@@ -176,6 +176,14 @@ export const queryKeys = {
   financeRecurringList: (includeInactive = false, asOf = "") =>
     ["finance", "recurring", "list", includeInactive, asOf] as const,
 
+  financeInvestments: ["finance", "investments"] as const,
+  financeInvestmentsList: (includeArchived = false) =>
+    ["finance", "investments", "list", includeArchived] as const,
+
+  financeInstallments: ["finance", "installments"] as const,
+  financeInstallmentsList: (includeClosed = false) =>
+    ["finance", "installments", "list", includeClosed] as const,
+
   financeReminders: ["finance", "reminders"] as const,
   financeRemindersList: (includeDisabled = false) =>
     ["finance", "reminders", "list", includeDisabled] as const,

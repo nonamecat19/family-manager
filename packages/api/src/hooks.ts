@@ -6,7 +6,10 @@ import {
   BudgetPeriod,
   BudgetTargetFilter,
   BudgetTargetKind,
+  CategoryGroupRole,
   InsightKind,
+  InstallmentStatus,
+  InvestmentKind,
   MemberRole,
   MemberStatus,
   RecurrenceUnit,
@@ -1027,6 +1030,167 @@ export function useSkipRecurringOccurrence() {
 }
 
 
+export function useInvestments(includeArchived = false) {
+  const { finance } = useClients();
+  return useQuery({
+    queryKey: queryKeys.financeInvestmentsList(includeArchived),
+    queryFn: async () => (await finance.listInvestments({ includeArchived })).investments,
+  });
+}
+
+export interface CreateInvestmentInput {
+  name: string;
+  kind: InvestmentKind;
+  currencyCode?: string;
+}
+
+export function useCreateInvestment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateInvestmentInput) =>
+      (
+        await finance.createInvestment({
+          name: input.name,
+          kind: input.kind,
+          currencyCode: input.currencyCode ?? "",
+        })
+      ).investment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export interface UpdateInvestmentInput {
+  investmentId: string;
+  name?: string;
+  kind?: InvestmentKind;
+  archived?: boolean;
+}
+
+export function useUpdateInvestment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateInvestmentInput) =>
+      (
+        await finance.updateInvestment({
+          ...input,
+          kind: input.kind ?? InvestmentKind.UNSPECIFIED,
+        })
+      ).investment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useSetInvestmentValue() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { investmentId: string; value: Money; valuedOn?: string }) =>
+      (
+        await finance.setInvestmentValue({
+          investmentId: input.investmentId,
+          value: toWire(input.value),
+          valuedOn: input.valuedOn ?? "",
+        })
+      ).investment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.financeInvestments }),
+  });
+}
+
+export function useDeleteInvestment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (investmentId: string) => finance.deleteInvestment({ investmentId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useInstallments(includeClosed = false) {
+  const { finance } = useClients();
+  return useQuery({
+    queryKey: queryKeys.financeInstallmentsList(includeClosed),
+    queryFn: async () => (await finance.listInstallments({ includeClosed })).installments,
+  });
+}
+
+export interface CreateInstallmentInput {
+  name: string;
+  total: Money;
+  months: number;
+  monthly?: Money;
+  accountId: string;
+  memberId?: string;
+  purchasedOn?: string;
+  firstDueOn?: string;
+}
+
+export function useCreateInstallment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateInstallmentInput) =>
+      (
+        await finance.createInstallment({
+          name: input.name,
+          total: toWire(input.total),
+          months: input.months,
+          monthly: input.monthly ? toWire(input.monthly) : undefined,
+          accountId: input.accountId,
+          memberId: input.memberId ?? "",
+          purchasedOn: input.purchasedOn ?? "",
+          firstDueOn: input.firstDueOn ?? "",
+        })
+      ).installment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export interface UpdateInstallmentInput {
+  installmentId: string;
+  name?: string;
+  monthly?: Money;
+  accountId?: string;
+  memberId?: string;
+  nextDueOn?: string;
+}
+
+export function useUpdateInstallment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ monthly, ...rest }: UpdateInstallmentInput) =>
+      (
+        await finance.updateInstallment({
+          ...rest,
+          monthly: monthly ? toWire(monthly) : undefined,
+        })
+      ).installment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useCancelInstallment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (installmentId: string) =>
+      (await finance.cancelInstallment({ installmentId })).installment ?? null,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+export function useDeleteInstallment() {
+  const { finance } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (installmentId: string) => finance.deleteInstallment({ installmentId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.finance }),
+  });
+}
+
+
 export function useReminders(includeDisabled = false) {
   const { finance } = useClients();
   return useQuery({
@@ -1157,7 +1321,10 @@ export {
   BudgetPeriod,
   BudgetTargetFilter,
   BudgetTargetKind,
+  CategoryGroupRole,
   InsightKind,
+  InstallmentStatus,
+  InvestmentKind,
   MemberRole,
   MemberStatus,
   RecurrenceUnit,
@@ -1189,6 +1356,8 @@ export type {
   HiddenPrivateSummary,
   HouseholdFinanceSettings,
   Insight,
+  Installment,
+  Investment,
   Member,
   MemberAmount,
   MemberChip,
