@@ -299,7 +299,7 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -407,7 +407,7 @@
       "title": "Reminder and digest RPCs for the telegram scheduler (ListMyDueReminders, Ack, Snooze, GetDigest)",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays. Rules (coordinator, from reviews): SnoozeReminder rewrites remind_at (sets snoozed_until, clears acked_at) AND ClearDeliveries for that reminder in the same InTx, so it fires again; works on already-acked reminders. Snooze option via schedule.SnoozeUntil (rejects unknown). reminder_id is the task_reminders uuid (fits a 64-byte Telegram callback with a short prefix). AckReminder records channel 'telegram' delivery. ListMyDueReminders uses ListDueRemindersForUser(channel 'telegram') and IsMember-checks nothing (caller is the user). GetDigest: date = schedule.Today(family tz); due = schedule.DigestDue(now, tz, last sent); MarkDigestSent per user."
+      "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays. Rules (coordinator, from reviews): SnoozeReminder rewrites remind_at (sets snoozed_until, clears acked_at) AND ClearDeliveries for that reminder in the same InTx, so it fires again; works on already-acked reminders. Snooze option via schedule.SnoozeUntil (rejects unknown). reminder_id is the task_reminders uuid (fits a 64-byte Telegram callback with a short prefix). AckReminder records channel 'telegram' delivery. ListMyDueReminders uses ListDueRemindersForUser(channel 'telegram') and IsMember-checks nothing (caller is the user). GetDigest: date = schedule.Today(family tz); due = schedule.DigestDue(now, tz, last sent); MarkDigestSent per user. From u13 verify: acked task_reminders rows survive item update/delete (only pending ones are deleted), so SnoozeReminder/AckReminder must verify the item (task or birthday) still exists in the family and the reminder's occurrence is still current, else NotFound."
     },
     {
       "nodes": [
@@ -1316,7 +1316,7 @@
         "u18"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -1351,5 +1351,5 @@
       "notes": "E8 decision 1 (2026-10-06): u12 shipped short of its notes. Meet every rule in u12 notes: CreateTask/UpdateTask set due_at via schedule.Deadline.At(family tz) whenever due_on is set, so task_due reminders are created; assignees must be members (refresh via family.Client.ListMembers with the REQUEST bearer token, upsert known_members + DeleteKnownMembersExcept in one InTx; reuse fetchMembers/refreshKnownMembers from u13 birthdays.go); remove the tasks.task.assigned publish (u15 owns it); touchKnownMember uses TouchKnownMember (keeps display_name). fake_test.go may gain real birthday methods replacing the u13 birthdayStore wrapper only if trivial."
     }
   ],
-  "updated_at": "2026-10-06T08:02:23.989Z"
+  "updated_at": "2026-10-06T08:13:29.036Z"
 }
