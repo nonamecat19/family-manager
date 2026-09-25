@@ -66,6 +66,7 @@ vuln:
 
 proto:
     cd libs/proto && buf generate
+    cd libs/proto && buf generate --template buf.gen.java.yaml --path notes
 
 proto-check:
     cd libs/proto && buf lint && buf breaking --against '../../.git#branch=master,subdir=libs/proto'

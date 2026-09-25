@@ -49,6 +49,20 @@ public class Note extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "owner_user_id")
+    private UUID ownerUserId;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean starred = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean archived = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String blocks;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
@@ -93,6 +107,28 @@ public class Note extends BaseEntity {
 
     public void moveTo(Group group) {
         this.group = group;
+    }
+
+    public void writeBlocks(String blocks, String content) {
+        this.blocks = blocks;
+        this.content = content;
+    }
+
+    public void rename(String title) {
+        this.title = title;
+    }
+
+    public void owner(UUID ownerUserId) {
+        this.ownerUserId = ownerUserId;
+    }
+
+    public boolean toggleStar() {
+        this.starred = !this.starred;
+        return this.starred;
+    }
+
+    public void archive(boolean archived) {
+        this.archived = archived;
     }
 
     public void reparent(Note parent) {
