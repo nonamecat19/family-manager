@@ -18,6 +18,7 @@ go.work.sum
 !.env.example
 
 *.pem
+infra/secrets/telegram-token-key
 
 **/.dart_tool/
 **/build/
