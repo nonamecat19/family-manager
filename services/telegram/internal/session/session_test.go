@@ -400,3 +400,38 @@ func TestApproveLoginMapsAuthRefusals(t *testing.T) {
 		t.Fatalf("err = %v, want an opaque failure", err)
 	}
 }
+
+func TestDecideLoginRefreshesAStaleTokenOnce(t *testing.T) {
+	for name, decide := range map[string]func(*Store) error{
+		"approve": func(s *Store) error { return s.ApproveLogin(context.Background(), 42, "BCDFGHJK") },
+		"deny":    func(s *Store) error { return s.DenyLogin(context.Background(), 42, "BCDFGHJK") },
+	} {
+		f := newFixture(t)
+		f.link(t)
+		f.auth.decideOnce = connect.NewError(connect.CodeUnauthenticated, errors.New("no sid"))
+
+		if err := decide(f.store); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if len(f.auth.refreshed) != 1 {
+			t.Fatalf("%s: refreshed %d times, want once", name, len(f.auth.refreshed))
+		}
+		if len(f.auth.bearers) != 2 || f.auth.bearers[0] == f.auth.bearers[1] {
+			t.Fatalf("%s: bearers = %v, want a retry with a fresh token", name, f.auth.bearers)
+		}
+	}
+}
+
+func TestDecideLoginRetriesOnlyOnce(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.auth.decideErr = connect.NewError(connect.CodeUnauthenticated, errors.New("still refused"))
+
+	err := f.store.ApproveLogin(context.Background(), 42, "BCDFGHJK")
+	if err == nil || errors.Is(err, ErrLoginExpired) {
+		t.Fatalf("err = %v, want an opaque failure", err)
+	}
+	if len(f.auth.bearers) != 2 {
+		t.Fatalf("calls = %d, want the first and one retry", len(f.auth.bearers))
+	}
+}

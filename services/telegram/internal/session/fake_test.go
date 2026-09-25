@@ -139,6 +139,7 @@ type fakeAuth struct {
 	bearers    []string
 	unlinkErr  error
 	decideErr  error
+	decideOnce error
 	approved   []*authv1.ApproveDeviceLoginRequest
 	denied     []*authv1.DenyDeviceLoginRequest
 	onRefresh  func()
@@ -296,6 +297,10 @@ func (f *fakeAuth) ApproveDeviceLogin(
 	if f.decideErr != nil {
 		return nil, f.decideErr
 	}
+	if err := f.decideOnce; err != nil {
+		f.decideOnce = nil
+		return nil, err
+	}
 	f.approved = append(f.approved, req.Msg)
 	return connect.NewResponse(&authv1.ApproveDeviceLoginResponse{
 		Kind: authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM,
@@ -308,6 +313,10 @@ func (f *fakeAuth) DenyDeviceLogin(
 	f.bearers = append(f.bearers, req.Header().Get("Authorization"))
 	if f.decideErr != nil {
 		return nil, f.decideErr
+	}
+	if err := f.decideOnce; err != nil {
+		f.decideOnce = nil
+		return nil, err
 	}
 	f.denied = append(f.denied, req.Msg)
 	return connect.NewResponse(&authv1.DenyDeviceLoginResponse{}), nil

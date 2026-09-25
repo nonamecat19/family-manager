@@ -32,7 +32,6 @@ type Querier interface {
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
-	ListChainsApprovedFrom(ctx context.Context, chainID pgtype.UUID) ([]pgtype.UUID, error)
 	ListIdentitiesForUser(ctx context.Context, userID pgtype.UUID) ([]Identity, error)
 	LockChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
 	LockIdentityKey(ctx context.Context, key string) error
@@ -40,7 +39,9 @@ type Querier interface {
 	MarkRefreshTokenUsed(ctx context.Context, id pgtype.UUID) (int64, error)
 	RevokeAllForUser(ctx context.Context, userID pgtype.UUID) (int64, error)
 	RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error)
+	RevokeChainsRootedAt(ctx context.Context, rootChainID pgtype.UUID) (int64, error)
 	TombstoneChain(ctx context.Context, id pgtype.UUID) error
+	TombstoneChainsRootedAt(ctx context.Context, rootChainID pgtype.UUID) error
 	TouchLoginGrant(ctx context.Context, arg TouchLoginGrantParams) (int64, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) (Identity, error)
 }

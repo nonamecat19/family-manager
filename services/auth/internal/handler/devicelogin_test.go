@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strings"
 	"testing"
@@ -16,6 +18,7 @@ import (
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
+	"github.com/nnc/family-manager/services/auth/internal/config"
 	"github.com/nnc/family-manager/services/auth/internal/ratelimit"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
@@ -461,63 +464,113 @@ func TestDecisionThrottleDoesNotShareLoginKeys(t *testing.T) {
 	}
 }
 
-func startFrom(forwardedFor string) *connect.Request[authv1.StartDeviceLoginRequest] {
-	req := connect.NewRequest(&authv1.StartDeviceLoginRequest{})
-	req.Header().Set("X-Forwarded-For", forwardedFor)
-	return req
-}
-
-func TestStartDeviceLoginIsRateLimitedPerClientIP(t *testing.T) {
+func TestStartDeviceLoginIsRateLimitedPerClient(t *testing.T) {
 	f := newFixture(t)
 	f.h.starts = ratelimit.New(2, time.Minute, nil)
+	f.h.trustedProxies = mustProxies(t, config.DefaultTrustedProxies)
 
 	for i := range 2 {
-		if _, err := f.h.StartDeviceLogin(context.Background(), startFrom("203.0.113.7")); err != nil {
+		if _, err := f.h.StartDeviceLogin(context.Background(),
+			connect.NewRequest(&authv1.StartDeviceLoginRequest{})); err != nil {
 			t.Fatalf("start %d: %v", i, err)
 		}
 	}
-	_, err := f.h.StartDeviceLogin(context.Background(), startFrom("198.51.100.1, 203.0.113.7"))
+	_, err := f.h.StartDeviceLogin(context.Background(), connect.NewRequest(&authv1.StartDeviceLoginRequest{}))
 	if connect.CodeOf(err) != connect.CodeResourceExhausted {
 		t.Fatalf("third start from the same client = %v, want resource_exhausted", connect.CodeOf(err))
 	}
-	if _, err := f.h.StartDeviceLogin(context.Background(), startFrom("203.0.113.8")); err != nil {
-		t.Fatalf("another client was limited: %v", err)
-	}
 }
 
-func TestStartDeviceLoginCapsPendingGrants(t *testing.T) {
+func TestStartDeviceLoginRefusesOnlyAboveTheCeiling(t *testing.T) {
 	f := newFixture(t)
-	f.h.maxPending = 2
+	f.h.maxPending = 5
 
-	f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
-	f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	for range 5 {
+		f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	}
 	_, err := f.h.StartDeviceLogin(context.Background(), connect.NewRequest(&authv1.StartDeviceLoginRequest{}))
 	if connect.CodeOf(err) != connect.CodeResourceExhausted {
-		t.Fatalf("start over the cap = %v, want resource_exhausted", connect.CodeOf(err))
+		t.Fatalf("start over the ceiling = %v, want resource_exhausted", connect.CodeOf(err))
 	}
-	if n := len(f.store.grants); n != 2 {
-		t.Fatalf("grants = %d, want the cap of 2", n)
+	if n := len(f.store.grants); n != 5 {
+		t.Fatalf("grants = %d, want the ceiling of 5", n)
 	}
 }
 
-func TestClientIPTakesTheHopCaddyAppended(t *testing.T) {
+func TestPendingCeilingWarnsAtEightyPercent(t *testing.T) {
+	f := newFixture(t)
+	var logs strings.Builder
+	f.h.log = slog.New(slog.NewTextHandler(&logs, nil))
+	f.h.maxPending = 5
+
+	for range 4 {
+		f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	}
+	if strings.Contains(logs.String(), "near the ceiling") {
+		t.Fatal("warned below 80%")
+	}
+	f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	if strings.Count(logs.String(), "near the ceiling") != 1 {
+		t.Fatalf("logs = %q, want one warning at 80%%", logs.String())
+	}
+}
+
+func mustProxies(t *testing.T, list string) []netip.Prefix {
+	t.Helper()
+	p, err := config.ParseProxies(list)
+	if err != nil {
+		t.Fatalf("ParseProxies: %v", err)
+	}
+	return p
+}
+
+func TestClientIPHonoursForwardedForOnlyFromTrustedProxies(t *testing.T) {
+	trusted := mustProxies(t, config.DefaultTrustedProxies)
 	cases := []struct {
-		forwarded, peer, want string
+		name, forwarded, peer, want string
 	}{
-		{"203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
-		{"6.6.6.6, 203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
-		{"", "172.18.0.5:41234", "172.18.0.5"},
-		{"not-an-ip", "172.18.0.5:41234", "172.18.0.5"},
-		{"2001:db8::1", "[::1]:80", "2001:db8::1"},
+		{"caddy on the compose network", "203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
+		{"client-supplied hop before caddy's", "6.6.6.6, 203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
+		{"trusted hops are skipped", "203.0.113.7, 10.0.0.9", "172.18.0.5:41234", "203.0.113.7"},
+		{"untrusted peer is the client", "6.6.6.6", "198.51.100.4:5000", "198.51.100.4"},
+		{"no header", "", "172.18.0.5:41234", "172.18.0.5"},
+		{"garbage stops the walk", "not-an-ip", "172.18.0.5:41234", "172.18.0.5"},
+		{"ipv6 client", "2001:db8::1", "[::1]:80", "2001:db8::1"},
+		{"mapped ipv4 peer", "203.0.113.7", "[::ffff:172.18.0.5]:80", "203.0.113.7"},
 	}
 	for _, c := range cases {
 		h := http.Header{}
 		if c.forwarded != "" {
-			h.Set("X-Forwarded-For", c.forwarded)
+			h.Add("X-Forwarded-For", c.forwarded)
 		}
-		if got := clientIP(h, c.peer); got != c.want {
-			t.Errorf("clientIP(%q, %q) = %q, want %q", c.forwarded, c.peer, got, c.want)
+		if got := clientIP(h, c.peer, trusted); got.String() != c.want {
+			t.Errorf("%s: clientIP = %v, want %s", c.name, got, c.want)
 		}
+	}
+
+	h := http.Header{}
+	h.Add("X-Forwarded-For", "6.6.6.6")
+	h.Add("X-Forwarded-For", "203.0.113.7")
+	if got := clientIP(h, "172.18.0.5:1", trusted); got.String() != "203.0.113.7" {
+		t.Errorf("repeated headers: clientIP = %v, want the last one", got)
+	}
+	if got := clientIP(h, "172.18.0.5:1", nil); got.String() != "172.18.0.5" {
+		t.Errorf("no trusted proxies: clientIP = %v, want the peer", got)
+	}
+}
+
+func TestStartLimitKeyGroupsAnIPv6Slash64(t *testing.T) {
+	a := startLimitKey(netip.MustParseAddr("2001:db8:1:2::1"))
+	b := startLimitKey(netip.MustParseAddr("2001:db8:1:2:ffff:ffff:ffff:ffff"))
+	c := startLimitKey(netip.MustParseAddr("2001:db8:1:3::1"))
+	if a != b || a == c {
+		t.Fatalf("keys %q %q %q: want one /64 to share a key and the next /64 not", a, b, c)
+	}
+	if k := startLimitKey(netip.MustParseAddr("203.0.113.7")); k != "203.0.113.7" {
+		t.Fatalf("ipv4 key = %q, want the full address", k)
+	}
+	if k := startLimitKey(netip.MustParseAddr("203.0.113.8")); k == "203.0.113.7" {
+		t.Fatal("neighbouring ipv4 addresses share a key")
 	}
 }
 

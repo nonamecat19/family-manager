@@ -12,15 +12,20 @@ import (
 )
 
 const approveLoginGrant = `-- name: ApproveLoginGrant :one
-UPDATE login_grants
+UPDATE login_grants g
 SET user_id           = $1,
     approved_at       = $2,
-    approver_chain_id = $3
-WHERE user_code_hash = $4
-  AND approved_at IS NULL
-  AND denied_at IS NULL
-  AND expires_at > $2
-RETURNING id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at
+    approver_chain_id = $3,
+    root_chain_id     = COALESCE(
+      (SELECT p.root_chain_id FROM login_grants p
+       WHERE p.chain_id = $3::uuid),
+      $3::uuid
+    )
+WHERE g.user_code_hash = $4
+  AND g.approved_at IS NULL
+  AND g.denied_at IS NULL
+  AND g.expires_at > $2
+RETURNING id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, root_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at
 `
 
 type ApproveLoginGrantParams struct {
@@ -45,6 +50,7 @@ func (q *Queries) ApproveLoginGrant(ctx context.Context, arg ApproveLoginGrantPa
 		&i.UserCodeHash,
 		&i.UserID,
 		&i.ApproverChainID,
+		&i.RootChainID,
 		&i.ChainID,
 		&i.ApprovedAt,
 		&i.DeniedAt,
@@ -66,10 +72,17 @@ WHERE g.id = $2
   AND g.expires_at > NOW()
   AND (
     g.approver_chain_id IS NULL
-    OR EXISTS (
-      SELECT 1 FROM chains c
-      WHERE c.id = g.approver_chain_id AND c.revoked_at IS NULL
-      FOR SHARE
+    OR (
+      EXISTS (
+        SELECT 1 FROM chains c
+        WHERE c.id = g.root_chain_id AND c.revoked_at IS NULL
+        FOR SHARE
+      )
+      AND EXISTS (
+        SELECT 1 FROM chains c
+        WHERE c.id = g.approver_chain_id AND c.revoked_at IS NULL
+        FOR SHARE
+      )
     )
   )
 `
@@ -104,7 +117,7 @@ func (q *Queries) CountPendingLoginGrants(ctx context.Context) (int64, error) {
 const createLoginGrant = `-- name: CreateLoginGrant :one
 INSERT INTO login_grants (kind, device_code_hash, user_code_hash, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at
+RETURNING id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, root_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at
 `
 
 type CreateLoginGrantParams struct {
@@ -129,6 +142,7 @@ func (q *Queries) CreateLoginGrant(ctx context.Context, arg CreateLoginGrantPara
 		&i.UserCodeHash,
 		&i.UserID,
 		&i.ApproverChainID,
+		&i.RootChainID,
 		&i.ChainID,
 		&i.ApprovedAt,
 		&i.DeniedAt,
@@ -143,10 +157,9 @@ func (q *Queries) CreateLoginGrant(ctx context.Context, arg CreateLoginGrantPara
 const deleteExpiredLoginGrants = `-- name: DeleteExpiredLoginGrants :execrows
 DELETE FROM login_grants g
 WHERE g.expires_at < NOW() - interval '1 hour'
-  AND (
-    g.chain_id IS NULL
-    OR g.approver_chain_id IS NULL
-    OR NOT EXISTS (SELECT 1 FROM chains c WHERE c.id = g.chain_id)
+  AND NOT EXISTS (
+    SELECT 1 FROM chains c
+    WHERE c.id = g.chain_id AND c.revoked_at IS NULL
   )
 `
 
@@ -182,7 +195,7 @@ func (q *Queries) DenyLoginGrant(ctx context.Context, arg DenyLoginGrantParams) 
 }
 
 const getLoginGrantByDeviceCode = `-- name: GetLoginGrantByDeviceCode :one
-SELECT id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at FROM login_grants
+SELECT id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, root_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at FROM login_grants
 WHERE device_code_hash = $1
 `
 
@@ -196,6 +209,7 @@ func (q *Queries) GetLoginGrantByDeviceCode(ctx context.Context, deviceCodeHash 
 		&i.UserCodeHash,
 		&i.UserID,
 		&i.ApproverChainID,
+		&i.RootChainID,
 		&i.ChainID,
 		&i.ApprovedAt,
 		&i.DeniedAt,
@@ -208,7 +222,7 @@ func (q *Queries) GetLoginGrantByDeviceCode(ctx context.Context, deviceCodeHash 
 }
 
 const getLoginGrantByUserCode = `-- name: GetLoginGrantByUserCode :one
-SELECT id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at FROM login_grants
+SELECT id, kind, device_code_hash, user_code_hash, user_id, approver_chain_id, root_chain_id, chain_id, approved_at, denied_at, consumed_at, last_polled_at, expires_at, created_at FROM login_grants
 WHERE user_code_hash = $1
 `
 
@@ -222,6 +236,7 @@ func (q *Queries) GetLoginGrantByUserCode(ctx context.Context, userCodeHash stri
 		&i.UserCodeHash,
 		&i.UserID,
 		&i.ApproverChainID,
+		&i.RootChainID,
 		&i.ChainID,
 		&i.ApprovedAt,
 		&i.DeniedAt,
@@ -233,36 +248,36 @@ func (q *Queries) GetLoginGrantByUserCode(ctx context.Context, userCodeHash stri
 	return i, err
 }
 
-const listChainsApprovedFrom = `-- name: ListChainsApprovedFrom :many
-WITH RECURSIVE lineage (id) AS (
-  SELECT g.chain_id FROM login_grants g
-  WHERE g.approver_chain_id = $1::uuid AND g.chain_id IS NOT NULL
-  UNION
-  SELECT g.chain_id FROM login_grants g
-  JOIN lineage l ON g.approver_chain_id = l.id
-  WHERE g.chain_id IS NOT NULL
-)
-SELECT id::uuid FROM lineage
+const revokeChainsRootedAt = `-- name: RevokeChainsRootedAt :execrows
+UPDATE refresh_tokens r
+SET revoked_at = NOW()
+WHERE r.revoked_at IS NULL
+  AND r.chain_id IN (
+    SELECT g.chain_id FROM login_grants g
+    WHERE g.root_chain_id = $1 AND g.chain_id IS NOT NULL
+  )
 `
 
-func (q *Queries) ListChainsApprovedFrom(ctx context.Context, chainID pgtype.UUID) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, listChainsApprovedFrom, chainID)
+func (q *Queries) RevokeChainsRootedAt(ctx context.Context, rootChainID pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, revokeChainsRootedAt, rootChainID)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	defer rows.Close()
-	var items []pgtype.UUID
-	for rows.Next() {
-		var id pgtype.UUID
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+	return result.RowsAffected(), nil
+}
+
+const tombstoneChainsRootedAt = `-- name: TombstoneChainsRootedAt :exec
+INSERT INTO chains (id, revoked_at)
+SELECT DISTINCT g.chain_id, NOW()
+FROM login_grants g
+WHERE g.root_chain_id = $1 AND g.chain_id IS NOT NULL
+ON CONFLICT (id) DO UPDATE
+SET revoked_at = COALESCE(chains.revoked_at, EXCLUDED.revoked_at)
+`
+
+func (q *Queries) TombstoneChainsRootedAt(ctx context.Context, rootChainID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, tombstoneChainsRootedAt, rootChainID)
+	return err
 }
 
 const touchLoginGrant = `-- name: TouchLoginGrant :execrows

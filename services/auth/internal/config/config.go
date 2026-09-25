@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/netip"
 	"os"
 	"strings"
 	"time"
@@ -32,6 +33,8 @@ type Config struct {
 	DeviceLoginWindow    time.Duration
 	DeviceLoginMaxActive int64
 
+	TrustedProxies []netip.Prefix
+
 	LogLevel string
 	LogJSON  bool
 }
@@ -49,7 +52,8 @@ func Load() (*Config, error) {
 	v.SetDefault("REFRESH_TTL", 30*24*time.Hour)
 	v.SetDefault("DEVICE_LOGIN_PER_IP", 10)
 	v.SetDefault("DEVICE_LOGIN_WINDOW", 10*time.Minute)
-	v.SetDefault("DEVICE_LOGIN_MAX_ACTIVE", 5000)
+	v.SetDefault("DEVICE_LOGIN_MAX_ACTIVE", 100000)
+	v.SetDefault("TRUSTED_PROXIES", DefaultTrustedProxies)
 	v.SetDefault("LOG_LEVEL", "info")
 	v.SetDefault("LOG_JSON", false)
 
@@ -87,6 +91,12 @@ func Load() (*Config, error) {
 	}
 	cfg.SigningKeyPEM = strings.ReplaceAll(cfg.SigningKeyPEM, `\n`, "\n")
 
+	proxies, err := ParseProxies(v.GetString("TRUSTED_PROXIES"))
+	if err != nil {
+		return nil, err
+	}
+	cfg.TrustedProxies = proxies
+
 	if cfg.DatabaseURL == "" {
 		return nil, fmt.Errorf("config: AUTH_DATABASE_URL is required")
 	}
@@ -96,4 +106,22 @@ func Load() (*Config, error) {
 				"(generate: openssl ecparam -name prime256v1 -genkey -noout)")
 	}
 	return cfg, nil
+}
+
+const DefaultTrustedProxies = "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8,::1/128,fc00::/7"
+
+func ParseProxies(list string) ([]netip.Prefix, error) {
+	var out []netip.Prefix
+	for _, raw := range strings.Split(list, ",") {
+		raw = strings.TrimSpace(raw)
+		if raw == "" {
+			continue
+		}
+		p, err := netip.ParsePrefix(raw)
+		if err != nil {
+			return nil, fmt.Errorf("config: AUTH_TRUSTED_PROXIES: %w", err)
+		}
+		out = append(out, p.Masked())
+	}
+	return out, nil
 }

@@ -130,16 +130,11 @@ func revokeLineage(ctx context.Context, q db.Querier, root pgtype.UUID) error {
 	if err := revokeChain(ctx, q, root); err != nil {
 		return err
 	}
-	approved, err := q.ListChainsApprovedFrom(ctx, root)
-	if err != nil {
+	if err := q.TombstoneChainsRootedAt(ctx, root); err != nil {
 		return err
 	}
-	for _, chainID := range approved {
-		if err := revokeChain(ctx, q, chainID); err != nil {
-			return err
-		}
-	}
-	return nil
+	_, err := q.RevokeChainsRootedAt(ctx, root)
+	return err
 }
 
 func lockChain(ctx context.Context, q db.Querier, chainID pgtype.UUID, fresh bool) (pgtype.Timestamptz, error) {

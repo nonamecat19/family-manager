@@ -42,6 +42,7 @@ type LoginGrant struct {
 	UserCodeHash    string
 	UserID          pgtype.UUID
 	ApproverChainID pgtype.UUID
+	RootChainID     pgtype.UUID
 	ChainID         pgtype.UUID
 	ApprovedAt      pgtype.Timestamptz
 	DeniedAt        pgtype.Timestamptz

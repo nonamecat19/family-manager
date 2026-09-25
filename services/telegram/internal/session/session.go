@@ -306,18 +306,33 @@ func (s *Store) DenyLogin(ctx context.Context, telegramUserID int64, userCode st
 }
 
 func (s *Store) decideLogin(ctx context.Context, telegramUserID int64, call func(bearer string) error) error {
+	err := s.decideOnce(ctx, telegramUserID, call)
+	if connect.CodeOf(err) == connect.CodeUnauthenticated {
+		if err := s.ExpireAccess(ctx, telegramUserID); err != nil {
+			return err
+		}
+		err = s.decideOnce(ctx, telegramUserID, call)
+	}
+	if err == nil {
+		return nil
+	}
+	var cerr *connect.Error
+	if !errors.As(err, &cerr) {
+		return err
+	}
+	switch cerr.Code() {
+	case connect.CodeNotFound, connect.CodeInvalidArgument:
+		return ErrLoginExpired
+	case connect.CodeResourceExhausted:
+		return ErrLoginThrottled
+	}
+	return fmt.Errorf("session: decide login: %w", err)
+}
+
+func (s *Store) decideOnce(ctx context.Context, telegramUserID int64, call func(bearer string) error) error {
 	current, err := s.Session(ctx, telegramUserID)
 	if err != nil {
 		return err
 	}
-	if err := call("Bearer " + current.AccessToken); err != nil {
-		switch connect.CodeOf(err) {
-		case connect.CodeNotFound, connect.CodeInvalidArgument:
-			return ErrLoginExpired
-		case connect.CodeResourceExhausted:
-			return ErrLoginThrottled
-		}
-		return fmt.Errorf("session: decide login: %w", err)
-	}
-	return nil
+	return call("Bearer " + current.AccessToken)
 }
