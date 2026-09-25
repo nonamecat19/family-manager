@@ -156,7 +156,7 @@ class NoteServiceTest {
         assertThatThrownBy(() -> noteService.delete(5L))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(noteRepository, never()).delete(any());
+        verify(noteRepository, never()).delete(any(Note.class));
     }
 
     private static Note noteWithId(Long id, String title) {
