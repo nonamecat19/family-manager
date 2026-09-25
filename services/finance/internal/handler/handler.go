@@ -155,19 +155,10 @@ func (h *Handler) fillSelf(ctx context.Context, c caller, m db.FinanceMember) er
 	if (m.DisplayName != "" && m.Email != "") || c.email == "" {
 		return nil
 	}
-	name := m.DisplayName
-	if name == "" {
-		name = displayNameFrom(c.email)
-	}
-	email := m.Email
-	if email == "" {
-		email = c.email
-	}
-	if _, err := h.q.UpsertMember(ctx, db.UpsertMemberParams{
+	name := displayNameFrom(c.email)
+	if err := h.q.FillMemberIdentity(ctx, db.FillMemberIdentityParams{
+		DisplayName: name, Initial: initialOf(name), Email: c.email,
 		FamilyID: m.FamilyID, UserID: m.UserID,
-		DisplayName: name, Initial: initialOf(name),
-		AvatarColorStep: m.AvatarColorStep,
-		Role:            m.Role, Status: m.Status, Email: email,
 	}); err != nil {
 		return h.internal(ctx, err, "fill in member")
 	}

@@ -194,6 +194,22 @@ func (s *fakeStore) UpsertMember(_ context.Context, arg db.UpsertMemberParams) (
 	return m, nil
 }
 
+func (s *fakeStore) FillMemberIdentity(_ context.Context, arg db.FillMemberIdentityParams) error {
+	key := memberKey(arg.FamilyID, arg.UserID)
+	m, ok := s.members[key]
+	if !ok {
+		return nil
+	}
+	if m.DisplayName == "" {
+		m.DisplayName, m.Initial = arg.DisplayName, arg.Initial
+	}
+	if m.Email == "" {
+		m.Email = arg.Email
+	}
+	s.members[key] = m
+	return nil
+}
+
 func (s *fakeStore) DeleteMember(_ context.Context, arg db.DeleteMemberParams) (int64, error) {
 	key := memberKey(arg.FamilyID, arg.UserID)
 	if _, ok := s.members[key]; !ok {

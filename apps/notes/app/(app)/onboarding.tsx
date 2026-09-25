@@ -1,5 +1,6 @@
 import { useCreateFamily } from "@fm/api";
 import { useAuth } from "@fm/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, View } from "react-native";
@@ -11,6 +12,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { refreshNow } = useAuth();
   const createFamily = useCreateFamily();
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
 
   const create = async () => {
@@ -20,6 +22,7 @@ export default function OnboardingScreen() {
       return;
     }
     await refreshNow();
+    await queryClient.invalidateQueries();
     router.replace("/(app)");
   };
 

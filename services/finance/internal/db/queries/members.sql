@@ -28,3 +28,10 @@ WHERE family_id = $1 AND user_id = $2;
 -- name: CountMembers :one
 SELECT COUNT(*) FROM finance_members
 WHERE family_id = $1 AND status = 'active';
+
+-- name: FillMemberIdentity :exec
+UPDATE finance_members
+SET display_name = CASE WHEN display_name = '' THEN sqlc.arg(display_name)::text ELSE display_name END,
+    initial = CASE WHEN display_name = '' THEN sqlc.arg(initial)::text ELSE initial END,
+    email = CASE WHEN email = '' THEN sqlc.arg(email)::text ELSE email END
+WHERE family_id = sqlc.arg(family_id) AND user_id = sqlc.arg(user_id);

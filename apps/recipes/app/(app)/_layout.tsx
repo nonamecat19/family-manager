@@ -61,7 +61,7 @@ function Gate() {
         <Tabs.Screen name="connected-accounts" options={{ href: null }} />
         <Tabs.Screen name="approve-device" options={{ href: null }} />
         <Tabs.Screen name="search" options={{ href: null }} />
-        <Tabs.Screen name="onboarding" options={{ href: null }} />
+        <Tabs.Screen name="onboarding" options={{ href: null, tabBarStyle: { display: "none" } }} />
         <Tabs.Screen name="recipe/[id]" options={{ href: null }} />
         <Tabs.Screen name="recipe-edit/[id]" options={{ href: null }} />
         <Tabs.Screen name="cook/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />

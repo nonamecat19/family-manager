@@ -41,6 +41,33 @@ func (q *Queries) DeleteMember(ctx context.Context, arg DeleteMemberParams) (int
 	return result.RowsAffected(), nil
 }
 
+const fillMemberIdentity = `-- name: FillMemberIdentity :exec
+UPDATE finance_members
+SET display_name = CASE WHEN display_name = '' THEN $1::text ELSE display_name END,
+    initial = CASE WHEN display_name = '' THEN $2::text ELSE initial END,
+    email = CASE WHEN email = '' THEN $3::text ELSE email END
+WHERE family_id = $4 AND user_id = $5
+`
+
+type FillMemberIdentityParams struct {
+	DisplayName string
+	Initial     string
+	Email       string
+	FamilyID    pgtype.UUID
+	UserID      pgtype.UUID
+}
+
+func (q *Queries) FillMemberIdentity(ctx context.Context, arg FillMemberIdentityParams) error {
+	_, err := q.db.Exec(ctx, fillMemberIdentity,
+		arg.DisplayName,
+		arg.Initial,
+		arg.Email,
+		arg.FamilyID,
+		arg.UserID,
+	)
+	return err
+}
+
 const getMember = `-- name: GetMember :one
 SELECT family_id, user_id, display_name, initial, avatar_color_step, role, status, email, joined_at FROM finance_members
 WHERE family_id = $1 AND user_id = $2

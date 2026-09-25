@@ -173,6 +173,7 @@ export function useCaptureQueue(): CaptureQueue {
       }
       console.warn("[notes] capture queue flush stopped", error);
       retryAfter = Date.now() + RETRY_COOLDOWN_MS;
+      setTimeout(() => void flush(), RETRY_COOLDOWN_MS);
     } finally {
       setFlushing(false);
     }

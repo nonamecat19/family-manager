@@ -45,6 +45,7 @@ type Querier interface {
 	DeleteTemplate(ctx context.Context, arg DeleteTemplateParams) (int64, error)
 	DeleteTransaction(ctx context.Context, arg DeleteTransactionParams) (int64, error)
 	DeleteWidget(ctx context.Context, arg DeleteWidgetParams) (int64, error)
+	FillMemberIdentity(ctx context.Context, arg FillMemberIdentityParams) error
 	GetBudget(ctx context.Context, arg GetBudgetParams) (Budget, error)
 	GetCategory(ctx context.Context, arg GetCategoryParams) (Category, error)
 	GetCategoryGroup(ctx context.Context, arg GetCategoryGroupParams) (CategoryGroup, error)

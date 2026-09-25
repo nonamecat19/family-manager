@@ -87,7 +87,7 @@ function Gate() {
       <Tabs.Screen name="connected-accounts" options={{ href: null }} />
       <Tabs.Screen name="approve-device" options={{ href: null }} />
       <Tabs.Screen name="members/spending" options={{ href: null }} />
-      <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Screen name="onboarding" options={{ href: null, tabBarStyle: { display: "none" } }} />
     </Tabs>
   );
 }

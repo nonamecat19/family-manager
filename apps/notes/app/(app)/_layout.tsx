@@ -1131,7 +1131,7 @@ function MobileTabs() {
         name="settings"
         options={{ title: strings.tabs.settings, tabBarIcon: tabIcon("gear-six") }}
       />
-      <Tabs.Screen name="onboarding" options={{ href: null }} />
+      <Tabs.Screen name="onboarding" options={{ href: null, tabBarStyle: { display: "none" } }} />
       <Tabs.Screen name="connected-accounts" options={{ href: null }} />
       <Tabs.Screen name="approve-device" options={{ href: null }} />
       <Tabs.Screen name="notebook/[id]" options={{ href: null }} />
