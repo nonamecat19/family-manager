@@ -148,6 +148,10 @@ func (c *countingSweeper) DeleteExpiredRefreshTokens(context.Context) (int64, er
 	return 3, c.err
 }
 
+func (c *countingSweeper) DeleteExpiredLinkTokens(context.Context) (int64, error) {
+	return 1, c.err
+}
+
 func TestSweepRunsBeforeTheFirstTick(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

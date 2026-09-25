@@ -421,6 +421,230 @@ func (*LogoutResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{7}
 }
 
+type CreateLinkTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateLinkTokenRequest) Reset() {
+	*x = CreateLinkTokenRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLinkTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLinkTokenRequest) ProtoMessage() {}
+
+func (x *CreateLinkTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLinkTokenRequest.ProtoReflect.Descriptor instead.
+func (*CreateLinkTokenRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CreateLinkTokenRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+type CreateLinkTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	ExpiresIn     int64                  `protobuf:"varint,2,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateLinkTokenResponse) Reset() {
+	*x = CreateLinkTokenResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLinkTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLinkTokenResponse) ProtoMessage() {}
+
+func (x *CreateLinkTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLinkTokenResponse.ProtoReflect.Descriptor instead.
+func (*CreateLinkTokenResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreateLinkTokenResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *CreateLinkTokenResponse) GetExpiresIn() int64 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
+type RedeemLinkTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	Provider      string                 `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
+	ExternalId    string                 `protobuf:"bytes,3,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RedeemLinkTokenRequest) Reset() {
+	*x = RedeemLinkTokenRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RedeemLinkTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RedeemLinkTokenRequest) ProtoMessage() {}
+
+func (x *RedeemLinkTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RedeemLinkTokenRequest.ProtoReflect.Descriptor instead.
+func (*RedeemLinkTokenRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RedeemLinkTokenRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *RedeemLinkTokenRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *RedeemLinkTokenRequest) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+type RedeemLinkTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	ExpiresIn     int64                  `protobuf:"varint,4,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RedeemLinkTokenResponse) Reset() {
+	*x = RedeemLinkTokenResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RedeemLinkTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RedeemLinkTokenResponse) ProtoMessage() {}
+
+func (x *RedeemLinkTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RedeemLinkTokenResponse.ProtoReflect.Descriptor instead.
+func (*RedeemLinkTokenResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RedeemLinkTokenResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *RedeemLinkTokenResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *RedeemLinkTokenResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *RedeemLinkTokenResponse) GetExpiresIn() int64 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
@@ -449,12 +673,31 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"expires_in\x18\x03 \x01(\x03R\texpiresIn\"4\n" +
 	"\rLogoutRequest\x12#\n" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x10\n" +
-	"\x0eLogoutResponse2\xff\x01\n" +
+	"\x0eLogoutResponse\"4\n" +
+	"\x16CreateLinkTokenRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\"N\n" +
+	"\x17CreateLinkTokenResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x02 \x01(\x03R\texpiresIn\"k\n" +
+	"\x16RedeemLinkTokenRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1a\n" +
+	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x1f\n" +
+	"\vexternal_id\x18\x03 \x01(\tR\n" +
+	"externalId\"\x99\x01\n" +
+	"\x17RedeemLinkTokenResponse\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x04 \x01(\x03R\texpiresIn2\xab\x03\n" +
 	"\vAuthService\x126\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\x12?\n" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\x12<\n" +
 	"\aRefresh\x12\x17.auth.v1.RefreshRequest\x1a\x18.auth.v1.RefreshResponse\x129\n" +
-	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponseB\x8a\x01\n" +
+	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\x12T\n" +
+	"\x0fCreateLinkToken\x12\x1f.auth.v1.CreateLinkTokenRequest\x1a .auth.v1.CreateLinkTokenResponse\x12T\n" +
+	"\x0fRedeemLinkToken\x12\x1f.auth.v1.RedeemLinkTokenRequest\x1a .auth.v1.RedeemLinkTokenResponseB\x8a\x01\n" +
 	"\vcom.auth.v1B\tAuthProtoP\x01Z3github.com/nnc/family-manager/sdk/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
@@ -469,31 +712,39 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*LoginRequest)(nil),     // 0: auth.v1.LoginRequest
-	(*LoginResponse)(nil),    // 1: auth.v1.LoginResponse
-	(*RegisterRequest)(nil),  // 2: auth.v1.RegisterRequest
-	(*RegisterResponse)(nil), // 3: auth.v1.RegisterResponse
-	(*RefreshRequest)(nil),   // 4: auth.v1.RefreshRequest
-	(*RefreshResponse)(nil),  // 5: auth.v1.RefreshResponse
-	(*LogoutRequest)(nil),    // 6: auth.v1.LogoutRequest
-	(*LogoutResponse)(nil),   // 7: auth.v1.LogoutResponse
+	(*LoginRequest)(nil),            // 0: auth.v1.LoginRequest
+	(*LoginResponse)(nil),           // 1: auth.v1.LoginResponse
+	(*RegisterRequest)(nil),         // 2: auth.v1.RegisterRequest
+	(*RegisterResponse)(nil),        // 3: auth.v1.RegisterResponse
+	(*RefreshRequest)(nil),          // 4: auth.v1.RefreshRequest
+	(*RefreshResponse)(nil),         // 5: auth.v1.RefreshResponse
+	(*LogoutRequest)(nil),           // 6: auth.v1.LogoutRequest
+	(*LogoutResponse)(nil),          // 7: auth.v1.LogoutResponse
+	(*CreateLinkTokenRequest)(nil),  // 8: auth.v1.CreateLinkTokenRequest
+	(*CreateLinkTokenResponse)(nil), // 9: auth.v1.CreateLinkTokenResponse
+	(*RedeemLinkTokenRequest)(nil),  // 10: auth.v1.RedeemLinkTokenRequest
+	(*RedeemLinkTokenResponse)(nil), // 11: auth.v1.RedeemLinkTokenResponse
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	0, // 0: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
-	2, // 1: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
-	4, // 2: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
-	6, // 3: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
-	1, // 4: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
-	3, // 5: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
-	5, // 6: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
-	7, // 7: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
+	2,  // 1: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
+	4,  // 2: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
+	6,  // 3: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
+	8,  // 4: auth.v1.AuthService.CreateLinkToken:input_type -> auth.v1.CreateLinkTokenRequest
+	10, // 5: auth.v1.AuthService.RedeemLinkToken:input_type -> auth.v1.RedeemLinkTokenRequest
+	1,  // 6: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
+	3,  // 7: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
+	5,  // 8: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
+	7,  // 9: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
+	9,  // 10: auth.v1.AuthService.CreateLinkToken:output_type -> auth.v1.CreateLinkTokenResponse
+	11, // 11: auth.v1.AuthService.RedeemLinkToken:output_type -> auth.v1.RedeemLinkTokenResponse
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -507,7 +758,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

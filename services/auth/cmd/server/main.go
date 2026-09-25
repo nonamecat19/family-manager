@@ -15,6 +15,7 @@ import (
 
 	"connectrpc.com/connect"
 
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database"
 	"github.com/nnc/family-manager/libs/go/logger"
 	"github.com/nnc/family-manager/libs/go/rpc"
@@ -151,12 +152,29 @@ type jwksProvider interface {
 	JWKS() token.JWKS
 }
 
-func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database.Pinger, log *slog.Logger) *http.ServeMux {
+type sessionVerifier interface {
+	jwksProvider
+	fmauth.TokenVerifier
+}
+
+var publicProcedures = []string{
+	authv1connect.AuthServiceLoginProcedure,
+	authv1connect.AuthServiceRegisterProcedure,
+	authv1connect.AuthServiceRefreshProcedure,
+	authv1connect.AuthServiceLogoutProcedure,
+	authv1connect.AuthServiceRedeemLinkTokenProcedure,
+}
+
+func newMux(h authv1connect.AuthServiceHandler, keys sessionVerifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	path, svc := authv1connect.NewAuthServiceHandler(h,
 		connect.WithReadMaxBytes(maxRequestBytes),
-		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
+		connect.WithInterceptors(
+			rpc.Recover(log),
+			rpc.Observe(log),
+			fmauth.Interceptor(keys, publicProcedures...),
+		),
 	)
 	mux.Handle(path, svc)
 
@@ -175,6 +193,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys jwksProvider, pool database
 
 type sweeper interface {
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
+	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
 }
 
 func sweepExpiredTokens(ctx context.Context, q sweeper, log *slog.Logger, interval time.Duration) {
@@ -196,10 +215,17 @@ func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
 	deleted, err := q.DeleteExpiredRefreshTokens(ctx)
 	if err != nil {
 		log.WarnContext(ctx, "sweep expired refresh tokens", slog.String("error", err.Error()))
+	} else if deleted > 0 {
+		log.InfoContext(ctx, "swept expired refresh tokens", slog.Int64("rows", deleted))
+	}
+
+	deleted, err = q.DeleteExpiredLinkTokens(ctx)
+	if err != nil {
+		log.WarnContext(ctx, "sweep expired link tokens", slog.String("error", err.Error()))
 		return
 	}
 	if deleted > 0 {
-		log.InfoContext(ctx, "swept expired refresh tokens", slog.Int64("rows", deleted))
+		log.InfoContext(ctx, "swept expired link tokens", slog.Int64("rows", deleted))
 	}
 }
 

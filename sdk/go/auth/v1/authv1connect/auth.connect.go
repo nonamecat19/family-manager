@@ -41,6 +41,12 @@ const (
 	AuthServiceRefreshProcedure = "/auth.v1.AuthService/Refresh"
 	// AuthServiceLogoutProcedure is the fully-qualified name of the AuthService's Logout RPC.
 	AuthServiceLogoutProcedure = "/auth.v1.AuthService/Logout"
+	// AuthServiceCreateLinkTokenProcedure is the fully-qualified name of the AuthService's
+	// CreateLinkToken RPC.
+	AuthServiceCreateLinkTokenProcedure = "/auth.v1.AuthService/CreateLinkToken"
+	// AuthServiceRedeemLinkTokenProcedure is the fully-qualified name of the AuthService's
+	// RedeemLinkToken RPC.
+	AuthServiceRedeemLinkTokenProcedure = "/auth.v1.AuthService/RedeemLinkToken"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -49,6 +55,8 @@ type AuthServiceClient interface {
 	Register(context.Context, *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error)
 	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
+	CreateLinkToken(context.Context, *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error)
+	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -86,15 +94,29 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("Logout")),
 			connect.WithClientOptions(opts...),
 		),
+		createLinkToken: connect.NewClient[v1.CreateLinkTokenRequest, v1.CreateLinkTokenResponse](
+			httpClient,
+			baseURL+AuthServiceCreateLinkTokenProcedure,
+			connect.WithSchema(authServiceMethods.ByName("CreateLinkToken")),
+			connect.WithClientOptions(opts...),
+		),
+		redeemLinkToken: connect.NewClient[v1.RedeemLinkTokenRequest, v1.RedeemLinkTokenResponse](
+			httpClient,
+			baseURL+AuthServiceRedeemLinkTokenProcedure,
+			connect.WithSchema(authServiceMethods.ByName("RedeemLinkToken")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // authServiceClient implements AuthServiceClient.
 type authServiceClient struct {
-	login    *connect.Client[v1.LoginRequest, v1.LoginResponse]
-	register *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
-	refresh  *connect.Client[v1.RefreshRequest, v1.RefreshResponse]
-	logout   *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
+	login           *connect.Client[v1.LoginRequest, v1.LoginResponse]
+	register        *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
+	refresh         *connect.Client[v1.RefreshRequest, v1.RefreshResponse]
+	logout          *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
+	createLinkToken *connect.Client[v1.CreateLinkTokenRequest, v1.CreateLinkTokenResponse]
+	redeemLinkToken *connect.Client[v1.RedeemLinkTokenRequest, v1.RedeemLinkTokenResponse]
 }
 
 // Login calls auth.v1.AuthService.Login.
@@ -117,12 +139,24 @@ func (c *authServiceClient) Logout(ctx context.Context, req *connect.Request[v1.
 	return c.logout.CallUnary(ctx, req)
 }
 
+// CreateLinkToken calls auth.v1.AuthService.CreateLinkToken.
+func (c *authServiceClient) CreateLinkToken(ctx context.Context, req *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error) {
+	return c.createLinkToken.CallUnary(ctx, req)
+}
+
+// RedeemLinkToken calls auth.v1.AuthService.RedeemLinkToken.
+func (c *authServiceClient) RedeemLinkToken(ctx context.Context, req *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error) {
+	return c.redeemLinkToken.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
 	Register(context.Context, *connect.Request[v1.RegisterRequest]) (*connect.Response[v1.RegisterResponse], error)
 	Refresh(context.Context, *connect.Request[v1.RefreshRequest]) (*connect.Response[v1.RefreshResponse], error)
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
+	CreateLinkToken(context.Context, *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error)
+	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -156,6 +190,18 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("Logout")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceCreateLinkTokenHandler := connect.NewUnaryHandler(
+		AuthServiceCreateLinkTokenProcedure,
+		svc.CreateLinkToken,
+		connect.WithSchema(authServiceMethods.ByName("CreateLinkToken")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceRedeemLinkTokenHandler := connect.NewUnaryHandler(
+		AuthServiceRedeemLinkTokenProcedure,
+		svc.RedeemLinkToken,
+		connect.WithSchema(authServiceMethods.ByName("RedeemLinkToken")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceLoginProcedure:
@@ -166,6 +212,10 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceRefreshHandler.ServeHTTP(w, r)
 		case AuthServiceLogoutProcedure:
 			authServiceLogoutHandler.ServeHTTP(w, r)
+		case AuthServiceCreateLinkTokenProcedure:
+			authServiceCreateLinkTokenHandler.ServeHTTP(w, r)
+		case AuthServiceRedeemLinkTokenProcedure:
+			authServiceRedeemLinkTokenHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -189,4 +239,12 @@ func (UnimplementedAuthServiceHandler) Refresh(context.Context, *connect.Request
 
 func (UnimplementedAuthServiceHandler) Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.Logout is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) CreateLinkToken(context.Context, *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.CreateLinkToken is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.RedeemLinkToken is not implemented"))
 }
