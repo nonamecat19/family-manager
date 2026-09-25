@@ -13,15 +13,21 @@ function token(payload: unknown, signature = "sig"): string {
   return `${b64url({ alg: "ES256", typ: "JWT" })}.${b64url(payload)}.${signature}`;
 }
 
-test("reads the three claims services/auth mints", () => {
+test("reads the claims services/auth mints", () => {
   const claims = decodeAccessClaims(
-    token({ sub: "user-1", family_id: "fam-1", email: "olena@example.com" }),
+    token({ sub: "user-1", family_id: "fam-1", email: "olena@example.com", locale: "uk" }),
   );
   assert.deepEqual(claims, {
     userId: "user-1",
     familyId: "fam-1",
     email: "olena@example.com",
+    locale: "uk",
   });
+});
+
+test("a token minted before the locale claim existed still decodes", () => {
+  const claims = decodeAccessClaims(token({ sub: "user-1", email: "o@example.com" }));
+  assert.equal(claims?.locale, "");
 });
 
 test("a user in no family has an empty family id, not a null claims object", () => {

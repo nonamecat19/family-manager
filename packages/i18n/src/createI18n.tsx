@@ -22,8 +22,14 @@ export interface I18nConfig<L extends string, D extends Translations> {
   bootBackground: string;
 }
 
+export interface I18nProviderProps {
+  children: ReactNode;
+  remoteLocale?: string | null;
+  onLocaleChange?: (locale: string) => void;
+}
+
 export interface I18n<L extends string, D extends Translations> {
-  I18nProvider: (props: { children: ReactNode }) => ReactNode;
+  I18nProvider: (props: I18nProviderProps) => ReactNode;
   useI18n: () => I18nContextValue<L, D>;
   bootT: (key: StaticKey<D>) => string;
   deviceLocale: () => L;
@@ -44,15 +50,24 @@ export function createI18n<L extends string, D extends Translations>(
 
   const I18nContext = createContext<I18nContextValue<L, D> | null>(null);
 
-  function I18nProvider({ children }: { children: ReactNode }) {
+  function I18nProvider({ children, remoteLocale, onLocaleChange }: I18nProviderProps) {
     const [locale, setLocaleState] = useState<L>(resolveDeviceLocale);
     const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+      if (!remoteLocale) return;
+      if (!(locales as readonly string[]).includes(remoteLocale)) return;
+      setLocaleState(remoteLocale as L);
+      SecureStore.setItemAsync(storageKey, remoteLocale).catch(() => {
+      });
+    }, [remoteLocale]);
 
     useEffect(() => {
       let cancelled = false;
       SecureStore.getItemAsync(storageKey)
         .then((stored) => {
           if (cancelled) return;
+          if (remoteLocale) return;
           if (stored && (locales as readonly string[]).includes(stored)) {
             setLocaleState(stored as L);
           }
@@ -67,11 +82,15 @@ export function createI18n<L extends string, D extends Translations>(
       };
     }, []);
 
-    const setLocale = useCallback((next: L) => {
-      setLocaleState(next);
-      SecureStore.setItemAsync(storageKey, next).catch(() => {
-      });
-    }, []);
+    const setLocale = useCallback(
+      (next: L) => {
+        setLocaleState(next);
+        SecureStore.setItemAsync(storageKey, next).catch(() => {
+        });
+        onLocaleChange?.(next);
+      },
+      [onLocaleChange],
+    );
 
     const t = useCallback(
       (key: keyof D, params?: Record<string, string | number>): string => {

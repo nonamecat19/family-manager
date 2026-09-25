@@ -44,6 +44,29 @@ import { toWireGranularity, toWirePeriod, toWireScope } from "./scopeWire.ts";
 
 
 
+export function useUserSettings(options: { enabled?: boolean } = {}) {
+  const { family } = useClients();
+  return useQuery({
+    queryKey: queryKeys.userSettings(),
+    queryFn: () => family.getMySettings({}),
+    enabled: options.enabled ?? true,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useUpdateUserSettings() {
+  const { family } = useClients();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { locale?: string; timezone?: string }) =>
+      family.updateMySettings({ locale: input.locale ?? "", timezone: input.timezone ?? "" }),
+    onSuccess: (res) => {
+      qc.setQueryData(queryKeys.userSettings(), res);
+      void qc.invalidateQueries({ queryKey: queryKeys.userSettings() });
+    },
+  });
+}
+
 export function useFamily() {
   const { family } = useClients();
   return useQuery({
