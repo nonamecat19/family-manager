@@ -180,3 +180,50 @@ u21.
 
 RESOLVED: 2026-10-06 — recommendations applied. (1) calsync owns the calendar switch through `Pusher.SwitchCalendar` (ErrForbidden and ErrNotFound count as gone), u20 calls it, and u20 now depends on u21. (2) Inserts use deterministic client-supplied event IDs from a new unit, u18b, which u21 depends on, and ErrConflict leads to an update. The item lock is taken before the item is read, and the sweep locks per link. A single tasks replica is recorded in u24. (3) `ListOrphanCalendarLinks` also matches tasks without a deadline (`google.sql` added to u21's files). u21 is unblocked with its attempts reset, and starts from its stash.
 
+
+## E10 — 0004 (home-screen widgets): human gates (open)
+
+The run continues with the units that are not gated (shared kit reads/writes, strings, justfile
+recipes, ADR). These seven units wait for you:
+
+- **u01: scaffold `packages/widgets` and add the native dependencies.** The packages are
+  react-native-android-widget, @bacons/apple-targets, expo-background-task and expo-task-manager,
+  for finance, notes and recipes. This is one `pnpm-lock.yaml` change (STOP). Answer "u01:
+  approved". Everything in the widget kit (u02-u06) and every app's renderers wait on it.
+- **u08: let the iOS widget extension read the session.** This moves the session in `@fm/auth`
+  into an App Group keychain access group. It is security-sensitive, so it gets your review.
+  Widgets never refresh tokens: after the 15-minute access token expires, iOS widget actions say
+  "Open app to sign in". Answer "u08: approved" or name changes. f07, n07 and t09 (the iOS App
+  Intents) wait on it.
+- **r07: the recipes basket has no server state.** It lives in `useState` in
+  `apps/recipes/components/basket.tsx`, and `recipes.v1` has no basket rpc. Pick one:
+  - (a) *(recommended)* store the basket on the device (AsyncStorage plus the widget snapshot) and
+    let the widget tick items on the device;
+  - (b) a server-side basket, which needs a new brief;
+  - (c) drop the basket widget and keep only "today's meal plan".
+- **t00 and t01: tasks widgets.** They wait until brief 0003 has `apps/tasks` (p1-p3, a5).
+  Mark t00 done afterwards. t01 is a second `pnpm-lock.yaml` change, unless the widget dependencies
+  are folded into 0003/p1.
+- **c01: a CI macOS job that compiles the Swift widget targets** (`.github/workflows/verify.yml`,
+  STOP). Locally, `check-ios-widgets` only proves that prebuild works.
+- **h01: Apple Developer team id and App Group ids.** These are credentials, needed only for
+  signed iOS builds.
+
+Not blocked, but assumed: neither platform lets a widget take typed input. So finance "quick add"
+logs a template from the widget, and a custom amount opens the app's add screen.
+
+## E11 — 0005 (bank notification capture): human gates (open)
+
+- **gw: `go.work`.** Registers `services/capture` (STOP). Until then, every capture unit tests
+  with `GOWORK=off`. Answer "gw: approved".
+- **hk: `CAPTURE_SEAL_KEY`.** Add a base64 32-byte key to the repo-root `.env`, which is never
+  committed: `openssl rand -base64 32`.
+- **rt: local runtime wiring.** Compose service on host :8089, the capture DB in postgres init,
+  and `.env.example` (STOP, deploy surface). Run it after 0003's u26, which edits the same files.
+- **hr: review data at rest before the first deploy.** Read ADR 0018 (written by unit d1) and
+  accept it: AES-GCM sealing of the raw text, owner-only visibility, raw text purged 90 days after
+  a confirm or dismiss.
+- **hp: prod deploy surface.** Caddy host `capture.<domain>` and the prod compose (`infra/**`).
+- **hr2: real bank samples.** The parser fixtures are synthesised from known formats. Replace them
+  with real notifications (redact the card digits) and confirm the package ids for PUMB, Sense,
+  A-Bank and Raiffeisen.

@@ -481,10 +481,10 @@
         "s1"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "gw",
       "title": "Register services/capture in go.work",
       "kind": "infra",
@@ -498,10 +498,10 @@
       "files": [],
       "depends_on": [],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "hk",
       "title": "Provision CAPTURE_SEAL_KEY in local .env",
       "kind": "infra",
@@ -523,10 +523,10 @@
         "hk"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "rt",
       "title": "Local runtime wiring: capture in compose (host :8089), capture DB in postgres init, root .env.example",
       "kind": "infra",
@@ -561,10 +561,10 @@
         "s6"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "hr",
       "title": "Human review of capture storage and retention before first deploy (accept ADR 0018)",
       "kind": "docs",
@@ -585,10 +585,10 @@
         "hr"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "hp",
       "title": "Prod deploy surface: Caddy host capture.<domain>, capture service + DB in prod compose",
       "kind": "infra",
@@ -606,10 +606,10 @@
         "pr5"
       ],
       "gate": "human",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "human gate (E11)",
       "id": "hr2",
       "title": "Replace synthesised parser fixtures with real recorded notifications; confirm bank package ids",
       "kind": "test",
@@ -990,5 +990,5 @@
       "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
     }
   ],
-  "updated_at": "2026-10-06T08:14:06.162Z"
+  "updated_at": "2026-10-06T08:14:53.883Z"
 }
