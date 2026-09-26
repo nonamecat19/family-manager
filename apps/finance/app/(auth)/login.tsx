@@ -1,17 +1,22 @@
-import { toDisplayError, useClients } from "@fm/api";
+import { toDisplayError, useClients, useTelegramLogin } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 
 import { Body, Button, Caption, Field, Heading, Screen, TextLink } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
 import { Icon, nocturne } from "../../components/nocturne/index.ts";
 
+const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
+
 export default function LoginScreen() {
   const { auth } = useClients();
   const { signIn } = useAuth();
   const { t } = useI18n();
+  const telegram = useTelegramLogin({ bot: telegramBot, open: Linking.openURL });
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -97,7 +102,53 @@ export default function LoginScreen() {
             setError(null);
           }}
         />
+
+        {telegram.available ? <TelegramLogin telegram={telegram} /> : null}
       </KeyboardAvoidingView>
     </Screen>
+  );
+}
+
+function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLogin> }) {
+  const { t } = useI18n();
+
+  if (telegram.phase === "pending" && telegram.userCode) {
+    return (
+      <View className="items-center gap-n3">
+        <Text className="text-[22px] font-semibold text-fg" style={{ letterSpacing: 3 }}>
+          {telegram.userCode}
+        </Text>
+        <Caption>{t("auth.telegramPendingHint")}</Caption>
+        <TextLink label={t("auth.telegramCancel")} onPress={telegram.cancel} />
+      </View>
+    );
+  }
+
+  const failure =
+    telegram.phase === "denied"
+      ? t("auth.telegramDenied")
+      : telegram.phase === "expired"
+        ? t("auth.telegramExpired")
+        : telegram.phase === "error"
+          ? toDisplayError(telegram.error, t("auth.telegramError")).message
+          : null;
+
+  if (failure) {
+    return (
+      <View className="items-center gap-n3">
+        <Caption>{failure}</Caption>
+        <Button title={t("auth.telegramRetry")} onPress={() => void telegram.start()} />
+      </View>
+    );
+  }
+
+  const busy = telegram.phase === "starting" || telegram.phase === "approved";
+  return (
+    <Button
+      title={busy ? t("auth.telegramSigningIn") : t("auth.telegramButton")}
+      disabled={busy}
+      busy={busy}
+      onPress={() => void telegram.start()}
+    />
   );
 }

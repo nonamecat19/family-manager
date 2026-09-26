@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n, type Locale } from "../../components/i18n/index.tsx";
 import { CheckIcon, Icon } from "../../components/organic/icons.tsx";
+import { NotificationsSection } from "../../components/organic/NotificationsSection.tsx";
 import { organic } from "../../components/organic/tokens.ts";
 import { Display, Kicker, PrimaryButton, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
@@ -108,6 +109,23 @@ export default function PreferencesScreen() {
           >
             <Text className="font-fig-bold text-[15.5px] text-fg">
               {t("preferences.connectedAccounts")}
+            </Text>
+            <Icon name="forward" size={16} color={organic.neutral[600]} />
+          </Pressable>
+        </View>
+
+        <NotificationsSection />
+
+        <View>
+          <Kicker className="mb-[11px]">{t("preferences.approveDevice")}</Kicker>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("preferences.approveDevice")}
+            onPress={() => router.push("/(app)/approve-device")}
+            className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-[16px] py-[14px]"
+          >
+            <Text className="font-fig-bold text-[15.5px] text-fg">
+              {t("preferences.approveDevice")}
             </Text>
             <Icon name="forward" size={16} color={organic.neutral[600]} />
           </Pressable>

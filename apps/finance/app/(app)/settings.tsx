@@ -36,8 +36,9 @@ import {
   PrivacySheet,
   TelegramSheet,
 } from "@/components/screens/settings/sheets.tsx";
+import { NotificationsSheet } from "@/components/screens/settings/NotificationsSheet.tsx";
 
-type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced" | "telegram";
+type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced" | "telegram" | "notifications";
 
 const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
@@ -211,6 +212,11 @@ export default function SettingsScreen() {
           label={t("settings.connectedAccounts")}
           onPress={() => openRoute("/(app)/connected-accounts")}
         />
+        <SettingsRow
+          icon="device-mobile"
+          label={t("settings.approveDevice")}
+          onPress={() => openRoute("/(app)/approve-device")}
+        />
         {telegram.available ? (
           <SettingsRow
             icon="device-mobile"
@@ -223,6 +229,11 @@ export default function SettingsScreen() {
             onPress={() => setSheet("telegram")}
           />
         ) : null}
+        <SettingsRow
+          icon="bell"
+          label={t("settings.notifications")}
+          onPress={() => setSheet("notifications")}
+        />
         <SettingsRow
           icon="sliders-horizontal"
           label={t("settings.advanced")}
@@ -256,6 +267,7 @@ export default function SettingsScreen() {
         onClose={() => setSheet(null)}
         link={telegram}
       />
+      <NotificationsSheet visible={sheet === "notifications"} onClose={() => setSheet(null)} />
       <AdvancedSheet
         visible={sheet === "advanced"}
         onClose={() => setSheet(null)}

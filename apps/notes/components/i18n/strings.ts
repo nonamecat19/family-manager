@@ -30,6 +30,14 @@ export const strings = {
     switchToLogin: "Already have an account? Sign in",
     loginError: "That sign-in did not go through.",
     registerError: "That account could not be created.",
+    telegramButton: "Log in with Telegram",
+    telegramSigningIn: "Signing you in",
+    telegramPendingHint: "In a private chat with the bot, tap “Sign me in” to confirm.",
+    telegramCancel: "Cancel",
+    telegramDenied: "Sign-in was declined in Telegram.",
+    telegramExpired: "That code expired. Try again.",
+    telegramError: "Telegram sign-in did not go through.",
+    telegramRetry: "Try again",
   },
 
   onboarding: {
@@ -261,6 +269,9 @@ export const strings = {
     telegramDisconnect: "Disconnect",
     telegramFailed: "Telegram linking did not respond. Try again.",
     connectedAccounts: "Connected accounts",
+    approveDevice: "Approve a sign-in",
+    notifications: "Notifications",
+    notificationsLoadFailed: "Notification settings did not load.",
   },
 
   connectedAccounts: {
@@ -274,5 +285,19 @@ export const strings = {
     unlink: "Disconnect",
     unlinkConfirm: "Disconnect this account?",
     unlinkFailed: "Could not disconnect. Try again.",
+  },
+
+  approveDevice: {
+    title: "Approve a sign-in",
+    back: "Back",
+    body: "Type the code shown on the other device to sign it in as you.",
+    placeholder: "XXXX-XXXX",
+    approve: "Approve",
+    deny: "Deny",
+    approved: "That device is signed in.",
+    denied: "Sign-in denied.",
+    notFound: "That code was not found or has expired.",
+    tooManyAttempts: "Too many attempts. Wait a bit and try again.",
+    failed: "That did not go through. Try again.",
   },
 } as const;

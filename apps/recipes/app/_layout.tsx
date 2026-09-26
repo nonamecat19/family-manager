@@ -1,6 +1,6 @@
 import "../global.css";
 
-import { ApiProvider, isRefreshRejection } from "@fm/api";
+import { ApiProvider, isRefreshRejection, usePushRegistration } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { ErrorBoundary, Loading, ThemeProvider } from "@fm/ui";
 import { organicTheme, type Theme } from "@fm/theme";
@@ -115,7 +115,13 @@ function ApiGate() {
 
   return (
     <ApiProvider baseUrl={API_BASE_URL} serviceUrls={SERVICE_URLS} getAccessToken={getToken}>
+      <PushRegistration />
       <Slot />
     </ApiProvider>
   );
+}
+
+function PushRegistration() {
+  usePushRegistration({ app: "recipes" });
+  return null;
 }

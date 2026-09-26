@@ -1,5 +1,7 @@
-import { toDisplayError, useClients } from "@fm/api";
+import { toDisplayError, useClients, useTelegramLogin } from "@fm/api";
 import { tokensFromResponse, useAuth } from "@fm/auth";
+import Constants from "expo-constants";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 
@@ -7,9 +9,12 @@ import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
 
 import { strings } from "../../components/i18n/index.ts";
 
+const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
+
 export default function LoginScreen() {
   const { auth } = useClients();
   const { signIn } = useAuth();
+  const telegram = useTelegramLogin({ bot: telegramBot, open: Linking.openURL });
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -96,8 +101,52 @@ export default function LoginScreen() {
             setError(null);
           }}
         />
+
+        {telegram.available ? <TelegramLogin telegram={telegram} /> : null}
       </KeyboardAvoidingView>
     </Screen>
+  );
+}
+
+function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLogin> }) {
+  if (telegram.phase === "pending" && telegram.userCode) {
+    return (
+      <View className="items-center gap-[10px]">
+        <Text className="font-semi text-[22px] text-fg" style={{ letterSpacing: 3 }}>
+          {telegram.userCode}
+        </Text>
+        <Caption>{strings.login.telegramPendingHint}</Caption>
+        <TextLink label={strings.login.telegramCancel} onPress={telegram.cancel} />
+      </View>
+    );
+  }
+
+  const failure =
+    telegram.phase === "denied"
+      ? strings.login.telegramDenied
+      : telegram.phase === "expired"
+        ? strings.login.telegramExpired
+        : telegram.phase === "error"
+          ? toDisplayError(telegram.error, strings.login.telegramError).message
+          : null;
+
+  if (failure) {
+    return (
+      <View className="items-center gap-[10px]">
+        <Caption>{failure}</Caption>
+        <Button title={strings.login.telegramRetry} onPress={() => void telegram.start()} />
+      </View>
+    );
+  }
+
+  const busy = telegram.phase === "starting" || telegram.phase === "approved";
+  return (
+    <Button
+      title={busy ? strings.login.telegramSigningIn : strings.login.telegramButton}
+      disabled={busy}
+      busy={busy}
+      onPress={() => void telegram.start()}
+    />
   );
 }
 
