@@ -5,12 +5,14 @@ WORKDIR /src
 
 COPY services/notes/gradlew services/notes/settings.gradle services/notes/build.gradle ./
 COPY services/notes/gradle/ gradle/
+COPY sdk/java/src/main/java/ generated/
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon dependencies --configuration runtimeClasspath
 
 COPY services/notes/src/ src/
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon -x test bootJar && cp build/libs/*-SNAPSHOT.jar /app.jar
+    ./gradlew --no-daemon -x test -PgeneratedProtoDir=generated bootJar \
+    && cp build/libs/*-SNAPSHOT.jar /app.jar
 
 RUN java -Djarmode=tools -jar /app.jar extract --layers --launcher --destination /layers
 
