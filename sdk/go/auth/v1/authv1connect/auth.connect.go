@@ -47,6 +47,11 @@ const (
 	// AuthServiceRedeemLinkTokenProcedure is the fully-qualified name of the AuthService's
 	// RedeemLinkToken RPC.
 	AuthServiceRedeemLinkTokenProcedure = "/auth.v1.AuthService/RedeemLinkToken"
+	// AuthServiceListIdentitiesProcedure is the fully-qualified name of the AuthService's
+	// ListIdentities RPC.
+	AuthServiceListIdentitiesProcedure = "/auth.v1.AuthService/ListIdentities"
+	// AuthServiceUnlinkProcedure is the fully-qualified name of the AuthService's Unlink RPC.
+	AuthServiceUnlinkProcedure = "/auth.v1.AuthService/Unlink"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -57,6 +62,8 @@ type AuthServiceClient interface {
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	CreateLinkToken(context.Context, *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error)
 	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
+	ListIdentities(context.Context, *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error)
+	Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -106,6 +113,18 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("RedeemLinkToken")),
 			connect.WithClientOptions(opts...),
 		),
+		listIdentities: connect.NewClient[v1.ListIdentitiesRequest, v1.ListIdentitiesResponse](
+			httpClient,
+			baseURL+AuthServiceListIdentitiesProcedure,
+			connect.WithSchema(authServiceMethods.ByName("ListIdentities")),
+			connect.WithClientOptions(opts...),
+		),
+		unlink: connect.NewClient[v1.UnlinkRequest, v1.UnlinkResponse](
+			httpClient,
+			baseURL+AuthServiceUnlinkProcedure,
+			connect.WithSchema(authServiceMethods.ByName("Unlink")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -117,6 +136,8 @@ type authServiceClient struct {
 	logout          *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
 	createLinkToken *connect.Client[v1.CreateLinkTokenRequest, v1.CreateLinkTokenResponse]
 	redeemLinkToken *connect.Client[v1.RedeemLinkTokenRequest, v1.RedeemLinkTokenResponse]
+	listIdentities  *connect.Client[v1.ListIdentitiesRequest, v1.ListIdentitiesResponse]
+	unlink          *connect.Client[v1.UnlinkRequest, v1.UnlinkResponse]
 }
 
 // Login calls auth.v1.AuthService.Login.
@@ -149,6 +170,16 @@ func (c *authServiceClient) RedeemLinkToken(ctx context.Context, req *connect.Re
 	return c.redeemLinkToken.CallUnary(ctx, req)
 }
 
+// ListIdentities calls auth.v1.AuthService.ListIdentities.
+func (c *authServiceClient) ListIdentities(ctx context.Context, req *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error) {
+	return c.listIdentities.CallUnary(ctx, req)
+}
+
+// Unlink calls auth.v1.AuthService.Unlink.
+func (c *authServiceClient) Unlink(ctx context.Context, req *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error) {
+	return c.unlink.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
@@ -157,6 +188,8 @@ type AuthServiceHandler interface {
 	Logout(context.Context, *connect.Request[v1.LogoutRequest]) (*connect.Response[v1.LogoutResponse], error)
 	CreateLinkToken(context.Context, *connect.Request[v1.CreateLinkTokenRequest]) (*connect.Response[v1.CreateLinkTokenResponse], error)
 	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
+	ListIdentities(context.Context, *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error)
+	Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -202,6 +235,18 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("RedeemLinkToken")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceListIdentitiesHandler := connect.NewUnaryHandler(
+		AuthServiceListIdentitiesProcedure,
+		svc.ListIdentities,
+		connect.WithSchema(authServiceMethods.ByName("ListIdentities")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceUnlinkHandler := connect.NewUnaryHandler(
+		AuthServiceUnlinkProcedure,
+		svc.Unlink,
+		connect.WithSchema(authServiceMethods.ByName("Unlink")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceLoginProcedure:
@@ -216,6 +261,10 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceCreateLinkTokenHandler.ServeHTTP(w, r)
 		case AuthServiceRedeemLinkTokenProcedure:
 			authServiceRedeemLinkTokenHandler.ServeHTTP(w, r)
+		case AuthServiceListIdentitiesProcedure:
+			authServiceListIdentitiesHandler.ServeHTTP(w, r)
+		case AuthServiceUnlinkProcedure:
+			authServiceUnlinkHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -247,4 +296,12 @@ func (UnimplementedAuthServiceHandler) CreateLinkToken(context.Context, *connect
 
 func (UnimplementedAuthServiceHandler) RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.RedeemLinkToken is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) ListIdentities(context.Context, *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.ListIdentities is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.Unlink is not implemented"))
 }

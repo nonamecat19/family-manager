@@ -26,6 +26,7 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/family"
 	"github.com/nnc/family-manager/services/auth/internal/handler"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/store"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
@@ -107,6 +108,7 @@ func run() error {
 
 	h := handler.New(handler.Options{
 		Queries:  db.New(pool),
+		Tx:       store.New(pool),
 		Signer:   signer,
 		Family:   lookup,
 		Log:      log,
@@ -194,6 +196,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys sessionVerifier, pool datab
 type sweeper interface {
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
+	DeleteOrphanChains(ctx context.Context) (int64, error)
 }
 
 func sweepExpiredTokens(ctx context.Context, q sweeper, log *slog.Logger, interval time.Duration) {
@@ -222,10 +225,15 @@ func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
 	deleted, err = q.DeleteExpiredLinkTokens(ctx)
 	if err != nil {
 		log.WarnContext(ctx, "sweep expired link tokens", slog.String("error", err.Error()))
-		return
-	}
-	if deleted > 0 {
+	} else if deleted > 0 {
 		log.InfoContext(ctx, "swept expired link tokens", slog.Int64("rows", deleted))
+	}
+
+	deleted, err = q.DeleteOrphanChains(ctx)
+	if err != nil {
+		log.WarnContext(ctx, "sweep orphan chains", slog.String("error", err.Error()))
+	} else if deleted > 0 {
+		log.InfoContext(ctx, "swept orphan chains", slog.Int64("rows", deleted))
 	}
 }
 

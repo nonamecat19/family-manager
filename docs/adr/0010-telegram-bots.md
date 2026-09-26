@@ -1,6 +1,6 @@
 # ADR 0010 — One Go service hosting one Telegram bot per app
 
-- Status: accepted
+- Status: accepted; linking amended by [ADR 0013](0013-linked-identities.md)
 - Date: 2026-09-22
 
 ## Context

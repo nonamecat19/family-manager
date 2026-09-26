@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"maps"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -18,6 +19,8 @@ type fakeStore struct {
 	byID   map[string]db.User
 	tokens map[string]db.RefreshToken
 	links  map[string]db.LinkToken
+	idents map[string]db.Identity
+	chains map[string]pgtype.Timestamptz
 
 	failOn map[string]error
 }
@@ -28,6 +31,8 @@ func newFakeStore() *fakeStore {
 		byID:   map[string]db.User{},
 		tokens: map[string]db.RefreshToken{},
 		links:  map[string]db.LinkToken{},
+		idents: map[string]db.Identity{},
+		chains: map[string]pgtype.Timestamptz{},
 		failOn: map[string]error{},
 	}
 }
@@ -242,4 +247,116 @@ func mustChainID() pgtype.UUID {
 		panic(err)
 	}
 	return id
+}
+
+func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
+	tokens, links, idents := maps.Clone(s.tokens), maps.Clone(s.links), maps.Clone(s.idents)
+	chains := maps.Clone(s.chains)
+	if err := fn(s); err != nil {
+		s.tokens, s.links, s.idents, s.chains = tokens, links, idents, chains
+		return err
+	}
+	return nil
+}
+
+func identKey(provider, externalID string) string { return provider + "|" + externalID }
+
+func (s *fakeStore) GetIdentity(_ context.Context, arg db.GetIdentityParams) (db.Identity, error) {
+	if err := s.fail("GetIdentity"); err != nil {
+		return db.Identity{}, err
+	}
+	i, ok := s.idents[identKey(arg.Provider, arg.ExternalID)]
+	if !ok {
+		return db.Identity{}, pgx.ErrNoRows
+	}
+	return i, nil
+}
+
+func (s *fakeStore) UpsertIdentity(_ context.Context, arg db.UpsertIdentityParams) (db.Identity, error) {
+	if err := s.fail("UpsertIdentity"); err != nil {
+		return db.Identity{}, err
+	}
+	key := identKey(arg.Provider, arg.ExternalID)
+	now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	if i, ok := s.idents[key]; ok {
+		if i.UserID != arg.UserID {
+			return db.Identity{}, pgx.ErrNoRows
+		}
+		i.ChainID, i.UpdatedAt = arg.ChainID, now
+		s.idents[key] = i
+		return i, nil
+	}
+	i := db.Identity{
+		ID:         mustChainID(),
+		UserID:     arg.UserID,
+		Provider:   arg.Provider,
+		ExternalID: arg.ExternalID,
+		ChainID:    arg.ChainID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	s.idents[key] = i
+	return i, nil
+}
+
+func (s *fakeStore) ListIdentitiesForUser(_ context.Context, userID pgtype.UUID) ([]db.Identity, error) {
+	if err := s.fail("ListIdentitiesForUser"); err != nil {
+		return nil, err
+	}
+	var out []db.Identity
+	for _, i := range s.idents {
+		if i.UserID == userID {
+			out = append(out, i)
+		}
+	}
+	return out, nil
+}
+
+func (s *fakeStore) DeleteIdentity(_ context.Context, arg db.DeleteIdentityParams) (db.Identity, error) {
+	if err := s.fail("DeleteIdentity"); err != nil {
+		return db.Identity{}, err
+	}
+	key := identKey(arg.Provider, arg.ExternalID)
+	i, ok := s.idents[key]
+	if !ok || i.UserID != arg.UserID {
+		return db.Identity{}, pgx.ErrNoRows
+	}
+	delete(s.idents, key)
+	return i, nil
+}
+
+func (s *fakeStore) LockIdentityKey(context.Context, string) error { return nil }
+
+func (s *fakeStore) EnsureChain(_ context.Context, id pgtype.UUID) (pgtype.Timestamptz, error) {
+	if err := s.fail("EnsureChain"); err != nil {
+		return pgtype.Timestamptz{}, err
+	}
+	key := pgconv.UUIDString(id)
+	revokedAt := s.chains[key]
+	s.chains[key] = revokedAt
+	return revokedAt, nil
+}
+
+func (s *fakeStore) TombstoneChain(_ context.Context, id pgtype.UUID) error {
+	if err := s.fail("TombstoneChain"); err != nil {
+		return err
+	}
+	key := pgconv.UUIDString(id)
+	if !s.chains[key].Valid {
+		s.chains[key] = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	}
+	return nil
+}
+
+func (s *fakeStore) DeleteOrphanChains(context.Context) (int64, error) { return 0, nil }
+
+func (s *fakeStore) LockChain(_ context.Context, id pgtype.UUID) (pgtype.Timestamptz, error) {
+	if err := s.fail("LockChain"); err != nil {
+		return pgtype.Timestamptz{}, err
+	}
+	revokedAt, ok := s.chains[pgconv.UUIDString(id)]
+	if !ok {
+		return pgtype.Timestamptz{}, pgx.ErrNoRows
+	}
+	return revokedAt, nil
 }

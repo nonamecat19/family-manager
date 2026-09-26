@@ -8,6 +8,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Chain struct {
+	ID        pgtype.UUID
+	RevokedAt pgtype.Timestamptz
+	CreatedAt pgtype.Timestamptz
+}
+
+type Identity struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	Provider   string
+	ExternalID string
+	ChainID    pgtype.UUID
+	CreatedAt  pgtype.Timestamptz
+	UpdatedAt  pgtype.Timestamptz
+}
+
 type LinkToken struct {
 	ID         pgtype.UUID
 	UserID     pgtype.UUID

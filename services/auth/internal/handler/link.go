@@ -96,15 +96,30 @@ func (h *Handler) RedeemLinkToken(
 		return nil, errInvalidLinkToken()
 	}
 
-	spent, err := h.q.MarkLinkTokenUsed(ctx, db.MarkLinkTokenUsedParams{
-		ID:         row.ID,
-		ExternalID: &externalID,
+	chainID, err := newChainID()
+	if err != nil {
+		return nil, h.internal(ctx, err, "generate chain id")
+	}
+
+	err = h.tx.InTx(ctx, func(q db.Querier) error {
+		spent, err := q.MarkLinkTokenUsed(ctx, db.MarkLinkTokenUsedParams{
+			ID:         row.ID,
+			ExternalID: &externalID,
+		})
+		if err != nil {
+			return err
+		}
+		if spent == 0 {
+			return errInvalidLinkToken()
+		}
+		return bindIdentity(ctx, q, row.UserID, provider, externalID, chainID)
 	})
 	if err != nil {
-		return nil, h.internal(ctx, err, "mark link token used")
-	}
-	if spent == 0 {
-		return nil, errInvalidLinkToken()
+		var cerr *connect.Error
+		if errors.As(err, &cerr) {
+			return nil, err
+		}
+		return nil, h.internal(ctx, err, "bind identity")
 	}
 
 	user, err := h.q.GetUserByID(ctx, row.UserID)
@@ -115,12 +130,7 @@ func (h *Handler) RedeemLinkToken(
 		return nil, h.internal(ctx, err, "get user")
 	}
 
-	chainID, err := newChainID()
-	if err != nil {
-		return nil, h.internal(ctx, err, "generate chain id")
-	}
-
-	tokens, err := h.mintSession(ctx, user, chainID)
+	tokens, err := h.mintSession(ctx, user, chainID, true)
 	if err != nil {
 		return nil, err
 	}

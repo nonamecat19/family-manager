@@ -9,6 +9,7 @@ package authv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -645,11 +646,239 @@ func (x *RedeemLinkTokenResponse) GetExpiresIn() int64 {
 	return 0
 }
 
+type Identity struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	ExternalId    string                 `protobuf:"bytes,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+	LinkedAt      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=linked_at,json=linkedAt,proto3" json:"linked_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Identity) Reset() {
+	*x = Identity{}
+	mi := &file_auth_v1_auth_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Identity) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Identity) ProtoMessage() {}
+
+func (x *Identity) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Identity.ProtoReflect.Descriptor instead.
+func (*Identity) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Identity) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *Identity) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+func (x *Identity) GetLinkedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LinkedAt
+	}
+	return nil
+}
+
+type ListIdentitiesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListIdentitiesRequest) Reset() {
+	*x = ListIdentitiesRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListIdentitiesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListIdentitiesRequest) ProtoMessage() {}
+
+func (x *ListIdentitiesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListIdentitiesRequest.ProtoReflect.Descriptor instead.
+func (*ListIdentitiesRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{13}
+}
+
+type ListIdentitiesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Identities    []*Identity            `protobuf:"bytes,1,rep,name=identities,proto3" json:"identities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListIdentitiesResponse) Reset() {
+	*x = ListIdentitiesResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListIdentitiesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListIdentitiesResponse) ProtoMessage() {}
+
+func (x *ListIdentitiesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListIdentitiesResponse.ProtoReflect.Descriptor instead.
+func (*ListIdentitiesResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListIdentitiesResponse) GetIdentities() []*Identity {
+	if x != nil {
+		return x.Identities
+	}
+	return nil
+}
+
+type UnlinkRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	ExternalId    string                 `protobuf:"bytes,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlinkRequest) Reset() {
+	*x = UnlinkRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlinkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkRequest) ProtoMessage() {}
+
+func (x *UnlinkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkRequest.ProtoReflect.Descriptor instead.
+func (*UnlinkRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *UnlinkRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *UnlinkRequest) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+type UnlinkResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnlinkResponse) Reset() {
+	*x = UnlinkResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnlinkResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnlinkResponse) ProtoMessage() {}
+
+func (x *UnlinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnlinkResponse.ProtoReflect.Descriptor instead.
+func (*UnlinkResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{16}
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\"@\n" +
+	"\x12auth/v1/auth.proto\x12\aauth.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"@\n" +
 	"\fLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"v\n" +
@@ -690,14 +919,31 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x04 \x01(\x03R\texpiresIn2\xab\x03\n" +
+	"expires_in\x18\x04 \x01(\x03R\texpiresIn\"\x80\x01\n" +
+	"\bIdentity\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1f\n" +
+	"\vexternal_id\x18\x02 \x01(\tR\n" +
+	"externalId\x127\n" +
+	"\tlinked_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\blinkedAt\"\x17\n" +
+	"\x15ListIdentitiesRequest\"K\n" +
+	"\x16ListIdentitiesResponse\x121\n" +
+	"\n" +
+	"identities\x18\x01 \x03(\v2\x11.auth.v1.IdentityR\n" +
+	"identities\"L\n" +
+	"\rUnlinkRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1f\n" +
+	"\vexternal_id\x18\x02 \x01(\tR\n" +
+	"externalId\"\x10\n" +
+	"\x0eUnlinkResponse2\xb9\x04\n" +
 	"\vAuthService\x126\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\x12?\n" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\x12<\n" +
 	"\aRefresh\x12\x17.auth.v1.RefreshRequest\x1a\x18.auth.v1.RefreshResponse\x129\n" +
 	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\x12T\n" +
 	"\x0fCreateLinkToken\x12\x1f.auth.v1.CreateLinkTokenRequest\x1a .auth.v1.CreateLinkTokenResponse\x12T\n" +
-	"\x0fRedeemLinkToken\x12\x1f.auth.v1.RedeemLinkTokenRequest\x1a .auth.v1.RedeemLinkTokenResponseB\x8a\x01\n" +
+	"\x0fRedeemLinkToken\x12\x1f.auth.v1.RedeemLinkTokenRequest\x1a .auth.v1.RedeemLinkTokenResponse\x12Q\n" +
+	"\x0eListIdentities\x12\x1e.auth.v1.ListIdentitiesRequest\x1a\x1f.auth.v1.ListIdentitiesResponse\x129\n" +
+	"\x06Unlink\x12\x16.auth.v1.UnlinkRequest\x1a\x17.auth.v1.UnlinkResponseB\x8a\x01\n" +
 	"\vcom.auth.v1B\tAuthProtoP\x01Z3github.com/nnc/family-manager/sdk/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
@@ -712,7 +958,7 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_auth_v1_auth_proto_goTypes = []any{
 	(*LoginRequest)(nil),            // 0: auth.v1.LoginRequest
 	(*LoginResponse)(nil),           // 1: auth.v1.LoginResponse
@@ -726,25 +972,37 @@ var file_auth_v1_auth_proto_goTypes = []any{
 	(*CreateLinkTokenResponse)(nil), // 9: auth.v1.CreateLinkTokenResponse
 	(*RedeemLinkTokenRequest)(nil),  // 10: auth.v1.RedeemLinkTokenRequest
 	(*RedeemLinkTokenResponse)(nil), // 11: auth.v1.RedeemLinkTokenResponse
+	(*Identity)(nil),                // 12: auth.v1.Identity
+	(*ListIdentitiesRequest)(nil),   // 13: auth.v1.ListIdentitiesRequest
+	(*ListIdentitiesResponse)(nil),  // 14: auth.v1.ListIdentitiesResponse
+	(*UnlinkRequest)(nil),           // 15: auth.v1.UnlinkRequest
+	(*UnlinkResponse)(nil),          // 16: auth.v1.UnlinkResponse
+	(*timestamppb.Timestamp)(nil),   // 17: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	0,  // 0: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
-	2,  // 1: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
-	4,  // 2: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
-	6,  // 3: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
-	8,  // 4: auth.v1.AuthService.CreateLinkToken:input_type -> auth.v1.CreateLinkTokenRequest
-	10, // 5: auth.v1.AuthService.RedeemLinkToken:input_type -> auth.v1.RedeemLinkTokenRequest
-	1,  // 6: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
-	3,  // 7: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
-	5,  // 8: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
-	7,  // 9: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
-	9,  // 10: auth.v1.AuthService.CreateLinkToken:output_type -> auth.v1.CreateLinkTokenResponse
-	11, // 11: auth.v1.AuthService.RedeemLinkToken:output_type -> auth.v1.RedeemLinkTokenResponse
-	6,  // [6:12] is the sub-list for method output_type
-	0,  // [0:6] is the sub-list for method input_type
-	0,  // [0:0] is the sub-list for extension type_name
-	0,  // [0:0] is the sub-list for extension extendee
-	0,  // [0:0] is the sub-list for field type_name
+	17, // 0: auth.v1.Identity.linked_at:type_name -> google.protobuf.Timestamp
+	12, // 1: auth.v1.ListIdentitiesResponse.identities:type_name -> auth.v1.Identity
+	0,  // 2: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
+	2,  // 3: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
+	4,  // 4: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
+	6,  // 5: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
+	8,  // 6: auth.v1.AuthService.CreateLinkToken:input_type -> auth.v1.CreateLinkTokenRequest
+	10, // 7: auth.v1.AuthService.RedeemLinkToken:input_type -> auth.v1.RedeemLinkTokenRequest
+	13, // 8: auth.v1.AuthService.ListIdentities:input_type -> auth.v1.ListIdentitiesRequest
+	15, // 9: auth.v1.AuthService.Unlink:input_type -> auth.v1.UnlinkRequest
+	1,  // 10: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
+	3,  // 11: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
+	5,  // 12: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
+	7,  // 13: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
+	9,  // 14: auth.v1.AuthService.CreateLinkToken:output_type -> auth.v1.CreateLinkTokenResponse
+	11, // 15: auth.v1.AuthService.RedeemLinkToken:output_type -> auth.v1.RedeemLinkTokenResponse
+	14, // 16: auth.v1.AuthService.ListIdentities:output_type -> auth.v1.ListIdentitiesResponse
+	16, // 17: auth.v1.AuthService.Unlink:output_type -> auth.v1.UnlinkResponse
+	10, // [10:18] is the sub-list for method output_type
+	2,  // [2:10] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -758,7 +1016,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

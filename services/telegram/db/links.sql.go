@@ -11,18 +11,36 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deleteLink = `-- name: DeleteLink :execrows
+const deleteLinkForUser = `-- name: DeleteLinkForUser :execrows
 DELETE FROM telegram_links
-WHERE bot = $1 AND telegram_user_id = $2
+WHERE telegram_user_id = $1 AND user_id = $2
 `
 
-type DeleteLinkParams struct {
-	Bot            string
+type DeleteLinkForUserParams struct {
 	TelegramUserID int64
+	UserID         pgtype.UUID
 }
 
-func (q *Queries) DeleteLink(ctx context.Context, arg DeleteLinkParams) (int64, error) {
-	result, err := q.db.Exec(ctx, deleteLink, arg.Bot, arg.TelegramUserID)
+func (q *Queries) DeleteLinkForUser(ctx context.Context, arg DeleteLinkForUserParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteLinkForUser, arg.TelegramUserID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const deleteLinkWithToken = `-- name: DeleteLinkWithToken :execrows
+DELETE FROM telegram_links
+WHERE telegram_user_id = $1 AND refresh_token = $2
+`
+
+type DeleteLinkWithTokenParams struct {
+	TelegramUserID int64
+	RefreshToken   []byte
+}
+
+func (q *Queries) DeleteLinkWithToken(ctx context.Context, arg DeleteLinkWithTokenParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteLinkWithToken, arg.TelegramUserID, arg.RefreshToken)
 	if err != nil {
 		return 0, err
 	}
@@ -33,16 +51,11 @@ const expireLinkAccess = `-- name: ExpireLinkAccess :execrows
 UPDATE telegram_links
 SET access_expires_at = NOW() - interval '1 second',
     updated_at        = NOW()
-WHERE bot = $1 AND telegram_user_id = $2
+WHERE telegram_user_id = $1
 `
 
-type ExpireLinkAccessParams struct {
-	Bot            string
-	TelegramUserID int64
-}
-
-func (q *Queries) ExpireLinkAccess(ctx context.Context, arg ExpireLinkAccessParams) (int64, error) {
-	result, err := q.db.Exec(ctx, expireLinkAccess, arg.Bot, arg.TelegramUserID)
+func (q *Queries) ExpireLinkAccess(ctx context.Context, telegramUserID int64) (int64, error) {
+	result, err := q.db.Exec(ctx, expireLinkAccess, telegramUserID)
 	if err != nil {
 		return 0, err
 	}
@@ -50,20 +63,14 @@ func (q *Queries) ExpireLinkAccess(ctx context.Context, arg ExpireLinkAccessPara
 }
 
 const getLink = `-- name: GetLink :one
-SELECT bot, telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at FROM telegram_links
-WHERE bot = $1 AND telegram_user_id = $2
+SELECT telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at FROM telegram_links
+WHERE telegram_user_id = $1
 `
 
-type GetLinkParams struct {
-	Bot            string
-	TelegramUserID int64
-}
-
-func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (TelegramLink, error) {
-	row := q.db.QueryRow(ctx, getLink, arg.Bot, arg.TelegramUserID)
+func (q *Queries) GetLink(ctx context.Context, telegramUserID int64) (TelegramLink, error) {
+	row := q.db.QueryRow(ctx, getLink, telegramUserID)
 	var i TelegramLink
 	err := row.Scan(
-		&i.Bot,
 		&i.TelegramUserID,
 		&i.UserID,
 		&i.TelegramUsername,
@@ -78,9 +85,9 @@ func (q *Queries) GetLink(ctx context.Context, arg GetLinkParams) (TelegramLink,
 }
 
 const listLinksForUser = `-- name: ListLinksForUser :many
-SELECT bot, telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at FROM telegram_links
+SELECT telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at FROM telegram_links
 WHERE user_id = $1
-ORDER BY bot
+ORDER BY telegram_user_id
 `
 
 func (q *Queries) ListLinksForUser(ctx context.Context, userID pgtype.UUID) ([]TelegramLink, error) {
@@ -93,7 +100,6 @@ func (q *Queries) ListLinksForUser(ctx context.Context, userID pgtype.UUID) ([]T
 	for rows.Next() {
 		var i TelegramLink
 		if err := rows.Scan(
-			&i.Bot,
 			&i.TelegramUserID,
 			&i.UserID,
 			&i.TelegramUsername,
@@ -114,55 +120,45 @@ func (q *Queries) ListLinksForUser(ctx context.Context, userID pgtype.UUID) ([]T
 	return items, nil
 }
 
-const updateLinkTokens = `-- name: UpdateLinkTokens :one
+const updateLinkTokens = `-- name: UpdateLinkTokens :execrows
 UPDATE telegram_links
-SET access_token      = $3,
-    access_expires_at = $4,
-    refresh_token     = $5,
+SET access_token      = $1,
+    access_expires_at = $2,
+    refresh_token     = $3,
     updated_at        = NOW()
-WHERE bot = $1 AND telegram_user_id = $2
-RETURNING bot, telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at
+WHERE telegram_user_id = $4
+  AND refresh_token = $5
 `
 
 type UpdateLinkTokensParams struct {
-	Bot             string
-	TelegramUserID  int64
-	AccessToken     []byte
-	AccessExpiresAt pgtype.Timestamptz
-	RefreshToken    []byte
+	AccessToken          []byte
+	AccessExpiresAt      pgtype.Timestamptz
+	RefreshToken         []byte
+	TelegramUserID       int64
+	PreviousRefreshToken []byte
 }
 
-func (q *Queries) UpdateLinkTokens(ctx context.Context, arg UpdateLinkTokensParams) (TelegramLink, error) {
-	row := q.db.QueryRow(ctx, updateLinkTokens,
-		arg.Bot,
-		arg.TelegramUserID,
+func (q *Queries) UpdateLinkTokens(ctx context.Context, arg UpdateLinkTokensParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateLinkTokens,
 		arg.AccessToken,
 		arg.AccessExpiresAt,
 		arg.RefreshToken,
+		arg.TelegramUserID,
+		arg.PreviousRefreshToken,
 	)
-	var i TelegramLink
-	err := row.Scan(
-		&i.Bot,
-		&i.TelegramUserID,
-		&i.UserID,
-		&i.TelegramUsername,
-		&i.ChatID,
-		&i.AccessToken,
-		&i.AccessExpiresAt,
-		&i.RefreshToken,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const upsertLink = `-- name: UpsertLink :one
 INSERT INTO telegram_links (
-    bot, telegram_user_id, user_id, telegram_username, chat_id,
+    telegram_user_id, user_id, telegram_username, chat_id,
     access_token, access_expires_at, refresh_token
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-ON CONFLICT (bot, telegram_user_id) DO UPDATE
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (telegram_user_id) DO UPDATE
 SET user_id           = EXCLUDED.user_id,
     telegram_username = EXCLUDED.telegram_username,
     chat_id           = EXCLUDED.chat_id,
@@ -170,11 +166,10 @@ SET user_id           = EXCLUDED.user_id,
     access_expires_at = EXCLUDED.access_expires_at,
     refresh_token     = EXCLUDED.refresh_token,
     updated_at        = NOW()
-RETURNING bot, telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at
+RETURNING telegram_user_id, user_id, telegram_username, chat_id, access_token, access_expires_at, refresh_token, created_at, updated_at
 `
 
 type UpsertLinkParams struct {
-	Bot              string
 	TelegramUserID   int64
 	UserID           pgtype.UUID
 	TelegramUsername string
@@ -186,7 +181,6 @@ type UpsertLinkParams struct {
 
 func (q *Queries) UpsertLink(ctx context.Context, arg UpsertLinkParams) (TelegramLink, error) {
 	row := q.db.QueryRow(ctx, upsertLink,
-		arg.Bot,
 		arg.TelegramUserID,
 		arg.UserID,
 		arg.TelegramUsername,
@@ -197,7 +191,6 @@ func (q *Queries) UpsertLink(ctx context.Context, arg UpsertLinkParams) (Telegra
 	)
 	var i TelegramLink
 	err := row.Scan(
-		&i.Bot,
 		&i.TelegramUserID,
 		&i.UserID,
 		&i.TelegramUsername,

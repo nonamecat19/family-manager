@@ -233,7 +233,7 @@ func newFakeSessions() *fakeSessions {
 	return &fakeSessions{linked: map[int64]*session.Session{}}
 }
 
-func (f *fakeSessions) Session(_ context.Context, _ string, id int64) (*session.Session, error) {
+func (f *fakeSessions) Session(_ context.Context, id int64) (*session.Session, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -245,7 +245,7 @@ func (f *fakeSessions) Session(_ context.Context, _ string, id int64) (*session.
 }
 
 func (f *fakeSessions) Redeem(
-	_ context.Context, _, linkToken string, from telegram.User, _ int64,
+	_ context.Context, linkToken string, from telegram.User, _ int64,
 ) (*session.Session, error) {
 	if f.err != nil {
 		return nil, f.err
@@ -256,12 +256,12 @@ func (f *fakeSessions) Redeem(
 	return s, nil
 }
 
-func (f *fakeSessions) ExpireAccess(_ context.Context, _ string, id int64) error {
+func (f *fakeSessions) ExpireAccess(_ context.Context, id int64) error {
 	f.expired = append(f.expired, id)
 	return nil
 }
 
-func (f *fakeSessions) Unlink(_ context.Context, _ string, id int64) error {
+func (f *fakeSessions) Unlink(_ context.Context, id int64) error {
 	if _, ok := f.linked[id]; !ok {
 		return session.ErrNotLinked
 	}

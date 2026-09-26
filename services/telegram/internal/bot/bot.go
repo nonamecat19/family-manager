@@ -24,10 +24,10 @@ const (
 type Handler func(ctx context.Context, c *Context) error
 
 type Sessions interface {
-	Session(ctx context.Context, bot string, telegramUserID int64) (*session.Session, error)
-	Redeem(ctx context.Context, bot, linkToken string, from telegram.User, chatID int64) (*session.Session, error)
-	Unlink(ctx context.Context, bot string, telegramUserID int64) error
-	ExpireAccess(ctx context.Context, bot string, telegramUserID int64) error
+	Session(ctx context.Context, telegramUserID int64) (*session.Session, error)
+	Redeem(ctx context.Context, linkToken string, from telegram.User, chatID int64) (*session.Session, error)
+	Unlink(ctx context.Context, telegramUserID int64) error
+	ExpireAccess(ctx context.Context, telegramUserID int64) error
 }
 
 type Command struct {
@@ -305,7 +305,7 @@ func (b *Bot) attachLocale(ctx context.Context, c *Context) {
 	if c.session != nil {
 		return
 	}
-	s, err := b.sessions.Session(ctx, b.name, c.From.ID)
+	s, err := b.sessions.Session(ctx, c.From.ID)
 	if err != nil {
 		return
 	}
@@ -314,7 +314,7 @@ func (b *Bot) attachLocale(ctx context.Context, c *Context) {
 }
 
 func (b *Bot) attachSession(ctx context.Context, log *slog.Logger, c *Context) bool {
-	s, err := b.sessions.Session(ctx, b.name, c.From.ID)
+	s, err := b.sessions.Session(ctx, c.From.ID)
 	switch {
 	case errors.Is(err, session.ErrNotLinked), errors.Is(err, session.ErrLinkAgain):
 		b.say(ctx, log, c, b.linkPrompt(c.Locale()))

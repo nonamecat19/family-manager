@@ -1,10 +1,10 @@
 -- name: UpsertLink :one
 INSERT INTO telegram_links (
-    bot, telegram_user_id, user_id, telegram_username, chat_id,
+    telegram_user_id, user_id, telegram_username, chat_id,
     access_token, access_expires_at, refresh_token
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-ON CONFLICT (bot, telegram_user_id) DO UPDATE
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (telegram_user_id) DO UPDATE
 SET user_id           = EXCLUDED.user_id,
     telegram_username = EXCLUDED.telegram_username,
     chat_id           = EXCLUDED.chat_id,
@@ -16,28 +16,32 @@ RETURNING *;
 
 -- name: GetLink :one
 SELECT * FROM telegram_links
-WHERE bot = $1 AND telegram_user_id = $2;
+WHERE telegram_user_id = $1;
 
--- name: UpdateLinkTokens :one
+-- name: UpdateLinkTokens :execrows
 UPDATE telegram_links
-SET access_token      = $3,
-    access_expires_at = $4,
-    refresh_token     = $5,
+SET access_token      = sqlc.arg(access_token),
+    access_expires_at = sqlc.arg(access_expires_at),
+    refresh_token     = sqlc.arg(refresh_token),
     updated_at        = NOW()
-WHERE bot = $1 AND telegram_user_id = $2
-RETURNING *;
+WHERE telegram_user_id = sqlc.arg(telegram_user_id)
+  AND refresh_token = sqlc.arg(previous_refresh_token);
 
--- name: DeleteLink :execrows
+-- name: DeleteLinkWithToken :execrows
 DELETE FROM telegram_links
-WHERE bot = $1 AND telegram_user_id = $2;
+WHERE telegram_user_id = $1 AND refresh_token = $2;
+
+-- name: DeleteLinkForUser :execrows
+DELETE FROM telegram_links
+WHERE telegram_user_id = $1 AND user_id = $2;
 
 -- name: ListLinksForUser :many
 SELECT * FROM telegram_links
 WHERE user_id = $1
-ORDER BY bot;
+ORDER BY telegram_user_id;
 
 -- name: ExpireLinkAccess :execrows
 UPDATE telegram_links
 SET access_expires_at = NOW() - interval '1 second',
     updated_at        = NOW()
-WHERE bot = $1 AND telegram_user_id = $2;
+WHERE telegram_user_id = $1;

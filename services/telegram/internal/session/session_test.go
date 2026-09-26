@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
 	"connectrpc.com/connect"
 
+	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	"github.com/nnc/family-manager/services/telegram/db"
+
 	"github.com/nnc/family-manager/services/telegram/internal/telegram"
 )
 
@@ -36,7 +39,7 @@ var ada = telegram.User{ID: 42, FirstName: "Ada", Username: "ada"}
 
 func (f *fixture) link(t *testing.T) *Session {
 	t.Helper()
-	s, err := f.store.Redeem(context.Background(), "finance", "link-token", ada, 99)
+	s, err := f.store.Redeem(context.Background(), "link-token", ada, 99)
 	if err != nil {
 		t.Fatalf("Redeem: %v", err)
 	}
@@ -55,7 +58,7 @@ func TestRedeemStoresTheSessionEncrypted(t *testing.T) {
 		t.Fatalf("redeemed = %+v, want the telegram user id as external id", f.auth.redeemed)
 	}
 
-	link, err := f.q.GetLink(context.Background(), db.GetLinkParams{Bot: "finance", TelegramUserID: 42})
+	link, err := f.q.GetLink(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("GetLink: %v", err)
 	}
@@ -72,7 +75,7 @@ func TestSessionReusesAFreshAccessToken(t *testing.T) {
 	f := newFixture(t)
 	f.link(t)
 
-	s, err := f.store.Session(context.Background(), "finance", 42)
+	s, err := f.store.Session(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("Session: %v", err)
 	}
@@ -90,7 +93,7 @@ func TestSessionRefreshesAnExpiredAccessToken(t *testing.T) {
 
 	f.now = f.now.Add(20 * time.Minute)
 
-	s, err := f.store.Session(context.Background(), "finance", 42)
+	s, err := f.store.Session(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("Session: %v", err)
 	}
@@ -101,7 +104,7 @@ func TestSessionRefreshesAnExpiredAccessToken(t *testing.T) {
 		t.Fatalf("refreshed = %v", f.auth.refreshed)
 	}
 
-	again, err := f.store.Session(context.Background(), "finance", 42)
+	again, err := f.store.Session(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("Session: %v", err)
 	}
@@ -116,7 +119,7 @@ func TestSessionDropsALinkTheAuthServiceRejects(t *testing.T) {
 	f.now = f.now.Add(20 * time.Minute)
 	f.auth.refreshErr = connect.NewError(connect.CodeUnauthenticated, errors.New("revoked"))
 
-	_, err := f.store.Session(context.Background(), "finance", 42)
+	_, err := f.store.Session(context.Background(), 42)
 	if !errors.Is(err, ErrLinkAgain) {
 		t.Fatalf("err = %v, want ErrLinkAgain", err)
 	}
@@ -128,7 +131,7 @@ func TestSessionDropsALinkTheAuthServiceRejects(t *testing.T) {
 func TestSessionWithoutALink(t *testing.T) {
 	f := newFixture(t)
 
-	_, err := f.store.Session(context.Background(), "finance", 42)
+	_, err := f.store.Session(context.Background(), 42)
 	if !errors.Is(err, ErrNotLinked) {
 		t.Fatalf("err = %v, want ErrNotLinked", err)
 	}
@@ -138,40 +141,77 @@ func TestRedeemSurfacesAStaleLinkToken(t *testing.T) {
 	f := newFixture(t)
 	f.auth.redeemErr = connect.NewError(connect.CodeUnauthenticated, errors.New("spent"))
 
-	_, err := f.store.Redeem(context.Background(), "finance", "used", ada, 99)
+	_, err := f.store.Redeem(context.Background(), "used", ada, 99)
 	if !errors.Is(err, ErrLinkAgain) {
 		t.Fatalf("err = %v, want ErrLinkAgain", err)
 	}
 }
 
-func TestLinksArePerBot(t *testing.T) {
+func TestRedeemReportsAnAccountLinkedElsewhere(t *testing.T) {
 	f := newFixture(t)
-	f.link(t)
+	f.auth.redeemErr = connect.NewError(connect.CodeAlreadyExists, errors.New("taken"))
 
-	if _, err := f.store.Session(context.Background(), "notes", 42); !errors.Is(err, ErrNotLinked) {
-		t.Fatalf("err = %v, want the notes bot to be unlinked", err)
+	if _, err := f.store.Redeem(context.Background(), "link-token", ada, 99); !errors.Is(err, ErrTaken) {
+		t.Fatalf("err = %v, want ErrTaken", err)
+	}
+	if len(f.q.links) != 0 {
+		t.Fatalf("links = %v, want none stored", f.q.links)
 	}
 }
 
-func TestUnlinkRevokesTheRefreshTokenAndDropsTheRow(t *testing.T) {
+func TestUnlinkRemovesTheIdentityInAuthAndDropsTheRow(t *testing.T) {
 	f := newFixture(t)
 	f.link(t)
 
-	if err := f.store.Unlink(context.Background(), "finance", 42); err != nil {
+	if err := f.store.Unlink(context.Background(), 42); err != nil {
 		t.Fatalf("Unlink: %v", err)
 	}
-	if len(f.auth.loggedOut) != 1 || f.auth.loggedOut[0] != "refresh-0" {
-		t.Fatalf("loggedOut = %v", f.auth.loggedOut)
+	if len(f.auth.unlinked) != 1 ||
+		f.auth.unlinked[0].GetProvider() != "telegram" || f.auth.unlinked[0].GetExternalId() != "42" {
+		t.Fatalf("unlinked = %v, want telegram:42", f.auth.unlinked)
 	}
-	if _, err := f.store.Session(context.Background(), "finance", 42); !errors.Is(err, ErrNotLinked) {
+	if f.auth.bearers[0] != "Bearer access-0" {
+		t.Fatalf("bearer = %q, want the user's access token", f.auth.bearers[0])
+	}
+	if _, err := f.store.Session(context.Background(), 42); !errors.Is(err, ErrNotLinked) {
 		t.Fatalf("err = %v, want ErrNotLinked after unlink", err)
+	}
+}
+
+func TestUnlinkAlreadyGoneInAuthStillDropsTheRow(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.auth.unlinkErr = connect.NewError(connect.CodeNotFound, errors.New("gone"))
+
+	if err := f.store.Unlink(context.Background(), 42); err != nil {
+		t.Fatalf("Unlink: %v", err)
+	}
+	if _, err := f.store.Session(context.Background(), 42); !errors.Is(err, ErrNotLinked) {
+		t.Fatalf("err = %v, want ErrNotLinked after unlink", err)
+	}
+}
+
+func TestUnlinkAfterAuthRevokedTheSession(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.now = f.now.Add(time.Hour)
+	f.auth.refreshErr = connect.NewError(connect.CodeUnauthenticated, errors.New("revoked"))
+
+	if err := f.store.Unlink(context.Background(), 42); err != nil {
+		t.Fatalf("Unlink: %v", err)
+	}
+	if len(f.auth.unlinked) != 0 {
+		t.Fatalf("unlinked = %v, want no call with a dead session", f.auth.unlinked)
+	}
+	if len(f.q.links) != 0 {
+		t.Fatalf("links = %v, want the dead row dropped", f.q.links)
 	}
 }
 
 func TestUnlinkWithoutALink(t *testing.T) {
 	f := newFixture(t)
 
-	if err := f.store.Unlink(context.Background(), "finance", 42); !errors.Is(err, ErrNotLinked) {
+	if err := f.store.Unlink(context.Background(), 42); !errors.Is(err, ErrNotLinked) {
 		t.Fatalf("err = %v, want ErrNotLinked", err)
 	}
 }
@@ -181,7 +221,7 @@ func TestSessionReadsTheLocaleClaimFromTheToken(t *testing.T) {
 	f.auth.accessToken = jwtWithClaims(`{"sub":"` + testUserID + `","locale":"en"}`)
 	f.link(t)
 
-	s, err := f.store.Session(context.Background(), "finance", 42)
+	s, err := f.store.Session(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("Session: %v", err)
 	}
@@ -195,7 +235,7 @@ func TestSessionWithoutALocaleClaimIsBlank(t *testing.T) {
 	f.auth.accessToken = jwtWithClaims(`{"sub":"` + testUserID + `"}`)
 	f.link(t)
 
-	s, err := f.store.Session(context.Background(), "finance", 42)
+	s, err := f.store.Session(context.Background(), 42)
 	if err != nil {
 		t.Fatalf("Session: %v", err)
 	}
@@ -208,14 +248,92 @@ func TestExpireAccessForcesTheNextCallToRefresh(t *testing.T) {
 	f := newFixture(t)
 	f.link(t)
 
-	if err := f.store.ExpireAccess(context.Background(), "finance", 42); err != nil {
+	if err := f.store.ExpireAccess(context.Background(), 42); err != nil {
 		t.Fatalf("ExpireAccess: %v", err)
 	}
 
-	if _, err := f.store.Session(context.Background(), "finance", 42); err != nil {
+	if _, err := f.store.Session(context.Background(), 42); err != nil {
 		t.Fatalf("Session: %v", err)
 	}
 	if len(f.auth.refreshed) != 1 {
 		t.Fatalf("refreshed %d times, want the expiry to force exactly one", len(f.auth.refreshed))
+	}
+}
+
+const otherUserID = "0c7e2a51-8d44-4f0b-b3a6-5b1e9f2d7a90"
+
+func (f *fixture) relinkToOtherUser(t *testing.T) {
+	t.Helper()
+	if _, err := f.q.UpsertLink(context.Background(), db.UpsertLinkParams{
+		TelegramUserID:  42,
+		UserID:          pgconv.MustUUID(otherUserID),
+		ChatID:          99,
+		AccessToken:     []byte("bob-access"),
+		AccessExpiresAt: pgconv.TimestampFrom(f.now.Add(time.Hour)),
+		RefreshToken:    []byte("bob-refresh"),
+	}); err != nil {
+		t.Fatalf("UpsertLink: %v", err)
+	}
+}
+
+func TestConcurrentSessionsRefreshOnce(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.now = f.now.Add(time.Hour)
+
+	var wg sync.WaitGroup
+	errs := make(chan error, 8)
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := f.store.Session(context.Background(), 42)
+			errs <- err
+		}()
+	}
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("Session: %v", err)
+		}
+	}
+	if len(f.auth.refreshed) != 1 {
+		t.Fatalf("refreshed %d times, want once", len(f.auth.refreshed))
+	}
+}
+
+func TestStaleRefreshDoesNotOverwriteANewerLink(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.now = f.now.Add(time.Hour)
+	f.auth.onRefresh = func() { f.relinkToOtherUser(t) }
+
+	if _, err := f.store.Session(context.Background(), 42); !errors.Is(err, ErrLinkAgain) {
+		t.Fatalf("err = %v, want ErrLinkAgain", err)
+	}
+
+	link, err := f.q.GetLink(context.Background(), 42)
+	if err != nil {
+		t.Fatalf("GetLink: %v", err)
+	}
+	if pgconv.UUIDString(link.UserID) != otherUserID || string(link.RefreshToken) != "bob-refresh" {
+		t.Fatalf("link = %+v, want the newer link untouched", link)
+	}
+}
+
+func TestDeadRefreshKeepsANewerLink(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+	f.now = f.now.Add(time.Hour)
+	f.auth.refreshErr = connect.NewError(connect.CodeUnauthenticated, errors.New("revoked"))
+	f.auth.onRefresh = func() { f.relinkToOtherUser(t) }
+
+	if _, err := f.store.Session(context.Background(), 42); !errors.Is(err, ErrLinkAgain) {
+		t.Fatalf("err = %v, want ErrLinkAgain", err)
+	}
+	if _, err := f.q.GetLink(context.Background(), 42); err != nil {
+		t.Fatalf("newer link was dropped: %v", err)
 	}
 }
