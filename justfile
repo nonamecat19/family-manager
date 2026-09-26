@@ -163,22 +163,54 @@ build-apk env="production":
     ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} \
     ./gradlew assembleDebug
 
-build-apk-release env="production":
+build-apk-release env="production" app="recipes":
     #!/usr/bin/env bash
     set -euo pipefail
     export EXPO_PUBLIC_API_ENV="{{env}}"
-    cd apps/recipes
+    sdk_dir="${ANDROID_HOME:-$HOME/Android/Sdk}"
+    if [ ! -d "$sdk_dir/platform-tools" ]; then
+      sdk_dir="${ANDROID_SDK_ROOT:-$HOME/Android}"
+    fi
+    export ANDROID_HOME="$sdk_dir" ANDROID_SDK_ROOT="$sdk_dir"
+    cd "apps/{{app}}"
     npx expo prebuild --platform android --no-install --clean
     cd android
     JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} \
-    ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} \
     ./gradlew assembleRelease -x lintVitalRelease
 
-install-apk-release:
+install-apk-release app="recipes":
     #!/usr/bin/env bash
     set -euo pipefail
-    export ANDROID_HOME=${ANDROID_HOME:-$HOME/Android}
-    "$ANDROID_HOME/platform-tools/adb" install -r apps/recipes/android/app/build/outputs/apk/release/app-release.apk
+    sdk_dir="${ANDROID_HOME:-$HOME/Android/Sdk}"
+    if [ ! -d "$sdk_dir/platform-tools" ]; then
+      sdk_dir="${ANDROID_SDK_ROOT:-$HOME/Android}"
+    fi
+    export ANDROID_HOME="$sdk_dir"
+    "$ANDROID_HOME/platform-tools/adb" install -r "apps/{{app}}/android/app/build/outputs/apk/release/app-release.apk"
+
+check-ios-widgets app:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd "apps/{{app}}"
+    npx expo prebuild --platform ios --no-install --clean
+    project="$(find ios -maxdepth 2 -name project.pbxproj -print -quit)"
+    if [ -z "$project" ] || ! grep -Eq 'WidgetExtension|WidgetKit' "$project"; then
+      echo "Widget target missing from $project" >&2
+      exit 1
+    fi
+    if [ "$(uname -s)" != "Darwin" ]; then
+      if [ "${CI:-}" = "true" ]; then
+        echo "iOS widgets require macOS in CI" >&2
+        exit 1
+      fi
+      echo "Widget target found; skipping iOS compile outside macOS."
+      exit 0
+    fi
+    cd ios
+    pod install
+    workspace="$(find . -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+    scheme="$(basename "$workspace" .xcworkspace)"
+    xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Debug -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO build
 
 install-apk:
     #!/usr/bin/env bash
