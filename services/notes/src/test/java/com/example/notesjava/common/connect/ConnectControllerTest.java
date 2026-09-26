@@ -17,6 +17,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -101,6 +103,33 @@ class ConnectControllerTest {
         mockMvc.perform(post(LIST_NOTEBOOKS).with(CALLER)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"somethingNewer\":true}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void aBinaryProtobufCallIsAnsweredInBinary() throws Exception {
+        byte[] request = ListNotebooksRequest.getDefaultInstance().toByteArray();
+
+        byte[] body = mockMvc.perform(post(LIST_NOTEBOOKS).with(CALLER)
+                        .contentType("application/proto").content(request))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/proto"))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        ListNotebooksResponse response = ListNotebooksResponse.parseFrom(body);
+        assertThat(response.getNotebooks(0).getName()).isEqualTo("Kitchen");
+    }
+
+    @Test
+    void anErrorOnABinaryCallIsStillJson() throws Exception {
+        notes.answer(request -> {
+            throw ConnectException.notFound("that notebook does not exist");
+        });
+
+        mockMvc.perform(post(LIST_NOTEBOOKS).with(CALLER)
+                        .contentType("application/proto")
+                        .content(ListNotebooksRequest.getDefaultInstance().toByteArray()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("not_found"));
     }
 
     @Test
