@@ -52,9 +52,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -69,26 +73,32 @@ public class NotesRpcService extends ConnectService {
     private final NoteRepository notes;
     private final GroupRepository groups;
     private final CallerContext callers;
+    private final TransactionTemplate write;
+    private final TransactionTemplate read;
 
-    public NotesRpcService(NoteRepository notes, GroupRepository groups, CallerContext callers) {
+    public NotesRpcService(NoteRepository notes, GroupRepository groups, CallerContext callers,
+                           PlatformTransactionManager transactions) {
         this.notes = notes;
         this.groups = groups;
         this.callers = callers;
+        this.write = new TransactionTemplate(transactions);
+        this.read = new TransactionTemplate(transactions);
+        this.read.setReadOnly(true);
 
-        register("ListNotebooks", ListNotebooksRequest.getDefaultInstance(), this::listNotebooks);
-        register("CreateNotebook", CreateNotebookRequest.getDefaultInstance(), this::createNotebook);
-        register("UpdateNotebook", UpdateNotebookRequest.getDefaultInstance(), this::updateNotebook);
-        register("DeleteNotebook", DeleteNotebookRequest.getDefaultInstance(), this::deleteNotebook);
+        register("ListNotebooks", ListNotebooksRequest.getDefaultInstance(), inTransaction(read, this::listNotebooks));
+        register("CreateNotebook", CreateNotebookRequest.getDefaultInstance(), inTransaction(write, this::createNotebook));
+        register("UpdateNotebook", UpdateNotebookRequest.getDefaultInstance(), inTransaction(write, this::updateNotebook));
+        register("DeleteNotebook", DeleteNotebookRequest.getDefaultInstance(), inTransaction(write, this::deleteNotebook));
 
-        register("ListNotes", ListNotesRequest.getDefaultInstance(), this::listNotes);
-        register("GetNote", GetNoteRequest.getDefaultInstance(), this::getNote);
-        register("CreateNote", CreateNoteRequest.getDefaultInstance(), this::createNote);
-        register("UpdateNote", UpdateNoteRequest.getDefaultInstance(), this::updateNote);
-        register("MoveNote", MoveNoteRequest.getDefaultInstance(), this::moveNote);
-        register("ToggleStar", ToggleStarRequest.getDefaultInstance(), this::toggleStar);
-        register("ArchiveNote", ArchiveNoteRequest.getDefaultInstance(), this::archiveNote);
-        register("DeleteNote", DeleteNoteRequest.getDefaultInstance(), this::deleteNote);
-        register("Search", SearchRequest.getDefaultInstance(), this::search);
+        register("ListNotes", ListNotesRequest.getDefaultInstance(), inTransaction(read, this::listNotes));
+        register("GetNote", GetNoteRequest.getDefaultInstance(), inTransaction(read, this::getNote));
+        register("CreateNote", CreateNoteRequest.getDefaultInstance(), inTransaction(write, this::createNote));
+        register("UpdateNote", UpdateNoteRequest.getDefaultInstance(), inTransaction(write, this::updateNote));
+        register("MoveNote", MoveNoteRequest.getDefaultInstance(), inTransaction(write, this::moveNote));
+        register("ToggleStar", ToggleStarRequest.getDefaultInstance(), inTransaction(write, this::toggleStar));
+        register("ArchiveNote", ArchiveNoteRequest.getDefaultInstance(), inTransaction(write, this::archiveNote));
+        register("DeleteNote", DeleteNoteRequest.getDefaultInstance(), inTransaction(write, this::deleteNote));
+        register("Search", SearchRequest.getDefaultInstance(), inTransaction(read, this::search));
 
         registerUnimplemented();
     }
@@ -96,6 +106,14 @@ public class NotesRpcService extends ConnectService {
     @Override
     public String serviceName() {
         return "notes.v1.NotesService";
+    }
+
+    // Handlers are dispatched through method references, which never pass through Spring's
+    // transactional proxy, so each one is wrapped here instead of annotated.
+    private static <I extends com.google.protobuf.Message, O extends com.google.protobuf.Message>
+    com.example.notesjava.common.connect.UnaryHandler<I, O> inTransaction(
+            TransactionTemplate template, com.example.notesjava.common.connect.UnaryHandler<I, O> handler) {
+        return request -> template.execute(status -> handler.handle(request));
     }
 
     private void registerUnimplemented() {
@@ -121,7 +139,6 @@ public class NotesRpcService extends ConnectService {
                 req -> { throw ConnectException.unimplemented("ListActivity"); });
     }
 
-    @Transactional(readOnly = true)
     ListNotebooksResponse listNotebooks(ListNotebooksRequest request) {
         UUID familyId = callers.requireFamilyId();
         ListNotebooksResponse.Builder response = ListNotebooksResponse.newBuilder();
@@ -133,7 +150,6 @@ public class NotesRpcService extends ConnectService {
         return response.build();
     }
 
-    @Transactional
     CreateNotebookResponse createNotebook(CreateNotebookRequest request) {
         UUID familyId = callers.requireFamilyId();
         String name = request.getName().trim();
@@ -147,7 +163,6 @@ public class NotesRpcService extends ConnectService {
                 .build();
     }
 
-    @Transactional
     UpdateNotebookResponse updateNotebook(UpdateNotebookRequest request) {
         UUID familyId = callers.requireFamilyId();
         Group group = notebook(request.getNotebookId(), familyId);
@@ -163,7 +178,6 @@ public class NotesRpcService extends ConnectService {
                 .build();
     }
 
-    @Transactional
     DeleteNotebookResponse deleteNotebook(DeleteNotebookRequest request) {
         UUID familyId = callers.requireFamilyId();
         Group group = notebook(request.getNotebookId(), familyId);
@@ -173,7 +187,6 @@ public class NotesRpcService extends ConnectService {
         return DeleteNotebookResponse.getDefaultInstance();
     }
 
-    @Transactional(readOnly = true)
     ListNotesResponse listNotes(ListNotesRequest request) {
         UUID familyId = callers.requireFamilyId();
 
@@ -182,12 +195,9 @@ public class NotesRpcService extends ConnectService {
                 : DEFAULT_PAGE_SIZE;
         Long notebookId = request.getNotebookId().isBlank() ? null : id(request.getNotebookId(), "notebook_id");
 
-        Page<Note> page = notes.listForContract(
-                familyId,
-                notebookId,
-                request.getStarredOnly(),
-                request.getIncludeArchived() || request.getArchivedOnly(),
-                request.getArchivedOnly(),
+        Page<Note> page = notes.findAll(
+                filter(familyId, notebookId, request.getStarredOnly(),
+                        request.getIncludeArchived(), request.getArchivedOnly()),
                 PageRequest.of(0, pageSize, sortFor(request.getSort())));
 
         ListNotesResponse.Builder response = ListNotesResponse.newBuilder();
@@ -195,7 +205,6 @@ public class NotesRpcService extends ConnectService {
         return response.build();
     }
 
-    @Transactional(readOnly = true)
     GetNoteResponse getNote(GetNoteRequest request) {
         UUID familyId = callers.requireFamilyId();
         return GetNoteResponse.newBuilder()
@@ -203,7 +212,6 @@ public class NotesRpcService extends ConnectService {
                 .build();
     }
 
-    @Transactional
     CreateNoteResponse createNote(CreateNoteRequest request) {
         Caller caller = callers.require();
         UUID familyId = caller.familyId();
@@ -230,7 +238,6 @@ public class NotesRpcService extends ConnectService {
                 .build();
     }
 
-    @Transactional
     UpdateNoteResponse updateNote(UpdateNoteRequest request) {
         UUID familyId = callers.requireFamilyId();
         Note note = note(request.getNoteId(), familyId);
@@ -245,7 +252,6 @@ public class NotesRpcService extends ConnectService {
         return UpdateNoteResponse.newBuilder().setNote(NotesMapper.toProto(note)).build();
     }
 
-    @Transactional
     MoveNoteResponse moveNote(MoveNoteRequest request) {
         UUID familyId = callers.requireFamilyId();
         Note note = note(request.getNoteId(), familyId);
@@ -254,7 +260,6 @@ public class NotesRpcService extends ConnectService {
         return MoveNoteResponse.newBuilder().setNote(NotesMapper.toProto(note)).build();
     }
 
-    @Transactional
     ToggleStarResponse toggleStar(ToggleStarRequest request) {
         UUID familyId = callers.requireFamilyId();
         Note note = note(request.getNoteId(), familyId);
@@ -263,7 +268,6 @@ public class NotesRpcService extends ConnectService {
         return ToggleStarResponse.newBuilder().setNote(NotesMapper.toProto(note)).build();
     }
 
-    @Transactional
     ArchiveNoteResponse archiveNote(ArchiveNoteRequest request) {
         UUID familyId = callers.requireFamilyId();
         Note note = note(request.getNoteId(), familyId);
@@ -272,14 +276,12 @@ public class NotesRpcService extends ConnectService {
         return ArchiveNoteResponse.newBuilder().setNote(NotesMapper.toProto(note)).build();
     }
 
-    @Transactional
     DeleteNoteResponse deleteNote(DeleteNoteRequest request) {
         UUID familyId = callers.requireFamilyId();
         notes.delete(note(request.getNoteId(), familyId));
         return DeleteNoteResponse.getDefaultInstance();
     }
 
-    @Transactional(readOnly = true)
     SearchResponse search(SearchRequest request) {
         UUID familyId = callers.requireFamilyId();
 
@@ -318,6 +320,27 @@ public class NotesRpcService extends ConnectService {
                 .setSearchedNotes(hits.size())
                 .setElapsedMs((int) ((System.nanoTime() - started) / 1_000_000))
                 .build();
+    }
+
+    private static Specification<Note> filter(
+            UUID familyId, Long notebookId, boolean starredOnly, boolean includeArchived, boolean archivedOnly) {
+        return (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("familyId"), familyId));
+
+            if (notebookId != null) {
+                predicates.add(builder.equal(root.get("group").get("id"), notebookId));
+            }
+            if (starredOnly) {
+                predicates.add(builder.isTrue(root.get("starred")));
+            }
+            if (archivedOnly) {
+                predicates.add(builder.isTrue(root.get("archived")));
+            } else if (!includeArchived) {
+                predicates.add(builder.isFalse(root.get("archived")));
+            }
+            return builder.and(predicates.toArray(Predicate[]::new));
+        };
     }
 
     private Sort sortFor(NoteSort sort) {
