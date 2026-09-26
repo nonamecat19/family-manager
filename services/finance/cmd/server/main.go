@@ -24,6 +24,7 @@ import (
 	dbfs "github.com/nnc/family-manager/services/finance/internal/db"
 	"github.com/nnc/family-manager/services/finance/internal/handler"
 	"github.com/nnc/family-manager/services/finance/internal/projection"
+	"github.com/nnc/family-manager/services/finance/internal/scheduler"
 	"github.com/nnc/family-manager/services/finance/internal/store"
 )
 
@@ -118,6 +119,8 @@ func run() error {
 			defer stopProjection()
 		}
 	}
+
+	go scheduler.NewInstallments(h, cfg.InstallmentTick, log).Run(ctx)
 
 	publicSrv := newServer(cfg.HTTPPort, publicMux(h, verifier, pool, log))
 	internalSrv := newServer(cfg.GRPCPort, internalMux(h, pool, log))
