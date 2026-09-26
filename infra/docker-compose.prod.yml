@@ -207,34 +207,68 @@ services:
   notes:
     image: ghcr.io/nonamecat19/family-manager/notes:${IMAGE_TAG:-latest}
     environment:
-      NOTES_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/notes?sslmode=disable
+      NOTES_DB_URL: jdbc:postgresql://postgres:5432/notes
+      NOTES_DB_USER: ${POSTGRES_USER}
+      NOTES_DB_PASSWORD: ${POSTGRES_PASSWORD}
       NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
-      NOTES_NATS_URL: nats://nats:4222
-      NOTES_HTTP_PORT: "8080"
-      NOTES_LOG_JSON: "true"
-      NOTES_LOG_LEVEL: ${LOG_LEVEL:-info}
-      GOMEMLIMIT: 140MiB
-      GOGC: "50"
+      # The JVM sizes its heap against the cgroup, but MaxRAMPercentage counts only the heap:
+      # metaspace, code cache, thread stacks and direct buffers live outside it. 55% of 448m
+      # leaves ~200m of native headroom, which is what keeps this from being OOM-killed as the
+      # largest single tenant on a 1.6 GiB box. The Dockerfile's default of 75% does not.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=55 -XX:+UseSerialGC -Xss512k
     depends_on:
       postgres:
         condition: service_healthy
-      nats:
+      auth:
+        condition: service_started
+    # Spring's own probe is /actuator/health; /healthz is the alias deploy.sh probes, the same
+    # path as every Go service here.
+    restart: unless-stopped
+    mem_limit: 448m
+    logging: *bounded-logs
+
+  telegram:
+    image: ghcr.io/nonamecat19/family-manager/telegram:${IMAGE_TAG:-latest}
+    environment:
+      TELEGRAM_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/telegram?sslmode=disable
+      # Long polling, not webhook. ADR 0010 prefers a webhook on a box that already runs Caddy,
+      # but a webhook needs a public hostname for this service and there is no DNS record for
+      # one; polling needs nothing published. Switching later is a config change, not a rebuild:
+      # set TELEGRAM_MODE=webhook, TELEGRAM_PUBLIC_URL and TELEGRAM_WEBHOOK_SECRET, and give
+      # Caddy a host that proxies /tg/ here.
+      TELEGRAM_MODE: ${TELEGRAM_MODE:-polling}
+      TELEGRAM_TOKEN_KEY_FILE: /run/secrets/telegram-token-key
+      TELEGRAM_AUTH_ADDR: http://auth:8080
+      TELEGRAM_FAMILY_ADDR: http://family:8080
+      TELEGRAM_FINANCE_ADDR: http://finance:8080
+      TELEGRAM_RECIPES_ADDR: http://recipes:8080
+      TELEGRAM_NOTES_ADDR: http://notes:8080
+      # A bot with no token here is simply not started, so an unused bot needs no placeholder.
+      TELEGRAM_FINANCE_TOKEN: ${TELEGRAM_FINANCE_TOKEN:-}
+      TELEGRAM_RECIPES_TOKEN: ${TELEGRAM_RECIPES_TOKEN:-}
+      TELEGRAM_NOTES_TOKEN: ${TELEGRAM_NOTES_TOKEN:-}
+      TELEGRAM_FAMILY_TOKEN: ${TELEGRAM_FAMILY_TOKEN:-}
+      TELEGRAM_HTTP_PORT: "8080"
+      TELEGRAM_LOG_JSON: "true"
+      TELEGRAM_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 80MiB
+      GOGC: "50"
+    secrets:
+      - telegram-token-key
+    depends_on:
+      postgres:
         condition: service_healthy
       auth:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "/server", "-healthcheck"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
+        condition: service_started
     restart: unless-stopped
-    mem_limit: 160m
+    mem_limit: 96m
     logging: *bounded-logs
 
 secrets:
   auth-signing-key:
     file: ./secrets/auth-signing-key.pem
+  telegram-token-key:
+    file: ./secrets/telegram-token-key
 
 volumes:
   pgdata:

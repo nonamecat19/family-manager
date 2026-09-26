@@ -5,7 +5,7 @@ DEPLOY_DIR="${DEPLOY_DIR:-/opt/family-manager}"
 PROJECT="family-manager"
 COMPOSE_FILE="docker-compose.prod.yml"
 STATE_FILE=".deployed-tag"
-SERVICES=(auth family finance notes recipes)
+SERVICES=(auth family finance recipes notes telegram)
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-180}"
 
 log() { printf '==> %s\n' "$*"; }
