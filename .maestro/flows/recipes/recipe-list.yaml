@@ -4,14 +4,17 @@ tags:
   - recipes
 ---
 - launchApp
-- assertVisible: "The family cookbook"
+- assertVisible: "The family\\scookbook"
 
 - tapOn: "Recipes"
 - assertVisible: "All recipes"
 
 - tapOn: "Filter"
-- assertVisible: "Max time"
-- tapOn: "Close"
+- assertVisible: "MAX TIME|Max time"
+- back
+- extendedWaitUntil:
+    notVisible: "MAX TIME"
+    timeout: 5000
 
 - assertVisible:
-    label: "Add recipe"
+    text: "Add recipe"

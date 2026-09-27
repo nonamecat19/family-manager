@@ -1,0 +1,9 @@
+appId: dev.familymanager.finance
+---
+- openLink: fmfinance:///${ROUTE}
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible: "Something\\swent wrong"
+- assertNotVisible: "Could not load.*"
+- assertNotVisible: "The app could not draw this screen.*"
+- takeScreenshot: ${'finance-' + ROUTE.replace('/', '-')}

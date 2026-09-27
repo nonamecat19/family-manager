@@ -1,4 +1,4 @@
-appId: dev.familymanager.recipes
+appId: dev.familymanager.finance
 name: "Smoke: app launches"
 tags:
   - smoke
@@ -6,6 +6,6 @@ tags:
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: "Family Recipes"
+    visible: "Family Money"
     timeout: 20000
 - assertVisible: "Sign in"

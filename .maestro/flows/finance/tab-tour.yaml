@@ -1,0 +1,51 @@
+appId: dev.familymanager.finance
+name: "Tabs: every tab and hidden screen renders"
+tags:
+  - tour
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 20000
+- tapOn: "Transactions"
+- assertNotVisible: "Something\\swent wrong"
+- assertNotVisible: "Could not load.*"
+- tapOn: "Accounts"
+- assertNotVisible: "Something\\swent wrong"
+- assertNotVisible: "Could not load.*"
+- tapOn: "You"
+- assertNotVisible: "Something\\swent wrong"
+- assertNotVisible: "Could not load.*"
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: charts }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: categories }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: household }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: templates }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: recurring }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: investments }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: installments }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: reminders }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: widgets }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: connected-accounts }
+- runFlow:
+    file: subflows/visit.yaml
+    env: { ROUTE: members/spending }

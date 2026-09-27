@@ -1,0 +1,41 @@
+appId: dev.familymanager.notes
+name: "Notes: quick capture keeps title and body, editor opens"
+tags:
+  - notes
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "All notes"
+    timeout: 20000
+- tapOn: "New note"
+- extendedWaitUntil:
+    visible: "Saves to the family"
+    timeout: 10000
+- tapOn: "Title"
+- inputText: "Trip plan"
+- tapOn: "Anything worth keeping"
+- inputText: "Book train tickets"
+- hideKeyboard
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Trip plan"
+    timeout: 10000
+- tapOn: "Trip plan"
+- extendedWaitUntil:
+    visible: "Book train tickets"
+    timeout: 10000
+- assertVisible: "All changes saved"
+- tapOn: "Back"
+- tapOn: "Search"
+- tapOn: "Search notes, tasks and notebooks"
+- inputText: "train"
+- extendedWaitUntil:
+    visible: "Trip plan"
+    timeout: 10000
+- hideKeyboard
+- tapOn: "Shared"
+- assertNotVisible: "Something went sideways"
+- assertNotVisible: "That did not load."
+- tapOn: "Settings"
+- assertNotVisible: "Something went sideways"
+- assertNotVisible: "That did not load."

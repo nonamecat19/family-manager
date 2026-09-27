@@ -128,10 +128,11 @@ test-android app flow="":
     export PATH="$PATH:$HOME/.maestro/bin"
     adb=${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb
     for port in 8081 8082 8083 8084 8085 8086 8087; do "$adb" reverse tcp:$port tcp:$port >/dev/null; done
+    email="e2e-$(date +%s)@example.test"
     if [ -z "{{flow}}" ]; then
-      maestro test ".maestro/flows/{{app}}/"
+      maestro test -e TEST_EMAIL="$email" ".maestro/flows/{{app}}/"
     else
-      maestro test ".maestro/flows/{{app}}/{{flow}}.yaml"
+      maestro test -e TEST_EMAIL="$email" ".maestro/flows/{{app}}/{{flow}}.yaml"
     fi
 
 

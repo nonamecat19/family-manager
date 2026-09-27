@@ -1,0 +1,41 @@
+appId: dev.familymanager.finance
+name: "Auth: register, create a family, land on home"
+tags:
+  - auth
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Family Money"
+    timeout: 20000
+- tapOn: "I don't have an account yet"
+- tapOn: "Name"
+- inputText: "Money Tester"
+- tapOn: "Email"
+- inputText: ${TEST_EMAIL || 'money-tester@example.com'}
+- tapOn: "Password"
+- inputText: ${TEST_PASSWORD || 'testpass123'}
+- hideKeyboard
+- tapOn: "Create account"
+- extendedWaitUntil:
+    visible: "No family\\syet|Сім'ї ще\\sнемає"
+    timeout: 20000
+- tapOn: "Create a family|Створити сім'ю"
+- tapOn: "NAME|Назва"
+- inputText: "The Savers"
+- hideKeyboard
+- tapOn: "Next|Далі"
+- extendedWaitUntil:
+    visible: "Home|Головна"
+    timeout: 30000
+
+- tapOn: "You|Ви"
+- scrollUntilVisible:
+    element: "English|Англійська"
+- tapOn: "English|Англійська"
+- extendedWaitUntil:
+    visible: "Language"
+    timeout: 10000
+- tapOn: "Home"
+- assertNotVisible: "Something\\swent wrong"
+- assertNotVisible: "Notification settings did not load.*"

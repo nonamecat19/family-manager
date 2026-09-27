@@ -5,7 +5,7 @@ tags:
   - meal-plan
 ---
 - launchApp
-- assertVisible: "The family cookbook"
+- assertVisible: "The family\\scookbook"
 
 - tapOn: "Recipes"
 - tapOn: "Test Pancakes"

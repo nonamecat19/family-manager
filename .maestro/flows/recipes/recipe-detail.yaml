@@ -5,7 +5,7 @@ tags:
   - detail
 ---
 - launchApp
-- assertVisible: "The family cookbook"
+- assertVisible: "The family\\scookbook"
 
 - tapOn: "Recipes"
 - tapOn: "Test Pancakes"
@@ -24,4 +24,4 @@ tags:
 - assertVisible: "Add to plan"
 
 - tapOn:
-    label: "Back"
+    text: "Back"

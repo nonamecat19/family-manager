@@ -5,12 +5,14 @@ tags:
   - create
 ---
 - launchApp
-- assertVisible: "The family cookbook"
+- assertVisible: "The family\\scookbook"
 
 - tapOn: "Recipes"
 - tapOn:
-    label: "Add recipe"
-- assertVisible: "New recipe"
+    text: "Add recipe"
+- extendedWaitUntil:
+    visible: "New recipe"
+    timeout: 10000
 
 - tapOn: "Name"
 - inputText: "Test Pancakes"
@@ -22,18 +24,23 @@ tags:
 - eraseText
 - inputText: "4"
 
-- tapOn:
-    text: "Name"
-    index: 1
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Chestnut mushrooms"
+- tapOn: "Chestnut mushrooms"
 - inputText: "Flour"
-- tapOn: "Amount"
+- tapOn: "300"
 - inputText: "200"
-- tapOn: "Unit"
+- tapOn: "^g$"
 - inputText: "g"
-
-- tapOn: "Instruction"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Sweat the onion and carrot in butter until soft."
+- tapOn: "Sweat the onion and carrot in butter until soft."
 - inputText: "Mix flour with water"
-
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Save recipe"
 - tapOn: "Save recipe"
 
 - extendedWaitUntil:

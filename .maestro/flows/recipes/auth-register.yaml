@@ -1,5 +1,5 @@
 appId: dev.familymanager.recipes
-name: "Auth: register and sign in"
+name: "Auth: register, create a family, land on home"
 tags:
   - auth
 ---
@@ -12,12 +12,36 @@ tags:
 - tapOn: "Name"
 - inputText: "Test Chef"
 - tapOn: "Email"
-- inputText: "testchef@example.com"
+- inputText: ${TEST_EMAIL || 'testchef@example.com'}
 - tapOn: "Password"
-- inputText: "testpass123"
+- inputText: ${TEST_PASSWORD || 'testpass123'}
+- hideKeyboard
 
 - tapOn: "Create account"
 
 - extendedWaitUntil:
-    visible: "Start your"
+    visible: "No family\\syet|Поки що немає\\sродини"
+    timeout: 20000
+- tapOn: "Create a family|Створити родину"
+- extendedWaitUntil:
+    visible: "Start your\\scookbook|Почніть свою\\sкулінарну книгу"
+    timeout: 10000
+- tapOn: "Family name|Назва родини"
+- inputText: "The Testers"
+- hideKeyboard
+- tapOn: "Create|Створити"
+- extendedWaitUntil:
+    visible: "The family\\scookbook|Сімейна\\sкулінарна книга"
+    timeout: 20000
+
+- tapOn: "You|Ви"
+- tapOn: "Preferences|Налаштування"
+- tapOn: "English"
+- extendedWaitUntil:
+    visible: "LANGUAGE|Language"
+    timeout: 10000
+- assertNotVisible: "Notification settings did not load."
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "The family\\scookbook"
     timeout: 10000

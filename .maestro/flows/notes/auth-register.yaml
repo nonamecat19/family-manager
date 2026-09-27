@@ -1,0 +1,35 @@
+appId: dev.familymanager.notes
+name: "Auth: register, create a family, land on notes"
+tags:
+  - auth
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Commonplace"
+    timeout: 20000
+- tapOn: "No account yet? Create one"
+- tapOn: "Name"
+- inputText: "Note Taker"
+- tapOn: "Email"
+- inputText: ${TEST_EMAIL || 'notes-tester@example.com'}
+- tapOn: "Password"
+- inputText: ${TEST_PASSWORD || 'testpass123'}
+- hideKeyboard
+- tapOn: "Create account"
+- extendedWaitUntil:
+    visible: "No family yet"
+    timeout: 20000
+- tapOn: "Create a family"
+- extendedWaitUntil:
+    visible: "Start a family"
+    timeout: 10000
+- tapOn: "Family name"
+- inputText: "The Readers"
+- hideKeyboard
+- tapOn: "Create family"
+- extendedWaitUntil:
+    visible: "Notes"
+    timeout: 20000
+- assertNotVisible: "Something went sideways"
+- assertNotVisible: "Commonplace lost its place"

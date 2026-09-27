@@ -5,21 +5,21 @@ tags:
   - favorites
 ---
 - launchApp
-- assertVisible: "The family cookbook"
+- assertVisible: "The family\\scookbook"
 
 - tapOn: "Recipes"
 - tapOn: "Test Pancakes"
 - assertVisible: "Test Pancakes"
 
 - tapOn:
-    label: "Add to favourites"
+    text: "Add to favourites"
 - extendedWaitUntil:
     visible:
-      label: "Remove from favourites"
+      text: "Remove from favourites"
     timeout: 5000
 
 - tapOn:
-    label: "Back"
+    text: "Back"
 - tapOn: "Home"
 - tapOn: "The ones you keep coming back to"
 - assertVisible: "Favourites"

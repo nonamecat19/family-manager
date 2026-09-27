@@ -1,0 +1,13 @@
+flows:
+  - "*.yaml"
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - "Smoke: app launches"
+    - "Auth: register, create a family, land on home"
+    - "Recipes: list screen"
+    - "Recipes: create recipe"
+    - "Recipes: detail screen"
+    - "Recipes: favorites flow"
+    - "Recipes: plan and shopping list"
+    - "Auth: login"

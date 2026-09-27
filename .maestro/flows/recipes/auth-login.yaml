@@ -2,21 +2,19 @@ appId: dev.familymanager.recipes
 name: "Auth: login"
 tags:
   - auth
-env:
-  TEST_EMAIL: "testchef@example.com"
-  TEST_PASSWORD: "testpass123"
 ---
 - launchApp:
     clearState: true
 - assertVisible: "Family Recipes"
 
 - tapOn: "Email"
-- inputText: ${TEST_EMAIL}
+- inputText: ${TEST_EMAIL || 'testchef@example.com'}
 - tapOn: "Password"
-- inputText: ${TEST_PASSWORD}
+- inputText: ${TEST_PASSWORD || 'testpass123'}
 
+- hideKeyboard
 - tapOn: "Sign in"
 
 - extendedWaitUntil:
-    visible: "The family cookbook"
+    visible: "The family\\scookbook"
     timeout: 10000
