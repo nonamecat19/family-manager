@@ -54,6 +54,8 @@ graph LR
     table_finance_settings["table:finance_settings"]
     table_groups["table:groups"]
     table_identities["table:identities"]
+    table_installments["table:installments"]
+    table_investments["table:investments"]
     table_link_tokens["table:link_tokens"]
     table_login_grants["table:login_grants"]
     table_meal_plan_entries["table:meal_plan_entries"]
@@ -158,6 +160,8 @@ graph LR
   service_finance -->|PERSISTS_TO| table_category_groups
   service_finance -->|PERSISTS_TO| table_finance_members
   service_finance -->|PERSISTS_TO| table_finance_settings
+  service_finance -->|PERSISTS_TO| table_installments
+  service_finance -->|PERSISTS_TO| table_investments
   service_finance -->|PERSISTS_TO| table_quick_templates
   service_finance -->|PERSISTS_TO| table_recurring_payments
   service_finance -->|PERSISTS_TO| table_reminders
@@ -226,6 +230,8 @@ graph LR
   table_finance_settings -->|OWNED_BY| service_finance
   table_groups -->|OWNED_BY| service_notes
   table_identities -->|OWNED_BY| service_auth
+  table_installments -->|OWNED_BY| service_finance
+  table_investments -->|OWNED_BY| service_finance
   table_link_tokens -->|OWNED_BY| service_auth
   table_login_grants -->|OWNED_BY| service_auth
   table_meal_plan_entries -->|OWNED_BY| service_recipes

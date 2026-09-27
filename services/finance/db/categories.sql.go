@@ -11,6 +11,39 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const adoptCategoryGroupRole = `-- name: AdoptCategoryGroupRole :one
+UPDATE category_groups
+SET role = $2::text, archived = FALSE, updated_at = NOW()
+WHERE family_id = $1 AND kind = 'expense' AND role = ''
+  AND lower(btrim(name)) = lower(btrim($3::text))
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role
+`
+
+type AdoptCategoryGroupRoleParams struct {
+	FamilyID pgtype.UUID
+	Role     string
+	Name     string
+}
+
+func (q *Queries) AdoptCategoryGroupRole(ctx context.Context, arg AdoptCategoryGroupRoleParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, adoptCategoryGroupRole, arg.FamilyID, arg.Role, arg.Name)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
+	)
+	return i, err
+}
+
 const countCategoriesInGroup = `-- name: CountCategoriesInGroup :one
 SELECT COUNT(*) FROM categories
 WHERE group_id = $1 AND family_id = $2
@@ -88,7 +121,7 @@ const createCategoryGroup = `-- name: CreateCategoryGroup :one
 INSERT INTO category_groups (family_id, name, kind, icon, color_step, sort_order)
 VALUES ($1, $2, $3, $4, $5,
     COALESCE((SELECT MAX(sort_order) + 1 FROM category_groups WHERE family_id = $1), 0))
-RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role
 `
 
 type CreateCategoryGroupParams struct {
@@ -119,6 +152,48 @@ func (q *Queries) CreateCategoryGroup(ctx context.Context, arg CreateCategoryGro
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
+	)
+	return i, err
+}
+
+const createRoleCategoryGroup = `-- name: CreateRoleCategoryGroup :one
+INSERT INTO category_groups (family_id, name, kind, icon, color_step, role, sort_order)
+VALUES ($1, $2, 'expense', $3, $4, $5,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM category_groups WHERE family_id = $1), 0))
+ON CONFLICT (family_id, role) WHERE role <> '' DO NOTHING
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role
+`
+
+type CreateRoleCategoryGroupParams struct {
+	FamilyID  pgtype.UUID
+	Name      string
+	Icon      string
+	ColorStep int32
+	Role      string
+}
+
+func (q *Queries) CreateRoleCategoryGroup(ctx context.Context, arg CreateRoleCategoryGroupParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, createRoleCategoryGroup,
+		arg.FamilyID,
+		arg.Name,
+		arg.Icon,
+		arg.ColorStep,
+		arg.Role,
+	)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }
@@ -188,7 +263,7 @@ func (q *Queries) GetCategory(ctx context.Context, arg GetCategoryParams) (Categ
 }
 
 const getCategoryGroup = `-- name: GetCategoryGroup :one
-SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at FROM category_groups
+SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role FROM category_groups
 WHERE id = $1 AND family_id = $2
 `
 
@@ -211,6 +286,36 @@ func (q *Queries) GetCategoryGroup(ctx context.Context, arg GetCategoryGroupPara
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
+	)
+	return i, err
+}
+
+const getCategoryGroupByRole = `-- name: GetCategoryGroupByRole :one
+SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role FROM category_groups
+WHERE family_id = $1 AND role = $2
+`
+
+type GetCategoryGroupByRoleParams struct {
+	FamilyID pgtype.UUID
+	Role     string
+}
+
+func (q *Queries) GetCategoryGroupByRole(ctx context.Context, arg GetCategoryGroupByRoleParams) (CategoryGroup, error) {
+	row := q.db.QueryRow(ctx, getCategoryGroupByRole, arg.FamilyID, arg.Role)
+	var i CategoryGroup
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Name,
+		&i.Kind,
+		&i.Icon,
+		&i.ColorStep,
+		&i.SortOrder,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }
@@ -268,7 +373,7 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 }
 
 const listCategoryGroups = `-- name: ListCategoryGroups :many
-SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at FROM category_groups
+SELECT id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role FROM category_groups
 WHERE family_id = $1
   AND ($2::text IS NULL OR kind = $2)
   AND ($3::bool OR NOT archived)
@@ -301,6 +406,7 @@ func (q *Queries) ListCategoryGroups(ctx context.Context, arg ListCategoryGroups
 			&i.Archived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Role,
 		); err != nil {
 			return nil, err
 		}
@@ -426,6 +532,23 @@ func (q *Queries) ReorderCategoryGroup(ctx context.Context, arg ReorderCategoryG
 	return err
 }
 
+const setCategoryArchived = `-- name: SetCategoryArchived :exec
+UPDATE categories
+SET archived = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2
+`
+
+type SetCategoryArchivedParams struct {
+	ID       pgtype.UUID
+	FamilyID pgtype.UUID
+	Archived bool
+}
+
+func (q *Queries) SetCategoryArchived(ctx context.Context, arg SetCategoryArchivedParams) error {
+	_, err := q.db.Exec(ctx, setCategoryArchived, arg.ID, arg.FamilyID, arg.Archived)
+	return err
+}
+
 const updateCategory = `-- name: UpdateCategory :one
 UPDATE categories
 SET name       = COALESCE($3::text, name),
@@ -476,7 +599,7 @@ SET name       = COALESCE($3::text, name),
     archived   = COALESCE($6::bool, archived),
     updated_at = NOW()
 WHERE id = $1 AND family_id = $2
-RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at
+RETURNING id, family_id, name, kind, icon, color_step, sort_order, archived, created_at, updated_at, role
 `
 
 type UpdateCategoryGroupParams struct {
@@ -509,6 +632,7 @@ func (q *Queries) UpdateCategoryGroup(ctx context.Context, arg UpdateCategoryGro
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Role,
 	)
 	return i, err
 }

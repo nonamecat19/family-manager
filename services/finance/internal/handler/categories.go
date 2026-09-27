@@ -241,6 +241,9 @@ func (h *Handler) DeleteCategoryGroup(
 		if errors.As(err, &connectErr) {
 			return nil, connectErr
 		}
+		if pgErrorCode(err) == pgForeignKeyViolation {
+			return nil, categoryInUse()
+		}
 		return nil, h.internal(ctx, err, "delete category group")
 	}
 	return connect.NewResponse(&financev1.DeleteCategoryGroupResponse{
@@ -481,6 +484,9 @@ func (h *Handler) DeleteCategory(
 		var connectErr *connect.Error
 		if errors.As(err, &connectErr) {
 			return nil, connectErr
+		}
+		if pgErrorCode(err) == pgForeignKeyViolation {
+			return nil, categoryInUse()
 		}
 		return nil, h.internal(ctx, err, "delete category")
 	}

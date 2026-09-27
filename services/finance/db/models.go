@@ -68,6 +68,7 @@ type CategoryGroup struct {
 	Archived  bool
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+	Role      string
 }
 
 type FinanceMember struct {
@@ -91,6 +92,41 @@ type FinanceSetting struct {
 	PinLockEnabled                bool
 	CreatedAt                     pgtype.Timestamptz
 	UpdatedAt                     pgtype.Timestamptz
+}
+
+type Installment struct {
+	ID              pgtype.UUID
+	FamilyID        pgtype.UUID
+	Name            string
+	TotalMinor      int64
+	MonthlyMinor    int64
+	Months          int32
+	CurrencyCode    string
+	AccountID       pgtype.UUID
+	CategoryID      pgtype.UUID
+	MemberID        pgtype.UUID
+	CreatedByUserID pgtype.UUID
+	PurchasedOn     pgtype.Date
+	DayOfMonth      int32
+	NextDueOn       pgtype.Date
+	Status          string
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+}
+
+type Investment struct {
+	ID                pgtype.UUID
+	FamilyID          pgtype.UUID
+	Name              string
+	Kind              string
+	CurrencyCode      string
+	CategoryID        pgtype.UUID
+	CurrentValueMinor int64
+	ValueUpdatedOn    pgtype.Date
+	Archived          bool
+	SortOrder         int32
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
 }
 
 type QuickTemplate struct {

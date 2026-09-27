@@ -207,6 +207,36 @@ const (
 	// FinanceServiceGetWidgetDataProcedure is the fully-qualified name of the FinanceService's
 	// GetWidgetData RPC.
 	FinanceServiceGetWidgetDataProcedure = "/finance.v1.FinanceService/GetWidgetData"
+	// FinanceServiceListInvestmentsProcedure is the fully-qualified name of the FinanceService's
+	// ListInvestments RPC.
+	FinanceServiceListInvestmentsProcedure = "/finance.v1.FinanceService/ListInvestments"
+	// FinanceServiceCreateInvestmentProcedure is the fully-qualified name of the FinanceService's
+	// CreateInvestment RPC.
+	FinanceServiceCreateInvestmentProcedure = "/finance.v1.FinanceService/CreateInvestment"
+	// FinanceServiceUpdateInvestmentProcedure is the fully-qualified name of the FinanceService's
+	// UpdateInvestment RPC.
+	FinanceServiceUpdateInvestmentProcedure = "/finance.v1.FinanceService/UpdateInvestment"
+	// FinanceServiceSetInvestmentValueProcedure is the fully-qualified name of the FinanceService's
+	// SetInvestmentValue RPC.
+	FinanceServiceSetInvestmentValueProcedure = "/finance.v1.FinanceService/SetInvestmentValue"
+	// FinanceServiceDeleteInvestmentProcedure is the fully-qualified name of the FinanceService's
+	// DeleteInvestment RPC.
+	FinanceServiceDeleteInvestmentProcedure = "/finance.v1.FinanceService/DeleteInvestment"
+	// FinanceServiceListInstallmentsProcedure is the fully-qualified name of the FinanceService's
+	// ListInstallments RPC.
+	FinanceServiceListInstallmentsProcedure = "/finance.v1.FinanceService/ListInstallments"
+	// FinanceServiceCreateInstallmentProcedure is the fully-qualified name of the FinanceService's
+	// CreateInstallment RPC.
+	FinanceServiceCreateInstallmentProcedure = "/finance.v1.FinanceService/CreateInstallment"
+	// FinanceServiceUpdateInstallmentProcedure is the fully-qualified name of the FinanceService's
+	// UpdateInstallment RPC.
+	FinanceServiceUpdateInstallmentProcedure = "/finance.v1.FinanceService/UpdateInstallment"
+	// FinanceServiceCancelInstallmentProcedure is the fully-qualified name of the FinanceService's
+	// CancelInstallment RPC.
+	FinanceServiceCancelInstallmentProcedure = "/finance.v1.FinanceService/CancelInstallment"
+	// FinanceServiceDeleteInstallmentProcedure is the fully-qualified name of the FinanceService's
+	// DeleteInstallment RPC.
+	FinanceServiceDeleteInstallmentProcedure = "/finance.v1.FinanceService/DeleteInstallment"
 )
 
 // FinanceServiceClient is a client for the finance.v1.FinanceService service.
@@ -269,6 +299,16 @@ type FinanceServiceClient interface {
 	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
 	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
 	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
+	ListInvestments(context.Context, *connect.Request[v1.ListInvestmentsRequest]) (*connect.Response[v1.ListInvestmentsResponse], error)
+	CreateInvestment(context.Context, *connect.Request[v1.CreateInvestmentRequest]) (*connect.Response[v1.CreateInvestmentResponse], error)
+	UpdateInvestment(context.Context, *connect.Request[v1.UpdateInvestmentRequest]) (*connect.Response[v1.UpdateInvestmentResponse], error)
+	SetInvestmentValue(context.Context, *connect.Request[v1.SetInvestmentValueRequest]) (*connect.Response[v1.SetInvestmentValueResponse], error)
+	DeleteInvestment(context.Context, *connect.Request[v1.DeleteInvestmentRequest]) (*connect.Response[v1.DeleteInvestmentResponse], error)
+	ListInstallments(context.Context, *connect.Request[v1.ListInstallmentsRequest]) (*connect.Response[v1.ListInstallmentsResponse], error)
+	CreateInstallment(context.Context, *connect.Request[v1.CreateInstallmentRequest]) (*connect.Response[v1.CreateInstallmentResponse], error)
+	UpdateInstallment(context.Context, *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error)
+	CancelInstallment(context.Context, *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error)
+	DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error)
 }
 
 // NewFinanceServiceClient constructs a client for the finance.v1.FinanceService service. By
@@ -630,6 +670,66 @@ func NewFinanceServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(financeServiceMethods.ByName("GetWidgetData")),
 			connect.WithClientOptions(opts...),
 		),
+		listInvestments: connect.NewClient[v1.ListInvestmentsRequest, v1.ListInvestmentsResponse](
+			httpClient,
+			baseURL+FinanceServiceListInvestmentsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListInvestments")),
+			connect.WithClientOptions(opts...),
+		),
+		createInvestment: connect.NewClient[v1.CreateInvestmentRequest, v1.CreateInvestmentResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateInvestmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateInvestment")),
+			connect.WithClientOptions(opts...),
+		),
+		updateInvestment: connect.NewClient[v1.UpdateInvestmentRequest, v1.UpdateInvestmentResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateInvestmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateInvestment")),
+			connect.WithClientOptions(opts...),
+		),
+		setInvestmentValue: connect.NewClient[v1.SetInvestmentValueRequest, v1.SetInvestmentValueResponse](
+			httpClient,
+			baseURL+FinanceServiceSetInvestmentValueProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("SetInvestmentValue")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteInvestment: connect.NewClient[v1.DeleteInvestmentRequest, v1.DeleteInvestmentResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteInvestmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteInvestment")),
+			connect.WithClientOptions(opts...),
+		),
+		listInstallments: connect.NewClient[v1.ListInstallmentsRequest, v1.ListInstallmentsResponse](
+			httpClient,
+			baseURL+FinanceServiceListInstallmentsProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("ListInstallments")),
+			connect.WithClientOptions(opts...),
+		),
+		createInstallment: connect.NewClient[v1.CreateInstallmentRequest, v1.CreateInstallmentResponse](
+			httpClient,
+			baseURL+FinanceServiceCreateInstallmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CreateInstallment")),
+			connect.WithClientOptions(opts...),
+		),
+		updateInstallment: connect.NewClient[v1.UpdateInstallmentRequest, v1.UpdateInstallmentResponse](
+			httpClient,
+			baseURL+FinanceServiceUpdateInstallmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("UpdateInstallment")),
+			connect.WithClientOptions(opts...),
+		),
+		cancelInstallment: connect.NewClient[v1.CancelInstallmentRequest, v1.CancelInstallmentResponse](
+			httpClient,
+			baseURL+FinanceServiceCancelInstallmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("CancelInstallment")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteInstallment: connect.NewClient[v1.DeleteInstallmentRequest, v1.DeleteInstallmentResponse](
+			httpClient,
+			baseURL+FinanceServiceDeleteInstallmentProcedure,
+			connect.WithSchema(financeServiceMethods.ByName("DeleteInstallment")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -693,6 +793,16 @@ type financeServiceClient struct {
 	updateWidget              *connect.Client[v1.UpdateWidgetRequest, v1.UpdateWidgetResponse]
 	removeWidget              *connect.Client[v1.RemoveWidgetRequest, v1.RemoveWidgetResponse]
 	getWidgetData             *connect.Client[v1.GetWidgetDataRequest, v1.GetWidgetDataResponse]
+	listInvestments           *connect.Client[v1.ListInvestmentsRequest, v1.ListInvestmentsResponse]
+	createInvestment          *connect.Client[v1.CreateInvestmentRequest, v1.CreateInvestmentResponse]
+	updateInvestment          *connect.Client[v1.UpdateInvestmentRequest, v1.UpdateInvestmentResponse]
+	setInvestmentValue        *connect.Client[v1.SetInvestmentValueRequest, v1.SetInvestmentValueResponse]
+	deleteInvestment          *connect.Client[v1.DeleteInvestmentRequest, v1.DeleteInvestmentResponse]
+	listInstallments          *connect.Client[v1.ListInstallmentsRequest, v1.ListInstallmentsResponse]
+	createInstallment         *connect.Client[v1.CreateInstallmentRequest, v1.CreateInstallmentResponse]
+	updateInstallment         *connect.Client[v1.UpdateInstallmentRequest, v1.UpdateInstallmentResponse]
+	cancelInstallment         *connect.Client[v1.CancelInstallmentRequest, v1.CancelInstallmentResponse]
+	deleteInstallment         *connect.Client[v1.DeleteInstallmentRequest, v1.DeleteInstallmentResponse]
 }
 
 // BootstrapHousehold calls finance.v1.FinanceService.BootstrapHousehold.
@@ -985,6 +1095,56 @@ func (c *financeServiceClient) GetWidgetData(ctx context.Context, req *connect.R
 	return c.getWidgetData.CallUnary(ctx, req)
 }
 
+// ListInvestments calls finance.v1.FinanceService.ListInvestments.
+func (c *financeServiceClient) ListInvestments(ctx context.Context, req *connect.Request[v1.ListInvestmentsRequest]) (*connect.Response[v1.ListInvestmentsResponse], error) {
+	return c.listInvestments.CallUnary(ctx, req)
+}
+
+// CreateInvestment calls finance.v1.FinanceService.CreateInvestment.
+func (c *financeServiceClient) CreateInvestment(ctx context.Context, req *connect.Request[v1.CreateInvestmentRequest]) (*connect.Response[v1.CreateInvestmentResponse], error) {
+	return c.createInvestment.CallUnary(ctx, req)
+}
+
+// UpdateInvestment calls finance.v1.FinanceService.UpdateInvestment.
+func (c *financeServiceClient) UpdateInvestment(ctx context.Context, req *connect.Request[v1.UpdateInvestmentRequest]) (*connect.Response[v1.UpdateInvestmentResponse], error) {
+	return c.updateInvestment.CallUnary(ctx, req)
+}
+
+// SetInvestmentValue calls finance.v1.FinanceService.SetInvestmentValue.
+func (c *financeServiceClient) SetInvestmentValue(ctx context.Context, req *connect.Request[v1.SetInvestmentValueRequest]) (*connect.Response[v1.SetInvestmentValueResponse], error) {
+	return c.setInvestmentValue.CallUnary(ctx, req)
+}
+
+// DeleteInvestment calls finance.v1.FinanceService.DeleteInvestment.
+func (c *financeServiceClient) DeleteInvestment(ctx context.Context, req *connect.Request[v1.DeleteInvestmentRequest]) (*connect.Response[v1.DeleteInvestmentResponse], error) {
+	return c.deleteInvestment.CallUnary(ctx, req)
+}
+
+// ListInstallments calls finance.v1.FinanceService.ListInstallments.
+func (c *financeServiceClient) ListInstallments(ctx context.Context, req *connect.Request[v1.ListInstallmentsRequest]) (*connect.Response[v1.ListInstallmentsResponse], error) {
+	return c.listInstallments.CallUnary(ctx, req)
+}
+
+// CreateInstallment calls finance.v1.FinanceService.CreateInstallment.
+func (c *financeServiceClient) CreateInstallment(ctx context.Context, req *connect.Request[v1.CreateInstallmentRequest]) (*connect.Response[v1.CreateInstallmentResponse], error) {
+	return c.createInstallment.CallUnary(ctx, req)
+}
+
+// UpdateInstallment calls finance.v1.FinanceService.UpdateInstallment.
+func (c *financeServiceClient) UpdateInstallment(ctx context.Context, req *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error) {
+	return c.updateInstallment.CallUnary(ctx, req)
+}
+
+// CancelInstallment calls finance.v1.FinanceService.CancelInstallment.
+func (c *financeServiceClient) CancelInstallment(ctx context.Context, req *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error) {
+	return c.cancelInstallment.CallUnary(ctx, req)
+}
+
+// DeleteInstallment calls finance.v1.FinanceService.DeleteInstallment.
+func (c *financeServiceClient) DeleteInstallment(ctx context.Context, req *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error) {
+	return c.deleteInstallment.CallUnary(ctx, req)
+}
+
 // FinanceServiceHandler is an implementation of the finance.v1.FinanceService service.
 type FinanceServiceHandler interface {
 	BootstrapHousehold(context.Context, *connect.Request[v1.BootstrapHouseholdRequest]) (*connect.Response[v1.BootstrapHouseholdResponse], error)
@@ -1045,6 +1205,16 @@ type FinanceServiceHandler interface {
 	UpdateWidget(context.Context, *connect.Request[v1.UpdateWidgetRequest]) (*connect.Response[v1.UpdateWidgetResponse], error)
 	RemoveWidget(context.Context, *connect.Request[v1.RemoveWidgetRequest]) (*connect.Response[v1.RemoveWidgetResponse], error)
 	GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error)
+	ListInvestments(context.Context, *connect.Request[v1.ListInvestmentsRequest]) (*connect.Response[v1.ListInvestmentsResponse], error)
+	CreateInvestment(context.Context, *connect.Request[v1.CreateInvestmentRequest]) (*connect.Response[v1.CreateInvestmentResponse], error)
+	UpdateInvestment(context.Context, *connect.Request[v1.UpdateInvestmentRequest]) (*connect.Response[v1.UpdateInvestmentResponse], error)
+	SetInvestmentValue(context.Context, *connect.Request[v1.SetInvestmentValueRequest]) (*connect.Response[v1.SetInvestmentValueResponse], error)
+	DeleteInvestment(context.Context, *connect.Request[v1.DeleteInvestmentRequest]) (*connect.Response[v1.DeleteInvestmentResponse], error)
+	ListInstallments(context.Context, *connect.Request[v1.ListInstallmentsRequest]) (*connect.Response[v1.ListInstallmentsResponse], error)
+	CreateInstallment(context.Context, *connect.Request[v1.CreateInstallmentRequest]) (*connect.Response[v1.CreateInstallmentResponse], error)
+	UpdateInstallment(context.Context, *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error)
+	CancelInstallment(context.Context, *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error)
+	DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error)
 }
 
 // NewFinanceServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -1402,6 +1572,66 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 		connect.WithSchema(financeServiceMethods.ByName("GetWidgetData")),
 		connect.WithHandlerOptions(opts...),
 	)
+	financeServiceListInvestmentsHandler := connect.NewUnaryHandler(
+		FinanceServiceListInvestmentsProcedure,
+		svc.ListInvestments,
+		connect.WithSchema(financeServiceMethods.ByName("ListInvestments")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateInvestmentHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateInvestmentProcedure,
+		svc.CreateInvestment,
+		connect.WithSchema(financeServiceMethods.ByName("CreateInvestment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateInvestmentHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateInvestmentProcedure,
+		svc.UpdateInvestment,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateInvestment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceSetInvestmentValueHandler := connect.NewUnaryHandler(
+		FinanceServiceSetInvestmentValueProcedure,
+		svc.SetInvestmentValue,
+		connect.WithSchema(financeServiceMethods.ByName("SetInvestmentValue")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteInvestmentHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteInvestmentProcedure,
+		svc.DeleteInvestment,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteInvestment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceListInstallmentsHandler := connect.NewUnaryHandler(
+		FinanceServiceListInstallmentsProcedure,
+		svc.ListInstallments,
+		connect.WithSchema(financeServiceMethods.ByName("ListInstallments")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCreateInstallmentHandler := connect.NewUnaryHandler(
+		FinanceServiceCreateInstallmentProcedure,
+		svc.CreateInstallment,
+		connect.WithSchema(financeServiceMethods.ByName("CreateInstallment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceUpdateInstallmentHandler := connect.NewUnaryHandler(
+		FinanceServiceUpdateInstallmentProcedure,
+		svc.UpdateInstallment,
+		connect.WithSchema(financeServiceMethods.ByName("UpdateInstallment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceCancelInstallmentHandler := connect.NewUnaryHandler(
+		FinanceServiceCancelInstallmentProcedure,
+		svc.CancelInstallment,
+		connect.WithSchema(financeServiceMethods.ByName("CancelInstallment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	financeServiceDeleteInstallmentHandler := connect.NewUnaryHandler(
+		FinanceServiceDeleteInstallmentProcedure,
+		svc.DeleteInstallment,
+		connect.WithSchema(financeServiceMethods.ByName("DeleteInstallment")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/finance.v1.FinanceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case FinanceServiceBootstrapHouseholdProcedure:
@@ -1520,6 +1750,26 @@ func NewFinanceServiceHandler(svc FinanceServiceHandler, opts ...connect.Handler
 			financeServiceRemoveWidgetHandler.ServeHTTP(w, r)
 		case FinanceServiceGetWidgetDataProcedure:
 			financeServiceGetWidgetDataHandler.ServeHTTP(w, r)
+		case FinanceServiceListInvestmentsProcedure:
+			financeServiceListInvestmentsHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateInvestmentProcedure:
+			financeServiceCreateInvestmentHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateInvestmentProcedure:
+			financeServiceUpdateInvestmentHandler.ServeHTTP(w, r)
+		case FinanceServiceSetInvestmentValueProcedure:
+			financeServiceSetInvestmentValueHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteInvestmentProcedure:
+			financeServiceDeleteInvestmentHandler.ServeHTTP(w, r)
+		case FinanceServiceListInstallmentsProcedure:
+			financeServiceListInstallmentsHandler.ServeHTTP(w, r)
+		case FinanceServiceCreateInstallmentProcedure:
+			financeServiceCreateInstallmentHandler.ServeHTTP(w, r)
+		case FinanceServiceUpdateInstallmentProcedure:
+			financeServiceUpdateInstallmentHandler.ServeHTTP(w, r)
+		case FinanceServiceCancelInstallmentProcedure:
+			financeServiceCancelInstallmentHandler.ServeHTTP(w, r)
+		case FinanceServiceDeleteInstallmentProcedure:
+			financeServiceDeleteInstallmentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1759,4 +2009,44 @@ func (UnimplementedFinanceServiceHandler) RemoveWidget(context.Context, *connect
 
 func (UnimplementedFinanceServiceHandler) GetWidgetData(context.Context, *connect.Request[v1.GetWidgetDataRequest]) (*connect.Response[v1.GetWidgetDataResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.GetWidgetData is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListInvestments(context.Context, *connect.Request[v1.ListInvestmentsRequest]) (*connect.Response[v1.ListInvestmentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListInvestments is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateInvestment(context.Context, *connect.Request[v1.CreateInvestmentRequest]) (*connect.Response[v1.CreateInvestmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateInvestment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateInvestment(context.Context, *connect.Request[v1.UpdateInvestmentRequest]) (*connect.Response[v1.UpdateInvestmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateInvestment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) SetInvestmentValue(context.Context, *connect.Request[v1.SetInvestmentValueRequest]) (*connect.Response[v1.SetInvestmentValueResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.SetInvestmentValue is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteInvestment(context.Context, *connect.Request[v1.DeleteInvestmentRequest]) (*connect.Response[v1.DeleteInvestmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteInvestment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) ListInstallments(context.Context, *connect.Request[v1.ListInstallmentsRequest]) (*connect.Response[v1.ListInstallmentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.ListInstallments is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CreateInstallment(context.Context, *connect.Request[v1.CreateInstallmentRequest]) (*connect.Response[v1.CreateInstallmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CreateInstallment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) UpdateInstallment(context.Context, *connect.Request[v1.UpdateInstallmentRequest]) (*connect.Response[v1.UpdateInstallmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.UpdateInstallment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) CancelInstallment(context.Context, *connect.Request[v1.CancelInstallmentRequest]) (*connect.Response[v1.CancelInstallmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.CancelInstallment is not implemented"))
+}
+
+func (UnimplementedFinanceServiceHandler) DeleteInstallment(context.Context, *connect.Request[v1.DeleteInstallmentRequest]) (*connect.Response[v1.DeleteInstallmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("finance.v1.FinanceService.DeleteInstallment is not implemented"))
 }

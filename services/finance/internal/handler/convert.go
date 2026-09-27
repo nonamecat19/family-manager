@@ -445,7 +445,18 @@ func toProtoGroup(g db.CategoryGroup) *financev1.CategoryGroup {
 		Archived:  g.Archived,
 		CreatedAt: pgconv.Timestamp(g.CreatedAt),
 		UpdatedAt: pgconv.Timestamp(g.UpdatedAt),
+		Role:      groupRoleToProto(g.Role),
 	}
+}
+
+func groupRoleToProto(s string) financev1.CategoryGroupRole {
+	switch s {
+	case roleInvestments:
+		return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_INVESTMENTS
+	case roleInstallments:
+		return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_INSTALLMENTS
+	}
+	return financev1.CategoryGroupRole_CATEGORY_GROUP_ROLE_UNSPECIFIED
 }
 
 func toProtoCategory(c db.Category) *financev1.Category {

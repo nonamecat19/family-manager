@@ -73,6 +73,18 @@ service FinanceService {
   rpc UpdateWidget(UpdateWidgetRequest) returns (UpdateWidgetResponse);
   rpc RemoveWidget(RemoveWidgetRequest) returns (RemoveWidgetResponse);
   rpc GetWidgetData(GetWidgetDataRequest) returns (GetWidgetDataResponse);
+
+  rpc ListInvestments(ListInvestmentsRequest) returns (ListInvestmentsResponse);
+  rpc CreateInvestment(CreateInvestmentRequest) returns (CreateInvestmentResponse);
+  rpc UpdateInvestment(UpdateInvestmentRequest) returns (UpdateInvestmentResponse);
+  rpc SetInvestmentValue(SetInvestmentValueRequest) returns (SetInvestmentValueResponse);
+  rpc DeleteInvestment(DeleteInvestmentRequest) returns (DeleteInvestmentResponse);
+
+  rpc ListInstallments(ListInstallmentsRequest) returns (ListInstallmentsResponse);
+  rpc CreateInstallment(CreateInstallmentRequest) returns (CreateInstallmentResponse);
+  rpc UpdateInstallment(UpdateInstallmentRequest) returns (UpdateInstallmentResponse);
+  rpc CancelInstallment(CancelInstallmentRequest) returns (CancelInstallmentResponse);
+  rpc DeleteInstallment(DeleteInstallmentRequest) returns (DeleteInstallmentResponse);
 }
 
 
@@ -212,6 +224,29 @@ enum InsightKind {
   INSIGHT_KIND_NEW_MERCHANT = 4;
 }
 
+enum CategoryGroupRole {
+  CATEGORY_GROUP_ROLE_UNSPECIFIED = 0;
+  CATEGORY_GROUP_ROLE_INVESTMENTS = 1;
+  CATEGORY_GROUP_ROLE_INSTALLMENTS = 2;
+}
+
+enum InvestmentKind {
+  INVESTMENT_KIND_UNSPECIFIED = 0;
+  INVESTMENT_KIND_DEPOSIT = 1;
+  INVESTMENT_KIND_STOCKS = 2;
+  INVESTMENT_KIND_BONDS = 3;
+  INVESTMENT_KIND_CRYPTO = 4;
+  INVESTMENT_KIND_REAL_ESTATE = 5;
+  INVESTMENT_KIND_OTHER = 6;
+}
+
+enum InstallmentStatus {
+  INSTALLMENT_STATUS_UNSPECIFIED = 0;
+  INSTALLMENT_STATUS_ACTIVE = 1;
+  INSTALLMENT_STATUS_PAID_OFF = 2;
+  INSTALLMENT_STATUS_CANCELLED = 3;
+}
+
 
 message Money {
   int64 amount_minor = 1;
@@ -295,6 +330,7 @@ message CategoryGroup {
   bool archived = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
+  CategoryGroupRole role = 11;
 }
 
 message Category {
@@ -407,6 +443,46 @@ message RecurringPaymentStatus {
   string next_due_on = 2;
   bool overdue = 3;
   Transaction last_posted = 4;
+}
+
+message Investment {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  InvestmentKind kind = 4;
+  string category_id = 5;
+  string group_id = 6;
+  Money invested = 7;
+  Money current_value = 8;
+  Money profit = 9;
+  int32 profit_bps = 10;
+  string value_updated_on = 11;
+  bool archived = 12;
+  int32 sort_order = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+message Installment {
+  string id = 1;
+  string family_id = 2;
+  string name = 3;
+  Money total = 4;
+  Money monthly = 5;
+  int32 months = 6;
+  Money paid = 7;
+  Money remaining = 8;
+  int32 payments_made = 9;
+  string purchased_on = 10;
+  int32 day_of_month = 11;
+  string next_due_on = 12;
+  string account_id = 13;
+  string category_id = 14;
+  string group_id = 15;
+  string member_id = 16;
+  InstallmentStatus status = 17;
+  google.protobuf.Timestamp created_at = 18;
+  google.protobuf.Timestamp updated_at = 19;
 }
 
 message Reminder {
@@ -1046,6 +1122,93 @@ message SkipRecurringOccurrenceResponse {
 }
 
 
+message ListInvestmentsRequest {
+  bool include_archived = 1;
+}
+message ListInvestmentsResponse {
+  repeated Investment investments = 1;
+}
+
+message CreateInvestmentRequest {
+  string name = 1;
+  InvestmentKind kind = 2;
+  string currency_code = 3;
+}
+message CreateInvestmentResponse {
+  Investment investment = 1;
+}
+
+message UpdateInvestmentRequest {
+  string investment_id = 1;
+  optional string name = 2;
+  InvestmentKind kind = 3;
+  optional bool archived = 4;
+}
+message UpdateInvestmentResponse {
+  Investment investment = 1;
+}
+
+message SetInvestmentValueRequest {
+  string investment_id = 1;
+  Money value = 2;
+  string valued_on = 3;
+}
+message SetInvestmentValueResponse {
+  Investment investment = 1;
+}
+
+message DeleteInvestmentRequest {
+  string investment_id = 1;
+}
+message DeleteInvestmentResponse {}
+
+
+message ListInstallmentsRequest {
+  bool include_closed = 1;
+}
+message ListInstallmentsResponse {
+  repeated Installment installments = 1;
+}
+
+message CreateInstallmentRequest {
+  string name = 1;
+  Money total = 2;
+  int32 months = 3;
+  Money monthly = 4;
+  string account_id = 5;
+  string member_id = 6;
+  string purchased_on = 7;
+  string first_due_on = 8;
+}
+message CreateInstallmentResponse {
+  Installment installment = 1;
+}
+
+message UpdateInstallmentRequest {
+  string installment_id = 1;
+  optional string name = 2;
+  Money monthly = 3;
+  optional string account_id = 4;
+  optional string member_id = 5;
+  optional string next_due_on = 6;
+}
+message UpdateInstallmentResponse {
+  Installment installment = 1;
+}
+
+message CancelInstallmentRequest {
+  string installment_id = 1;
+}
+message CancelInstallmentResponse {
+  Installment installment = 1;
+}
+
+message DeleteInstallmentRequest {
+  string installment_id = 1;
+}
+message DeleteInstallmentResponse {}
+
+
 message ListRemindersRequest {
   bool include_disabled = 1;
 }
@@ -1292,6 +1455,14 @@ message RecurringPostedEvent {
   string due_on = 4;
   string next_due_on = 5;
   google.protobuf.Timestamp occurred_at = 6;
+}
+
+message InstallmentPaidOffEvent {
+  string family_id = 1;
+  string installment_id = 2;
+  string name = 3;
+  Money total = 4;
+  google.protobuf.Timestamp occurred_at = 5;
 }
 
 message ReminderDueEvent {

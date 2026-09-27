@@ -28,6 +28,8 @@ type fakeStore struct {
 	recurring    map[string]db.RecurringPayment
 	reminders    map[string]db.Reminder
 	widgets      map[string]db.WidgetInstance
+	investments  map[string]db.Investment
+	installments map[string]db.Installment
 
 	failOn map[string]error
 	seq    int
@@ -46,6 +48,8 @@ func newFakeStore() *fakeStore {
 		recurring:    map[string]db.RecurringPayment{},
 		reminders:    map[string]db.Reminder{},
 		widgets:      map[string]db.WidgetInstance{},
+		investments:  map[string]db.Investment{},
+		installments: map[string]db.Installment{},
 		failOn:       map[string]error{},
 	}
 }

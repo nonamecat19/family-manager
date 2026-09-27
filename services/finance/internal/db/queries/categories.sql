@@ -93,3 +93,26 @@ WHERE category_id = $1 AND family_id = $2;
 -- name: CountCategoryTransactions :one
 SELECT COUNT(*) FROM transactions
 WHERE category_id = $1 AND family_id = $2;
+
+-- name: GetCategoryGroupByRole :one
+SELECT * FROM category_groups
+WHERE family_id = $1 AND role = $2;
+
+-- name: CreateRoleCategoryGroup :one
+INSERT INTO category_groups (family_id, name, kind, icon, color_step, role, sort_order)
+VALUES ($1, $2, 'expense', $3, $4, $5,
+    COALESCE((SELECT MAX(sort_order) + 1 FROM category_groups WHERE family_id = $1), 0))
+ON CONFLICT (family_id, role) WHERE role <> '' DO NOTHING
+RETURNING *;
+
+-- name: SetCategoryArchived :exec
+UPDATE categories
+SET archived = $3, updated_at = NOW()
+WHERE id = $1 AND family_id = $2;
+
+-- name: AdoptCategoryGroupRole :one
+UPDATE category_groups
+SET role = sqlc.arg('role')::text, archived = FALSE, updated_at = NOW()
+WHERE family_id = $1 AND kind = 'expense' AND role = ''
+  AND lower(btrim(name)) = lower(btrim(sqlc.arg('name')::text))
+RETURNING *;
