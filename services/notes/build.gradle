@@ -18,10 +18,12 @@ repositories {
 	mavenCentral()
 }
 
+def generatedProtoDir = findProperty('generatedProtoDir') ?: '../../sdk/java/src/main/java'
+
 sourceSets {
 	main {
 		java {
-			srcDir rootProject.file('../../sdk/java/src/main/java')
+			srcDir generatedProtoDir
 		}
 	}
 }
