@@ -202,9 +202,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "3de0e99",
       "blocked_reason": null,
       "id": "u10",
       "title": "@fm/api: widget read functions outside React (finance GetWidgetData/ListWidgets, recent + starred notes, today's meal plan)",
@@ -553,7 +553,7 @@
       "title": "recipes: widget declarations + snapshot builder (today's meal plan)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
-      "notes": "Meal plan only. The basket widget waits on r07 (blocked)."
+      "notes": "Meal plan only. The basket widget waits on r07 (blocked). From u10 verify: pass mealPlanWidgetSnapshot the family's local date (today in the family timezone from finance/tasks settings or the device timezone as fallback), not UTC."
     },
     {
       "nodes": [
@@ -1062,5 +1062,5 @@
       "notes": "Does not wait on the tasks chain (t00 is gated on brief 0003) or on r07. The tasks tail is m02 + t09 + t07, so run just verify again when they land."
     }
   ],
-  "updated_at": "2026-10-06T08:28:45.885Z"
+  "updated_at": "2026-10-06T08:40:07.398Z"
 }
