@@ -7,6 +7,7 @@ import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import { FamilyService } from "@fm/sdk/family/v1/family_pb";
 import { FinanceService } from "@fm/sdk/finance/v1/finance_pb";
 import { NotesService } from "@fm/sdk/notes/v1/notes_pb";
+import { NotificationsService } from "@fm/sdk/notifications/v1/notifications_pb";
 import { RecipesService } from "@fm/sdk/recipes/v1/recipes_pb";
 
 const PUBLIC_PROCEDURES = new Set([
@@ -17,7 +18,7 @@ const PUBLIC_PROCEDURES = new Set([
   `${AuthService.typeName}/${AuthService.method.pollDeviceLogin.name}`,
 ]);
 
-export type ServiceName = "auth" | "family" | "finance" | "recipes" | "notes";
+export type ServiceName = "auth" | "family" | "finance" | "recipes" | "notes" | "notifications";
 
 export interface ClientsOptions {
   baseUrl: string;
@@ -47,6 +48,7 @@ export interface Clients {
   finance: Client<typeof FinanceService>;
   recipes: Client<typeof RecipesService>;
   notes: Client<typeof NotesService>;
+  notifications: Client<typeof NotificationsService>;
 }
 
 export function createClients(opts: ClientsOptions): Clients {
@@ -59,5 +61,9 @@ export function createClients(opts: ClientsOptions): Clients {
     finance: createClient(FinanceService, createTransport(urlFor("finance"), opts.getAccessToken)),
     recipes: createClient(RecipesService, createTransport(urlFor("recipes"), opts.getAccessToken)),
     notes: createClient(NotesService, createTransport(urlFor("notes"), opts.getAccessToken)),
+    notifications: createClient(
+      NotificationsService,
+      createTransport(urlFor("notifications"), opts.getAccessToken),
+    ),
   };
 }

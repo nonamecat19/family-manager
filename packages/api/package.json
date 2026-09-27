@@ -23,11 +23,17 @@
     "@tanstack/react-query": "^5.102.8"
   },
   "peerDependencies": {
-    "react": "*"
+    "expo-constants": "*",
+    "expo-notifications": "*",
+    "react": "*",
+    "react-native": "*"
   },
   "devDependencies": {
     "@types/react": "~19.2.18",
+    "expo-constants": "~57.0.14",
+    "expo-notifications": "~57.0.21",
     "react": "19.2.8",
+    "react-native": "0.86.3",
     "typescript": "^5.7.0",
     "@types/node": "^26.4.0"
   },

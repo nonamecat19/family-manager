@@ -184,4 +184,7 @@ export const queryKeys = {
   financeWidgetsList: () => ["finance", "widgets", "list"] as const,
   financeWidgetData: (widgetIds: readonly string[] = []) =>
     ["finance", "widgets", "data", [...widgetIds].sort()] as const,
+
+  notifications: ["notifications"] as const,
+  notificationPreferences: () => ["notifications", "preferences"] as const,
 } as const;
