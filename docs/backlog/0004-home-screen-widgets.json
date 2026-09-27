@@ -1,0 +1,1066 @@
+{
+  "brief": "0004-home-screen-widgets",
+  "base": "73f3ce181b9ad9c48db061eaef75204b8c34a6b3",
+  "created_at": "2026-10-06T08:13:51.835Z",
+  "units": [
+    {
+      "nodes": [
+        "pkg:@fm/widgets",
+        "app:finance",
+        "app:notes",
+        "app:recipes"
+      ],
+      "files": [
+        "packages/widgets/package.json",
+        "packages/widgets/tsconfig.json",
+        "packages/widgets/eslint.config.mjs",
+        "packages/widgets/src/index.ts",
+        "apps/finance/package.json",
+        "apps/notes/package.json",
+        "apps/recipes/package.json",
+        "pnpm-lock.yaml"
+      ],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u01",
+      "title": "Scaffold packages/widgets (@fm/widgets) and add every native widget dependency to finance, notes, recipes + pnpm-lock",
+      "kind": "package",
+      "acceptance": "pnpm install --frozen-lockfile && pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "STOP by gate-check (pnpm-lock.yaml). Brief 0004 Known gates. Do the whole lockfile change in this one unit so no later unit for finance, notes or recipes touches the lockfile. Add react-native-android-widget, @bacons/apple-targets (devDependency), expo-background-task and expo-task-manager, plus @fm/widgets workspace:* in each app. The shared Expo config plugin ships from packages/widgets/app.plugin.js (u06), NOT packages/config, so packages/config stays untouched. tsconfig and eslint extend @fm/config without editing it. Over 5 files because a lockfile change cannot be split."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/widgets"
+      ],
+      "files": [
+        "packages/widgets/src/declare.ts",
+        "packages/widgets/src/snapshot.ts",
+        "packages/widgets/src/snapshot.test.ts",
+        "packages/widgets/src/index.ts"
+      ],
+      "depends_on": [
+        "u01"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u02",
+      "title": "@fm/widgets: widget declaration API, snapshot schema and the platform size map",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "One declareWidgets() per app: id, kinds, sizes, deep-link route. Snapshot = versioned JSON with only displayed fields + state ok|error|signedOut + refreshedAt. Size map follows the brief's default: 4x1/4x2 map to medium, 2x2/2x1 to small, 4x3 to large, and a size the platform cannot render is dropped. Test the map and the snapshot round-trip."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/widgets"
+      ],
+      "files": [
+        "packages/widgets/expo-module.config.json",
+        "packages/widgets/ios/FmWidgetStore.swift",
+        "packages/widgets/android/src/main/java/dev/familymanager/widgets/FmWidgetStoreModule.kt",
+        "packages/widgets/src/store.ts",
+        "packages/widgets/src/index.ts"
+      ],
+      "depends_on": [
+        "u02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u03",
+      "title": "@fm/widgets: native snapshot store (iOS App Group UserDefaults, Android SharedPreferences) + publishSnapshot()",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "A local Expo module so no third-party storage dependency is needed. iOS writes to UserDefaults(suiteName: appGroup) and calls WidgetCenter.reloadAllTimelines(). Android writes to SharedPreferences and asks react-native-android-widget to re-render. The JS side only does TS checks. The Kotlin code is compiled by f04, n04 and r04 (release APK). The Swift code is compiled by check-ios-widgets on macOS. Depends on u02 because of the snapshot type and the shared index.ts."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/widgets",
+        "pkg:@fm/auth",
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/widgets/src/session.ts",
+        "packages/widgets/src/actions.ts",
+        "packages/widgets/src/actions.test.ts",
+        "packages/widgets/src/index.ts"
+      ],
+      "depends_on": [
+        "u03"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u04",
+      "title": "@fm/widgets: headless session + widget action dispatcher (ok / error / 'Open app to sign in')",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "Read path only on @fm/auth: build SessionManager over secureTokenStore and createClients from @fm/api outside React. Android headless JS runs in the app process, so no shared store is needed there. A refresh rejection or a missing session gives the signedOut state. A failed action gives the error state with no retry and no queue (non-goal). No edit under packages/auth. Blast radius: pkg:@fm/auth has 4 dependents, read only. Depends on u03 because it publishes the resulting snapshot and shares index.ts."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/widgets"
+      ],
+      "files": [
+        "packages/widgets/src/refresh.ts",
+        "packages/widgets/src/refresh.test.ts",
+        "packages/widgets/src/index.ts"
+      ],
+      "depends_on": [
+        "u04"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u05",
+      "title": "@fm/widgets: refresh scheduler (background task at most every 15 min) + refresh-after-mutation hook",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "expo-background-task (WorkManager on Android, BGTaskScheduler on iOS), minimumInterval of 15 min. useRefreshWidgetsOnMutation(queryClient) subscribes to the TanStack mutation cache and republishes the snapshot after any successful write. iOS timeline policy .after(15 min) only re-reads the snapshot."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/widgets"
+      ],
+      "files": [
+        "packages/widgets/app.plugin.js",
+        "packages/widgets/plugin/withWidgets.cjs",
+        "packages/widgets/src/plugin.test.ts"
+      ],
+      "depends_on": [
+        "u01"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u06",
+      "title": "@fm/widgets: Expo config plugin (Android widget receivers, WidgetKit target wiring, App Group + keychain entitlements)",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/widgets",
+      "notes": "Composes the react-native-android-widget, @bacons/apple-targets and expo-background-task plugins from one apps-facing entry: plugins: [['@fm/widgets', { widgets: [...] }]]. App Group = group.<ios.bundleIdentifier>, also used as the keychain access group. Expose it as expo.extra.widgets.appGroup (read by u08 and the Swift kit). The Apple team ID comes from process.env.FM_APPLE_TEAM_ID and is optional, so unsigned prebuild and compile work without it. Never commit a team ID. Swift colours are generated as asset-catalog colorsets from @fm/config/organic.preset.cjs, with no colour literals. Files are disjoint from u02-u05 (no index.ts), so it runs in parallel with them."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/auth"
+      ],
+      "files": [
+        "packages/auth/src/store.ts",
+        "packages/auth/src/sharedAccess.ts",
+        "packages/auth/src/sharedAccess.test.ts"
+      ],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u08",
+      "title": "@fm/auth: on iOS store the session in the App Group keychain access group so the widget extension can read it",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/auth",
+      "notes": "Human review is required by the brief's Known gates (security-sensitive token storage) even though packages/auth is not in the gate-check STOP column, so gate-check will NOT catch this one. Blast radius: pkg:@fm/auth has 4 dependents (finance, notes, recipes, @fm/api). Pass accessGroup = expo.extra.widgets.appGroup to expo-secure-store on iOS only, and migrate an existing item from the default group once. When the key is absent, behaviour must stay byte-for-byte as it is today. Android stays unchanged. No change to refresh logic, lifetimes or the state machine. The iOS extension only reads a non-expired access token and never refreshes, which avoids a refresh-rotation race that would revoke the token chain. Only the iOS App Intent units (f07, n07, t09) depend on this."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "justfile"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u09",
+      "title": "justfile: per-app build-apk-release/install-apk-release + check-ios-widgets recipe",
+      "kind": "infra",
+      "acceptance": "just build-apk-release emulator finance",
+      "notes": "justfile is not in the STOP column. Signature build-apk-release env='production' app='recipes' (same as 0003 p8, so existing callers keep working; whichever brief lands first, the other's unit only needs its acceptance run). check-ios-widgets app: run expo prebuild -p ios --no-install --clean, assert the widget target is in the generated pbxproj, and on Darwin run pod install + xcodebuild CODE_SIGNING_ALLOWED=NO. Off Darwin it skips the compile with a message, except that it fails when CI=true (the same pattern as check-desktop)."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/widgetData.ts",
+        "packages/api/src/widgetData.test.ts",
+        "packages/api/src/index.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u10",
+      "title": "@fm/api: widget read functions outside React (finance GetWidgetData/ListWidgets, recent + starred notes, today's meal plan)",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Blast radius: pkg:@fm/api has 3 dependents (finance, notes, recipes) and the change is additive only. Pure functions of (clients: Clients) that return snapshot-ready plain objects, so they are tested here with node --test because the finance and recipes apps have no test runner. 'Pinned' notes = starred (ListNotes starred_only). Only the existing list RPCs are used: no contract change and no new backend model (non-goal)."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/widgetActions.ts",
+        "packages/api/src/widgetActions.test.ts",
+        "packages/api/src/index.ts"
+      ],
+      "depends_on": [
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u11",
+      "title": "@fm/api: widget write functions outside React (LogTemplate, CreateTransaction, CreateNote)",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Uses the same RPCs the app uses, and no others. Depends on u10 only because both edit packages/api/src/index.ts (one writer per file)."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/components/i18n/translations/en.ts",
+        "apps/finance/components/i18n/translations/uk.ts",
+        "apps/finance/components/i18n/translations/schema.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f01",
+      "title": "finance: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "No dependency: strings only. The renderer unit depends on it so the typed keys exist."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/components/widgets/declarations.ts",
+        "apps/finance/components/widgets/snapshot.ts"
+      ],
+      "depends_on": [
+        "u02",
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f02",
+      "title": "finance: widget declarations + snapshot builder (six WidgetType widgets (quick add, month, category, budgets and family, recent transactions, accounts))",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Reuse the GetWidgetData payload shape that apps/finance/components/screens/widgets/data.ts already maps. Do not fork it: lift shared mapping into @fm/api only if the gallery and the widget need it identically. Deep links: fmfinance:// routes that already exist (widgets, add, transactions, accounts)."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/components/widgets/android.tsx",
+        "apps/finance/components/widgets/taskHandler.tsx",
+        "apps/finance/index.js",
+        "apps/finance/package.json"
+      ],
+      "depends_on": [
+        "f01",
+        "f02",
+        "u04",
+        "u11"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f03",
+      "title": "finance: Android widget renderers, sign-in/error tiles and widget task handler (actions)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Actions: a template tap calls LogTemplate. 'Amount' opens fmfinance://add, because neither platform lets a widget take free-text input (assumption, see report). After an action, republish the snapshot."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app.config.js"
+      ],
+      "depends_on": [
+        "f03",
+        "u06",
+        "u09"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f04",
+      "title": "finance: register widgets via the @fm/widgets plugin in app.config.js; release APK builds",
+      "kind": "app",
+      "acceptance": "just build-apk-release emulator finance",
+      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app/_layout.tsx"
+      ],
+      "depends_on": [
+        "u05",
+        "f02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f05",
+      "title": "finance: refresh wiring (background task registration + refresh after app writes)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance"
+    },
+    {
+      "nodes": [
+        "app:finance",
+        "pkg:@fm/widgets"
+      ],
+      "files": [
+        "packages/widgets/ios/shared/SnapshotStore.swift",
+        "packages/widgets/ios/shared/Tiles.swift",
+        "apps/finance/targets/widget/expo-target.config.js",
+        "apps/finance/targets/widget/FinanceWidgets.swift"
+      ],
+      "depends_on": [
+        "f04"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f06",
+      "title": "finance: iOS WidgetKit target (display + tap-to-open deep links) + shared Swift kit in @fm/widgets",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets finance",
+      "notes": "The shared Swift kit (App Group snapshot reader, sign-in tile, error tile) lands with its first consumer because Swift cannot compile on Linux without a target. Only the static timeline is read from the App Group, with no network calls. On Linux the acceptance proves prebuild and target wiring only. The Swift compile is proven by check-ios-widgets on macOS (c01)."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/components/i18n/strings.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n01",
+      "title": "notes: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-notes",
+      "notes": "No dependency: strings only. The renderer unit depends on it so the typed keys exist."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/components/widgets/declarations.ts",
+        "apps/notes/components/widgets/snapshot.ts"
+      ],
+      "depends_on": [
+        "u02",
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n02",
+      "title": "notes: widget declarations + snapshot builder (recent / starred notes and new note)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-notes",
+      "notes": "Deep link to /note/[id] and to a new note."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/components/widgets/android.tsx",
+        "apps/notes/components/widgets/taskHandler.tsx",
+        "apps/notes/index.js",
+        "apps/notes/package.json"
+      ],
+      "depends_on": [
+        "n01",
+        "n02",
+        "u04",
+        "u11"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n03",
+      "title": "notes: Android widget renderers, sign-in/error tiles and widget task handler (actions)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-notes",
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Action: 'New note' calls CreateNote, then deep-links into the new note. After an action, republish the snapshot."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/app.config.js"
+      ],
+      "depends_on": [
+        "n03",
+        "u06",
+        "u09"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n04",
+      "title": "notes: register widgets via the @fm/widgets plugin in app.config.js; release APK builds",
+      "kind": "app",
+      "acceptance": "just build-apk-release emulator notes",
+      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/app/_layout.tsx"
+      ],
+      "depends_on": [
+        "u05",
+        "n02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n05",
+      "title": "notes: refresh wiring (background task registration + refresh after app writes)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-notes"
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/targets/widget/expo-target.config.js",
+        "apps/notes/targets/widget/NotesWidgets.swift"
+      ],
+      "depends_on": [
+        "n04",
+        "f06"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n06",
+      "title": "notes: iOS WidgetKit target (display + tap-to-open deep links)",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets notes",
+      "notes": "Depends on f06 for the shared Swift kit. Only the static timeline is read from the App Group, with no network calls. On Linux the acceptance proves prebuild and target wiring only. The Swift compile is proven by check-ios-widgets on macOS (c01)."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/components/i18n/translations/en.ts",
+        "apps/recipes/components/i18n/translations/uk.ts",
+        "apps/recipes/components/i18n/translations/schema.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r01",
+      "title": "recipes: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
+      "notes": "No dependency: strings only. The renderer unit depends on it so the typed keys exist."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/components/widgets/declarations.ts",
+        "apps/recipes/components/widgets/snapshot.ts"
+      ],
+      "depends_on": [
+        "u02",
+        "u10"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r02",
+      "title": "recipes: widget declarations + snapshot builder (today's meal plan)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
+      "notes": "Meal plan only. The basket widget waits on r07 (blocked)."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/components/widgets/android.tsx",
+        "apps/recipes/components/widgets/taskHandler.tsx",
+        "apps/recipes/index.js",
+        "apps/recipes/package.json"
+      ],
+      "depends_on": [
+        "r01",
+        "r02",
+        "u04"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r03",
+      "title": "recipes: Android widget renderers, sign-in/error tiles and widget task handler (tap-to-open)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). No action, tap-to-open only. After an action, republish the snapshot."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/app.config.js"
+      ],
+      "depends_on": [
+        "r03",
+        "u06",
+        "u09"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r04",
+      "title": "recipes: register widgets via the @fm/widgets plugin in app.config.js; release APK builds",
+      "kind": "app",
+      "acceptance": "just build-apk-release emulator recipes",
+      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/app/_layout.tsx"
+      ],
+      "depends_on": [
+        "u05",
+        "r02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r05",
+      "title": "recipes: refresh wiring (background task registration + refresh after app writes)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes"
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [
+        "apps/recipes/targets/widget/expo-target.config.js",
+        "apps/recipes/targets/widget/RecipesWidgets.swift"
+      ],
+      "depends_on": [
+        "r04",
+        "f06"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r06",
+      "title": "recipes: iOS WidgetKit target (display + tap-to-open deep links)",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets recipes",
+      "notes": "Depends on f06 for the shared Swift kit. Only the static timeline is read from the App Group, with no network calls. On Linux the acceptance proves prebuild and target wiring only. The Swift compile is proven by check-ios-widgets on macOS (c01)."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/targets/widget/LogTemplateIntent.swift",
+        "apps/finance/targets/widget/FinanceWidgets.swift"
+      ],
+      "depends_on": [
+        "f06",
+        "u08"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f07",
+      "title": "finance iOS: App Intent for quick-add templates (iOS 17+, LogTemplate); older iOS stays tap-to-open",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets finance",
+      "notes": "Reads the access token from the App Group keychain (u08), and only uses it if it has not expired, else it shows 'Open app to sign in'. It never refreshes. authenticationPolicy requires the device to be unlocked (brief default)."
+    },
+    {
+      "nodes": [
+        "app:notes"
+      ],
+      "files": [
+        "apps/notes/targets/widget/NewNoteIntent.swift",
+        "apps/notes/targets/widget/NotesWidgets.swift"
+      ],
+      "depends_on": [
+        "n06",
+        "u08"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n07",
+      "title": "notes iOS: App Intent 'New note' (iOS 17+, CreateNote); older iOS stays tap-to-open",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets notes",
+      "notes": "Same session rule as f07."
+    },
+    {
+      "nodes": [
+        "app:recipes"
+      ],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "r07",
+      "title": "BLOCKED QUESTION: the recipes basket has no server state. Where does a widget tick-off write?",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
+      "notes": "apps/recipes/components/basket.tsx holds the basket and its checked items in React useState only. It is not persisted, and recipes.v1 has no basket rpc (only SumIngredients and TotalIngredients). The brief's 'basket update' RPC does not exist. Human decision: (a) persist the basket on the device (snapshot store / AsyncStorage) and let the Android widget tick items locally, with iOS tap-to-open; (b) add a server-side basket to recipes.v1 + service:recipes, which goes beyond the brief's 'no new backend model' non-goal and is a new brief; or (c) drop the basket widget. The basket widget units (renderer, action, iOS target) will be added once this is answered."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t00",
+      "title": "EXTERNAL: wait for brief 0003 p1, p2, p3 and a5 (apps/tasks scaffold, dictionaries, shell; tasks hooks in @fm/api)",
+      "kind": "app",
+      "acceptance": "test -f apps/tasks/package.json && test -f apps/tasks/app/_layout.tsx && grep -q TasksService packages/api/src/client.ts && pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "backlog.mjs cannot name a unit from another brief in depends_on, so this sentinel is GATED rather than given a cross-brief dependency. Unblock it (backlog.mjs unblock/done) once 0003 p1, p2, p3 and a5 are done and the acceptance passes. Until then, every t* unit stays waiting. Optional shortcut: if the human adds react-native-android-widget, @bacons/apple-targets, expo-background-task, expo-task-manager and @fm/widgets to 0003 p1's dependency list, t01 becomes acceptance-only."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/package.json",
+        "pnpm-lock.yaml"
+      ],
+      "depends_on": [
+        "t00",
+        "u01"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t01",
+      "title": "apps/tasks: add widget native dependencies + @fm/widgets + pnpm-lock",
+      "kind": "app",
+      "acceptance": "pnpm install --frozen-lockfile && pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "STOP by gate-check (pnpm-lock.yaml). It is a second lockfile change only because apps/tasks does not exist when u01 runs."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/widgetTasks.ts",
+        "packages/api/src/widgetTasks.test.ts",
+        "packages/api/src/index.ts"
+      ],
+      "depends_on": [
+        "t00",
+        "u11"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t02",
+      "title": "@fm/api: tasks widget reads (today + overdue, upcoming birthdays) and CompleteTask action outside React",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Uses ListTasks, ListBirthdays and CompleteTask from 0003's tasks client (a1). Depends on u11 because of the shared index.ts."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/components/i18n/translations/en.ts",
+        "apps/tasks/components/i18n/translations/uk.ts",
+        "apps/tasks/components/i18n/translations/schema.ts"
+      ],
+      "depends_on": [
+        "t00"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t03",
+      "title": "tasks: widget strings (en, uk)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "Paths assume 0003 p2 mirrors the finance layout. If p2 chose differently, edit p2's files."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/components/widgets/declarations.ts",
+        "apps/tasks/components/widgets/snapshot.ts"
+      ],
+      "depends_on": [
+        "t01",
+        "t02",
+        "u02"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t04",
+      "title": "tasks: widget declarations + snapshot builder (today and overdue, upcoming birthdays)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "Deep links use the fmtasks:// scheme (0003 p1)."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/components/widgets/android.tsx",
+        "apps/tasks/components/widgets/taskHandler.tsx",
+        "apps/tasks/index.js",
+        "apps/tasks/package.json"
+      ],
+      "depends_on": [
+        "t03",
+        "t04",
+        "u04"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t05",
+      "title": "tasks: Android widget renderers + task handler (Mark done -> CompleteTask)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": "Same entry pattern as f03."
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app.config.js"
+      ],
+      "depends_on": [
+        "t05",
+        "u06",
+        "u09"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t06",
+      "title": "tasks: register widgets in app.config.js; release APK builds",
+      "kind": "app",
+      "acceptance": "just build-apk-release emulator tasks"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/app/_layout.tsx"
+      ],
+      "depends_on": [
+        "t04",
+        "u05"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t07",
+      "title": "tasks: refresh wiring (background task + refresh after app writes)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/targets/widget/expo-target.config.js",
+        "apps/tasks/targets/widget/TasksWidgets.swift"
+      ],
+      "depends_on": [
+        "t06",
+        "f06"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t08",
+      "title": "tasks iOS: WidgetKit target (display + tap-to-open)",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets tasks"
+    },
+    {
+      "nodes": [
+        "app:tasks"
+      ],
+      "files": [
+        "apps/tasks/targets/widget/CompleteTaskIntent.swift",
+        "apps/tasks/targets/widget/TasksWidgets.swift"
+      ],
+      "depends_on": [
+        "t08",
+        "u08"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "t09",
+      "title": "tasks iOS: App Intent 'Mark done' (iOS 17+, CompleteTask)",
+      "kind": "app",
+      "acceptance": "just check-ios-widgets tasks",
+      "notes": "Same session rule as f07."
+    },
+    {
+      "nodes": [],
+      "files": [
+        ".maestro/flows/widgets/config.yaml",
+        ".maestro/flows/widgets/finance.yaml",
+        ".maestro/flows/widgets/notes.yaml",
+        ".maestro/flows/widgets/recipes.yaml"
+      ],
+      "depends_on": [
+        "f04",
+        "n04",
+        "r04"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "m01",
+      "title": "Maestro .maestro/flows/widgets: add one widget per app (finance, notes, recipes) + one action",
+      "kind": "test",
+      "acceptance": "just test-android widgets",
+      "notes": "Needs the emulator, the installed emulator APKs and just up-all. Pin the widget through the launcher's add-widget sheet, or through AppWidgetManager.requestPinAppWidget from a debug deep link plus the system confirm dialog. Action under test: finance template tap (LogTemplate) or notes New note."
+    },
+    {
+      "nodes": [],
+      "files": [
+        ".maestro/flows/widgets/tasks.yaml"
+      ],
+      "depends_on": [
+        "m01",
+        "t06"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "m02",
+      "title": "Maestro: tasks widget flow (add widget, Mark done)",
+      "kind": "test",
+      "acceptance": "just test-android widgets tasks"
+    },
+    {
+      "nodes": [],
+      "files": [
+        ".github/workflows/verify.yml"
+      ],
+      "depends_on": [
+        "u09",
+        "f06",
+        "n06",
+        "r06"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "c01",
+      "title": "CI: macOS job running just check-ios-widgets for each app",
+      "kind": "infra",
+      "acceptance": "grep -q 'check-ios-widgets' .github/workflows/verify.yml && just check-ios-widgets finance",
+      "notes": "STOP by gate-check (.github/workflows). Only this job proves the Swift compiles. Add tasks to the matrix once t08 lands. No actionlint or YAML parser is installed locally, so the acceptance is a grep plus a local prebuild."
+    },
+    {
+      "nodes": [],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h01",
+      "title": "Apple signing: register the App Groups / keychain groups and provide FM_APPLE_TEAM_ID for signed builds",
+      "kind": "infra",
+      "acceptance": "node -e \"process.exit(process.env.FM_APPLE_TEAM_ID ? 0 : 1)\"",
+      "notes": "Human-provided credential values (brief Known gates). Groups: group.dev.familymanager.{finance,notes,recipes,tasks} in the Apple Developer portal. Nothing in this backlog depends on it, because CI compiles unsigned. It is needed only for device installs and for the shared session to work on a real iPhone."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "docs/adr/0019-home-screen-widgets.md",
+        "docs/stack.md"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "d01",
+      "title": "Docs: ADR for home-screen widgets (shared session via App Group keychain, no extension refresh) + stack.md rows",
+      "kind": "docs",
+      "acceptance": "test -f docs/adr/0019-home-screen-widgets.md && grep -q 'react-native-android-widget' docs/stack.md",
+      "notes": "New rows only (widget rendering, background refresh), no row displaced. Use the next free ADR number if brief 0005 takes 0018 first."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "docs/graph/graph.json",
+        "docs/graph/graph.mmd"
+      ],
+      "depends_on": [
+        "f05",
+        "f07",
+        "n05",
+        "n07",
+        "r05",
+        "r06",
+        "m01",
+        "d01"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "g01",
+      "title": "Regenerate knowledge graph (pkg:@fm/widgets edges) and run full verify",
+      "kind": "docs",
+      "acceptance": "just verify",
+      "notes": "Does not wait on the tasks chain (t00 is gated on brief 0003) or on r07. The tasks tail is m02 + t09 + t07, so run just verify again when they land."
+    }
+  ],
+  "updated_at": "2026-10-06T08:14:44.702Z"
+}

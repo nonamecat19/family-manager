@@ -1,0 +1,994 @@
+{
+  "brief": "0005-bank-notification-capture",
+  "base": "73f3ce181b9ad9c48db061eaef75204b8c34a6b3",
+  "created_at": "2026-10-06T08:13:03.634Z",
+  "units": [
+    {
+      "nodes": [
+        "proto:libs/proto/capture/v1/capture.proto"
+      ],
+      "files": [
+        "libs/proto/capture/v1/capture.proto"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "doing",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "c1",
+      "title": "capture.v1 contract: CaptureService rpcs and messages",
+      "kind": "contract",
+      "acceptance": "just proto-check",
+      "notes": "Package capture.v1, no go_package; dir name must equal service dir (capture). Rpcs: SubmitNotifications (batch of CapturedNotification{device_id, notification_key, package_name, title, text, posted_at}; idempotent per (member, device_id, notification_key); response returns per-item accepted/duplicate + suggestion id), ListSuggestions (status filter PENDING/CONFIRMED/DISMISSED, page token; response carries pending_count), ConfirmSuggestion (suggestion_id, finance_transaction_id, account_id, category_id), DismissSuggestion, ListCapturedNotifications, DeleteCapturedNotification, GetCaptureSettings / SetCaptureSettings (enabled, repeated allowed_packages). Suggestion: amount as minor units + currency_code, direction DEBIT/CREDIT, merchant, card_hint, optional balance, parser id, occurred_at, suggested_account_id, suggested_category_id (learned from earlier confirms of the same card_hint / merchant). Additive only; new file."
+    },
+    {
+      "nodes": [
+        "proto:libs/proto/capture/v1/capture.proto"
+      ],
+      "files": [
+        "sdk/go/capture/v1/capture.pb.go",
+        "sdk/go/capture/v1/capturev1connect/capture.connect.go",
+        "sdk/typescript/src/capture/v1/capture_pb.ts"
+      ],
+      "depends_on": [
+        "c1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "c2",
+      "title": "Generate capture.v1 stubs into sdk/go and sdk/typescript",
+      "kind": "contract",
+      "acceptance": "cd sdk/go && go vet ./capture/...",
+      "notes": "just proto. Commit only the capture outputs; any other churn means the generator drifted, stop."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/go.mod",
+        "services/capture/go.sum",
+        "services/capture/cmd/server/main.go",
+        "services/capture/cmd/server/main_test.go",
+        "services/capture/internal/config/config.go",
+        "services/capture/internal/config/config_test.go"
+      ],
+      "depends_on": [
+        "c2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s1",
+      "title": "Scaffold services/capture module: go.mod with replaces, viper config, server main with Unimplemented handler and /healthz",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./...",
+      "notes": "Mirror services/tasks (go.mod replace block) and services/finance (publicMux/internalMux, rpc.Recover, rpc.Observe, auth interceptor in that order, GET /healthz via database.HealthHandler, :8080 public, :9090 internal with /metrics). Handlers live in internal/handler, no internal/grpc layer (ESCALATIONS E8). Config prefix CAPTURE_: DATABASE_URL, SEAL_KEY (base64 32 bytes, no default, crash at boot), RETENTION (default 2160h = 90 days), PURGE_INTERVAL, JWKS settings as finance. Not in go.work yet: test with GOWORK=off."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/db/migrations/000001_init.up.sql",
+        "services/capture/internal/db/embed.go",
+        "services/capture/internal/db/embed_test.go"
+      ],
+      "depends_on": [
+        "s1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s2",
+      "title": "capture migration 000001: captured_notifications, suggestions, capture_settings, prefill rules",
+      "kind": "migration",
+      "acceptance": "cd services/capture && GOWORK=off go test ./internal/db/...",
+      "notes": "New database, new tables only. No .down.sql (gate-check stops any DROP; the runner skips down files, see E7). Every row keyed by family_id AND user_id (member-private). captured_notifications: UNIQUE (user_id, device_id, notification_key) for idempotency; package_name; raw title/text as bytea ciphertext (nullable so the purge can null it); posted_at, received_at. suggestions: FK to notification ON DELETE CASCADE, status pending/confirmed/dismissed with CHECK, acted_at, finance_transaction_id, parsed fields (amount_minor bigint, currency_code, direction, merchant, card_hint, balance_minor nullable, parser). capture_settings: (user_id) PK, enabled, allowed_packages text[]. prefill_rules: (user_id, kind card_hint|merchant, key) -> account_id / category_id. Index on (user_id, status) and on acted_at for the purge. embed.go mirrors services/tasks/internal/db/embed.go."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/sqlc.yaml",
+        "services/capture/internal/db/queries/",
+        "services/capture/db/"
+      ],
+      "depends_on": [
+        "s2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s3",
+      "title": "capture sqlc queries + generated db package",
+      "kind": "service",
+      "acceptance": "cd services/capture && sqlc diff && GOWORK=off go build ./...",
+      "notes": "sqlc.yaml as services/finance (pgx/v5, emit_interface). Queries: notifications.sql, suggestions.sql, settings.sql, prefill.sql, retention.sql. Every read/write filters by user_id (and family_id); none by id alone. Insert notification ON CONFLICT (user_id, device_id, notification_key) DO NOTHING RETURNING. Suggestion transitions are conditional UPDATE ... WHERE status = 'pending'. Purge: null raw columns where suggestion acted_at < cutoff."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/crypto/seal.go",
+        "services/capture/internal/crypto/seal_test.go"
+      ],
+      "depends_on": [
+        "s1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s4",
+      "title": "Raw notification sealing at rest (AES-GCM, member-bound AAD)",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/crypto/...",
+      "notes": "Model on services/tasks/internal/crypto/seal.go (versioned prefix, random nonce, length-prefixed owner AAD), domain string 'capture-notification' with family_id, user_id. Tests: round trip, wrong owner fails, tampered ciphertext fails, bad key length rejected. Stdlib only. Do not import the tasks package (services never import another service)."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/store/tx.go",
+        "services/capture/internal/store/tx_test.go"
+      ],
+      "depends_on": [
+        "s3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s5",
+      "title": "capture store InTx",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/store/...",
+      "notes": "Copy services/tasks/internal/store/tx.go shape: InTx(ctx, func(db.Querier) error)."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/parser.go",
+        "services/capture/internal/parser/amount.go",
+        "services/capture/internal/parser/generic.go",
+        "services/capture/internal/parser/generic_test.go",
+        "services/capture/internal/parser/testdata/generic/"
+      ],
+      "depends_on": [
+        "s1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr0",
+      "title": "Parser core: types, amount/currency normalisation, generic amount+currency fallback (uk, en fixtures)",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "Pure stdlib. Result{AmountMinor int64, Currency, Direction, Merchant, CardHint, BalanceMinor *int64, Parser string}; ok=false when no amount. Amount handles NBSP/thin-space thousands, comma and dot decimals, leading minus/plus, symbols and codes: ₴ грн UAH, $ USD дол, € EUR євро, zł PLN. Fixture tests table-driven from testdata/generic/*.txt with expected .json golden next to each; at least 3 uk and 3 en samples plus negative cases (OTP codes, promo texts with percentages, dates) that must NOT produce a suggestion."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/monobank.go",
+        "services/capture/internal/parser/monobank_test.go",
+        "services/capture/internal/parser/testdata/monobank/"
+      ],
+      "depends_on": [
+        "pr0"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr1",
+      "title": "Monobank parser with uk/en fixtures",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "Package com.ftband.mono. Purchase, refund, top-up/incoming transfer, outgoing transfer, foreign-currency purchase, balance line ('Баланс' / 'Balance'). Fixtures uk + en, golden .json per sample. Do not touch parser.go/amount.go or another bank's files; registration happens in pr5."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/privatbank.go",
+        "services/capture/internal/parser/privatbank_test.go",
+        "services/capture/internal/parser/testdata/privatbank/"
+      ],
+      "depends_on": [
+        "pr0"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr2",
+      "title": "PrivatBank (Privat24) parser with uk/en fixtures",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "Package ua.privatbank.ap24. Card mask hint (e.g. 5168**1234 / *1234), 'Бал.' balance, purchase/credit/transfer. Fixtures uk + en, golden .json. Own files only; registration in pr5."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/pumb.go",
+        "services/capture/internal/parser/pumb_test.go",
+        "services/capture/internal/parser/testdata/pumb/"
+      ],
+      "depends_on": [
+        "pr0"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr3",
+      "title": "PUMB parser with uk/en fixtures",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "PUMB Online app. Package id unverified: expose it as a constant; hr2 confirms it. Fixtures uk + en, golden .json. Own files only; registration in pr5."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/sense.go",
+        "services/capture/internal/parser/sense_test.go",
+        "services/capture/internal/parser/testdata/sense/"
+      ],
+      "depends_on": [
+        "pr0"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr4",
+      "title": "Sense (ex-Alfa-Bank) parser with uk/en fixtures",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "Sense SuperApp and the legacy Alfa-Bank Ukraine app (both package ids accepted; unverified, constants, hr2 confirms). Fixtures uk + en, golden .json. Own files only; registration in pr5."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/registry.go",
+        "services/capture/internal/parser/registry_test.go"
+      ],
+      "depends_on": [
+        "pr1",
+        "pr2",
+        "pr3",
+        "pr4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "pr5",
+      "title": "Parser registry: dispatch by package id, generic fallback",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "Parse(pkg, title, text) Result: bank parser for a known package, generic fallback when the bank parser declines or the package is unknown (A-Bank, Raiffeisen, user-added apps). Test walks every testdata dir through Parse to prove dispatch."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/handler/handler.go",
+        "services/capture/internal/handler/fake_test.go",
+        "services/capture/internal/handler/settings.go",
+        "services/capture/internal/handler/settings_test.go"
+      ],
+      "depends_on": [
+        "s3",
+        "s5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h1",
+      "title": "Handler base (caller, member scoping, fake store) + Get/SetCaptureSettings",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Caller from libs/go/auth claims like finance handler.go (family_id + user_id required, else PermissionDenied). fake_test.go implements EVERY db.Querier method so h2-h4 never edit it. Errors via rpc.Internal. Allow-list: at most 64 package ids, each validated as an Android package name, bounded in runes. Test: member B in the same family gets their own (empty) settings, never A's."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/handler/submit.go",
+        "services/capture/internal/handler/submit_test.go"
+      ],
+      "depends_on": [
+        "h1",
+        "s4",
+        "pr5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h2",
+      "title": "SubmitNotifications: batch, idempotent, sealed, parsed into suggestions",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/handler/suggestions.go",
+        "services/capture/internal/handler/suggestions_test.go"
+      ],
+      "depends_on": [
+        "h1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h3",
+      "title": "ListSuggestions, ConfirmSuggestion, DismissSuggestion with transitions and prefill learning",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Transitions: pending->confirmed (stores finance_transaction_id, required, uuid), pending->dismissed; confirm/dismiss of a non-pending item is FailedPrecondition, except re-confirm with the same transaction id which is idempotent OK. Confirm upserts prefill_rules from account_id/category_id. Member scoping test: another member of the SAME family gets NotFound on list/confirm/dismiss. pending_count in the list response. Do not edit fake_test.go."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/handler/captured.go",
+        "services/capture/internal/handler/captured_test.go"
+      ],
+      "depends_on": [
+        "h1",
+        "s4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h4",
+      "title": "ListCapturedNotifications, DeleteCapturedNotification",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Opens sealed text for the owner only; purged items list with empty text and a purged flag. Delete removes the notification and its suggestion (cascade), any status. Same-family other member: NotFound on list and delete (test). Do not edit fake_test.go."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/retention/purge.go",
+        "services/capture/internal/retention/purge_test.go"
+      ],
+      "depends_on": [
+        "s3"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "h5",
+      "title": "Retention purge loop: raw text nulled 90 days after confirm/dismiss",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/retention/...",
+      "notes": "Injected clock and interval; pending suggestions are never purged; confirmed/dismissed older than CAPTURE_RETENTION have raw title/text set to NULL (parsed fields kept). Tests cover boundary (exactly 90d), pending untouched, idempotent second run."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/cmd/server/main.go",
+        "services/capture/cmd/server/main_test.go",
+        "services/capture/internal/config/config.go"
+      ],
+      "depends_on": [
+        "h2",
+        "h3",
+        "h4",
+        "h5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s6",
+      "title": "Wire capture main: pool + migrations, seal box, handler, retention loop",
+      "kind": "service",
+      "acceptance": "cd services/capture && GOWORK=off go vet ./... && cd services/capture && GOWORK=off go test -race ./...",
+      "notes": "Run migrations from internal/db embed via libs/go/database at boot (as tasks/finance). Boot fails on a missing or malformed CAPTURE_SEAL_KEY (test). /healthz on both listeners."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/Dockerfile",
+        "services/capture/.air.toml",
+        "services/capture/.env.example"
+      ],
+      "depends_on": [
+        "s1",
+        "gw"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "s7",
+      "title": "services/capture Dockerfile, .air.toml, .env.example",
+      "kind": "service",
+      "acceptance": "docker build -f services/capture/Dockerfile -t fm-capture:check .",
+      "notes": "Copy services/finance/Dockerfile; it copies go.work, so it needs gw. .env.example keys with empty values only (never a real key)."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "go.work",
+        "go.work.sum"
+      ],
+      "depends_on": [
+        "s1"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "gw",
+      "title": "Register services/capture in go.work",
+      "kind": "infra",
+      "acceptance": "just check-go",
+      "notes": "STOP: go.work is a workspace-wide change (gate-check PATH_RULES). Brief 'Known gates'. Brief 0003 u25 also edits go.work: if both are pending, the human applies both lines together."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [],
+      "depends_on": [],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "hk",
+      "title": "Provision CAPTURE_SEAL_KEY in local .env",
+      "kind": "infra",
+      "acceptance": "grep -qE '^CAPTURE_SEAL_KEY=.{43}=$' .env",
+      "notes": "Credential, human only, nothing committed: CAPTURE_SEAL_KEY=$(openssl rand -base64 32). Losing it makes every stored raw text unreadable."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "docker-compose.services.yml",
+        "infra/postgres/init/init-services.sh",
+        ".env.example"
+      ],
+      "depends_on": [
+        "s6",
+        "s7",
+        "hk"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "rt",
+      "title": "Local runtime wiring: capture in compose (host :8089), capture DB in postgres init, root .env.example",
+      "kind": "infra",
+      "acceptance": "just up-all && curl -fsS http://localhost:8089/healthz",
+      "notes": "STOP: compose + infra/** + .env*. Add 'capture' to SERVICE_DATABASES (existing volumes need a manual CREATE DATABASE capture on the local DB). CAPTURE_SEAL_KEY passed through with ${CAPTURE_SEAL_KEY:?}. Port 8088 is reserved by brief 0003 (tasks), so capture is 8089. Healthy service proves the migration applied to the local compose DB."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "docs/adr/0018-capture-data-at-rest.md",
+        "docs/adr/README.md"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "d1",
+      "title": "ADR 0018: capture data at rest (encryption, member privacy, retention), status proposed",
+      "kind": "docs",
+      "acceptance": "grep -q '0018-capture-data-at-rest' docs/adr/README.md && grep -qi '^status: proposed' docs/adr/0018-capture-data-at-rest.md",
+      "notes": "Records the brief defaults: AES-GCM with a service key and member-bound AAD, raw text member-private, purge 90 days after confirm/dismiss, pending kept, member delete, key rotation story (version byte), what is NOT encrypted (parsed amount/merchant) and why. Status line format 'Status: proposed'."
+    },
+    {
+      "nodes": [],
+      "files": [
+        "docs/adr/0018-capture-data-at-rest.md"
+      ],
+      "depends_on": [
+        "d1",
+        "s6"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "hr",
+      "title": "Human review of capture storage and retention before first deploy (accept ADR 0018)",
+      "kind": "docs",
+      "acceptance": "grep -qi '^status: accepted' docs/adr/0018-capture-data-at-rest.md",
+      "notes": "Brief 'Known gates': financial personal data at rest. Human reads the ADR and the s2 schema / s4 sealing / h5 purge, then flips Status to accepted or answers with changes."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "infra/Caddyfile",
+        "infra/docker-compose.prod.yml",
+        "infra/README.md"
+      ],
+      "depends_on": [
+        "s7",
+        "hr"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "hp",
+      "title": "Prod deploy surface: Caddy host capture.<domain>, capture service + DB in prod compose",
+      "kind": "infra",
+      "acceptance": "docker compose -f infra/docker-compose.prod.yml config -q",
+      "notes": "STOP: infra/**. Brief keeps this a human step. Includes prod postgres init for the capture DB and CAPTURE_SEAL_KEY in infra/secrets. Deploy itself is a human push."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/internal/parser/testdata/"
+      ],
+      "depends_on": [
+        "pr5"
+      ],
+      "gate": "human",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "hr2",
+      "title": "Replace synthesised parser fixtures with real recorded notifications; confirm bank package ids",
+      "kind": "test",
+      "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/parser/...",
+      "notes": "The run can only synthesise fixtures from known formats; the brief asks for recorded samples. Human captures real (redacted: card digits, names) texts per bank in uk and en and confirms package ids for PUMB, Sense/Alfa, A-Bank, Raiffeisen (also used in a4). Nothing depends on this unit."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/client.ts",
+        "packages/api/src/queryKeys.ts",
+        "packages/api/src/queryKeys.test.ts"
+      ],
+      "depends_on": [
+        "c2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a1",
+      "title": "@fm/api: optional capture client + capture query keys",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "ServiceName gains 'capture'; URL optional (falls back like the others) so notes and recipes keep working unchanged. Keys: suggestions(status), pendingCount, captured, captureSettings - all defined here so a2-a4 stay disjoint. Blast radius: finance, notes, recipes."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/capture.ts",
+        "packages/api/src/capture.test.ts"
+      ],
+      "depends_on": [
+        "a1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a2",
+      "title": "@fm/api: capture hooks (suggestions, pending count, confirm = CreateTransaction then ConfirmSuggestion, dismiss, captured list/delete, settings)",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Confirm: finance CreateTransaction with the edited fields, then ConfirmSuggestion(transaction id, account, category); if ConfirmSuggestion fails after the transaction exists, retry it (never create a second transaction). Invalidate finance transaction keys and capture keys. Tests on the ordering/retry logic with fake clients."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/captureMatch.ts",
+        "packages/api/src/captureMatch.test.ts"
+      ],
+      "depends_on": [
+        "c2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a3",
+      "title": "@fm/api: suggestion prefill fallback and possible-duplicate hint (same amount within +-1 day)",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Pure functions. Duplicate: an existing finance transaction with equal amount and currency within +-1 calendar day of occurred_at (timezone-aware tests). Prefill fallback when the server sent no suggested account: the only account with the suggestion's currency, else none. Services do not call each other, so this runs in the app."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/captureQueue.ts",
+        "packages/api/src/captureQueue.test.ts",
+        "packages/api/src/captureBanks.ts"
+      ],
+      "depends_on": [
+        "c2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a4",
+      "title": "@fm/api: device capture queue (allow-list filter, batching, retry/backoff) + known bank package list",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": "Storage injected (native module in the app). Items from packages not on the allow-list are dropped and never sent (test). Batches of <=50, ack only accepted/duplicate items, exponential backoff with cap on network errors, nothing lost across a failure (test). captureBanks: Monobank com.ftband.mono, Privat24 ua.privatbank.ap24, PUMB, Sense, A-Bank, Raiffeisen (unverified ids marked, hr2)."
+    },
+    {
+      "nodes": [
+        "pkg:@fm/api"
+      ],
+      "files": [
+        "packages/api/src/index.ts"
+      ],
+      "depends_on": [
+        "a2",
+        "a3",
+        "a4"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "a5",
+      "title": "@fm/api: export capture, captureMatch, captureQueue, captureBanks",
+      "kind": "package",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/modules/notification-listener/expo-module.config.json",
+        "apps/finance/modules/notification-listener/android/build.gradle",
+        "apps/finance/modules/notification-listener/android/src/main/AndroidManifest.xml",
+        "apps/finance/modules/notification-listener/android/src/main/java/dev/familymanager/capture/CaptureListenerService.kt",
+        "apps/finance/modules/notification-listener/android/src/main/java/dev/familymanager/capture/CaptureQueue.kt"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n1",
+      "title": "Finance native module: Kotlin NotificationListenerService with on-device allow-list filter and persistent queue",
+      "kind": "app",
+      "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug",
+      "notes": "Local Expo module (autolinked from apps/finance/modules), NO new npm dependency: a pnpm-lock.yaml change is STOP. Service declared with BIND_NOTIFICATION_LISTENER_SERVICE. onNotificationPosted: drop unless package is in the allow-list stored in SharedPreferences and capture is enabled; else enqueue {key=sbn.key+postTime, package, title, text, posted_at} to a bounded file-backed queue, then start the headless task (n3). apps/finance/android is gitignored, generated by prebuild."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/modules/notification-listener/android/src/main/java/dev/familymanager/capture/NotificationListenerModule.kt",
+        "apps/finance/modules/notification-listener/index.ts",
+        "apps/finance/modules/notification-listener/src/NotificationListener.types.ts"
+      ],
+      "depends_on": [
+        "n1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n2",
+      "title": "Finance native module: JS bridge (access status, open settings, installed apps, allow-list, drain/ack queue)",
+      "kind": "app",
+      "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug",
+      "notes": "Functions: isAccessGranted, openAccessSettings (ACTION_NOTIFICATION_LISTENER_SETTINGS), listInstalledApps (needs QUERY_ALL_PACKAGES, added in n3), setAllowList(enabled, packages), peekQueue(limit), ackQueue(keys). index.ts returns no-op stubs on iOS/web so typecheck and iOS builds pass."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/plugins/withNotificationListener.cjs",
+        "apps/finance/app.config.js",
+        "apps/finance/index.js",
+        "apps/finance/package.json",
+        "apps/finance/modules/notification-listener/android/src/main/java/dev/familymanager/capture/CaptureHeadlessService.kt"
+      ],
+      "depends_on": [
+        "n2"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "n3",
+      "title": "Expo config plugin + headless upload task registration",
+      "kind": "app",
+      "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug && grep -q QUERY_ALL_PACKAGES app/src/main/AndroidManifest.xml",
+      "notes": "Plugin adds QUERY_ALL_PACKAGES (sideloaded only, Play not used) and the HeadlessJsTaskService declaration. app.config.js: register the plugin, capture endpoints (production https://capture.nonamecat.pp.ua, local http://localhost:8089, emulator http://10.0.2.2:8089), EXPO_PUBLIC_CAPTURE_URL override, serviceUrls.capture. index.js registers AppRegistry.registerHeadlessTask('CaptureUpload') then imports expo-router/entry; package.json 'main' -> index.js only (no dependency edits, so no lockfile change). No colour literals."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/components/i18n/translations/schema.ts",
+        "apps/finance/components/i18n/translations/en.ts",
+        "apps/finance/components/i18n/translations/uk.ts"
+      ],
+      "depends_on": [],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f1",
+      "title": "Finance i18n: capture inbox, settings, captured history strings (en, uk)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Every key for f2-f6 up front so screen units never share a dictionary file: inbox title with count, confirm/dismiss, possible duplicate, empty states, notification access granted/not granted, bank list, allow-list, captured history, delete, purged, iOS 'captured on your Android phone' note."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/components/capture/uploader.ts",
+        "apps/finance/components/capture/headless.ts"
+      ],
+      "depends_on": [
+        "n3",
+        "a5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f2",
+      "title": "Finance headless uploader: drain native queue through captureQueue to SubmitNotifications",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "headless.ts is the task body registered by n3's index.js; also flush on app foreground. Uses @fm/api captureQueue with the native module as storage and the access token from @fm/auth; on 401/offline keeps items for retry."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app/(app)/captured.tsx",
+        "apps/finance/components/capture/CapturedRow.tsx"
+      ],
+      "depends_on": [
+        "f1",
+        "a5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f3",
+      "title": "Finance captured history screen (list, delete any item)",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Member's own items only (server-scoped). Purged items show the parsed summary and a 'text removed' label. testIDs for Maestro."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app/(app)/capture-settings.tsx",
+        "apps/finance/components/capture/BankAppList.tsx",
+        "apps/finance/app/(app)/settings.tsx"
+      ],
+      "depends_on": [
+        "f1",
+        "f3",
+        "n2",
+        "a5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f4",
+      "title": "Finance capture settings screen: notification access, installed bank apps with known ones preselected, allow-list",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Android only: the settings.tsx entry is hidden on iOS. On save: SetCaptureSettings, then native setAllowList (device filter mirrors server). Known banks from captureBanks preselected only when installed and no saved list exists. Links to captured history (f3)."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app/(app)/inbox.tsx",
+        "apps/finance/components/capture/SuggestionRow.tsx",
+        "apps/finance/components/capture/ConfirmSheet.tsx"
+      ],
+      "depends_on": [
+        "f1",
+        "a5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f5",
+      "title": "Finance inbox screen: suggestions, editable prefilled confirm, dismiss, duplicate hint",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Confirm via the a2 hook (CreateTransaction then ConfirmSuggestion); account and category prefilled from suggestion or a3 fallback, all fields editable. Shown on iOS too (no capture settings there). Built from @fm/ui, no colour literals."
+    },
+    {
+      "nodes": [
+        "app:finance"
+      ],
+      "files": [
+        "apps/finance/app/(app)/_layout.tsx"
+      ],
+      "depends_on": [
+        "f5"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "f6",
+      "title": "Finance navigation: inbox entry with pending-count label",
+      "kind": "app",
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
+      "notes": "Label 'Inbox (N)' from the pendingCount query; hidden count at 0."
+    },
+    {
+      "nodes": [
+        "service:capture"
+      ],
+      "files": [
+        "services/capture/e2e/capture_test.go",
+        "justfile"
+      ],
+      "depends_on": [
+        "rt",
+        "s6"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "e1",
+      "title": "tgemu-free e2e: SubmitNotifications fixtures -> CreateTransaction -> ConfirmSuggestion against the public listeners",
+      "kind": "test",
+      "acceptance": "just up-all && just test-capture-e2e",
+      "notes": "Build tag e2e. Adds justfile recipe test-capture-e2e: cd services/capture && go test -tags e2e -count=1 -v ./e2e/. Registers a user via auth (8081), bootstraps a finance household + account (8083), SetCaptureSettings, submits Monobank and PrivatBank fixture texts from internal/parser/testdata twice (second is duplicate), lists suggestions, creates the finance transaction, confirms, then reads it back from finance ListTransactions. Also checks a second member in the same family cannot see the suggestion."
+    },
+    {
+      "nodes": [
+        "service:capture",
+        "proto:libs/proto/capture/v1/capture.proto",
+        "app:finance"
+      ],
+      "files": [
+        "docs/graph/graph.json",
+        "docs/graph/graph.mmd"
+      ],
+      "depends_on": [
+        "gw",
+        "s6",
+        "f2",
+        "f4",
+        "f6",
+        "e1"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "g1",
+      "title": "Regenerate knowledge graph (service:capture, capture.v1, app:finance edge) and full verify",
+      "kind": "docs",
+      "acceptance": "just verify",
+      "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
+    }
+  ],
+  "updated_at": "2026-10-06T08:14:06.162Z"
+}
