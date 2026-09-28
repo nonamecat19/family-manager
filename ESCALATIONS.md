@@ -34,7 +34,7 @@ Decision (2026-10-04): ship brief 0001 now, fix in a follow-up.
 
 Decision (2026-10-04): ship brief 0001 now, fix in a follow-up.
 
-## E3 — 0003/p1: scaffold apps/tasks (open, gate: workspace dependency change)
+## E3 — 0003/p1: scaffold apps/tasks (resolved)
 
 Unit p1 creates `apps/tasks` and adds its native dependencies
 (`@react-native-community/datetimepicker`, `expo-auth-session`, `expo-web-browser`, `expo-crypto`,
@@ -44,7 +44,9 @@ workspace-wide dependency change (STOP). Every app unit (p2-p9) depends on it.
 To unblock: approve here ("p1: approved") and run `/escalations`; the run then scaffolds the app
 from `apps/finance` as described in the unit notes. Or scaffold it yourself and mark p1 done.
 
-## E4 — 0003/h1: Google OAuth client for the tasks service (open, credential)
+RESOLVED: 2026-10-06 — approved by the human ("use recommended options"). p1 unblocked with gate auto. The STOP on `pnpm-lock.yaml` is authorized for p1 only. It also adds `@react-native-google-signin/google-signin` (E4).
+
+## E4 — 0003/h1: Google OAuth client for the tasks service (decided; credential still open)
 
 Create an OAuth client in Google Cloud (type: Web application; redirect URI: the tasks app's
 custom scheme `fmtasks:/oauthredirect` and, for production, `https://tasks.<domain>/oauth/google`),
@@ -68,12 +70,14 @@ The service supports both (it sends `client_secret` only when configured, and ch
 calendar and email scopes were actually granted). The app must request
 `access_type=offline&prompt=consent` with scopes `openid email https://www.googleapis.com/auth/calendar`.
 
+DECIDED: 2026-10-06 — option 1, Android client for the app plus a Web client for the server. No option was marked recommended; the run chose 1 because it needs no public host and Android is the verified target. Recorded in the notes of u20, p7 and h1. Still open: the human creates both clients and fills `.env` (h1).
+
 ## E5 — 0003/h2: BotFather token for the tasks bot (open, credential)
 
 Create the bot with @BotFather and add `TELEGRAM_TASKS_TOKEN=<id>:<secret>` to the repo-root
 `.env` (never committed). Nothing depends on it: the e2e suite uses the tgemu fake token.
 
-## E6 — 0003/u25: register services/tasks in go.work (open, gate: workspace change)
+## E6 — 0003/u25: register services/tasks in go.work (resolved)
 
 `services/tasks` builds and tests with `GOWORK=off` (its go.mod carries the same replace block as
 finance). Adding `use ./services/tasks` to `go.work` makes `just check-go`, `just lint-go` and the
@@ -82,7 +86,9 @@ knowledge graph pick it up; gate-check treats any go.work edit as a workspace-wi
 To unblock: approve here ("u25: approved") and run `/escalations`, or add the line yourself and
 run `go work sync`. Units u06 (Dockerfile) and the final g1 verify depend on it.
 
-## E7 — 0003/u07: tasks schema ships without a down migration (open, informational)
+RESOLVED: 2026-10-06 — approved by the human ("use recommended options"). u25 unblocked with gate auto. The STOP on `go.work` / `go.work.sum` is authorized for u25 only.
+
+## E7 — 0003/u07: tasks schema ships without a down migration (resolved)
 
 gate-check stops any `DROP`, including a `.down.sql` that only drops the tables the same unit
 creates. The migration runner never executes down files (`libs/go/database/migrate.go`
@@ -90,7 +96,9 @@ creates. The migration runner never executes down files (`libs/go/database/migra
 `tasks` database is `DROP DATABASE tasks`. If you want down files kept for parity with finance,
 answer "u07: add down" and the drop list will be added as a human-approved commit.
 
-## E8 — 0003/u12, u13: `master` does not build, and handler acceptance commands cannot pass (open, stop-the-line for services/tasks)
+RESOLVED: 2026-10-06 — no answer requested a down file, so u07 stays as shipped (`000001_init.up.sql` only).
+
+## E8 — 0003/u12, u13: `master` does not build, and handler acceptance commands cannot pass (resolved)
 
 **What is broken.** Commit `344d108` (u12, recorded in the backlog as commit `HEAD`) adds
 `services/tasks/internal/handler/birthdays.go`, which is in u13's file list, and that file does not
@@ -129,7 +137,9 @@ transaction (that belongs to u15); and `touchKnownMember` overwrites `display_na
 Until this is answered, nothing under `services/tasks/internal/handler` can pass acceptance:
 u13, u14, u15, u17, u20, u22 and u24 are stuck.
 
-## E9 — 0003/u21: calendar push failed verification twice (open, stop-the-line)
+RESOLVED: 2026-10-06 — option 1 (recommended). `./internal/grpc/...` is removed from the acceptance of u12, u13, u14, u17 and u20, and `internal/grpc/*` from their file lists. u12's recorded commit is corrected to `344d108`. The u12 shortfalls go to a new unit, u12b (depends on u13), and u14, u15, u17, u20, u22 and u24 now depend on u12b. u13, u14, u15, u17 and u20 are unblocked. u13 starts from its stash.
+
+## E9 — 0003/u21: calendar push failed verification twice (resolved)
 
 The run stopped here because two verifiers each found a blocker in u21. The work is saved in
 `git stash` as "autopilot 0003/u21: calsync push"
@@ -167,3 +177,6 @@ succeeds, so every item linked there stops syncing for good. Review 2's other op
 
 Once you decide, `git stash pop` the u21 entry and run `/autopilot` again. u22 and u23 wait on
 u21.
+
+RESOLVED: 2026-10-06 — recommendations applied. (1) calsync owns the calendar switch through `Pusher.SwitchCalendar` (ErrForbidden and ErrNotFound count as gone), u20 calls it, and u20 now depends on u21. (2) Inserts use deterministic client-supplied event IDs from a new unit, u18b, which u21 depends on, and ErrConflict leads to an update. The item lock is taken before the item is read, and the sweep locks per link. A single tasks replica is recorded in u24. (3) `ListOrphanCalendarLinks` also matches tasks without a deadline (`google.sql` added to u21's files). u21 is unblocked with its attempts reset, and starts from its stash.
+

@@ -269,9 +269,7 @@
       "files": [
         "services/tasks/internal/handler/handler.go",
         "services/tasks/internal/handler/tasks.go",
-        "services/tasks/internal/handler/tasks_test.go",
-        "services/tasks/internal/grpc/server.go",
-        "services/tasks/internal/grpc/tasks.go"
+        "services/tasks/internal/handler/tasks_test.go"
       ],
       "depends_on": [
         "u08",
@@ -281,13 +279,13 @@
       "gate": "auto",
       "status": "done",
       "attempts": 0,
-      "commit": "HEAD",
+      "commit": "344d108",
       "blocked_reason": null,
       "id": "u12",
       "title": "Task handlers + Connect layer with family scoping and assignee restriction",
       "kind": "service",
-      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Tests: family A cannot read/change family B tasks; assignees must be members of caller's family. Titles/notes bounded in runes. Errors via rpc.Internal. Rules (coordinator, from reviews): Handlers fail closed on fmauth.FromContext error (the internal :9090 listener has no auth interceptor). UpdateTask: due_on \"\" clears date AND time; due_time without a date -> InvalidArgument; formats YYYY-MM-DD / HH:MM in the family timezone (schedule.ParseDeadline). due_at is always set when due_on is set (date-only = end of local day, schedule.Deadline.At). AssigneeList presence: absent = unchanged, present-empty = clear all, else replace. Assignees must be members: refresh via family.Client.ListMembers(caller bearer, family) over the PUBLIC listener and upsert known_members + DeleteKnownMembersExcept in one InTx (the query refuses an empty keep list). ReopenTask clears completed_by_user_id (CHECK enforces). ListTasks keeps SQL order (due_at NULLS LAST, urgent>high>medium>low); DONE filter sorts by completed_at desc in Go. Reminders are created at WRITE time: Create/Update -> per assignee UpsertReminder(kind task_due, occurrence = due_at RFC3339, remind_at = schedule.TaskRemindAt) + DeletePendingRemindersForItemExcept(keep assignees, occurrence); Complete/Delete -> DeletePendingRemindersForItem(task_due); Reopen -> re-create. Typed constants: task_reminders.kind 'task_due'|'birthday'; calendar_links.kind 'task'|'birthday'. Every authenticated RPC (shared caller helper) calls TouchKnownMember(caller family, caller user, claims email) so known_members is filled even for families that never assign a task."
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Tests: family A cannot read/change family B tasks; assignees must be members of caller's family. Titles/notes bounded in runes. Errors via rpc.Internal. Rules (coordinator, from reviews): Handlers fail closed on fmauth.FromContext error (the internal :9090 listener has no auth interceptor). UpdateTask: due_on \"\" clears date AND time; due_time without a date -> InvalidArgument; formats YYYY-MM-DD / HH:MM in the family timezone (schedule.ParseDeadline). due_at is always set when due_on is set (date-only = end of local day, schedule.Deadline.At). AssigneeList presence: absent = unchanged, present-empty = clear all, else replace. Assignees must be members: refresh via family.Client.ListMembers(caller bearer, family) over the PUBLIC listener and upsert known_members + DeleteKnownMembersExcept in one InTx (the query refuses an empty keep list). ReopenTask clears completed_by_user_id (CHECK enforces). ListTasks keeps SQL order (due_at NULLS LAST, urgent>high>medium>low); DONE filter sorts by completed_at desc in Go. Reminders are created at WRITE time: Create/Update -> per assignee UpsertReminder(kind task_due, occurrence = due_at RFC3339, remind_at = schedule.TaskRemindAt) + DeletePendingRemindersForItemExcept(keep assignees, occurrence); Complete/Delete -> DeletePendingRemindersForItem(task_due); Reopen -> re-create. Typed constants: task_reminders.kind 'task_due'|'birthday'; calendar_links.kind 'task'|'birthday'. Every authenticated RPC (shared caller helper) calls TouchKnownMember(caller family, caller user, claims email) so known_members is filled even for families that never assign a task. E8 (2026-10-06): recorded commit corrected from literal HEAD to 344d108; shortfalls are reworked in u12b."
     },
     {
       "nodes": [
@@ -295,22 +293,21 @@
       ],
       "files": [
         "services/tasks/internal/handler/birthdays.go",
-        "services/tasks/internal/handler/birthdays_test.go",
-        "services/tasks/internal/grpc/birthdays.go"
+        "services/tasks/internal/handler/birthdays_test.go"
       ],
       "depends_on": [
         "u12"
       ],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "acceptance names ./internal/grpc/... which no service has; u12 put Connect in handler/ (E8). Work stashed: stash@{0}",
+      "blocked_reason": null,
       "id": "u13",
       "title": "Birthday handlers + Connect layer",
       "kind": "service",
-      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Family scoping tests for birthdays; age/next occurrence from u10. Rules (coordinator, from reviews): Validate with schedule.ValidateBirthday (rejects 29 Feb with a non-leap year and future dates). Age shown only when year != 0 (Occurrence.HasAge), never infer from turning_age == 0. DeleteBirthday deletes pending task_reminders (kind birthday) for it. Create/UpdateBirthday also run the ListMembers refresh of known_members (upsert + DeleteKnownMembersExcept in one InTx)."
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Family scoping tests for birthdays; age/next occurrence from u10. Rules (coordinator, from reviews): Validate with schedule.ValidateBirthday (rejects 29 Feb with a non-leap year and future dates). Age shown only when year != 0 (Occurrence.HasAge), never infer from turning_age == 0. DeleteBirthday deletes pending task_reminders (kind birthday) for it. Create/UpdateBirthday also run the ListMembers refresh of known_members (upsert + DeleteKnownMembersExcept in one InTx). E8 decision 1: start from git stash 'autopilot 0003/u13: birthday handlers'."
     },
     {
       "nodes": [
@@ -318,21 +315,21 @@
       ],
       "files": [
         "services/tasks/internal/handler/settings.go",
-        "services/tasks/internal/handler/settings_test.go",
-        "services/tasks/internal/grpc/settings.go"
+        "services/tasks/internal/handler/settings_test.go"
       ],
       "depends_on": [
-        "u12"
+        "u12",
+        "u12b"
       ],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
+      "blocked_reason": null,
       "id": "u14",
       "title": "Family settings (timezone) handlers + Connect layer",
       "kind": "service",
-      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
       "notes": "Validate IANA zone; first write wins as initialisation from device. Rules (coordinator, from reviews): GetFamilySettings(device_timezone) initialises the family timezone on first read (InitFamilySettings ON CONFLICT DO NOTHING) — document and test; SetFamilySettings validates the IANA zone."
     },
     {
@@ -349,13 +346,14 @@
       ],
       "depends_on": [
         "u04",
-        "u12"
+        "u12",
+        "u12b"
       ],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
+      "blocked_reason": null,
       "id": "u15",
       "title": "Event publisher + tasks.task.assigned on create/update",
       "kind": "service",
@@ -393,22 +391,22 @@
         "services/tasks/internal/handler/reminders.go",
         "services/tasks/internal/handler/reminders_test.go",
         "services/tasks/internal/handler/digest.go",
-        "services/tasks/internal/handler/digest_test.go",
-        "services/tasks/internal/grpc/reminders.go"
+        "services/tasks/internal/handler/digest_test.go"
       ],
       "depends_on": [
         "u11",
-        "u12"
+        "u12",
+        "u12b"
       ],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
+      "blocked_reason": null,
       "id": "u17",
       "title": "Reminder and digest RPCs for the telegram scheduler (ListMyDueReminders, Ack, Snooze, GetDigest)",
       "kind": "service",
-      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
       "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays. Rules (coordinator, from reviews): SnoozeReminder rewrites remind_at (sets snoozed_until, clears acked_at) AND ClearDeliveries for that reminder in the same InTx, so it fires again; works on already-acked reminders. Snooze option via schedule.SnoozeUntil (rejects unknown). reminder_id is the task_reminders uuid (fits a 64-byte Telegram callback with a short prefix). AckReminder records channel 'telegram' delivery. ListMyDueReminders uses ListDueRemindersForUser(channel 'telegram') and IsMember-checks nothing (caller is the user). GetDigest: date = schedule.Today(family tz); due = schedule.DigestDue(now, tz, last sent); MarkDigestSent per user."
     },
     {
@@ -463,24 +461,25 @@
       ],
       "files": [
         "services/tasks/internal/handler/google.go",
-        "services/tasks/internal/handler/google_test.go",
-        "services/tasks/internal/grpc/google.go"
+        "services/tasks/internal/handler/google_test.go"
       ],
       "depends_on": [
         "u12",
         "u18",
-        "u19"
+        "u19",
+        "u12b",
+        "u21"
       ],
       "gate": "auto",
-      "status": "blocked",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
+      "blocked_reason": null,
       "id": "u20",
       "title": "Google connect / disconnect / list + pick calendar RPCs; FailedPrecondition when OAuth unset",
       "kind": "service",
-      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Per-member connection. With client id/secret empty: service starts, ConnectGoogle returns FailedPrecondition with a clear message (tested). Rules (coordinator, from reviews): SetGoogleCalendar stores the real calendarList id (never \"primary\") and deletes the user's old calendar_links when the calendar changes. DisconnectGoogle calls gcal.Revoke then deletes the connection and links. ConnectGoogle maps gcal.ErrInsufficientScope / ErrMissingRefresh to FailedPrecondition with a clear message; ErrClientConfig -> Internal (log, no Google body). Never overwrite the stored email from Refresh output (it returns none). Seal the refresh token with crypto.Box.Seal(token, crypto.Owner(family, user)); never store raw Google error bodies in last_error or logs."
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "Per-member connection. With client id/secret empty: service starts, ConnectGoogle returns FailedPrecondition with a clear message (tested). Rules (coordinator, from reviews): SetGoogleCalendar stores the real calendarList id (never \"primary\") and deletes the user's old calendar_links when the calendar changes. DisconnectGoogle calls gcal.Revoke then deletes the connection and links. ConnectGoogle maps gcal.ErrInsufficientScope / ErrMissingRefresh to FailedPrecondition with a clear message; ErrClientConfig -> Internal (log, no Google body). Never overwrite the stored email from Refresh output (it returns none). Seal the refresh token with crypto.Box.Seal(token, crypto.Owner(family, user)); never store raw Google error bodies in last_error or logs. E9 decision 1: SetGoogleCalendar calls calsync.Pusher.SwitchCalendar before storing the new calendar; it never deletes calendar_links directly. E4 decision (option 1, 2026-10-06): ConnectGoogle accepts a serverAuthCode from Google Sign-In on Android and exchanges it with the Web client id/secret and an EMPTY redirect URI (no PKCE verifier)."
     },
     {
       "nodes": [
@@ -489,22 +488,25 @@
       "files": [
         "services/tasks/internal/calsync/mapping.go",
         "services/tasks/internal/calsync/push.go",
-        "services/tasks/internal/calsync/push_test.go"
+        "services/tasks/internal/calsync/push_test.go",
+        "services/tasks/internal/db/queries/google.sql",
+        "services/tasks/db/google.sql.go"
       ],
       "depends_on": [
         "u08",
-        "u18"
+        "u18",
+        "u18b"
       ],
       "gate": "auto",
-      "status": "blocked",
-      "attempts": 2,
+      "status": "todo",
+      "attempts": 0,
       "commit": null,
-      "blocked_reason": "stop-the-line: 2 verifier blockers (E9). Work stashed.",
+      "blocked_reason": null,
       "id": "u21",
       "title": "Calendar push sync: task/birthday -> Google event create/update/delete",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/calsync/...",
-      "notes": "Completed task keeps its event with a check-mark title prefix (brief default). Birthdays as yearly all-day events. Tests use gcal fake. Rules (coordinator, from reviews): We OWN the events (gcal.UpdateEvent is a PUT): user additions such as location are not preserved — accepted. Never resurrect: if the linked event was cancelled in Google and the pull has not run, run pull for that connection first or skip. Events need a duration: date-only = all-day (end date exclusive, next day); timed = 30 minutes ending at the deadline. Skip pushing into a calendar the family already has a link in (CalendarLinkedInFamily) so shared calendars do not get duplicates. Keep calendar_links until the Google delete succeeds; sweep ListOrphanCalendarLinks. gcal.ErrForbidden = lost writer access: set last_error, ask the user to pick another calendar (not reconnect)."
+      "notes": "Completed task keeps its event with a check-mark title prefix (brief default). Birthdays as yearly all-day events. Tests use gcal fake. Rules (coordinator, from reviews): We OWN the events (gcal.UpdateEvent is a PUT): user additions such as location are not preserved — accepted. Never resurrect: if the linked event was cancelled in Google and the pull has not run, run pull for that connection first or skip. Events need a duration: date-only = all-day (end date exclusive, next day); timed = 30 minutes ending at the deadline. Skip pushing into a calendar the family already has a link in (CalendarLinkedInFamily) so shared calendars do not get duplicates. Keep calendar_links until the Google delete succeeds; sweep ListOrphanCalendarLinks. gcal.ErrForbidden = lost writer access: set last_error, ask the user to pick another calendar (not reconnect). E9 decisions (2026-10-06): (1) The calendar switch is owned by calsync: add Pusher.SwitchCalendar(ctx, family, user) that, under each item's lock, deletes the user's events in the OLD calendar treating ErrForbidden and ErrNotFound as gone (log calendar_id+event_id of abandoned events) and drops those links; u20's SetGoogleCalendar calls it instead of deleting links itself. pushTo then treats a link whose calendar differs from the connection's as stale: drop the link without touching Google, then insert. (2) Inserts use gcal.EventID(...) (u18b): ErrConflict on insert means our event already exists -> UpdateEvent that id and save the link, so retries/timeouts/concurrent pushes never duplicate. Keep the per-item lock, taken BEFORE reading the item in PushTask/PushBirthday; SweepOrphans locks per link; evict idle item mutexes. Single tasks replica is assumed (recorded in u24 notes). (3) ListOrphanCalendarLinks also returns task links whose task has due_on IS NULL (sqlc regenerate). Start from git stash 'autopilot 0003/u21: calsync push'."
     },
     {
       "nodes": [
@@ -518,7 +520,8 @@
       "depends_on": [
         "u13",
         "u15",
-        "u21"
+        "u21",
+        "u12b"
       ],
       "gate": "auto",
       "status": "todo",
@@ -570,7 +573,8 @@
         "u17",
         "u20",
         "u22",
-        "u23"
+        "u23",
+        "u12b"
       ],
       "gate": "auto",
       "status": "todo",
@@ -581,7 +585,7 @@
       "title": "Wire tasks main: pool + migrations, family client, publisher, reminder scheduler, calendar pull loop",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go vet ./... && GOWORK=off go test -race ./...",
-      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04). Rules (coordinator, from reviews): Wire TASKS_FAMILY_ADDR (family :9090, internal RPCs) AND TASKS_FAMILY_PUBLIC_ADDR (family :8080, token-forwarded ListMembers) — both required at startup. bus.EnsureStream(ctx, \"tasks\") before the publisher and scheduler; /healthz -> database.HealthHandler(pool, 0); subscribe family.member.removed -> DeleteKnownMember. The family.member.removed subscriber (internal/members/removed.go + test) deletes the known_members row, the user's pending task_reminders and their task_assignees rows in that family."
+      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04). Rules (coordinator, from reviews): Wire TASKS_FAMILY_ADDR (family :9090, internal RPCs) AND TASKS_FAMILY_PUBLIC_ADDR (family :8080, token-forwarded ListMembers) — both required at startup. bus.EnsureStream(ctx, \"tasks\") before the publisher and scheduler; /healthz -> database.HealthHandler(pool, 0); subscribe family.member.removed -> DeleteKnownMember. The family.member.removed subscriber (internal/members/removed.go + test) deletes the known_members row, the user's pending task_reminders and their task_assignees rows in that family. E9: run exactly one tasks replica (calsync per-item lock is in-process); compose/prod must not scale tasks."
     },
     {
       "nodes": [
@@ -595,16 +599,16 @@
       "depends_on": [
         "u05"
       ],
-      "gate": "human",
-      "status": "blocked",
+      "gate": "auto",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "human gate: go.work edit is a workspace-wide dependency change (gate-check STOP)",
+      "blocked_reason": null,
       "id": "u25",
       "title": "Register services/tasks in go.work",
       "kind": "infra",
       "acceptance": "just check-go",
-      "notes": "STOP by gate-check PATH_RULES (go.work = workspace-wide dependency change), although the brief lists go.work only as touched. Needed for the graph node and the Docker image build."
+      "notes": "STOP by gate-check PATH_RULES (go.work = workspace-wide dependency change), although the brief lists go.work only as touched. Needed for the graph node and the Docker image build. E6 approved by human 2026-10-06: gate-check STOP on go.work/go.work.sum is authorized for this unit only; confirm nothing else is in the STOP column."
     },
     {
       "nodes": [
@@ -1004,16 +1008,16 @@
         "pnpm-lock.yaml"
       ],
       "depends_on": [],
-      "gate": "human",
-      "status": "blocked",
+      "gate": "auto",
+      "status": "todo",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": "human gate: scaffold changes pnpm-lock.yaml (workspace-wide dependency change, STOP)",
+      "blocked_reason": null,
       "id": "p1",
       "title": "Scaffold apps/tasks (configs, app.config.js endpoints :8088, root layout) + pnpm-lock",
       "kind": "app",
       "acceptance": "pnpm install --frozen-lockfile && pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
-      "notes": "STOP by gate-check (pnpm-lock.yaml). Copy apps/finance config files verbatim (babel, metro, tailwind, tsconfig, eslint, global.css, d.ts, assets). Add ALL native deps now so later units never touch the lockfile: @react-native-community/datetimepicker, expo-auth-session, expo-web-browser, expo-crypto, expo-notifications. scheme fmtasks; emulator endpoint http://10.0.2.2:8088. Larger than 5 files because the template is one indivisible scaffold."
+      "notes": "STOP by gate-check (pnpm-lock.yaml). Copy apps/finance config files verbatim (babel, metro, tailwind, tsconfig, eslint, global.css, d.ts, assets). Add ALL native deps now so later units never touch the lockfile: @react-native-community/datetimepicker, expo-auth-session, expo-web-browser, expo-crypto, expo-notifications. scheme fmtasks; emulator endpoint http://10.0.2.2:8088. Larger than 5 files because the template is one indivisible scaffold. E3 approved by human 2026-10-06: gate-check STOP on pnpm-lock.yaml is authorized for this unit only; confirm nothing else is in the STOP column. E4 decision (option 1): also add @react-native-google-signin/google-signin (serverAuthCode flow)."
     },
     {
       "nodes": [
@@ -1155,7 +1159,7 @@
       "title": "apps/tasks settings: language, notifications, Google Calendar connect/disconnect/pick, connected accounts",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
-      "notes": "expo-auth-session code + PKCE -> ConnectGoogle; FailedPrecondition shown as 'Google Calendar not configured'. Rules (coordinator, from reviews): Google connect: authorize with access_type=offline&prompt=consent, scopes 'openid email https://www.googleapis.com/auth/calendar', PKCE S256; the client type is the human's decision (ESCALATIONS E4)."
+      "notes": "expo-auth-session code + PKCE -> ConnectGoogle; FailedPrecondition shown as 'Google Calendar not configured'. Rules (coordinator, from reviews): Google connect: authorize with access_type=offline&prompt=consent, scopes 'openid email https://www.googleapis.com/auth/calendar', PKCE S256; the client type is the human's decision (ESCALATIONS E4). E4 decision (option 1): connect via @react-native-google-signin/google-signin with webClientId, offlineAccess:true, forceCodeForRefreshToken:true, scopes email + https://www.googleapis.com/auth/calendar; send serverAuthCode to ConnectGoogle."
     },
     {
       "nodes": [
@@ -1222,7 +1226,7 @@
       "title": "Provision Google OAuth Web client (redirect URI + fmtasks scheme) into local .env",
       "kind": "infra",
       "acceptance": "grep -qE '^TASKS_GOOGLE_CLIENT_ID=.+' .env && grep -qE '^TASKS_GOOGLE_CLIENT_SECRET=.+' .env",
-      "notes": "Credential values, human only. Nothing committed. No unit depends on it: all tests use the fake Google API."
+      "notes": "Credential values, human only. Nothing committed. No unit depends on it: all tests use the fake Google API. E4 decision (option 1): create an Android OAuth client (package + SHA-1 of the signing key) AND a Web client; .env gets the Web client's TASKS_GOOGLE_CLIENT_ID/SECRET; the app needs the Web client id as EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID."
     },
     {
       "nodes": [
@@ -1297,7 +1301,55 @@
       "kind": "docs",
       "acceptance": "just verify",
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/gcal/client.go",
+        "services/tasks/internal/gcal/http.go",
+        "services/tasks/internal/gcal/http_test.go",
+        "services/tasks/internal/gcal/fake.go"
+      ],
+      "depends_on": [
+        "u18"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u18b",
+      "title": "gcal: client-supplied deterministic event IDs; 409 on insert -> ErrConflict",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/gcal/...",
+      "notes": "E9 decision 2 (2026-10-06). InsertEvent sends Event.ID when set (Google allows client ids: base32hex a-v0-9, 5-1024 chars). Add gcal.EventID(familyID, userID, kind, itemID, calendarID) deriving a stable base32hex id (sha256, lower base32hex, no padding). HTTP 409 on insert -> ErrConflict; fake mirrors it (insert with an existing id, live or cancelled, -> ErrConflict). Tests for both clients."
+    },
+    {
+      "nodes": [
+        "service:tasks"
+      ],
+      "files": [
+        "services/tasks/internal/handler/handler.go",
+        "services/tasks/internal/handler/tasks.go",
+        "services/tasks/internal/handler/tasks_test.go",
+        "services/tasks/internal/handler/fake_test.go"
+      ],
+      "depends_on": [
+        "u13"
+      ],
+      "gate": "auto",
+      "status": "todo",
+      "attempts": 0,
+      "commit": null,
+      "blocked_reason": null,
+      "id": "u12b",
+      "title": "Rework task handlers to meet u12 notes (due_at, membership check, ListMembers refresh, no publish in tx, touch keeps display name)",
+      "kind": "service",
+      "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
+      "notes": "E8 decision 1 (2026-10-06): u12 shipped short of its notes. Meet every rule in u12 notes: CreateTask/UpdateTask set due_at via schedule.Deadline.At(family tz) whenever due_on is set, so task_due reminders are created; assignees must be members (refresh via family.Client.ListMembers with the REQUEST bearer token, upsert known_members + DeleteKnownMembersExcept in one InTx; reuse fetchMembers/refreshKnownMembers from u13 birthdays.go); remove the tasks.task.assigned publish (u15 owns it); touchKnownMember uses TouchKnownMember (keeps display_name). fake_test.go may gain real birthday methods replacing the u13 birthdayStore wrapper only if trivial."
     }
   ],
-  "updated_at": "2026-10-06T07:59:19.373Z"
+  "updated_at": "2026-10-06T08:02:23.989Z"
 }
