@@ -79,3 +79,4 @@ export * from "./login.ts";
 export * from "./telegram.ts";
 export * from "./pushToken.ts";
 export * from "./notifications.ts";
+export * from "./widgetData.ts";
