@@ -20,7 +20,9 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | migrations | golang-migrate, numbered SQL | `services/*/internal/db/migrations` | — |
 | object storage | MinIO (dev) · Cloudflare R2 (prod), one `minio-go` client | `docker-compose.yml`, `infra/` | [0007](adr/0007-object-storage.md) |
 | Go config | viper, env-prefixed | `services/*/internal/config` | — |
-| auth | ES256 JWT (15 min) + rotating refresh, JWKS | `services/auth`, `libs/go/auth` | [0005](adr/0005-auth.md) |
+| auth | ES256 JWT (15 min) + rotating refresh, JWKS, `locale` claim | `services/auth`, `libs/go/auth` | [0005](adr/0005-auth.md) |
+| per-user settings | `user_settings` in `services/family`, shared by apps and bots | `services/family`, `packages/api` | [0011](adr/0011-user-settings.md) |
+| bot copy | Go catalog, `uk` + `en`, key parity enforced by test | `services/telegram/internal/i18n` | [0011](adr/0011-user-settings.md) |
 | password hashing | argon2id | `services/auth` only | [0005](adr/0005-auth.md) |
 | Go logging | `log/slog`, JSON in prod, request-id correlated | `libs/go/logger` | [0006](adr/0006-observability.md) |
 | RPC interceptors | recover · access log + request id · auth, in that order | `libs/go/rpc` | [0008](adr/0008-rpc-interceptors.md) |
@@ -32,6 +34,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | dependency updates | Dependabot, monthly | `.github/dependabot.yml` | — |
 | CI | GitHub Actions running the verify node | `.github/workflows/verify.yml` | [0006](adr/0006-observability.md) |
 | Go hot reload | air | `services/*/.air.toml` | — |
+| Telegram bots | one Go service, one bot per app, inline-keyboard panels edited in place, hand-written Bot API client, polling in dev and webhook in prod | `services/telegram` | [0010](adr/0010-telegram-bots.md) |
 | app framework | Expo (managed) + expo-router | `apps/*/package.json` | — |
 | app styling | NativeWind (Tailwind for RN) | `packages/theme`, `packages/config` | [0002](adr/0002-nativewind.md) |
 | app data layer | TanStack Query over `packages/api` | `packages/api` | — |
@@ -155,3 +158,4 @@ radius is the whole repo (`just impact pkg:@fm/config`).
 | Redis | JetStream covers queues/streams; Postgres covers everything else at this scale. The sign-in throttle is in-process for the same reason — one container per service on one box means shared state would be a dependency nothing else needs |
 | a monorepo-wide shared Go module | one module per service/lib keeps `go.work` boundaries real |
 | Flutter | the existing `*-android` apps are being retired in favour of Expo (see docs/architecture.md) |
+| a Telegram bot library | `services/telegram` uses five Bot API methods; a hand-written client keeps the dependency list shorter than the translation layer would ([ADR 0010](adr/0010-telegram-bots.md)) |

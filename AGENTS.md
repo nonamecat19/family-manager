@@ -28,6 +28,7 @@ library that displaces a row in that table without an ADR.
 apps/        Expo apps (family-manager, shopping, recipes, notes)
 packages/    shared TS: ui, auth, api, theme, config
 services/    Go microservices, app-specific: auth, family, notes, notifications, shopping
+             plus telegram — one process hosting one bot per app (ADR 0010)
 libs/go/     shared Go: auth, logger, rpc, database, events, storage
 libs/proto/  .proto contracts — the ONLY cross-boundary contract surface
 sdk/         generated clients: typescript/, go/
