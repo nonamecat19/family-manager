@@ -90,9 +90,8 @@ it reaches the human gate.
 
 - **expo-router** file-based navigation; screens live only in `apps/*`.
 - **NativeWind**: Tailwind classes on React Native. The token source is a Tailwind preset in
-  `packages/theme`, imported by every app's `tailwind.config.js` via `packages/config`; an app
-  may extend or repaint those roles in its own `tailwind.config.js` (`apps/notes` does, for
-  Nocturne). No colour literals anywhere in an app — colours, radii and font faces are read from
+  `packages/theme`, imported by every app's `tailwind.config.js` via `packages/config` together
+  with the shared organic preset, so every app renders the same design. No colour literals anywhere in an app — colours, radii and font faces are read from
   the config or the app's token module, never typed as a hex into a screen or `app.config.js`.
   Arbitrary-value spacing and size utilities (`px-[18px]`, `w-[268px]`, `text-[15.5px]`) are
   allowed for one-off layout; a value that repeats as a role earns a named token.

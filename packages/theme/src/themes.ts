@@ -1,38 +1,4 @@
-import { nocturneCore } from "./nocturne.ts";
 import type { Theme } from "./theme.ts";
-
-export const nocturneTheme: Theme = {
-  name: "nocturne",
-  scheme: "dark",
-
-  bg: nocturneCore.bg,
-  surface: nocturneCore.surface,
-  text: nocturneCore.text,
-  muted: nocturneCore.neutral[500],
-  divider: nocturneCore.divider,
-
-  neutral: nocturneCore.neutral,
-  accent: nocturneCore.accent,
-  accent2: {
-    DEFAULT: "#a7a1db",
-    100: "#f5f4ff",
-    200: "#e7e5fe",
-    300: "#d2cefd",
-    400: "#b5afe8",
-    500: "#9690c9",
-    600: "#7972a9",
-    700: "#5c5783",
-    800: "#423e5d",
-    900: "#2b293a",
-  },
-
-  danger: "#e5928a",
-  accentFg: nocturneCore.bg,
-  dangerFg: nocturneCore.bg,
-
-  radius: nocturneCore.radius,
-  fieldStyle: "outline",
-};
 
 export const organicTheme: Theme = {
   name: "organic",
@@ -91,6 +57,6 @@ export const organicTheme: Theme = {
   labelCase: "sentence",
 };
 
-export const themes = { nocturne: nocturneTheme, organic: organicTheme } as const;
+export const themes = { organic: organicTheme } as const;
 
 export type ThemeName = keyof typeof themes;

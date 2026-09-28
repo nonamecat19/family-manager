@@ -213,9 +213,9 @@ through the human gate.
 
 **TypeScript**: apps hold screens (expo-router) only. Anything reusable goes to `packages/*`;
 anything talking to a service goes through `sdk/typescript` (generated) wrapped by `packages/api`
-(TanStack Query). Styling is NativeWind against the `packages/theme` preset — an app may repaint
-the shared roles in its own `tailwind.config.js` (as `apps/notes` does for Nocturne), but **no
-colour literals in an app**: every colour, radius and font face comes from a config or token
+(TanStack Query). Styling is NativeWind against the `packages/theme` preset plus the shared
+organic preset (`@fm/config/organic.preset.cjs`) that every app composes, and screens are built
+from `@fm/ui` so all apps share one design — **no colour literals in an app**: every colour, radius and font face comes from a config or token
 module, never a hex or `rgba()` typed into a screen, a component or `app.config.js`.
 Arbitrary-value spacing and size utilities (`px-[18px]`, `w-[268px]`, `text-[15.5px]`) are
 allowed for one-off layout; a value that repeats as a role earns a named token instead.

@@ -17,7 +17,7 @@ export {
   type ColorSchemeName,
 } from "./scheme.ts";
 
-export { nocturneCore, initialOf, type Tint } from "./nocturne.ts";
+export { initialOf, type Tint } from "./initial.ts";
 
 export {
   type Theme,
@@ -25,4 +25,4 @@ export {
   type AccentRamp,
   type SchemeName,
 } from "./theme.ts";
-export { nocturneTheme, organicTheme, themes, type ThemeName } from "./themes.ts";
+export { organicTheme, themes, type ThemeName } from "./themes.ts";

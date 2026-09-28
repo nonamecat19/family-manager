@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { test } from "node:test";
 
-import { nocturneCore } from "./nocturne.ts";
-import { nocturneTheme, organicTheme, themes } from "./themes.ts";
+import { organicTheme, themes } from "./themes.ts";
 import type { Theme } from "./theme.ts";
 
 const require = createRequire(import.meta.url);
@@ -42,22 +41,6 @@ for (const [name, theme] of Object.entries(themes) as [string, Theme][]) {
   });
 }
 
-test("the themes are actually different systems, not one palette twice", () => {
-  assert.notEqual(nocturneTheme.bg, organicTheme.bg);
-  assert.notEqual(nocturneTheme.accent.DEFAULT, organicTheme.accent.DEFAULT);
-  assert.notEqual(nocturneTheme.scheme, organicTheme.scheme);
-  assert.notEqual(nocturneTheme.radius.md, organicTheme.radius.md);
-});
-
-test("the nocturne theme is the shared nocturne core, not a second copy of it", () => {
-  assert.equal(nocturneTheme.bg, nocturneCore.bg);
-  assert.equal(nocturneTheme.surface, nocturneCore.surface);
-  assert.equal(nocturneTheme.text, nocturneCore.text);
-  assert.equal(nocturneTheme.muted, nocturneCore.neutral[500]);
-  assert.deepEqual(nocturneTheme.accent, { ...nocturneCore.accent });
-  assert.deepEqual(nocturneTheme.radius, { ...nocturneCore.radius });
-});
-
 test("the organic theme matches the organic tailwind preset", () => {
   const preset = require("../../../packages/config/organic.preset.cjs") as {
     theme: { extend: { colors: Record<string, string | Record<string, string>>; borderRadius: Record<string, string> } };
@@ -83,29 +66,26 @@ test("the organic theme matches the organic tailwind preset", () => {
   });
 });
 
-test("the recipes app composes the organic preset instead of restating the palette", () => {
-  const cfg = require("../../../apps/recipes/tailwind.config.js") as {
+for (const app of ["finance", "notes", "recipes"]) test(`the ${app} app composes the organic preset instead of restating the palette`, () => {
+  const cfg = require(`../../../apps/${app}/tailwind.config.js`) as {
     presets: { theme?: { extend?: { colors?: Record<string, string> } } }[];
     theme?: { extend?: { colors?: unknown } };
   };
   const composed = cfg.presets.some(
     (p) => p.theme?.extend?.colors?.bg === organicTheme.bg,
   );
-  assert.ok(composed, "recipes must pull the organic palette in through a preset");
+  assert.ok(composed, `${app} must pull the organic palette in through a preset`);
   assert.equal(cfg.theme?.extend?.colors, undefined, "the palette must not be restated in the app config");
 });
 
-test("each theme declares its own input treatment", () => {
-  assert.equal(nocturneTheme.fieldStyle, "outline");
+test("the organic theme declares its input treatment", () => {
   assert.equal(organicTheme.fieldStyle, "filled");
 });
 
-test("label case is per theme, and the two systems disagree", () => {
-  assert.equal(nocturneTheme.labelCase ?? "uppercase", "uppercase");
+test("the organic theme uses sentence-case labels", () => {
   assert.equal(organicTheme.labelCase, "sentence");
 });
 
-test("fonts are absent from the base themes, because two apps share one palette", () => {
-  assert.equal(nocturneTheme.fonts, undefined);
+test("fonts are absent from the base theme; apps add them through appTheme", () => {
   assert.equal(organicTheme.fonts, undefined);
 });
