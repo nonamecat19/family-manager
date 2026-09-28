@@ -28,6 +28,10 @@ type Config struct {
 	LoginLockoutBase      time.Duration
 	LoginLockoutMax       time.Duration
 
+	DeviceLoginPerIP     int
+	DeviceLoginWindow    time.Duration
+	DeviceLoginMaxActive int64
+
 	LogLevel string
 	LogJSON  bool
 }
@@ -43,6 +47,9 @@ func Load() (*Config, error) {
 	v.SetDefault("AUDIENCE", "family-manager")
 	v.SetDefault("ACCESS_TTL", 15*time.Minute)
 	v.SetDefault("REFRESH_TTL", 30*24*time.Hour)
+	v.SetDefault("DEVICE_LOGIN_PER_IP", 10)
+	v.SetDefault("DEVICE_LOGIN_WINDOW", 10*time.Minute)
+	v.SetDefault("DEVICE_LOGIN_MAX_ACTIVE", 5000)
 	v.SetDefault("LOG_LEVEL", "info")
 	v.SetDefault("LOG_JSON", false)
 
@@ -62,8 +69,13 @@ func Load() (*Config, error) {
 		LoginFailureThreshold: v.GetInt("LOGIN_FAILURE_THRESHOLD"),
 		LoginLockoutBase:      v.GetDuration("LOGIN_LOCKOUT_BASE"),
 		LoginLockoutMax:       v.GetDuration("LOGIN_LOCKOUT_MAX"),
-		LogLevel:              v.GetString("LOG_LEVEL"),
-		LogJSON:               v.GetBool("LOG_JSON"),
+
+		DeviceLoginPerIP:     v.GetInt("DEVICE_LOGIN_PER_IP"),
+		DeviceLoginWindow:    v.GetDuration("DEVICE_LOGIN_WINDOW"),
+		DeviceLoginMaxActive: v.GetInt64("DEVICE_LOGIN_MAX_ACTIVE"),
+
+		LogLevel: v.GetString("LOG_LEVEL"),
+		LogJSON:  v.GetBool("LOG_JSON"),
 	}
 
 	if path := v.GetString("SIGNING_KEY_FILE"); path != "" {

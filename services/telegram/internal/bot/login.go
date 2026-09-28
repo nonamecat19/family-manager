@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/nnc/family-manager/services/telegram/internal/i18n"
@@ -15,11 +16,15 @@ const (
 	loginCallback      = "login"
 	loginApprove       = "ok"
 	loginDeny          = "no"
+	privateChat        = "private"
 )
 
 var loginCodeShape = regexp.MustCompile(`^[A-Za-z0-9]{8}$`)
 
 func confirmLogin(ctx context.Context, c *Context, code string) error {
+	if !inPrivateChat(c) {
+		return c.Reply(ctx, Esc(c.T(i18n.LoginPrivateOnly)))
+	}
 	if _, err := c.Bot.sessions.Session(ctx, c.From.ID); err != nil {
 		if errors.Is(err, session.ErrNotLinked) || errors.Is(err, session.ErrLinkAgain) {
 			return c.Reply(ctx, Lines(
@@ -35,19 +40,26 @@ func confirmLogin(ctx context.Context, c *Context, code string) error {
 		return c.Reply(ctx, loginExpired(c))
 	}
 	code = strings.ToUpper(code)
+	owner := strconv.FormatInt(c.From.ID, 10)
 
 	return c.Send(ctx, Lines(
 		Bold(c.T(i18n.LoginConfirm)),
 		"",
 		Esc(c.T(i18n.LoginConfirmBody, displayLoginCode(code))),
 	), Keyboard{Row(
-		Data(c.T(i18n.LoginApprove), loginCallback+":"+loginApprove+":"+code),
-		Data(c.T(i18n.LoginDeny), loginCallback+":"+loginDeny+":"+code),
+		Data(c.T(i18n.LoginApprove), loginButton(loginApprove, code, owner)),
+		Data(c.T(i18n.LoginDeny), loginButton(loginDeny, code, owner)),
 	)})
 }
 
 func decideLogin(ctx context.Context, c *Context) error {
-	action, code := c.PayloadAt(0), c.PayloadAt(1)
+	if !inPrivateChat(c) {
+		return c.Alert(ctx, c.T(i18n.LoginPrivateOnly))
+	}
+	action, code, owner := c.PayloadAt(0), c.PayloadAt(1), c.PayloadAt(2)
+	if owner != strconv.FormatInt(c.From.ID, 10) {
+		return c.Toast(ctx, c.T(i18n.StaleButton))
+	}
 	if !loginCodeShape.MatchString(code) {
 		return c.Show(ctx, loginExpired(c), nil)
 	}
@@ -78,6 +90,14 @@ func decideLogin(ctx context.Context, c *Context) error {
 		return err
 	}
 	return c.Show(ctx, done, nil)
+}
+
+func inPrivateChat(c *Context) bool {
+	return c.ChatType == privateChat && c.Chat == c.From.ID
+}
+
+func loginButton(action, code, owner string) string {
+	return loginCallback + ":" + action + ":" + code + ":" + owner
 }
 
 func loginExpired(c *Context) string {

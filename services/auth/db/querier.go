@@ -12,7 +12,8 @@ import (
 
 type Querier interface {
 	ApproveLoginGrant(ctx context.Context, arg ApproveLoginGrantParams) (LoginGrant, error)
-	ConsumeLoginGrant(ctx context.Context, id pgtype.UUID) (int64, error)
+	ConsumeLoginGrant(ctx context.Context, arg ConsumeLoginGrantParams) (int64, error)
+	CountPendingLoginGrants(ctx context.Context) (int64, error)
 	CreateLinkToken(ctx context.Context, arg CreateLinkTokenParams) (LinkToken, error)
 	CreateLoginGrant(ctx context.Context, arg CreateLoginGrantParams) (LoginGrant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
@@ -31,6 +32,7 @@ type Querier interface {
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
+	ListChainsApprovedFrom(ctx context.Context, chainID pgtype.UUID) ([]pgtype.UUID, error)
 	ListIdentitiesForUser(ctx context.Context, userID pgtype.UUID) ([]Identity, error)
 	LockChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
 	LockIdentityKey(ctx context.Context, key string) error

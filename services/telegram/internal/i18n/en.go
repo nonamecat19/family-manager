@@ -25,6 +25,7 @@ var en = map[Key]string{
 	LoginExpired:       "That sign-in code is spent",
 	LoginExpiredBody:   "It expired or was already used. Start “Log in with Telegram” again in the app.",
 	LoginThrottled:     "Too many sign-in codes tried. Wait a few minutes and try again.",
+	LoginPrivateOnly:   "Sign-in codes work only in a private chat with the bot. Open the bot directly and try again.",
 
 	HelpMenu:     "open the main menu",
 	HelpHelp:     "list what I understand",

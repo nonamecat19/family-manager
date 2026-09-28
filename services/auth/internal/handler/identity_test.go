@@ -191,3 +191,90 @@ func TestRefreshRefusesAChainWhoseRowIsGone(t *testing.T) {
 		t.Fatal("refresh recreated a swept chain")
 	}
 }
+
+func (f *fixture) unlinkTelegram(t *testing.T, userID, externalID string) {
+	t.Helper()
+	if _, err := f.h.Unlink(asUser(userID), connect.NewRequest(&authv1.UnlinkRequest{
+		Provider: "telegram", ExternalId: externalID,
+	})); err != nil {
+		t.Fatalf("Unlink: %v", err)
+	}
+}
+
+func (f *fixture) signInApprovedBy(t *testing.T, access, userID string) *authv1.PollDeviceLoginResponse {
+	t.Helper()
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM)
+	if err := f.approveAs(access, userID, start.GetUserCode()); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	res := f.poll(t, start.GetDeviceCode())
+	if res.GetStatus() != authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_APPROVED {
+		t.Fatalf("poll = %v, want approved", res.GetStatus())
+	}
+	return res
+}
+
+func TestUnlinkRevokesSessionsTheIdentityApproved(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	tg, err := f.redeem(t, f.linkToken(t, ada), "4242")
+	if err != nil {
+		t.Fatalf("redeem: %v", err)
+	}
+
+	phone := f.signInApprovedBy(t, tg.GetAccessToken(), ada)
+	tablet := f.signInApprovedBy(t, phone.GetAccessToken(), ada)
+	ownAccess, _ := f.sessionOf(ada)
+	laptop := f.signInApprovedBy(t, ownAccess, ada)
+
+	f.unlinkTelegram(t, ada, "4242")
+
+	if connect.CodeOf(f.refresh(phone.GetRefreshToken())) != connect.CodeUnauthenticated {
+		t.Fatal("a session the Telegram identity approved survived unlink")
+	}
+	if connect.CodeOf(f.refresh(tablet.GetRefreshToken())) != connect.CodeUnauthenticated {
+		t.Fatal("a session approved from a Telegram-approved session survived unlink")
+	}
+	if err := f.refresh(laptop.GetRefreshToken()); err != nil {
+		t.Fatalf("a session approved elsewhere was revoked: %v", err)
+	}
+}
+
+func TestUnlinkStopsAnApprovedGrantFromMinting(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	tg, err := f.redeem(t, f.linkToken(t, ada), "4242")
+	if err != nil {
+		t.Fatalf("redeem: %v", err)
+	}
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM)
+	if err := f.approveAs(tg.GetAccessToken(), ada, start.GetUserCode()); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+
+	f.unlinkTelegram(t, ada, "4242")
+
+	res := f.poll(t, start.GetDeviceCode())
+	if res.GetStatus() != authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_EXPIRED || res.GetAccessToken() != "" {
+		t.Fatalf("poll after unlink = %v with a token %t, want expired and empty",
+			res.GetStatus(), res.GetAccessToken() != "")
+	}
+}
+
+func TestRelinkRevokesSessionsThePreviousLinkApproved(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	first, err := f.redeem(t, f.linkToken(t, ada), "4242")
+	if err != nil {
+		t.Fatalf("first redeem: %v", err)
+	}
+	phone := f.signInApprovedBy(t, first.GetAccessToken(), ada)
+
+	if _, err := f.redeem(t, f.linkToken(t, ada), "4242"); err != nil {
+		t.Fatalf("second redeem: %v", err)
+	}
+
+	if connect.CodeOf(f.refresh(phone.GetRefreshToken())) != connect.CodeUnauthenticated {
+		t.Fatal("a session the replaced link approved survived relink")
+	}
+}

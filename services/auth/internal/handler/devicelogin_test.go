@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"net/http"
 	"regexp"
 	"strings"
 	"testing"
@@ -9,9 +10,15 @@ import (
 
 	"connectrpc.com/connect"
 
+	"github.com/jackc/pgx/v5/pgtype"
+
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
+	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
+	"github.com/nnc/family-manager/services/auth/db"
+	"github.com/nnc/family-manager/services/auth/internal/ratelimit"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
+	"github.com/nnc/family-manager/services/auth/internal/token"
 )
 
 type clock struct{ t time.Time }
@@ -48,10 +55,37 @@ func (f *fixture) poll(t *testing.T, deviceCode string) *authv1.PollDeviceLoginR
 	return res.Msg
 }
 
-func (f *fixture) approve(userID, userCode string) error {
-	_, err := f.h.ApproveDeviceLogin(withUser(userID),
-		connect.NewRequest(&authv1.ApproveDeviceLoginRequest{UserCode: userCode}))
+func (f *fixture) sessionOf(userID string) (string, pgtype.UUID) {
+	id, err := pgconv.UUID(userID)
+	if err != nil {
+		panic(err)
+	}
+	user, err := f.store.GetUserByID(context.Background(), id)
+	if err != nil {
+		panic(err)
+	}
+	chainID := mustChainID()
+	tokens, err := f.h.mintSession(context.Background(), user, chainID, true)
+	if err != nil {
+		panic(err)
+	}
+	return tokens.access, chainID
+}
+
+func approveRequest(access, userCode string) *connect.Request[authv1.ApproveDeviceLoginRequest] {
+	req := connect.NewRequest(&authv1.ApproveDeviceLoginRequest{UserCode: userCode})
+	req.Header().Set("Authorization", "Bearer "+access)
+	return req
+}
+
+func (f *fixture) approveAs(access, userID, userCode string) error {
+	_, err := f.h.ApproveDeviceLogin(withUser(userID), approveRequest(access, userCode))
 	return err
+}
+
+func (f *fixture) approve(userID, userCode string) error {
+	access, _ := f.sessionOf(userID)
+	return f.approveAs(access, userID, userCode)
 }
 
 var userCodeShape = regexp.MustCompile(`^[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}$`)
@@ -165,11 +199,11 @@ func TestApprovedDeviceLoginMintsASessionOnce(t *testing.T) {
 	f := newFixture(t)
 	userID := f.register(t, "ada@example.test", "correct horse")
 	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
-	chainsBefore := len(f.store.chains)
 
 	if err := f.approve(userID, start.GetUserCode()); err != nil {
 		t.Fatalf("ApproveDeviceLogin: %v", err)
 	}
+	chainsBefore := len(f.store.chains)
 
 	res := f.poll(t, start.GetDeviceCode())
 	if res.GetStatus() != authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_APPROVED {
@@ -240,8 +274,8 @@ func TestApproveIsIdempotentForTheApproverOnly(t *testing.T) {
 	if err := f.approve(ada, start.GetUserCode()); err != nil {
 		t.Fatalf("first approve: %v", err)
 	}
-	res, err := f.h.ApproveDeviceLogin(withUser(ada),
-		connect.NewRequest(&authv1.ApproveDeviceLoginRequest{UserCode: start.GetUserCode()}))
+	access, _ := f.sessionOf(ada)
+	res, err := f.h.ApproveDeviceLogin(withUser(ada), approveRequest(access, start.GetUserCode()))
 	if err != nil {
 		t.Fatalf("repeat approve by the approver: %v", err)
 	}
@@ -330,7 +364,7 @@ func TestPollUnknownDeviceCodeReadsAsExpired(t *testing.T) {
 
 func TestApproveGuessingIsThrottled(t *testing.T) {
 	f := newFixture(t)
-	f.h.throttle = throttle.New(throttle.Params{Threshold: 3, Base: time.Minute, Max: time.Minute}, nil)
+	f.h.decisions = throttle.New(throttle.Params{Threshold: 3, Base: time.Minute, Max: time.Minute}, nil)
 	userID := f.register(t, "ada@example.test", "correct horse")
 	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
 
@@ -342,4 +376,158 @@ func TestApproveGuessingIsThrottled(t *testing.T) {
 	if err := f.approve(userID, start.GetUserCode()); connect.CodeOf(err) != connect.CodeResourceExhausted {
 		t.Fatalf("approve after guessing = %v, want resource_exhausted", connect.CodeOf(err))
 	}
+}
+
+func TestApproveRecordsTheApprovingSession(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM)
+	access, chainID := f.sessionOf(ada)
+
+	if err := f.approveAs(access, ada, start.GetUserCode()); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	f.poll(t, start.GetDeviceCode())
+
+	grant := f.onlyGrant(t)
+	if grant.ApproverChainID != chainID {
+		t.Fatalf("approver chain = %v, want %v", grant.ApproverChainID, chainID)
+	}
+	if !grant.ChainID.Valid || pgconv.UUIDString(grant.ChainID) != f.signer.last().ChainID {
+		t.Fatalf("minted chain = %v, want the polled session's chain %q", grant.ChainID, f.signer.last().ChainID)
+	}
+}
+
+func TestApproveRefusesASessionWithoutAChain(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	legacy, err := f.signer.Sign(token.Claims{UserID: ada})
+	if err != nil {
+		t.Fatalf("Sign: %v", err)
+	}
+
+	if err := f.approveAs(legacy, ada, start.GetUserCode()); connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("approve with a chainless token = %v, want unauthenticated", connect.CodeOf(err))
+	}
+	if err := f.approveAs("forged", ada, start.GetUserCode()); connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("approve with an unverifiable token = %v, want unauthenticated", connect.CodeOf(err))
+	}
+}
+
+func TestGrantApprovedFromARevokedSessionIsNotRedeemed(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM)
+	access, chainID := f.sessionOf(ada)
+
+	if err := f.approveAs(access, ada, start.GetUserCode()); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	if err := revokeChain(context.Background(), f.store, chainID); err != nil {
+		t.Fatalf("revoke: %v", err)
+	}
+
+	res := f.poll(t, start.GetDeviceCode())
+	if res.GetStatus() != authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_EXPIRED || res.GetAccessToken() != "" {
+		t.Fatalf("poll = %v with a token %t, want expired and empty", res.GetStatus(), res.GetAccessToken() != "")
+	}
+}
+
+func TestDecisionThrottleDoesNotShareLoginKeys(t *testing.T) {
+	f := newFixture(t)
+	f.h.throttle = throttle.New(throttle.Params{Threshold: 1, Base: time.Minute, Max: time.Minute}, nil)
+	f.h.decisions = throttle.New(throttle.Params{Threshold: 1, Base: time.Minute, Max: time.Minute}, nil)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	collidingEmail := "device-login:" + ada
+
+	if err := f.approve(ada, "BCDF-GHJK"); connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("guess = %v, want not_found", connect.CodeOf(err))
+	}
+	if wait := f.h.throttle.Retry(collidingEmail); wait != 0 {
+		t.Fatalf("a wrong device code locked the login key for %v", wait)
+	}
+
+	f.h.decisions = throttle.New(throttle.Params{Threshold: 1, Base: time.Minute, Max: time.Minute}, nil)
+	_, err := f.h.Login(context.Background(), connect.NewRequest(&authv1.LoginRequest{
+		Email: collidingEmail, Password: "wrong",
+	}))
+	if connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("login = %v, want unauthenticated", connect.CodeOf(err))
+	}
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	if err := f.approve(ada, start.GetUserCode()); err != nil {
+		t.Fatalf("approve after a failed login on the colliding key: %v", err)
+	}
+}
+
+func startFrom(forwardedFor string) *connect.Request[authv1.StartDeviceLoginRequest] {
+	req := connect.NewRequest(&authv1.StartDeviceLoginRequest{})
+	req.Header().Set("X-Forwarded-For", forwardedFor)
+	return req
+}
+
+func TestStartDeviceLoginIsRateLimitedPerClientIP(t *testing.T) {
+	f := newFixture(t)
+	f.h.starts = ratelimit.New(2, time.Minute, nil)
+
+	for i := range 2 {
+		if _, err := f.h.StartDeviceLogin(context.Background(), startFrom("203.0.113.7")); err != nil {
+			t.Fatalf("start %d: %v", i, err)
+		}
+	}
+	_, err := f.h.StartDeviceLogin(context.Background(), startFrom("198.51.100.1, 203.0.113.7"))
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("third start from the same client = %v, want resource_exhausted", connect.CodeOf(err))
+	}
+	if _, err := f.h.StartDeviceLogin(context.Background(), startFrom("203.0.113.8")); err != nil {
+		t.Fatalf("another client was limited: %v", err)
+	}
+}
+
+func TestStartDeviceLoginCapsPendingGrants(t *testing.T) {
+	f := newFixture(t)
+	f.h.maxPending = 2
+
+	f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	_, err := f.h.StartDeviceLogin(context.Background(), connect.NewRequest(&authv1.StartDeviceLoginRequest{}))
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("start over the cap = %v, want resource_exhausted", connect.CodeOf(err))
+	}
+	if n := len(f.store.grants); n != 2 {
+		t.Fatalf("grants = %d, want the cap of 2", n)
+	}
+}
+
+func TestClientIPTakesTheHopCaddyAppended(t *testing.T) {
+	cases := []struct {
+		forwarded, peer, want string
+	}{
+		{"203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
+		{"6.6.6.6, 203.0.113.7", "172.18.0.5:41234", "203.0.113.7"},
+		{"", "172.18.0.5:41234", "172.18.0.5"},
+		{"not-an-ip", "172.18.0.5:41234", "172.18.0.5"},
+		{"2001:db8::1", "[::1]:80", "2001:db8::1"},
+	}
+	for _, c := range cases {
+		h := http.Header{}
+		if c.forwarded != "" {
+			h.Set("X-Forwarded-For", c.forwarded)
+		}
+		if got := clientIP(h, c.peer); got != c.want {
+			t.Errorf("clientIP(%q, %q) = %q, want %q", c.forwarded, c.peer, got, c.want)
+		}
+	}
+}
+
+func (f *fixture) onlyGrant(t *testing.T) db.LoginGrant {
+	t.Helper()
+	if len(f.store.grants) != 1 {
+		t.Fatalf("grants = %d, want 1", len(f.store.grants))
+	}
+	for _, g := range f.store.grants {
+		return g
+	}
+	return db.LoginGrant{}
 }

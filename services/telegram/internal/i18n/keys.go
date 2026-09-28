@@ -25,6 +25,7 @@ const (
 	LoginExpired       Key = "login.expired.title"
 	LoginExpiredBody   Key = "login.expired.body"
 	LoginThrottled     Key = "login.throttled"
+	LoginPrivateOnly   Key = "login.privateonly"
 
 	HelpMenu     Key = "help.menu"
 	HelpHelp     Key = "help.help"

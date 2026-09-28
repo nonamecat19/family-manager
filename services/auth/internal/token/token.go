@@ -22,6 +22,7 @@ type Claims struct {
 	Email    string
 	FamilyID string
 	Locale   string
+	ChainID  string
 }
 
 type Signer struct {
@@ -86,6 +87,9 @@ func (s *Signer) Sign(c Claims) (string, error) {
 	}
 	if c.Locale != "" {
 		claims["locale"] = c.Locale
+	}
+	if c.ChainID != "" {
+		claims["sid"] = c.ChainID
 	}
 
 	tok := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
@@ -159,6 +163,38 @@ func checkCurve(key *ecdsa.PrivateKey) (*ecdsa.PrivateKey, error) {
 }
 
 func (s *Signer) Verify(_ context.Context, signed string) (*fmauth.Claims, error) {
+	claims, err := s.parse(signed)
+	if err != nil {
+		return nil, err
+	}
+
+	sub, err := claims.GetSubject()
+	if err != nil || sub == "" {
+		return nil, fmauth.ErrInvalidToken
+	}
+	out := &fmauth.Claims{UserID: sub}
+	if v, ok := claims["email"].(string); ok {
+		out.Email = v
+	}
+	if v, ok := claims["family_id"].(string); ok {
+		out.FamilyID = v
+	}
+	if v, ok := claims["locale"].(string); ok {
+		out.Locale = v
+	}
+	return out, nil
+}
+
+func (s *Signer) ChainOf(_ context.Context, signed string) (string, error) {
+	claims, err := s.parse(signed)
+	if err != nil {
+		return "", err
+	}
+	sid, _ := claims["sid"].(string)
+	return sid, nil
+}
+
+func (s *Signer) parse(signed string) (jwt.MapClaims, error) {
 	opts := []jwt.ParserOption{
 		jwt.WithValidMethods([]string{"ES256"}),
 		jwt.WithExpirationRequired(),
@@ -177,20 +213,5 @@ func (s *Signer) Verify(_ context.Context, signed string) (*fmauth.Claims, error
 	); err != nil {
 		return nil, fmt.Errorf("%w: %w", fmauth.ErrInvalidToken, err)
 	}
-
-	sub, err := claims.GetSubject()
-	if err != nil || sub == "" {
-		return nil, fmauth.ErrInvalidToken
-	}
-	out := &fmauth.Claims{UserID: sub}
-	if v, ok := claims["email"].(string); ok {
-		out.Email = v
-	}
-	if v, ok := claims["family_id"].(string); ok {
-		out.FamilyID = v
-	}
-	if v, ok := claims["locale"].(string); ok {
-		out.Locale = v
-	}
-	return out, nil
+	return claims, nil
 }

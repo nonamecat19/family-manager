@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
+	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -13,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
@@ -44,6 +48,21 @@ func (h *Handler) StartDeviceLogin(
 	kindName, ok := deviceLoginKinds[kind]
 	if !ok {
 		return nil, invalid("unsupported kind")
+	}
+
+	if wait := h.starts.Take(clientIP(req.Header(), req.Peer().Addr)); wait > 0 {
+		return nil, connect.NewError(connect.CodeResourceExhausted,
+			fmt.Errorf("too many sign-in requests; try again in %s", wait.Round(time.Second)))
+	}
+	if h.maxPending > 0 {
+		pending, err := h.q.CountPendingLoginGrants(ctx)
+		if err != nil {
+			return nil, h.internal(ctx, err, "count pending login grants")
+		}
+		if pending >= h.maxPending {
+			return nil, connect.NewError(connect.CodeResourceExhausted,
+				errors.New("too many sign-ins in progress; try again shortly"))
+		}
 	}
 
 	deviceCode, err := newRefreshToken()
@@ -128,7 +147,15 @@ func (h *Handler) PollDeviceLogin(
 func (h *Handler) redeemGrant(
 	ctx context.Context, row db.LoginGrant,
 ) (*connect.Response[authv1.PollDeviceLoginResponse], error) {
-	consumed, err := h.q.ConsumeLoginGrant(ctx, row.ID)
+	chainID, err := newChainID()
+	if err != nil {
+		return nil, h.internal(ctx, err, "generate chain id")
+	}
+
+	consumed, err := h.q.ConsumeLoginGrant(ctx, db.ConsumeLoginGrantParams{
+		ChainID: chainID,
+		ID:      row.ID,
+	})
 	if err != nil {
 		return nil, h.internal(ctx, err, "consume login grant")
 	}
@@ -142,11 +169,6 @@ func (h *Handler) redeemGrant(
 			return pollStatus(authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_EXPIRED, 0), nil
 		}
 		return nil, h.internal(ctx, err, "get user")
-	}
-
-	chainID, err := newChainID()
-	if err != nil {
-		return nil, h.internal(ctx, err, "generate chain id")
 	}
 
 	tokens, err := h.mintSession(ctx, user, chainID, true)
@@ -170,26 +192,32 @@ func (h *Handler) ApproveDeviceLogin(
 		return nil, err
 	}
 
-	key := approveThrottleKey(userID)
-	if wait := h.throttle.Retry(key); wait > 0 {
+	approverChain, err := h.callerChain(ctx, req.Header())
+	if err != nil {
+		return nil, err
+	}
+
+	key := decisionThrottleKey(userID)
+	if wait := h.decisions.Retry(key); wait > 0 {
 		return nil, errTooManyAttempts(wait)
 	}
 
 	code, ok := normalizeUserCode(req.Msg.GetUserCode())
 	if !ok {
-		h.throttle.Failed(key)
+		h.decisions.Failed(key)
 		return nil, errInvalidUserCode()
 	}
 
 	row, err := h.q.ApproveLoginGrant(ctx, db.ApproveLoginGrantParams{
-		UserID:       userID,
-		DecidedAt:    pgconv.TimestampFrom(h.now()),
-		UserCodeHash: hashToken(code),
+		UserID:          userID,
+		DecidedAt:       pgconv.TimestampFrom(h.now()),
+		ApproverChainID: approverChain,
+		UserCodeHash:    hashToken(code),
 	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		row, err = h.q.GetLoginGrantByUserCode(ctx, hashToken(code))
 		if errors.Is(err, pgx.ErrNoRows) || err == nil && !(row.ApprovedAt.Valid && row.UserID == userID) {
-			h.throttle.Failed(key)
+			h.decisions.Failed(key)
 			return nil, errInvalidUserCode()
 		}
 	}
@@ -208,14 +236,14 @@ func (h *Handler) DenyDeviceLogin(
 		return nil, err
 	}
 
-	key := approveThrottleKey(userID)
-	if wait := h.throttle.Retry(key); wait > 0 {
+	key := decisionThrottleKey(userID)
+	if wait := h.decisions.Retry(key); wait > 0 {
 		return nil, errTooManyAttempts(wait)
 	}
 
 	code, ok := normalizeUserCode(req.Msg.GetUserCode())
 	if !ok {
-		h.throttle.Failed(key)
+		h.decisions.Failed(key)
 		return nil, errInvalidUserCode()
 	}
 
@@ -233,7 +261,7 @@ func (h *Handler) DenyDeviceLogin(
 			return nil, h.internal(ctx, err, "get login grant")
 		}
 		if err != nil || !(row.DeniedAt.Valid && row.UserID == userID) {
-			h.throttle.Failed(key)
+			h.decisions.Failed(key)
 			return nil, errInvalidUserCode()
 		}
 	}
@@ -297,8 +325,38 @@ func normalizeUserCode(raw string) (string, bool) {
 	return sb.String(), true
 }
 
-func approveThrottleKey(userID pgtype.UUID) string {
+func decisionThrottleKey(userID pgtype.UUID) string {
 	return "device-login:" + pgconv.UUIDString(userID)
+}
+
+func (h *Handler) callerChain(ctx context.Context, header http.Header) (pgtype.UUID, error) {
+	sid, err := h.signer.ChainOf(ctx, fmauth.BearerToken(header.Get("Authorization")))
+	if err != nil {
+		return pgtype.UUID{}, connect.NewError(connect.CodeUnauthenticated, err)
+	}
+	if sid == "" {
+		return pgtype.UUID{}, connect.NewError(connect.CodeUnauthenticated,
+			errors.New("this session is out of date; try again in a few minutes"))
+	}
+	chainID, err := pgconv.UUID(sid)
+	if err != nil {
+		return pgtype.UUID{}, connect.NewError(connect.CodeUnauthenticated, errors.New("malformed session"))
+	}
+	return chainID, nil
+}
+
+func clientIP(header http.Header, peer string) string {
+	forwarded := header.Values("X-Forwarded-For")
+	if len(forwarded) > 0 {
+		hops := strings.Split(forwarded[len(forwarded)-1], ",")
+		if ip := net.ParseIP(strings.TrimSpace(hops[len(hops)-1])); ip != nil {
+			return ip.String()
+		}
+	}
+	if host, _, err := net.SplitHostPort(peer); err == nil {
+		return host
+	}
+	return peer
 }
 
 func errInvalidUserCode() error {

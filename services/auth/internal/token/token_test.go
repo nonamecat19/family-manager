@@ -232,3 +232,28 @@ func TestSEC1KeysAreAccepted(t *testing.T) {
 		t.Fatalf("NewSigner with a SEC1 key: %v", err)
 	}
 }
+
+func TestChainOfReadsTheSessionClaim(t *testing.T) {
+	signer := testSigner(t)
+
+	signed, err := signer.Sign(Claims{UserID: "u1", ChainID: "chain-1"})
+	if err != nil {
+		t.Fatalf("Sign: %v", err)
+	}
+	chain, err := signer.ChainOf(context.Background(), signed)
+	if err != nil || chain != "chain-1" {
+		t.Fatalf("ChainOf = %q, %v", chain, err)
+	}
+
+	bare, err := signer.Sign(Claims{UserID: "u1"})
+	if err != nil {
+		t.Fatalf("Sign: %v", err)
+	}
+	if chain, err := signer.ChainOf(context.Background(), bare); err != nil || chain != "" {
+		t.Fatalf("ChainOf without sid = %q, %v", chain, err)
+	}
+
+	if _, err := signer.ChainOf(context.Background(), bare+"x"); err == nil {
+		t.Fatal("ChainOf accepted a tampered token")
+	}
+}
