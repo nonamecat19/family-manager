@@ -1763,3 +1763,33 @@ func TestUpdateTransactionAnnouncesAnOverspendOnce(t *testing.T) {
 		t.Errorf("budget.exceeded published %d times for one edit, want 1", exceeded)
 	}
 }
+
+func TestListMembersFillsInAMemberProjectedWithoutAName(t *testing.T) {
+	store := newFakeStore()
+	h := New(Options{Queries: store, Tx: store, Now: func() time.Time { return testNow }})
+	projected := pgconv.MustUUID("00000000-0000-4000-8000-000000000004")
+	if _, err := store.UpsertMember(context.Background(), db.UpsertMemberParams{
+		FamilyID: pgconv.MustUUID(testFamily), UserID: projected,
+		AvatarColorStep: 3, Role: "owner", Status: "active",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	ctx := fmauth.WithClaims(context.Background(), &fmauth.Claims{
+		UserID: "00000000-0000-4000-8000-000000000004", FamilyID: testFamily, Email: "olha.k@example.com",
+	})
+
+	resp, err := h.ListMembers(ctx, connect.NewRequest(&financev1.ListMembersRequest{}))
+	if err != nil {
+		t.Fatalf("ListMembers: %v", err)
+	}
+	if len(resp.Msg.Members) != 1 {
+		t.Fatalf("members = %d, want 1", len(resp.Msg.Members))
+	}
+	m := resp.Msg.Members[0]
+	if m.DisplayName == "" || m.Initial == "" || m.Email != "olha.k@example.com" {
+		t.Errorf("member = %q / %q / %q, want a name, an initial and the caller's email", m.DisplayName, m.Initial, m.Email)
+	}
+	if m.Role != financev1.MemberRole_MEMBER_ROLE_OWNER || m.AvatarColorStep != 3 {
+		t.Errorf("role %v / colour %d changed while filling in the name", m.Role, m.AvatarColorStep)
+	}
+}

@@ -123,11 +123,11 @@ func (h *Handler) caller(ctx context.Context) (caller, error) {
 }
 
 func (h *Handler) ensureSelf(ctx context.Context, c caller) error {
-	if _, err := h.q.GetMember(ctx, db.GetMemberParams{
-		FamilyID: c.familyID, UserID: c.userID,
-	}); err == nil {
-		return nil
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	existing, err := h.q.GetMember(ctx, db.GetMemberParams{FamilyID: c.familyID, UserID: c.userID})
+	if err == nil {
+		return h.fillSelf(ctx, c, existing)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
 		return h.internal(ctx, err, "get member")
 	}
 
@@ -147,6 +147,29 @@ func (h *Handler) ensureSelf(ctx context.Context, c caller) error {
 		Role:            role, Status: "active", Email: c.email,
 	}); err != nil {
 		return h.internal(ctx, err, "upsert member")
+	}
+	return nil
+}
+
+func (h *Handler) fillSelf(ctx context.Context, c caller, m db.FinanceMember) error {
+	if (m.DisplayName != "" && m.Email != "") || c.email == "" {
+		return nil
+	}
+	name := m.DisplayName
+	if name == "" {
+		name = displayNameFrom(c.email)
+	}
+	email := m.Email
+	if email == "" {
+		email = c.email
+	}
+	if _, err := h.q.UpsertMember(ctx, db.UpsertMemberParams{
+		FamilyID: m.FamilyID, UserID: m.UserID,
+		DisplayName: name, Initial: initialOf(name),
+		AvatarColorStep: m.AvatarColorStep,
+		Role:            m.Role, Status: m.Status, Email: email,
+	}); err != nil {
+		return h.internal(ctx, err, "fill in member")
 	}
 	return nil
 }
