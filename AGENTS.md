@@ -108,15 +108,15 @@ Project skills in `.claude/skills/` — invoke instead of improvising:
 ## Autonomous mode
 
 The default operating mode: a human writes a brief, the machine does the rest. Policy —
-what runs unattended, what stops, the caps, the merge rule — is [docs/autonomy.md](docs/autonomy.md).
+what runs unattended, what stops, the caps, the completion rule — is [docs/autonomy.md](docs/autonomy.md).
 It is enforced by `just gate-check` (a script), not by prose.
 
 ```
 /brief "<idea>"          human's only creative step -> docs/briefs/NNNN-slug.md
    -> decomposer agent   -> docs/backlog/NNNN-slug.json  (units, deps, acceptance, gates)
-/autopilot NNNN-slug     branch auto/NNNN-slug; per unit: implement -> acceptance ->
-                         verifier -> gate-check -> commit; blocked units escalate and the
-                         loop CONTINUES; then PR, CI, squash-merge when green
+/autopilot NNNN-slug     on master; per unit: implement -> acceptance -> verifier ->
+                         gate-check -> commit to master; blocked units escalate and the
+                         loop CONTINUES; then verify + gate-check over the run; no push
 /escalations             human answers; blocked units unblock; run resumes
 /graph-health            periodic structural audit
 ```

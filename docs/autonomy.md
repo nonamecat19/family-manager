@@ -6,7 +6,7 @@ something goes wrong at 3am with nobody watching.
 
 **The policy is enforced by a script, not by good intentions**: `just gate-check` inspects the
 staged diff and exits non-zero on anything in the STOP column. `/autopilot` runs it before every
-commit and before every merge.
+commit and once over the whole run before it reports.
 
 ## Gate table
 
@@ -40,39 +40,41 @@ and **the loop continues with the next unblocked unit**. A blocked unit is not a
 
 ## Isolation
 
-- Every brief gets a branch: `auto/<brief-id>-<slug>`. **Never commit to master directly.**
-- Every unit worked in parallel gets its own git worktree, so one-writer-per-file is enforced by
-  the filesystem rather than by discipline.
+- Runs commit straight to local `master` — no branches, no PRs. `backlog.mjs begin` records the
+  run's base sha, so `<base>..HEAD` is exactly the run's commits and one unit is one commit.
+- Every unit worked in parallel gets its own detached git worktree, so one-writer-per-file is
+  enforced by the filesystem rather than by discipline; the coordinator cherry-picks each
+  accepted unit onto master.
+- A run never pushes. Pushing master triggers the deploy, so it stays a human step.
 - Migrations run against the local compose DB only. The MCP postgres server is read-only
   (`--access-mode=restricted`) and points at localhost. Nothing in this workflow has production
   credentials, by construction.
 
-## Merge
+## Completion
 
-`/autopilot` merges its own branch when **all** hold:
+A run is complete when **all** hold:
 
 1. every unit is `done` or `blocked` (and no blocked unit is a dependency of a done one),
 2. `just verify` green locally,
-3. CI green on the branch (`gh pr checks --watch`),
-4. `just gate-check` clean across the whole branch diff, not just the last commit,
-5. at least one `verifier` pass with `VERDICT: pass`.
+3. `just gate-check-range <base>..HEAD` clean across the whole run, not just the last commit,
+4. at least one `verifier` pass with `VERDICT: pass`.
 
-Then: squash merge, delete branch. If any condition fails, the PR stays open and an escalation
-is written. The human reviews master history after the fact — that is the accepted trade for
-speed, and the reason the STOP column is wide.
+Then the run reports and stops; the human reviews `<base>..HEAD` and pushes. CI runs on the
+pushed master and gates the deploy. If any condition fails, the commits stay on local master,
+an escalation names the condition and the range, and the human decides whether to fix forward
+or revert.
 
 ## Stop-the-line
 
-Halt the entire run, write an escalation, and do not merge when:
+Halt the entire run and write an escalation when:
 
 - two units fail in a row,
 - `just gate-check` reports a STOP the plan did not anticipate (the decomposition was wrong),
 - the knowledge graph loses edges the run did not intend to remove,
 - a verifier returns `blocker` twice on the same unit,
-- CI fails for a reason not reproducible locally.
 
 ## Human touchpoints (all asynchronous)
 
 1. `/brief <idea>` — the creative step. Five minutes, produces `docs/briefs/NNNN-<slug>.md`.
 2. `ESCALATIONS.md` — read when convenient, answer in the file, then `/autopilot resume`.
-3. Post-hoc review of master history. Optional, and the safety net is CI plus the gate table.
+3. Review `<base>..HEAD` on local master and push. CI on master then gates the deploy.

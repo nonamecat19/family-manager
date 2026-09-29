@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -8,13 +9,13 @@ const DIR = path.join(ROOT, "docs/backlog");
 const MAX_ATTEMPTS = 3;
 
 const [cmd, brief, ...rest] = process.argv.slice(2);
-if (!cmd) die("usage: backlog.mjs <new|add|status|next|start|done|block|unblock|fail> ...");
+if (!cmd) die("usage: backlog.mjs <new|begin|add|status|next|start|done|block|unblock|fail> ...");
 
 function die(msg, code = 1) { console.error(msg); process.exit(code); }
 function file(id) { return path.join(DIR, `${id}.json`); }
 function load(id) {
   try { return JSON.parse(fs.readFileSync(file(id), "utf8")); }
-  catch { die(`no backlog for brief "${id}" — run: backlog.mjs new ${id} <branch>`); }
+  catch { die(`no backlog for brief "${id}" — run: backlog.mjs new ${id}`); }
 }
 function save(b) {
   b.updated_at = new Date().toISOString();
@@ -29,10 +30,22 @@ function unit(b, id) {
 
 switch (cmd) {
   case "new": {
-    const branch = rest[0] ?? `auto/${brief}`;
     if (fs.existsSync(file(brief))) die(`backlog ${brief} already exists`);
-    save({ brief, branch, created_at: new Date().toISOString(), units: [] });
-    console.log(`created docs/backlog/${brief}.json on branch ${branch}`);
+    save({ brief, base: null, created_at: new Date().toISOString(), units: [] });
+    console.log(`created docs/backlog/${brief}.json`);
+    break;
+  }
+
+  case "begin": {
+    const b = load(brief);
+    const git = (...args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
+    const current = git("rev-parse", "--abbrev-ref", "HEAD");
+    if (current !== "master") die(`autopilot runs on master, not "${current}"`);
+    if (!b.base) {
+      b.base = git("rev-parse", "HEAD");
+      save(b);
+    }
+    console.log(b.base);
     break;
   }
 
@@ -54,7 +67,7 @@ switch (cmd) {
   case "status": {
     const b = load(brief);
     const by = (s) => b.units.filter((u) => u.status === s);
-    console.log(`${b.brief}  branch=${b.branch}`);
+    console.log(`${b.brief}  base=${b.base ?? "not started"}`);
     console.log(`done ${by("done").length}/${b.units.length}  doing ${by("doing").length}  todo ${by("todo").length}  blocked ${by("blocked").length}`);
     for (const u of b.units) {
       const mark = { done: "x", doing: ">", blocked: "!", todo: " " }[u.status];
