@@ -13,6 +13,13 @@ const DEFAULT_LABELS: Record<string, string> = {
   "nutrition.fat": "fat",
   "nutrition.carbs": "carbs",
   "nutrition.grams": "{value} g",
+  "notifications.topic.family": "Family",
+  "notifications.topic.finance": "Money",
+  "notifications.topic.recipes": "Recipes",
+  "notifications.topic.family.member.joined": "Someone joins the family",
+  "notifications.topic.family.member.removed": "Someone leaves the family",
+  "notifications.topic.finance.budget.exceeded": "A budget is overspent",
+  "notifications.topic.recipes.recipe.created": "A new recipe is added",
 };
 
 function fill(template: string, vars?: Record<string, string | number>): string {

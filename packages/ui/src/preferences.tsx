@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Text, View } from "react-native";
 
 import { ErrorText } from "./chrome.tsx";
+import { useUiTranslate } from "./labels.tsx";
 import { OutlineButton, PrimaryButton } from "./controls.tsx";
 import { Field } from "./primitives.tsx";
 import {
@@ -130,6 +131,12 @@ export function NotificationsSection({
   onChange: (nextMuted: string[]) => void;
 }) {
   const t = useTheme();
+  const tLabel = useUiTranslate();
+  const labelOf = (key: string) => {
+    const id = `notifications.topic.${key}`;
+    const label = tLabel(id);
+    return label === id ? humanizeTopic(key) : label;
+  };
   const domains = [...new Set(topics.map((topic) => topic.domain))];
   const toggle = (key: string, muteIt: boolean) => {
     const next = new Set(muted);
@@ -149,7 +156,7 @@ export function NotificationsSection({
           {domains.map((domain) => (
             <View key={domain}>
               <SettingsToggleRow
-                label={domain}
+                label={labelOf(domain)}
                 value={!muted.includes(domain)}
                 onValueChange={(next) => toggle(domain, !next)}
               />
@@ -158,7 +165,7 @@ export function NotificationsSection({
                 .map((topic) => (
                   <SettingsToggleRow
                     key={topic.key}
-                    label={topic.key}
+                    label={labelOf(topic.key)}
                     indent={16}
                     value={!muted.includes(domain) && !muted.includes(topic.key)}
                     disabled={muted.includes(domain)}
@@ -171,6 +178,11 @@ export function NotificationsSection({
       )}
     </SettingsSection>
   );
+}
+
+function humanizeTopic(key: string): string {
+  const words = key.split(".").slice(-2).join(" ").replace(/[_-]+/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 export function LinkSection({ title, label, onPress }: { title: string; label: string; onPress: () => void }) {

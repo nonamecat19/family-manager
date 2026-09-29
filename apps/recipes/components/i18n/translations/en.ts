@@ -379,4 +379,12 @@ export const en = {
     many: "{count} results",
     other: "{count} results",
   },
+
+  "notifications.topic.family": "Family",
+  "notifications.topic.finance": "Money",
+  "notifications.topic.recipes": "Recipes",
+  "notifications.topic.family.member.joined": "Someone joins the family",
+  "notifications.topic.family.member.removed": "Someone leaves the family",
+  "notifications.topic.finance.budget.exceeded": "A budget is overspent",
+  "notifications.topic.recipes.recipe.created": "A new recipe is added",
 } as const;

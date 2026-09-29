@@ -514,4 +514,12 @@ export const en = {
   "installments.emptyTitle": "No installments",
   "installments.emptyBody": "Bought something in monthly parts? Add it and payments record themselves.",
   "installments.saveError": "Could not save the installment.",
+
+  "notifications.topic.family": "Family",
+  "notifications.topic.finance": "Money",
+  "notifications.topic.recipes": "Recipes",
+  "notifications.topic.family.member.joined": "Someone joins the family",
+  "notifications.topic.family.member.removed": "Someone leaves the family",
+  "notifications.topic.finance.budget.exceeded": "A budget is overspent",
+  "notifications.topic.recipes.recipe.created": "A new recipe is added",
 } as const;

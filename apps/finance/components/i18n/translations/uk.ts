@@ -589,4 +589,12 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "installments.emptyTitle": "Розстрочок немає",
   "installments.emptyBody": "Купили щось частинами? Додайте — і платежі записуватимуться самі.",
   "installments.saveError": "Не вдалося зберегти розстрочку.",
+
+  "notifications.topic.family": "Родина",
+  "notifications.topic.finance": "Гроші",
+  "notifications.topic.recipes": "Рецепти",
+  "notifications.topic.family.member.joined": "Хтось приєднується до родини",
+  "notifications.topic.family.member.removed": "Хтось залишає родину",
+  "notifications.topic.finance.budget.exceeded": "Бюджет перевищено",
+  "notifications.topic.recipes.recipe.created": "Додано новий рецепт",
 };
