@@ -7,6 +7,7 @@ COPY go.work go.work.sum* ./
 COPY libs/go/ libs/go/
 COPY sdk/go/ sdk/go/
 COPY --parents services/*/go.mod services/*/go.sum ./
+COPY apps/tui/go.mod apps/tui/go.sum apps/tui/
 RUN go mod download all
 
 COPY services/family/ services/family/

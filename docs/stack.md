@@ -40,6 +40,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | app styling | NativeWind (Tailwind for RN) | `packages/theme`, `packages/config` | [0002](adr/0002-nativewind.md) |
 | app data layer | TanStack Query over `packages/api` | `packages/api` | — |
 | app secrets | expo-secure-store | `packages/auth` | — |
+| terminal client | Go + Bubble Tea v2 / lipgloss v2, device-code sign-in, credentials file `0600` | `apps/tui/go.mod` | [0017](adr/0017-terminal-client.md) |
 | desktop shell | Tauri v2 wrapping the Expo web export, gated by `just check-desktop` (CI only; skips without cargo) | `apps/notes/desktop/src-tauri/tauri.conf.json`, `just check-desktop` | [0009](adr/0009-tauri-desktop.md) |
 | deployment | Docker Compose on a VPS + Caddy | `infra/` | [0004](adr/0004-compose-vps.md) |
 | language versions | Go 1.25 · Node ≥22 · pnpm 11 | `go.work`, `package.json` | — |
@@ -101,6 +102,14 @@ it reaches the human gate.
   Tokens never touch AsyncStorage or Zustand.
 - Metro must watch the workspace root or shared packages will not hot-reload — that config
   lives in `packages/config`, not copy-pasted per app.
+
+## Terminal client
+
+`apps/tui` is the one Go module in `apps/`: the `fm` binary, built by `just check-go` and not by
+Turborepo. It calls `sdk/go`'s Connect clients directly, signs in only through device-code login
+(`fm login`, approved from Settings → Approve a device in any app), keeps tokens in
+`<user config dir>/family-manager/credentials.json` and refreshes them in one interceptor. With
+no arguments it opens a Bubble Tea UI over the notes list. [ADR 0017](adr/0017-terminal-client.md).
 
 ## Auth in one paragraph
 
