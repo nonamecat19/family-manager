@@ -12,6 +12,7 @@ use (
 	./services/family
 	./services/finance
 	./services/recipes
+	./services/telegram
 )
 
 // Add every new module here on creation:
