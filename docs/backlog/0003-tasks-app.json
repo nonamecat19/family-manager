@@ -325,10 +325,10 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
       "id": "u14",
       "title": "Family settings (timezone) handlers + Connect layer",
       "kind": "service",
@@ -352,10 +352,10 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
       "id": "u15",
       "title": "Event publisher + tasks.task.assigned on create/update",
       "kind": "service",
@@ -401,10 +401,10 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
       "id": "u17",
       "title": "Reminder and digest RPCs for the telegram scheduler (ListMyDueReminders, Ack, Snooze, GetDigest)",
       "kind": "service",
@@ -472,10 +472,10 @@
         "u19"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "E8: internal/handler does not compile on master; acceptance needs it",
       "id": "u20",
       "title": "Google connect / disconnect / list + pick calendar RPCs; FailedPrecondition when OAuth unset",
       "kind": "service",
@@ -496,10 +496,10 @@
         "u18"
       ],
       "gate": "auto",
-      "status": "todo",
-      "attempts": 0,
+      "status": "blocked",
+      "attempts": 2,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "stop-the-line: 2 verifier blockers (E9). Work stashed.",
       "id": "u21",
       "title": "Calendar push sync: task/birthday -> Google event create/update/delete",
       "kind": "service",
@@ -1299,5 +1299,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-06T07:49:24.792Z"
+  "updated_at": "2026-10-06T07:59:19.373Z"
 }

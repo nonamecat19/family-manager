@@ -128,3 +128,42 @@ transaction (that belongs to u15); and `touchKnownMember` overwrites `display_na
 
 Until this is answered, nothing under `services/tasks/internal/handler` can pass acceptance:
 u13, u14, u15, u17, u20, u22 and u24 are stuck.
+
+## E9 — 0003/u21: calendar push failed verification twice (open, stop-the-line)
+
+The run stopped here because two verifiers each found a blocker in u21. The work is saved in
+`git stash` as "autopilot 0003/u21: calsync push"
+(`services/tasks/internal/calsync/{mapping,push,push_test}.go`, `go test -race` green).
+
+**Review 1 blocker (fixed in the stash):** when a member switched calendars, the old event was
+left live with no link, and on a shared calendar a second copy appeared. The stash also contains
+fixes for review 1's other findings: an event is deleted when its link cannot be saved, pushes
+for one item hold a per-item mutex, timezone errors are no longer hidden, and a lost scope asks
+the user to reconnect.
+
+**Review 2 blocker (open):** the fix deletes the old calendar's event before inserting into the
+new calendar. If the old calendar has lost write access (`ErrForbidden`), that delete never
+succeeds, so every item linked there stops syncing for good. Review 2's other open findings:
+- The shared-calendar switch depends on member order (`ORDER BY user_id`) and can leave the shared
+  calendar with no event.
+- The per-item lock is taken after the item is read, so a stale push can re-create an event for a
+  deleted task.
+- The delete that undoes an insert reuses a possibly cancelled `ctx`.
+- `SweepOrphans` runs without the item lock.
+
+**This needs a design decision:**
+1. **u20 and u21 contradict each other.** u20's notes say `SetGoogleCalendar` deletes the user's
+   old `calendar_links`, which orphans the old events before calsync ever sees the switch. Pick one
+   owner for the calendar switch. Recommended: u20 calls a calsync `SwitchCalendar` that deletes the
+   old events, treating `ErrForbidden` and `ErrNotFound` as gone, then drops the links. The push path
+   then never has to handle a link whose calendar differs from the connection's.
+2. **Duplicate inserts after a timed-out insert.** A request that times out after Google created
+   the event can only be made safe with event IDs we choose ourselves (a `gcal` change, u18) or a
+   database-level guard such as a pg advisory lock, or an insert-only link that loses the race and
+   deletes its own event. Also confirm the push runs in a single tasks replica.
+3. **Retrying a delete after the deadline is removed.** If deleting the event fails after a deadline
+   is removed, the event stays live. Only a sweep that also matches tasks with `due_on IS NULL`
+   (a `google.sql` change) can clean it up.
+
+Once you decide, `git stash pop` the u21 entry and run `/autopilot` again. u22 and u23 wait on
+u21.
