@@ -1,4 +1,10 @@
-export { createI18n, type I18n, type I18nConfig, type I18nContextValue } from "./createI18n.tsx";
+export {
+  createI18n,
+  type I18n,
+  type I18nConfig,
+  type I18nContextValue,
+  type I18nProviderProps,
+} from "./createI18n.tsx";
 export { deviceLocale } from "./locale.ts";
 export { localeFromTag } from "./resolve.ts";
 export {

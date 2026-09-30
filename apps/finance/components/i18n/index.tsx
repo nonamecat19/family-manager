@@ -1,4 +1,7 @@
+import { useUpdateUserSettings, useUserSettings } from "@fm/api";
+import { useAuth } from "@fm/auth";
 import { createI18n } from "@fm/i18n";
+import { useCallback, type ReactNode } from "react";
 
 import { nocturne } from "../nocturne/tokens.ts";
 import { en } from "./translations/en.ts";
@@ -22,6 +25,32 @@ const i18n = createI18n<Locale, typeof en>({
   bootBackground: nocturne.bg,
 });
 
-export const { I18nProvider, useI18n, bootT, deviceLocale } = i18n;
+const { I18nProvider: BaseI18nProvider, useI18n, bootT, deviceLocale } = i18n;
+
+export { useI18n, bootT, deviceLocale };
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const { status } = useAuth();
+  const authenticated = status === "authenticated";
+
+  const settings = useUserSettings({ enabled: authenticated });
+  const update = useUpdateUserSettings();
+
+  const remoteLocale = settings.data?.settings?.locale ?? null;
+
+  const onLocaleChange = useCallback(
+    (next: string) => {
+      if (!authenticated) return;
+      update.mutate({ locale: next });
+    },
+    [authenticated, update],
+  );
+
+  return (
+    <BaseI18nProvider remoteLocale={remoteLocale} onLocaleChange={onLocaleChange}>
+      {children}
+    </BaseI18nProvider>
+  );
+}
 
 export { localeFromTag, interpolate, selectPlural, type PluralForms } from "@fm/i18n";

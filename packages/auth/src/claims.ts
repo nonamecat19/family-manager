@@ -2,6 +2,7 @@ export interface AccessClaims {
   userId: string;
   familyId: string;
   email: string;
+  locale: string;
 }
 
 export function decodeAccessClaims(accessToken: string | null | undefined): AccessClaims | null {
@@ -15,6 +16,7 @@ export function decodeAccessClaims(accessToken: string | null | undefined): Acce
     userId,
     familyId: typeof payload["family_id"] === "string" ? payload["family_id"] : "",
     email: typeof payload["email"] === "string" ? payload["email"] : "",
+    locale: typeof payload["locale"] === "string" ? payload["locale"] : "",
   };
 }
 
