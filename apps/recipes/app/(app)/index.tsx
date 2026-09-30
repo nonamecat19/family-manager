@@ -1,4 +1,5 @@
-import { useMealPlan, useRecipeCategories, useRecipes, useTotalIngredients } from "@fm/api";
+import { useMealPlan, useMembers, useRecipeCategories, useRecipes, useTotalIngredients } from "@fm/api";
+import { useAuth } from "@fm/auth";
 import type { Category, Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
@@ -12,6 +13,10 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t, locale } = useI18n();
   const all = useRecipes();
+  const { claims } = useAuth();
+  const members = useMembers(claims?.familyId ?? "");
+  const me = members.data?.members?.find((m) => m.userId === claims?.userId);
+  const myName = me?.displayName || me?.email || claims?.email || "";
   const categories = useRecipeCategories();
   const { from, to } = weekRange(new Date());
   const plan = useMealPlan(from, to);
@@ -36,7 +41,7 @@ export default function HomeScreen() {
             accessibilityLabel={t("home.yourProfile")}
             onPress={() => router.push("/(app)/settings")}
           >
-            <Avatar initial="M" tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }} size={48} />
+            <Avatar initial={initialOf(myName)} tint={{ bg: organic.accent2[300], fg: organic.accent2[800] }} size={48} />
           </Pressable>
         </View>
 
