@@ -85,3 +85,7 @@
 {$NOTES_HOST} {
 	import api notes:8080
 }
+
+{$NOTIFICATIONS_HOST} {
+	import api notifications:8080
+}

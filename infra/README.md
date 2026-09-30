@@ -32,18 +32,19 @@ per-service base URL (`packages/api/src/client.ts`), so nothing in the app chang
 laptop and production except the hostnames.
 
 ```
-                    :443
-  auth.nonamecat.pp.ua    ─┐                      ┌─ auth     :8080
-  family.nonamecat.pp.ua  ─┤                      ├─ family   :8080  (+ :9090 internal gRPC)
-  finance.nonamecat.pp.ua ─┼─→ caddy (TLS) ──────→┼─ finance  :8080  (+ :9090 internal gRPC)
-  recipes.nonamecat.pp.ua ─┤                      ├─ recipes  :8080
-  notes.nonamecat.pp.ua   ─┘                      └─ notes    :8080
-                                                       │
-                                    postgres ──────────┤
-                                    nats ──────────────┘
+                          :443
+  auth.nonamecat.pp.ua          ─┐                      ┌─ auth          :8080
+  family.nonamecat.pp.ua        ─┤                      ├─ family        :8080  (+ :9090 internal gRPC)
+  finance.nonamecat.pp.ua       ─┼─→ caddy (TLS) ──────→┼─ finance       :8080  (+ :9090 internal gRPC)
+  recipes.nonamecat.pp.ua       ─┤                      ├─ recipes       :8080
+  notes.nonamecat.pp.ua         ─┤                      ├─ notes         :8080
+  notifications.nonamecat.pp.ua ─┘                      └─ notifications :8080  (→ exp.host push API)
+                                                             │
+                                          postgres ──────────┤
+                                          nats ──────────────┘
 ```
 
-Caddy is the only container that publishes a host port. Postgres, NATS and all five services
+Caddy is the only container that publishes a host port. Postgres, NATS and all six services
 are reachable only on the compose network — `ufw` would not save us if they were published,
 because Docker writes its own iptables chain ahead of ufw's.
 
@@ -57,7 +58,7 @@ Steps 1 and 2 are yours; the rest is mechanical.
 
 ### 1. Point DNS at the box
 
-All five A records must resolve **before** the first start. Caddy issues certificates over the
+All six A records must resolve **before** the first start. Caddy issues certificates over the
 ACME HTTP-01 challenge, so a hostname that does not yet resolve to this box cannot get one, and
 repeated failed issuance counts against Let's Encrypt rate limits.
 
@@ -67,6 +68,7 @@ family.nonamecat.pp.ua    A  79.108.160.103
 finance.nonamecat.pp.ua   A  79.108.160.103
 recipes.nonamecat.pp.ua   A  79.108.160.103
 notes.nonamecat.pp.ua     A  79.108.160.103
+notifications.nonamecat.pp.ua  A  79.108.160.103
 ```
 
 They currently point at `135.181.41.169`. Verify with `getent ahostsv4 auth.nonamecat.pp.ua`
@@ -214,7 +216,7 @@ The whole point of the tuning. Total 1.6 GiB, plus the 2 GiB swapfile bootstrap 
 | postgres | 320m | `shared_buffers=128MB`, `max_connections=50`, `work_mem=4MB` |
 | nats | 128m | JetStream capped at 512MB file / 32MB memory store |
 | caddy | 96m | |
-| auth, family, finance, recipes, notes | 160m each | `GOMEMLIMIT=140MiB`, `GOGC=50` |
+| auth, family, finance, recipes, notes, notifications | 160m each | `GOMEMLIMIT=140MiB`, `GOGC=50` |
 
 ≈1.5 GiB committed against 1.6 GiB, leaving ~80 MiB for the OS. That is over the line the
 previous entry drew: finance was the fourth service onto a box sized for three and the note
@@ -320,6 +322,9 @@ is exactly the state the box is in mid-deploy.
   Skip it and the notes container boots, fails to connect, and restarts forever while every
   other service is fine — which reads like a notes bug rather than a missing database. The
   service applies its own migrations on the next boot, so nothing else is needed.
+
+  The same applies to `notifications`: the script's list now includes it, and the same one-off
+  `exec` above creates it on the live cluster before the first notifications deploy.
 
 - **The live `finance` database still holds the OLD finance schema, and that blocks the
   rebuilt service from starting correctly.** finance was deleted from the repo and has now
