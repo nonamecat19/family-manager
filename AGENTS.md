@@ -125,8 +125,11 @@ Backlog state is a **file with a deterministic CLI** (`just backlog status|next|
 not model memory — a run that loses its session re-reads the file and continues where it stopped.
 Three failed attempts blocks a unit automatically; two consecutive unit failures stop the line.
 
-Never commit to master directly, never apply a migration to a non-local database, never work
-around a `gate-check` STOP — escalate and take the next unit.
+Never apply a migration to a non-local database, never work around a `gate-check` STOP —
+escalate and take the next unit.
+
+Commits go straight to `master` — no feature branches, no PRs. Split work into reviewable
+commits instead; push only when asked.
 
 ## Commands, agents, hooks
 
