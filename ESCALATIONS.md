@@ -89,3 +89,42 @@ creates. The migration runner never executes down files (`libs/go/database/migra
 `LoadMigrations` skips them), so u07 ships `000001_init.up.sql` alone; rolling back a fresh
 `tasks` database is `DROP DATABASE tasks`. If you want down files kept for parity with finance,
 answer "u07: add down" and the drop list will be added as a human-approved commit.
+
+## E8 — 0003/u12, u13: `master` does not build, and handler acceptance commands cannot pass (open, stop-the-line for services/tasks)
+
+**What is broken.** Commit `344d108` (u12, recorded in the backlog as commit `HEAD`) adds
+`services/tasks/internal/handler/birthdays.go`, which is in u13's file list, and that file does not
+compile (`birthdays.go:111:63: undefined: loc` plus unused imports). So
+`cd services/tasks && GOWORK=off go test ./internal/handler/...` fails on `master`. u12 was marked
+done while its acceptance command failed.
+
+**Why the acceptance commands cannot pass.** u12, u13, u14 and u17 all use
+`go test -race ./internal/handler/... ./internal/grpc/...`. `services/tasks/internal/grpc` does not
+exist, so the command always ends `FAIL ./internal/grpc/... [setup failed]`. AGENTS.md lists an
+`internal/grpc` layer, but no service in the repo has one: finance, recipes and family register
+their `internal/handler` types directly with `New<X>ServiceHandler`, and tasks does the same
+(`cmd/server/main.go`).
+
+**u13 is done, but not committed.** The rewritten `birthdays.go` and a new `birthdays_test.go`
+(scoping, validation, 29 February, timezone, reminder fan-out, known-members refresh) pass
+`GOWORK=off go test -race ./internal/handler/...`. They are saved in
+`git stash` as "autopilot 0003/u13: birthday handlers". Fixes in that work:
+- `ListMembers` got the caller's user id as the bearer token. It now gets the request's token.
+- The early and day-of birthday reminders shared one `occurrence`, so the UNIQUE key folded them
+  into one row. Day-of is now `YYYY-MM-DD` and the early one `YYYY-MM-DD-<N>d`.
+- Age comes from `Occurrence.HasAge`, and the next occurrence uses the family's timezone.
+
+**u12 does not meet its own notes** (read in passing, not fixed because u12 is marked done):
+`CreateTask` never sets `due_at`, so no task reminders are ever created; assignees are not checked
+for membership; there is no `ListMembers` refresh; `tasks.task.assigned` is published inside the
+transaction (that belongs to u15); and `touchKnownMember` overwrites `display_name` with the email.
+
+**Decision needed:**
+1. *(recommended)* Change the acceptance for u12, u13, u14 and u17 to `./internal/handler/...` only,
+   which matches every existing service, and reopen u12 so it meets its notes. Then
+   `git stash pop` and commit u13.
+2. Keep `internal/grpc` as AGENTS.md describes: reopen u12 to add `internal/grpc/server.go` as a
+   Connect adapter, and the later units add their own `grpc/*.go`.
+
+Until this is answered, nothing under `services/tasks/internal/handler` can pass acceptance:
+u13, u14, u15, u17, u20, u22 and u24 are stuck.

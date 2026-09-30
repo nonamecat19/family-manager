@@ -302,10 +302,10 @@
         "u12"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "blocked",
       "attempts": 0,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "acceptance names ./internal/grpc/... which no service has; u12 put Connect in handler/ (E8). Work stashed: stash@{0}",
       "id": "u13",
       "title": "Birthday handlers + Connect layer",
       "kind": "service",
@@ -1299,5 +1299,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T20:07:08.473Z"
+  "updated_at": "2026-10-06T07:49:24.792Z"
 }
