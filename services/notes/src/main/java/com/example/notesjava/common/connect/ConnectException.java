@@ -21,6 +21,14 @@ public class ConnectException extends RuntimeException {
         return new ConnectException(ConnectCode.NOT_FOUND, message);
     }
 
+    public static ConnectException permissionDenied(String message) {
+        return new ConnectException(ConnectCode.PERMISSION_DENIED, message);
+    }
+
+    public static ConnectException unavailable(String message) {
+        return new ConnectException(ConnectCode.UNAVAILABLE, message);
+    }
+
     public static ConnectException unimplemented(String method) {
         return new ConnectException(ConnectCode.UNIMPLEMENTED,
                 method + " is not implemented by this service yet");

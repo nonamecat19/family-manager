@@ -35,12 +35,20 @@ notes:
     jwk-set-uri: ${NOTES_JWKS_URL:http://auth:8080/.well-known/jwks.json}
     issuer: ${NOTES_ISSUER:}
     audience: ${NOTES_AUDIENCE:}
+  storage:
+    provider: ${NOTES_STORAGE_PROVIDER:minio}
+    endpoint: ${NOTES_STORAGE_ENDPOINT:}
+    access-key: ${NOTES_STORAGE_ACCESS_KEY:}
+    secret-key: ${NOTES_STORAGE_SECRET_KEY:}
+    use-ssl: ${NOTES_STORAGE_USE_SSL:false}
+    bucket: ${NOTES_STORAGE_BUCKET:notes}
+    public-url: ${NOTES_STORAGE_PUBLIC_URL:}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: when-authorized

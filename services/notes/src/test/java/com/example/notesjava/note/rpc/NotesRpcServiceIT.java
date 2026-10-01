@@ -15,6 +15,24 @@ import com.nnc.familymanager.notes.v1.Block;
 import com.nnc.familymanager.notes.v1.BlockType;
 import com.nnc.familymanager.notes.v1.Comment;
 import com.nnc.familymanager.notes.v1.CreateNoteRequest;
+import com.nnc.familymanager.notes.v1.CreateNotebookRequest;
+import com.nnc.familymanager.notes.v1.CreateNotebookResponse;
+import com.nnc.familymanager.notes.v1.DeleteNotebookRequest;
+import com.nnc.familymanager.notes.v1.GetNoteRequest;
+import com.nnc.familymanager.notes.v1.GetNoteResponse;
+import com.nnc.familymanager.notes.v1.ListSharedWithMeRequest;
+import com.nnc.familymanager.notes.v1.ListSharedWithMeResponse;
+import com.nnc.familymanager.notes.v1.ListSharesRequest;
+import com.nnc.familymanager.notes.v1.ListSharesResponse;
+import com.nnc.familymanager.notes.v1.MoveNoteRequest;
+import com.nnc.familymanager.notes.v1.SearchRequest;
+import com.nnc.familymanager.notes.v1.SearchResponse;
+import com.nnc.familymanager.notes.v1.Share;
+import com.nnc.familymanager.notes.v1.ShareNoteResponse;
+import com.nnc.familymanager.notes.v1.ShareNotebookRequest;
+import com.nnc.familymanager.notes.v1.ShareNotebookResponse;
+import com.nnc.familymanager.notes.v1.UnshareRequest;
+import com.nnc.familymanager.notes.v1.UploadNoteImageRequest;
 import com.nnc.familymanager.notes.v1.DeleteNoteRequest;
 import com.nnc.familymanager.notes.v1.ListActivityRequest;
 import com.nnc.familymanager.notes.v1.ListActivityResponse;
@@ -23,6 +41,9 @@ import com.nnc.familymanager.notes.v1.ListCommentsResponse;
 import com.nnc.familymanager.notes.v1.ListNotesRequest;
 import com.nnc.familymanager.notes.v1.ResolveCommentRequest;
 import com.nnc.familymanager.notes.v1.ResolveCommentResponse;
+import com.nnc.familymanager.notes.v1.ShareNoteRequest;
+import com.nnc.familymanager.notes.v1.SharePermission;
+import com.nnc.familymanager.notes.v1.ShareSubject;
 import com.nnc.familymanager.notes.v1.ToggleStarRequest;
 import com.nnc.familymanager.notes.v1.UpdateNoteRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -188,6 +209,11 @@ class NotesRpcServiceIT extends AbstractIntegrationTest {
     @Test
     void onlyTheAuthorOrTheNoteOwnerResolvesAComment() {
         String noteId = createNote("owned by USER");
+        rpc.procedure("ShareNote").invoke(ShareNoteRequest.newBuilder()
+                .setNoteId(noteId)
+                .setSubject(ShareSubject.SHARE_SUBJECT_FAMILY)
+                .setPermission(SharePermission.SHARE_PERMISSION_VIEW)
+                .build());
         actAs(OTHER);
         Comment byOther = comment(noteId, "from someone else");
         actAs("55555555-5555-5555-5555-555555555555");
@@ -276,5 +302,287 @@ class NotesRpcServiceIT extends AbstractIntegrationTest {
 
         assertThat(comments(noteId, true)).isEmpty();
         assertThat(activity(noteId)).isEmpty();
+    }
+    private static final String THIRD = "55555555-5555-5555-5555-555555555555";
+
+    private Share shareNote(String noteId, ShareSubject subject, String member, SharePermission permission) {
+        return ((ShareNoteResponse) rpc.procedure("ShareNote").invoke(ShareNoteRequest.newBuilder()
+                .setNoteId(noteId).setSubject(subject).setMemberUserId(member).setPermission(permission)
+                .build())).getShare();
+    }
+
+    private Share shareNotebook(String notebookId, ShareSubject subject, String member,
+                                SharePermission permission) {
+        return ((ShareNotebookResponse) rpc.procedure("ShareNotebook").invoke(ShareNotebookRequest.newBuilder()
+                .setNotebookId(notebookId).setSubject(subject).setMemberUserId(member).setPermission(permission)
+                .build())).getShare();
+    }
+
+    private com.nnc.familymanager.notes.v1.Note getNote(String noteId) {
+        return ((GetNoteResponse) rpc.procedure("GetNote").invoke(
+                GetNoteRequest.newBuilder().setNoteId(noteId).build())).getNote();
+    }
+
+    private java.util.List<String> listedIds(ListNotesRequest request) {
+        return ((com.nnc.familymanager.notes.v1.ListNotesResponse) rpc.procedure("ListNotes").invoke(request))
+                .getNotesList().stream().map(com.nnc.familymanager.notes.v1.Note::getId).toList();
+    }
+
+    private java.util.List<Share> sharesOf(ListSharesRequest request) {
+        return ((ListSharesResponse) rpc.procedure("ListShares").invoke(request)).getSharesList();
+    }
+
+    private ConnectCode refusal(Runnable call) {
+        return catchThrowableOfType(ConnectException.class, call::run).code();
+    }
+
+    private String createNotebook(String name) {
+        return ((CreateNotebookResponse) rpc.procedure("CreateNotebook").invoke(
+                CreateNotebookRequest.newBuilder().setName(name).build())).getNotebook().getId();
+    }
+
+    private String createNoteIn(String notebookId, String title) {
+        return ((com.nnc.familymanager.notes.v1.CreateNoteResponse) rpc.procedure("CreateNote").invoke(
+                CreateNoteRequest.newBuilder().setNotebookId(notebookId).setTitle(title).build())).getNote().getId();
+    }
+
+    @Test
+    void aNewNoteIsPrivateToItsOwner() {
+        String noteId = createNote("diary entry");
+        assertThat(getNote(noteId).getCanEdit()).isTrue();
+        assertThat(getNote(noteId).getShared()).isFalse();
+
+        actAs(OTHER);
+
+        assertThat(refusal(() -> getNote(noteId))).isEqualTo(ConnectCode.NOT_FOUND);
+        assertThat(listedIds(ListNotesRequest.getDefaultInstance())).doesNotContain(noteId);
+        var search = (SearchResponse) rpc.procedure("Search").invoke(
+                SearchRequest.newBuilder().setQuery("diary entry").build());
+        assertThat(search.getHitsList()).noneMatch(hit -> hit.getNoteId().equals(noteId));
+        assertThat(comments(noteId, true)).isEmpty();
+        assertThat(activity(noteId)).isEmpty();
+    }
+
+    @Test
+    void aViewShareLetsAMemberReadButNotWrite() {
+        String noteId = createNote("shopping plan");
+        Share share = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_VIEW);
+
+        assertThat(share.getSubject()).isEqualTo(ShareSubject.SHARE_SUBJECT_MEMBER);
+        assertThat(share.getMemberUserId()).isEqualTo(OTHER);
+        assertThat(share.getPermission()).isEqualTo(SharePermission.SHARE_PERMISSION_VIEW);
+        assertThat(share.getGrantedByUserId()).isEqualTo(USER);
+        assertThat(share.hasCreatedAt()).isTrue();
+        assertThat(activity(noteId)).extracting(Activity::getKind, Activity::getDetail)
+                .contains(org.assertj.core.groups.Tuple.tuple(ActivityKind.ACTIVITY_KIND_SHARED, OTHER));
+
+        actAs(OTHER);
+        var seen = getNote(noteId);
+        assertThat(seen.getCanEdit()).isFalse();
+        assertThat(seen.getShared()).isTrue();
+        assertThat(seen.getSharesList()).extracting(Share::getId).containsExactly(share.getId());
+        assertThat(listedIds(ListNotesRequest.newBuilder().setSharedOnly(true).build())).contains(noteId);
+        assertThat(((ListSharedWithMeResponse) rpc.procedure("ListSharedWithMe")
+                .invoke(ListSharedWithMeRequest.getDefaultInstance())).getNotesList())
+                .extracting(com.nnc.familymanager.notes.v1.Note::getId).contains(noteId);
+
+        assertThat(refusal(() -> rpc.procedure("UpdateNote").invoke(
+                UpdateNoteRequest.newBuilder().setNoteId(noteId).setTitle("mine now").build())))
+                .isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(refusal(() -> rpc.procedure("ToggleStar").invoke(
+                ToggleStarRequest.newBuilder().setNoteId(noteId).build())))
+                .isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(comment(noteId, "looks good").getAuthorUserId()).isEqualTo(OTHER);
+
+        actAs(THIRD);
+        assertThat(refusal(() -> getNote(noteId))).isEqualTo(ConnectCode.NOT_FOUND);
+    }
+
+    @Test
+    void resharingChangesThePermissionInsteadOfStackingAGrant() {
+        String noteId = createNote("recipes to try");
+        Share first = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_VIEW);
+        Share second = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_EDIT);
+
+        assertThat(second.getId()).isEqualTo(first.getId());
+        assertThat(sharesOf(ListSharesRequest.newBuilder().setNoteId(noteId).build()))
+                .extracting(Share::getPermission)
+                .containsExactly(SharePermission.SHARE_PERMISSION_EDIT);
+
+        actAs(OTHER);
+        var updated = (com.nnc.familymanager.notes.v1.UpdateNoteResponse) rpc.procedure("UpdateNote").invoke(
+                UpdateNoteRequest.newBuilder().setNoteId(noteId).setTitle("recipes we tried").build());
+        assertThat(updated.getNote().getTitle()).isEqualTo("recipes we tried");
+        assertThat(updated.getNote().getCanEdit()).isTrue();
+        assertThat(sharesOf(ListSharesRequest.newBuilder().setNoteId(noteId).build())).hasSize(1);
+    }
+
+    @Test
+    void aFamilyShareReachesEveryMemberButNoOtherFamily() {
+        String noteId = createNote("holiday plans");
+        shareNote(noteId, ShareSubject.SHARE_SUBJECT_FAMILY, "", SharePermission.SHARE_PERMISSION_VIEW);
+
+        actAs(THIRD);
+        assertThat(getNote(noteId).getTitle()).isEqualTo("holiday plans");
+
+        UUID strangers = UUID.fromString("44444444-4444-4444-4444-444444444444");
+        when(callers.require()).thenReturn(new Caller(THIRD, strangers, "x@example.test"));
+        assertThat(refusal(() -> getNote(noteId))).isEqualTo(ConnectCode.NOT_FOUND);
+        assertThat(refusal(() -> sharesOf(ListSharesRequest.newBuilder().setNoteId(noteId).build())))
+                .isEqualTo(ConnectCode.NOT_FOUND);
+    }
+
+    @Test
+    void aNotebookShareReachesOnlyTheNotesItsOwnerKeepsThere() {
+        String notebookId = createNotebook("Household");
+        String ownersNote = createNoteIn(notebookId, "bills");
+        shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_EDIT);
+
+        assertThat(activity(ownersNote)).extracting(Activity::getKind).contains(ActivityKind.ACTIVITY_KIND_SHARED);
+
+        actAs(OTHER);
+        assertThat(listedIds(ListNotesRequest.newBuilder().setNotebookId(notebookId).build()))
+                .containsExactly(ownersNote);
+        assertThat(getNote(ownersNote).getCanEdit()).isTrue();
+        assertThat(getNote(ownersNote).getShared()).isTrue();
+        var sharedWithMe = (ListSharedWithMeResponse) rpc.procedure("ListSharedWithMe")
+                .invoke(ListSharedWithMeRequest.getDefaultInstance());
+        assertThat(sharedWithMe.getNotebooksList()).extracting(com.nnc.familymanager.notes.v1.Notebook::getId)
+                .contains(notebookId);
+        String othersNote = createNoteIn(notebookId, "my private bit");
+
+        actAs(USER);
+        shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_FAMILY, "", SharePermission.SHARE_PERMISSION_VIEW);
+        assertThat(refusal(() -> getNote(othersNote))).isEqualTo(ConnectCode.NOT_FOUND);
+
+        actAs(THIRD);
+        assertThat(listedIds(ListNotesRequest.newBuilder().setNotebookId(notebookId).build()))
+                .containsExactly(ownersNote);
+        assertThat(getNote(ownersNote).getCanEdit()).isFalse();
+        assertThat(refusal(() -> createNoteIn(notebookId, "not allowed")))
+                .isEqualTo(ConnectCode.PERMISSION_DENIED);
+        var notebooks = (com.nnc.familymanager.notes.v1.ListNotebooksResponse) rpc.procedure("ListNotebooks")
+                .invoke(com.nnc.familymanager.notes.v1.ListNotebooksRequest.getDefaultInstance());
+        assertThat(notebooks.getNotebooksList())
+                .filteredOn(notebook -> notebook.getId().equals(notebookId))
+                .singleElement()
+                .satisfies(notebook -> {
+                    assertThat(notebook.getNoteCount()).isEqualTo(1);
+                    assertThat(notebook.getOwnerUserId()).isEqualTo(USER);
+                });
+    }
+
+    @Test
+    void onlyTheOwnerSharesMovesOrDeletes() {
+        String noteId = createNote("owned");
+        String notebookId = createNotebook("Owned book");
+        shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_EDIT);
+        shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_EDIT);
+
+        actAs(OTHER);
+        assertThat(refusal(() -> shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, THIRD,
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(refusal(() -> shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_FAMILY, "",
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(refusal(() -> rpc.procedure("DeleteNote").invoke(
+                DeleteNoteRequest.newBuilder().setNoteId(noteId).build()))).isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(refusal(() -> rpc.procedure("MoveNote").invoke(
+                MoveNoteRequest.newBuilder().setNoteId(noteId).setNotebookId(notebookId).build())))
+                .isEqualTo(ConnectCode.PERMISSION_DENIED);
+        assertThat(refusal(() -> rpc.procedure("DeleteNotebook").invoke(
+                DeleteNotebookRequest.newBuilder().setNotebookId(notebookId).build())))
+                .isEqualTo(ConnectCode.PERMISSION_DENIED);
+    }
+
+    @Test
+    void unshareRevokesAccessAndAnswersNotFoundForAnythingElse() {
+        String noteId = createNote("temporary");
+        Share share = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_VIEW);
+
+        actAs(OTHER);
+        assertThat(refusal(() -> rpc.procedure("Unshare").invoke(UnshareRequest.newBuilder()
+                .setNoteId(noteId).setShareId(share.getId()).build()))).isEqualTo(ConnectCode.NOT_FOUND);
+
+        actAs(USER);
+        assertThat(refusal(() -> rpc.procedure("Unshare").invoke(UnshareRequest.newBuilder()
+                .setNoteId(noteId).setShareId("999999999").build()))).isEqualTo(ConnectCode.NOT_FOUND);
+        rpc.procedure("Unshare").invoke(UnshareRequest.newBuilder()
+                .setNoteId(noteId).setShareId(share.getId()).build());
+        assertThat(sharesOf(ListSharesRequest.newBuilder().setNoteId(noteId).build())).isEmpty();
+        assertThat(getNote(noteId).getShared()).isFalse();
+
+        actAs(OTHER);
+        assertThat(refusal(() -> getNote(noteId))).isEqualTo(ConnectCode.NOT_FOUND);
+    }
+
+    @Test
+    void unshareFromANotebookRevokesItsNotes() {
+        String notebookId = createNotebook("Shared then not");
+        String noteId = createNoteIn(notebookId, "inside");
+        Share share = shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_FAMILY, "",
+                SharePermission.SHARE_PERMISSION_VIEW);
+        assertThat(sharesOf(ListSharesRequest.newBuilder().setNotebookId(notebookId).build()))
+                .extracting(Share::getSubject).containsExactly(ShareSubject.SHARE_SUBJECT_FAMILY);
+
+        rpc.procedure("Unshare").invoke(UnshareRequest.newBuilder()
+                .setNotebookId(notebookId).setShareId(share.getId()).build());
+
+        actAs(OTHER);
+        assertThat(refusal(() -> getNote(noteId))).isEqualTo(ConnectCode.NOT_FOUND);
+    }
+
+    @Test
+    void sharingRefusesMalformedRequests() {
+        String noteId = createNote("validated");
+
+        assertThat(refusal(() -> shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, "",
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.INVALID_ARGUMENT);
+        assertThat(refusal(() -> shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, USER,
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.INVALID_ARGUMENT);
+        assertThat(refusal(() -> shareNote(noteId, ShareSubject.SHARE_SUBJECT_FAMILY, OTHER,
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.INVALID_ARGUMENT);
+        assertThat(refusal(() -> shareNote(noteId, ShareSubject.SHARE_SUBJECT_UNSPECIFIED, "",
+                SharePermission.SHARE_PERMISSION_VIEW))).isEqualTo(ConnectCode.INVALID_ARGUMENT);
+        assertThat(refusal(() -> sharesOf(ListSharesRequest.getDefaultInstance())))
+                .isEqualTo(ConnectCode.INVALID_ARGUMENT);
+        assertThat(refusal(() -> sharesOf(ListSharesRequest.newBuilder()
+                .setNoteId(noteId).setNotebookId("1").build()))).isEqualTo(ConnectCode.INVALID_ARGUMENT);
+    }
+
+    @Test
+    void anUnspecifiedPermissionIsReadAsView() {
+        String noteId = createNote("defaults");
+
+        Share share = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_UNSPECIFIED);
+
+        assertThat(share.getPermission()).isEqualTo(SharePermission.SHARE_PERMISSION_VIEW);
+    }
+
+    @Test
+    void aNoteWithNoOwnerStaysVisibleToTheWholeFamily() {
+        var legacy = notes.save(com.example.notesjava.note.domain.Note.of(FAMILY, "from the REST api", "body", null));
+        String noteId = String.valueOf(legacy.getId());
+
+        actAs(OTHER);
+
+        assertThat(getNote(noteId).getCanEdit()).isTrue();
+        assertThat(listedIds(ListNotesRequest.getDefaultInstance())).contains(noteId);
+        assertThat(listedIds(ListNotesRequest.newBuilder().setSharedOnly(true).build())).doesNotContain(noteId);
+    }
+
+    @Test
+    void uploadingAnImageWithNoStorageConfiguredIsUnavailable() {
+        String noteId = createNote("pictures");
+
+        assertThat(refusal(() -> rpc.procedure("UploadNoteImage").invoke(UploadNoteImageRequest.newBuilder()
+                .setNoteId(noteId)
+                .setContentType("image/png")
+                .setImage(com.google.protobuf.ByteString.copyFrom(new byte[]{1, 2, 3}))
+                .build()))).isEqualTo(ConnectCode.UNAVAILABLE);
     }
 }
