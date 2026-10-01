@@ -1,6 +1,6 @@
 import { toDisplayError, useFamily } from "@fm/api";
 import { Code } from "@connectrpc/connect";
-import { Slot, Tabs, useRouter, useSegments } from "expo-router";
+import { Tabs, useRouter, useSegments } from "expo-router";
 import { GateMessage, Screen, tabIcon, useTabScreenOptions } from "@fm/ui";
 
 import { I18nProvider, useI18n } from "../../components/i18n/index.tsx";
@@ -20,7 +20,7 @@ function Gate() {
   const segments = useSegments();
   const isOnboarding = segments[segments.length - 1] === "onboarding";
 
-  if (family.isPending) {
+  if (family.isPending && !isOnboarding) {
     return (
       <Screen>
         <GateMessage title={t("gate.appName")} body={t("gate.preparing")} />
@@ -28,10 +28,9 @@ function Gate() {
     );
   }
 
-  if (family.isError) {
+  if (family.isError && !isOnboarding) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      if (isOnboarding) return <Slot />;
       return (
         <Screen>
           <GateMessage

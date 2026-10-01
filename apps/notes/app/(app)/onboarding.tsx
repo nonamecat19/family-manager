@@ -13,6 +13,16 @@ export default function OnboardingScreen() {
   const createFamily = useCreateFamily();
   const [name, setName] = useState("");
 
+  const create = async () => {
+    try {
+      await createFamily.mutateAsync(name.trim());
+    } catch {
+      return;
+    }
+    await refreshNow();
+    router.replace("/(app)");
+  };
+
   return (
     <Screen>
       <View className="flex-1 justify-center gap-5 px-xl">
@@ -31,11 +41,7 @@ export default function OnboardingScreen() {
         <PrimaryButton
           title={createFamily.isPending ? strings.onboarding.creating : strings.onboarding.create}
           disabled={name.trim() === "" || createFamily.isPending}
-          onPress={() =>
-            createFamily.mutate(name.trim(), {
-              onSuccess: () => void refreshNow().then(() => router.replace("/(app)")),
-            })
-          }
+          onPress={() => void create()}
         />
       </View>
     </Screen>

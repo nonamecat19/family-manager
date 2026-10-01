@@ -152,12 +152,11 @@ function Gate() {
   const segments = useSegments();
   const isOnboarding = segments[segments.length - 1] === "onboarding";
 
-  if (family.isPending) return <BootSplash title={strings.app.name} label={strings.gate.settingUp} />;
+  if (family.isPending && !isOnboarding) return <BootSplash title={strings.app.name} label={strings.gate.settingUp} />;
 
-  if (family.isError) {
+  if (family.isError && !isOnboarding) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      if (isOnboarding) return <Slot />;
       return (
         <Screen>
           <GateMessage
@@ -778,6 +777,7 @@ function NotebookDialog({
             </Pressable>
             <View className="ml-auto">
               <PrimaryButton
+                className="px-xl"
                 title={confirmLabel}
                 disabled={busy || name.trim() === ""}
                 onPress={() => onSubmit(name.trim())}

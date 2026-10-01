@@ -1,6 +1,6 @@
 import { toDisplayError, useFamily } from "@fm/api";
 import { Code } from "@connectrpc/connect";
-import { Slot, Tabs, useRouter, useSegments } from "expo-router";
+import { Tabs, useRouter, useSegments } from "expo-router";
 import { BootSplash, GateMessage, tabIcon, useTabScreenOptions } from "@fm/ui";
 
 import { BasketProvider } from "../../components/basket.tsx";
@@ -22,12 +22,11 @@ function Gate() {
   const isOnboarding = segments[segments.length - 1] === "onboarding";
   const tabScreenOptions = useTabScreenOptions();
 
-  if (family.isPending) return <BootSplash title={t("kitchen.appName")} label={t("kitchen.settingTheTable")} />;
+  if (family.isPending && !isOnboarding) return <BootSplash title={t("kitchen.appName")} label={t("kitchen.settingTheTable")} />;
 
-  if (family.isError) {
+  if (family.isError && !isOnboarding) {
     const code = (family.error as { code?: Code }).code;
     if (code === Code.FailedPrecondition) {
-      if (isOnboarding) return <Slot />;
       return (
         <GateMessage
           title={t("kitchen.noHouseholdTitle")}

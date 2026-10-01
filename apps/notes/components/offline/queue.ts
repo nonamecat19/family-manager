@@ -212,6 +212,7 @@ export function useCaptureQueue(): CaptureQueue {
 
 function terminalRefusal(error: unknown): string | null {
   if (!(error instanceof ConnectError)) return null;
+  if (error.code === Code.FailedPrecondition && /belongs to no family/i.test(error.rawMessage)) return null;
   switch (error.code) {
     case Code.PermissionDenied:
     case Code.NotFound:
