@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file auth/v1/auth.proto.
  */
 export const file_auth_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiLwoMTG9naW5SZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIlAKDUxvZ2luUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyJACg9SZWdpc3RlclJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCSIjChBSZWdpc3RlclJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkiJwoOUmVmcmVzaFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSJSCg9SZWZyZXNoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyImCg1Mb2dvdXRSZXF1ZXN0EhUKDXJlZnJlc2hfdG9rZW4YASABKAkiEAoOTG9nb3V0UmVzcG9uc2Uy/wEKC0F1dGhTZXJ2aWNlEjYKBUxvZ2luEhUuYXV0aC52MS5Mb2dpblJlcXVlc3QaFi5hdXRoLnYxLkxvZ2luUmVzcG9uc2USPwoIUmVnaXN0ZXISGC5hdXRoLnYxLlJlZ2lzdGVyUmVxdWVzdBoZLmF1dGgudjEuUmVnaXN0ZXJSZXNwb25zZRI8CgdSZWZyZXNoEhcuYXV0aC52MS5SZWZyZXNoUmVxdWVzdBoYLmF1dGgudjEuUmVmcmVzaFJlc3BvbnNlEjkKBkxvZ291dBIWLmF1dGgudjEuTG9nb3V0UmVxdWVzdBoXLmF1dGgudjEuTG9nb3V0UmVzcG9uc2VCigEKC2NvbS5hdXRoLnYxQglBdXRoUHJvdG9QAVozZ2l0aHViLmNvbS9ubmMvZmFtaWx5LW1hbmFnZXIvc2RrL2dvL2F1dGgvdjE7YXV0aHYxogIDQVhYqgIHQXV0aC5WMcoCB0F1dGhcVjHiAhNBdXRoXFYxXEdQQk1ldGFkYXRh6gIIQXV0aDo6VjFiBnByb3RvMw");
+  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiLwoMTG9naW5SZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIlAKDUxvZ2luUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyJACg9SZWdpc3RlclJlcXVlc3QSDQoFZW1haWwYASABKAkSEAoIcGFzc3dvcmQYAiABKAkSDAoEbmFtZRgDIAEoCSIjChBSZWdpc3RlclJlc3BvbnNlEg8KB3VzZXJfaWQYASABKAkiJwoOUmVmcmVzaFJlcXVlc3QSFQoNcmVmcmVzaF90b2tlbhgBIAEoCSJSCg9SZWZyZXNoUmVzcG9uc2USFAoMYWNjZXNzX3Rva2VuGAEgASgJEhUKDXJlZnJlc2hfdG9rZW4YAiABKAkSEgoKZXhwaXJlc19pbhgDIAEoAyImCg1Mb2dvdXRSZXF1ZXN0EhUKDXJlZnJlc2hfdG9rZW4YASABKAkiEAoOTG9nb3V0UmVzcG9uc2UiKgoWQ3JlYXRlTGlua1Rva2VuUmVxdWVzdBIQCghwcm92aWRlchgBIAEoCSI8ChdDcmVhdGVMaW5rVG9rZW5SZXNwb25zZRINCgV0b2tlbhgBIAEoCRISCgpleHBpcmVzX2luGAIgASgDIk4KFlJlZGVlbUxpbmtUb2tlblJlcXVlc3QSDQoFdG9rZW4YASABKAkSEAoIcHJvdmlkZXIYAiABKAkSEwoLZXh0ZXJuYWxfaWQYAyABKAkiawoXUmVkZWVtTGlua1Rva2VuUmVzcG9uc2USDwoHdXNlcl9pZBgBIAEoCRIUCgxhY2Nlc3NfdG9rZW4YAiABKAkSFQoNcmVmcmVzaF90b2tlbhgDIAEoCRISCgpleHBpcmVzX2luGAQgASgDMqsDCgtBdXRoU2VydmljZRI2CgVMb2dpbhIVLmF1dGgudjEuTG9naW5SZXF1ZXN0GhYuYXV0aC52MS5Mb2dpblJlc3BvbnNlEj8KCFJlZ2lzdGVyEhguYXV0aC52MS5SZWdpc3RlclJlcXVlc3QaGS5hdXRoLnYxLlJlZ2lzdGVyUmVzcG9uc2USPAoHUmVmcmVzaBIXLmF1dGgudjEuUmVmcmVzaFJlcXVlc3QaGC5hdXRoLnYxLlJlZnJlc2hSZXNwb25zZRI5CgZMb2dvdXQSFi5hdXRoLnYxLkxvZ291dFJlcXVlc3QaFy5hdXRoLnYxLkxvZ291dFJlc3BvbnNlElQKD0NyZWF0ZUxpbmtUb2tlbhIfLmF1dGgudjEuQ3JlYXRlTGlua1Rva2VuUmVxdWVzdBogLmF1dGgudjEuQ3JlYXRlTGlua1Rva2VuUmVzcG9uc2USVAoPUmVkZWVtTGlua1Rva2VuEh8uYXV0aC52MS5SZWRlZW1MaW5rVG9rZW5SZXF1ZXN0GiAuYXV0aC52MS5SZWRlZW1MaW5rVG9rZW5SZXNwb25zZUKKAQoLY29tLmF1dGgudjFCCUF1dGhQcm90b1ABWjNnaXRodWIuY29tL25uYy9mYW1pbHktbWFuYWdlci9zZGsvZ28vYXV0aC92MTthdXRodjGiAgNBWFiqAgdBdXRoLlYxygIHQXV0aFxWMeICE0F1dGhcVjFcR1BCTWV0YWRhdGHqAghBdXRoOjpWMWIGcHJvdG8z");
 
 /**
  * @generated from message auth.v1.LoginRequest
@@ -180,6 +180,104 @@ export const LogoutResponseSchema: GenMessage<LogoutResponse> = /*@__PURE__*/
   messageDesc(file_auth_v1_auth, 7);
 
 /**
+ * @generated from message auth.v1.CreateLinkTokenRequest
+ */
+export type CreateLinkTokenRequest = Message<"auth.v1.CreateLinkTokenRequest"> & {
+  /**
+   * @generated from field: string provider = 1;
+   */
+  provider: string;
+};
+
+/**
+ * Describes the message auth.v1.CreateLinkTokenRequest.
+ * Use `create(CreateLinkTokenRequestSchema)` to create a new message.
+ */
+export const CreateLinkTokenRequestSchema: GenMessage<CreateLinkTokenRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 8);
+
+/**
+ * @generated from message auth.v1.CreateLinkTokenResponse
+ */
+export type CreateLinkTokenResponse = Message<"auth.v1.CreateLinkTokenResponse"> & {
+  /**
+   * @generated from field: string token = 1;
+   */
+  token: string;
+
+  /**
+   * @generated from field: int64 expires_in = 2;
+   */
+  expiresIn: bigint;
+};
+
+/**
+ * Describes the message auth.v1.CreateLinkTokenResponse.
+ * Use `create(CreateLinkTokenResponseSchema)` to create a new message.
+ */
+export const CreateLinkTokenResponseSchema: GenMessage<CreateLinkTokenResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 9);
+
+/**
+ * @generated from message auth.v1.RedeemLinkTokenRequest
+ */
+export type RedeemLinkTokenRequest = Message<"auth.v1.RedeemLinkTokenRequest"> & {
+  /**
+   * @generated from field: string token = 1;
+   */
+  token: string;
+
+  /**
+   * @generated from field: string provider = 2;
+   */
+  provider: string;
+
+  /**
+   * @generated from field: string external_id = 3;
+   */
+  externalId: string;
+};
+
+/**
+ * Describes the message auth.v1.RedeemLinkTokenRequest.
+ * Use `create(RedeemLinkTokenRequestSchema)` to create a new message.
+ */
+export const RedeemLinkTokenRequestSchema: GenMessage<RedeemLinkTokenRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 10);
+
+/**
+ * @generated from message auth.v1.RedeemLinkTokenResponse
+ */
+export type RedeemLinkTokenResponse = Message<"auth.v1.RedeemLinkTokenResponse"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string access_token = 2;
+   */
+  accessToken: string;
+
+  /**
+   * @generated from field: string refresh_token = 3;
+   */
+  refreshToken: string;
+
+  /**
+   * @generated from field: int64 expires_in = 4;
+   */
+  expiresIn: bigint;
+};
+
+/**
+ * Describes the message auth.v1.RedeemLinkTokenResponse.
+ * Use `create(RedeemLinkTokenResponseSchema)` to create a new message.
+ */
+export const RedeemLinkTokenResponseSchema: GenMessage<RedeemLinkTokenResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 11);
+
+/**
  * @generated from service auth.v1.AuthService
  */
 export const AuthService: GenService<{
@@ -214,6 +312,22 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof LogoutRequestSchema;
     output: typeof LogoutResponseSchema;
+  },
+  /**
+   * @generated from rpc auth.v1.AuthService.CreateLinkToken
+   */
+  createLinkToken: {
+    methodKind: "unary";
+    input: typeof CreateLinkTokenRequestSchema;
+    output: typeof CreateLinkTokenResponseSchema;
+  },
+  /**
+   * @generated from rpc auth.v1.AuthService.RedeemLinkToken
+   */
+  redeemLinkToken: {
+    methodKind: "unary";
+    input: typeof RedeemLinkTokenRequestSchema;
+    output: typeof RedeemLinkTokenResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_auth_v1_auth, 0);

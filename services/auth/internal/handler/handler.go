@@ -33,6 +33,7 @@ type Signer interface {
 
 type FamilyLookup interface {
 	FamilyOf(ctx context.Context, userID string) (familyID string, err error)
+	LocaleOf(ctx context.Context, userID string) (locale string, err error)
 }
 
 type Handler struct {
@@ -283,12 +284,15 @@ type session struct {
 }
 
 func (h *Handler) mintSession(ctx context.Context, user db.User, chainID pgtype.UUID) (session, error) {
-	familyID := h.familyOf(ctx, pgconv.UUIDString(user.ID))
+	userID := pgconv.UUIDString(user.ID)
+	familyID := h.familyOf(ctx, userID)
+	locale := h.localeOf(ctx, userID)
 
 	access, err := h.signer.Sign(token.Claims{
-		UserID:   pgconv.UUIDString(user.ID),
+		UserID:   userID,
 		Email:    user.Email,
 		FamilyID: familyID,
+		Locale:   locale,
 	})
 	if err != nil {
 		return session{}, h.internal(ctx, err, "sign access token")
@@ -329,6 +333,19 @@ func (h *Handler) familyOf(ctx context.Context, userID string) string {
 		return ""
 	}
 	return familyID
+}
+
+func (h *Handler) localeOf(ctx context.Context, userID string) string {
+	if h.family == nil {
+		return ""
+	}
+	locale, err := h.family.LocaleOf(ctx, userID)
+	if err != nil {
+		h.log.WarnContext(ctx, "settings lookup failed; minting a token without locale",
+			slog.String("user_id", userID), slog.String("error", err.Error()))
+		return ""
+	}
+	return locale
 }
 
 func newRefreshToken() (string, error) {

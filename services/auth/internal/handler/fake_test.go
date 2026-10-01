@@ -17,6 +17,7 @@ type fakeStore struct {
 	users  map[string]db.User
 	byID   map[string]db.User
 	tokens map[string]db.RefreshToken
+	links  map[string]db.LinkToken
 
 	failOn map[string]error
 }
@@ -26,6 +27,7 @@ func newFakeStore() *fakeStore {
 		users:  map[string]db.User{},
 		byID:   map[string]db.User{},
 		tokens: map[string]db.RefreshToken{},
+		links:  map[string]db.LinkToken{},
 		failOn: map[string]error{},
 	}
 }
@@ -146,6 +148,52 @@ func (s *fakeStore) RevokeAllForUser(_ context.Context, userID pgtype.UUID) (int
 
 func (s *fakeStore) DeleteExpiredRefreshTokens(context.Context) (int64, error) { return 0, nil }
 
+func (s *fakeStore) CreateLinkToken(
+	_ context.Context, arg db.CreateLinkTokenParams,
+) (db.LinkToken, error) {
+	if err := s.fail("CreateLinkToken"); err != nil {
+		return db.LinkToken{}, err
+	}
+	t := db.LinkToken{
+		ID:        mustChainID(),
+		UserID:    arg.UserID,
+		Provider:  arg.Provider,
+		TokenHash: arg.TokenHash,
+		ExpiresAt: arg.ExpiresAt,
+		CreatedAt: pgtype.Timestamptz{Valid: true},
+	}
+	s.links[arg.TokenHash] = t
+	return t, nil
+}
+
+func (s *fakeStore) GetLinkToken(_ context.Context, hash string) (db.LinkToken, error) {
+	t, ok := s.links[hash]
+	if !ok {
+		return db.LinkToken{}, pgx.ErrNoRows
+	}
+	return t, nil
+}
+
+func (s *fakeStore) MarkLinkTokenUsed(
+	_ context.Context, arg db.MarkLinkTokenUsedParams,
+) (int64, error) {
+	for hash, t := range s.links {
+		if pgconv.UUIDString(t.ID) != pgconv.UUIDString(arg.ID) {
+			continue
+		}
+		if t.UsedAt.Valid {
+			return 0, nil
+		}
+		t.UsedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+		t.ExternalID = arg.ExternalID
+		s.links[hash] = t
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (s *fakeStore) DeleteExpiredLinkTokens(context.Context) (int64, error) { return 0, nil }
+
 type stubSigner struct {
 	signed []token.Claims
 	err    error
@@ -172,6 +220,7 @@ func (s *stubSigner) last() token.Claims {
 
 type stubFamily struct {
 	familyID string
+	locale   string
 	err      error
 	calls    int
 }
@@ -179,6 +228,10 @@ type stubFamily struct {
 func (f *stubFamily) FamilyOf(context.Context, string) (string, error) {
 	f.calls++
 	return f.familyID, f.err
+}
+
+func (f *stubFamily) LocaleOf(context.Context, string) (string, error) {
+	return f.locale, f.err
 }
 
 var errBoom = errors.New("boom")

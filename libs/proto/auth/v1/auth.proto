@@ -8,6 +8,8 @@ service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Refresh(RefreshRequest) returns (RefreshResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc CreateLinkToken(CreateLinkTokenRequest) returns (CreateLinkTokenResponse);
+  rpc RedeemLinkToken(RedeemLinkTokenRequest) returns (RedeemLinkTokenResponse);
 }
 
 message LoginRequest {
@@ -46,3 +48,25 @@ message LogoutRequest {
 }
 
 message LogoutResponse {}
+
+message CreateLinkTokenRequest {
+  string provider = 1;
+}
+
+message CreateLinkTokenResponse {
+  string token = 1;
+  int64 expires_in = 2;
+}
+
+message RedeemLinkTokenRequest {
+  string token = 1;
+  string provider = 2;
+  string external_id = 3;
+}
+
+message RedeemLinkTokenResponse {
+  string user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+}

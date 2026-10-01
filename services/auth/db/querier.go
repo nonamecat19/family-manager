@@ -11,12 +11,16 @@ import (
 )
 
 type Querier interface {
+	CreateLinkToken(ctx context.Context, arg CreateLinkTokenParams) (LinkToken, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
+	GetLinkToken(ctx context.Context, tokenHash string) (LinkToken, error)
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
+	MarkLinkTokenUsed(ctx context.Context, arg MarkLinkTokenUsedParams) (int64, error)
 	MarkRefreshTokenUsed(ctx context.Context, id pgtype.UUID) (int64, error)
 	RevokeAllForUser(ctx context.Context, userID pgtype.UUID) (int64, error)
 	RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error)

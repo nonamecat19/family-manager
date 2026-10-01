@@ -39,3 +39,12 @@ func (c *Client) FamilyOf(ctx context.Context, userID string) (string, error) {
 	}
 	return res.Msg.GetFamilyId(), nil
 }
+
+func (c *Client) LocaleOf(ctx context.Context, userID string) (string, error) {
+	res, err := c.client.GetUserSettings(ctx,
+		connect.NewRequest(&familyv1.GetUserSettingsRequest{UserId: userID}))
+	if err != nil {
+		return "", err
+	}
+	return res.Msg.GetSettings().GetLocale(), nil
+}

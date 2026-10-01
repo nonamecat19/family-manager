@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type LinkToken struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	Provider   string
+	TokenHash  string
+	ExternalID *string
+	UsedAt     pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+}
+
 type RefreshToken struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID

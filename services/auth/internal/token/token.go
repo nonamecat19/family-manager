@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
@@ -12,12 +13,15 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 )
 
 type Claims struct {
 	UserID   string
 	Email    string
 	FamilyID string
+	Locale   string
 }
 
 type Signer struct {
@@ -79,6 +83,9 @@ func (s *Signer) Sign(c Claims) (string, error) {
 	}
 	if c.FamilyID != "" {
 		claims["family_id"] = c.FamilyID
+	}
+	if c.Locale != "" {
+		claims["locale"] = c.Locale
 	}
 
 	tok := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
@@ -149,4 +156,41 @@ func checkCurve(key *ecdsa.PrivateKey) (*ecdsa.PrivateKey, error) {
 		return nil, ErrNotP256
 	}
 	return key, nil
+}
+
+func (s *Signer) Verify(_ context.Context, signed string) (*fmauth.Claims, error) {
+	opts := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{"ES256"}),
+		jwt.WithExpirationRequired(),
+		jwt.WithTimeFunc(s.now),
+	}
+	if s.issuer != "" {
+		opts = append(opts, jwt.WithIssuer(s.issuer))
+	}
+	if s.audience != "" {
+		opts = append(opts, jwt.WithAudience(s.audience))
+	}
+
+	claims := jwt.MapClaims{}
+	if _, err := jwt.NewParser(opts...).ParseWithClaims(signed, claims,
+		func(*jwt.Token) (any, error) { return &s.key.PublicKey, nil },
+	); err != nil {
+		return nil, fmt.Errorf("%w: %w", fmauth.ErrInvalidToken, err)
+	}
+
+	sub, err := claims.GetSubject()
+	if err != nil || sub == "" {
+		return nil, fmauth.ErrInvalidToken
+	}
+	out := &fmauth.Claims{UserID: sub}
+	if v, ok := claims["email"].(string); ok {
+		out.Email = v
+	}
+	if v, ok := claims["family_id"].(string); ok {
+		out.FamilyID = v
+	}
+	if v, ok := claims["locale"].(string); ok {
+		out.Locale = v
+	}
+	return out, nil
 }
