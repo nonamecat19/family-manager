@@ -246,9 +246,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "5e66578",
       "blocked_reason": null,
       "id": "f01",
       "title": "finance: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
@@ -304,7 +304,7 @@
       "title": "finance: Android widget renderers, sign-in/error tiles and widget task handler (actions)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-finance",
-      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Actions: a template tap calls LogTemplate. 'Amount' opens fmfinance://add, because neither platform lets a widget take free-text input (assumption, see report). After an action, republish the snapshot."
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Actions: a template tap calls LogTemplate. 'Amount' opens fmfinance://add, because neither platform lets a widget take free-text input (assumption, see report). After an action, republish the snapshot. From strings verify: outside React use interpolate(bootT(key), {time}) (recipes imports interpolate from @fm/i18n); bootT uses the device locale, so read the user's stored locale for widgets if it differs."
     },
     {
       "nodes": [
@@ -327,7 +327,7 @@
       "title": "finance: register widgets via the @fm/widgets plugin in app.config.js; release APK builds",
       "kind": "app",
       "acceptance": "just build-apk-release emulator finance",
-      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app."
+      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app. From strings verify: the Android picker description is build-time text in app.config.js widget plugin config; feed it from widgets.*Description (en) or drop those keys."
     },
     {
       "nodes": [
@@ -384,9 +384,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "9da702f",
       "blocked_reason": null,
       "id": "n01",
       "title": "notes: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
@@ -442,7 +442,7 @@
       "title": "notes: Android widget renderers, sign-in/error tiles and widget task handler (actions)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-notes",
-      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Action: 'New note' calls CreateNote, then deep-links into the new note. After an action, republish the snapshot."
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). Action: 'New note' calls CreateNote, then deep-links into the new note. After an action, republish the snapshot. From strings verify: outside React use interpolate(bootT(key), {time}) (recipes imports interpolate from @fm/i18n); bootT uses the device locale, so read the user's stored locale for widgets if it differs."
     },
     {
       "nodes": [
@@ -522,9 +522,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "6993313",
       "blocked_reason": null,
       "id": "r01",
       "title": "recipes: widget strings (en, uk) incl. 'Open app to sign in' and error tile",
@@ -579,7 +579,7 @@
       "title": "recipes: Android widget renderers, sign-in/error tiles and widget task handler (tap-to-open)",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
-      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). No action, tap-to-open only. After an action, republish the snapshot."
+      "notes": "react-native-android-widget JSX. Colours come from theme tokens, with no literals. The new index.js entry calls registerWidgetTaskHandler and then imports expo-router/entry, and package.json 'main' changes to ./index.js (an app package.json, not STOP, no lockfile change). No action, tap-to-open only. After an action, republish the snapshot. From strings verify: outside React use interpolate(bootT(key), {time}) (recipes imports interpolate from @fm/i18n); bootT uses the device locale, so read the user's stored locale for widgets if it differs."
     },
     {
       "nodes": [
@@ -602,7 +602,7 @@
       "title": "recipes: register widgets via the @fm/widgets plugin in app.config.js; release APK builds",
       "kind": "app",
       "acceptance": "just build-apk-release emulator recipes",
-      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app."
+      "notes": "This APK build is also the first real compile of the u03 Kotlin module for this app. From strings verify: the Android picker description is build-time text in app.config.js widget plugin config; feed it from widgets.*Description (en) or drop those keys."
     },
     {
       "nodes": [
@@ -709,7 +709,7 @@
       "title": "BLOCKED QUESTION: the recipes basket has no server state. Where does a widget tick-off write?",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-recipes",
-      "notes": "apps/recipes/components/basket.tsx holds the basket and its checked items in React useState only. It is not persisted, and recipes.v1 has no basket rpc (only SumIngredients and TotalIngredients). The brief's 'basket update' RPC does not exist. Human decision: (a) persist the basket on the device (snapshot store / AsyncStorage) and let the Android widget tick items locally, with iOS tap-to-open; (b) add a server-side basket to recipes.v1 + service:recipes, which goes beyond the brief's 'no new backend model' non-goal and is a new brief; or (c) drop the basket widget. The basket widget units (renderer, action, iOS target) will be added once this is answered."
+      "notes": "apps/recipes/components/basket.tsx holds the basket and its checked items in React useState only. It is not persisted, and recipes.v1 has no basket rpc (only SumIngredients and TotalIngredients). The brief's 'basket update' RPC does not exist. Human decision: (a) persist the basket on the device (snapshot store / AsyncStorage) and let the Android widget tick items locally, with iOS tap-to-open; (b) add a server-side basket to recipes.v1 + service:recipes, which goes beyond the brief's 'no new backend model' non-goal and is a new brief; or (c) drop the basket widget. The basket widget units (renderer, action, iOS target) will be added once this is answered. From strings verify: use 'Позначити' (matches existing 'позначки' copy) for widgets.tickOff when the basket widget lands."
     },
     {
       "nodes": [
@@ -1062,5 +1062,5 @@
       "notes": "Does not wait on the tasks chain (t00 is gated on brief 0003) or on r07. The tasks tail is m02 + t09 + t07, so run just verify again when they land."
     }
   ],
-  "updated_at": "2026-10-06T08:18:13.498Z"
+  "updated_at": "2026-10-06T08:28:45.885Z"
 }
