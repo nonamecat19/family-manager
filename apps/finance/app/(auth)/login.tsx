@@ -3,7 +3,7 @@ import { tokensFromResponse, useAuth } from "@fm/auth";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { KeyboardAvoidingView, Text, View } from "react-native";
 
 import { Body, Button, Caption, Display, Field, Screen, TextLink, Icon, organic } from "@fm/ui";
 
@@ -49,7 +49,7 @@ export default function LoginScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
         className="flex-1 justify-center gap-4.5 px-xl"
       >
         <View>

@@ -5,7 +5,6 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -81,7 +80,7 @@ export default function RecipeDetailScreen() {
 
   return (
     <Screen edges={["bottom"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-7">
           <View
             className="rounded-b-3xl px-5.5 pb-lg pt-14"

@@ -24,7 +24,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -367,7 +366,7 @@ export default function NoteScreen() {
     <Screen>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
       >
         <View className="flex-row items-center gap-2.5 px-lg pb-2.5 pt-1.5">
           <IconButton
@@ -489,7 +488,7 @@ function ConflictBanner({ onReload, onOverwrite }: { onReload: () => void; onOve
         {strings.note.conflictBody}
       </Text>
       <View className="flex-row gap-sm pt-0.5">
-        <PrimaryButton title={strings.note.conflictReload} onPress={onReload} />
+        <PrimaryButton className="px-xl" title={strings.note.conflictReload} onPress={onReload} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.note.conflictOverwrite}

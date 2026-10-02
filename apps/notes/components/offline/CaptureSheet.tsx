@@ -1,6 +1,6 @@
 import { BlockType, type Notebook } from "@fm/sdk/notes/v1/notes_pb";
 import { useState } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { makeBlock } from "../editor/index.ts";
 import { strings } from "../i18n/index.ts";
@@ -66,7 +66,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
         className="flex-1"
         style={SCRIM}
       />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView behavior="padding">
         <View
           className="gap-3.5 bg-surface px-4.5 pb-5.5 pt-2.5"
           style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
@@ -154,7 +154,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           ) : null}
 
           <View className="flex-row items-center gap-2.5">
-            <Text className="font-fig text-12 text-neutral-700">
+            <Text className="flex-shrink font-fig text-12 text-neutral-700">
               {queue.queued.length > 0
                 ? strings.capture.queued(queue.queued.length)
                 : notebook
@@ -163,6 +163,7 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
             </Text>
             <View className="ml-auto">
               <PrimaryButton
+                className="px-xl"
                 title={strings.capture.save}
                 onPress={() => void save()}
                 disabled={title.trim() === "" && body.trim() === ""}

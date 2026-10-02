@@ -9,7 +9,7 @@ import { useAuth } from "@fm/auth";
 import { useRouter } from "expo-router";
 import { getCalendars } from "expo-localization";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
 import { Card, Row } from "@/components/kit";
@@ -96,7 +96,7 @@ export default function OnboardingScreen() {
 
   return (
     <Screen>
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 22.4, paddingTop: 40, paddingBottom: 16.8 }}
