@@ -37,3 +37,11 @@ type FamilyMember struct {
 	Role        string
 	JoinedAt    pgtype.Timestamptz
 }
+
+type UserSetting struct {
+	UserID    pgtype.UUID
+	Locale    string
+	Timezone  string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}

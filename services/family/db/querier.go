@@ -22,12 +22,14 @@ type Querier interface {
 	GetInvitationByTokenHash(ctx context.Context, tokenHash string) (FamilyInvitation, error)
 	GetMember(ctx context.Context, arg GetMemberParams) (FamilyMember, error)
 	GetMembership(ctx context.Context, userID pgtype.UUID) (FamilyMember, error)
+	GetUserSettings(ctx context.Context, userID pgtype.UUID) (UserSetting, error)
 	ListInvitations(ctx context.Context, familyID pgtype.UUID) ([]FamilyInvitation, error)
 	ListMembers(ctx context.Context, familyID pgtype.UUID) ([]FamilyMember, error)
 	MarkInvitationAccepted(ctx context.Context, arg MarkInvitationAcceptedParams) (FamilyInvitation, error)
 	MarkInvitationRevoked(ctx context.Context, id pgtype.UUID) (int64, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) (int64, error)
 	UpdateFamily(ctx context.Context, arg UpdateFamilyParams) (Family, error)
+	UpsertUserSettings(ctx context.Context, arg UpsertUserSettingsParams) (UserSetting, error)
 }
 
 var _ Querier = (*Queries)(nil)

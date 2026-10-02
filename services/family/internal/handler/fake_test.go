@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -19,6 +20,7 @@ type fakeStore struct {
 	families    map[string]db.Family
 	members     map[string]db.FamilyMember
 	invitations map[string]db.FamilyInvitation
+	settings    map[string]db.UserSetting
 
 	failOn map[string]error
 }
@@ -28,6 +30,7 @@ func newFakeStore() *fakeStore {
 		families:    map[string]db.Family{},
 		members:     map[string]db.FamilyMember{},
 		invitations: map[string]db.FamilyInvitation{},
+		settings:    map[string]db.UserSetting{},
 		failOn:      map[string]error{},
 	}
 }
@@ -259,4 +262,32 @@ func (s *fakeStore) InTx(_ context.Context, fn func(db.Querier) error) error {
 		return err
 	}
 	return nil
+}
+
+func (s *fakeStore) GetUserSettings(_ context.Context, userID pgtype.UUID) (db.UserSetting, error) {
+	row, ok := s.settings[pgconv.UUIDString(userID)]
+	if !ok {
+		return db.UserSetting{}, pgx.ErrNoRows
+	}
+	return row, nil
+}
+
+func (s *fakeStore) UpsertUserSettings(
+	_ context.Context, arg db.UpsertUserSettingsParams,
+) (db.UserSetting, error) {
+	if s.settings == nil {
+		s.settings = map[string]db.UserSetting{}
+	}
+	key := pgconv.UUIDString(arg.UserID)
+	row := s.settings[key]
+	row.UserID = arg.UserID
+	if arg.Locale != "" {
+		row.Locale = arg.Locale
+	}
+	if arg.Timezone != "" {
+		row.Timezone = arg.Timezone
+	}
+	row.UpdatedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	s.settings[key] = row
+	return row, nil
 }
