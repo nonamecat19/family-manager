@@ -395,4 +395,16 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "notifications.topic.tasks.task.assigned": "Вам призначили завдання",
   "notifications.topic.tasks.task.due": "Настає строк завдання",
   "notifications.topic.tasks.birthday.upcoming": "Наближається день народження",
+
+  "widgets.todaysMeals": "Сьогоднішнє меню",
+  "widgets.todaysMealsDescription": "Заплановані страви на сьогодні.",
+  "widgets.basket": "Кошик",
+  "widgets.basketDescription": "Ваш кошик покупок — відмічайте куплене прямо з головного екрана.",
+  "widgets.tickOff": "Відмітити",
+  "widgets.signIn": "Відкрийте застосунок, щоб увійти",
+  "widgets.errorTitle": "Віджет не завантажився",
+  "widgets.retry": "Повторити",
+  "widgets.emptyTitle": "Поки нічого не заплановано",
+  "widgets.emptyBody": "Заплануйте страву в застосунку — і вона з'явиться тут.",
+  "widgets.updatedAt": "Оновлено {time}",
 };

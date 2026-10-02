@@ -391,4 +391,16 @@ export const en = {
   "notifications.topic.tasks.task.assigned": "A task is assigned to you",
   "notifications.topic.tasks.task.due": "A task is due",
   "notifications.topic.tasks.birthday.upcoming": "A birthday is coming up",
+
+  "widgets.todaysMeals": "Today's meals",
+  "widgets.todaysMealsDescription": "What's planned on the menu for today.",
+  "widgets.basket": "Basket",
+  "widgets.basketDescription": "Your shopping basket, ready to tick off as you shop.",
+  "widgets.tickOff": "Tick off",
+  "widgets.signIn": "Open app to sign in",
+  "widgets.errorTitle": "Couldn't load this widget",
+  "widgets.retry": "Retry",
+  "widgets.emptyTitle": "Nothing planned yet",
+  "widgets.emptyBody": "Plan a meal in the app and it will show up here.",
+  "widgets.updatedAt": "Updated {time}",
 } as const;
