@@ -78,6 +78,11 @@ each other's errors; one owner of the merge cuts that by ~4×.
 | dependency bump in `packages/config` | sequential + human gate |
 | repo-wide rename | one agent, one writer per file, no exceptions |
 
+The executable form of the multi-agent branch is `/fanout` (`.claude/commands/fanout.md`):
+foundation in the shared package by the lead → shared package frozen → one worker per app or
+service, spawned in one message, each with its own WRITE globs → lead merges NEEDS → verifiers
+with one question each.
+
 ### Fake edges
 
 For every "and then" in a plan, ask whether the next job reads the previous job's output. Writing

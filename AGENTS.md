@@ -131,7 +131,9 @@ around a `gate-check` STOP — escalate and take the next unit.
 ## Commands, agents, hooks
 
 Slash commands (`.claude/commands/`): `/brief`, `/autopilot`, `/escalations` (autonomous mode);
-`/feature <desc>` (supervised plan → implement → verify loop), `/impact <node>`,
+`/feature <desc>` (supervised plan → implement → verify loop), `/fanout <change>` (one change
+repeated across apps/services: lead writes the shared foundation, parallel workers own disjoint
+slices, fresh-context verifiers, one merger), `/impact <node>`,
 `/migrate <service> <change>` (ends at the human gate), `/graph-health`.
 
 Subagents (`.claude/agents/`): `decomposer` (brief → backlog), `verifier` (read-only, fresh
