@@ -1,16 +1,33 @@
 import {
   currentPeriod,
+  FamilyMemberRole,
+  familyStanding,
   fromWire,
+  InvitationStatus,
   MemberRole,
   MemberStatus,
   toDisplayError,
   useFamily,
   useFinanceSettings,
   useHouseholdOverview,
+  useInvitations,
   useInviteMember,
+  useLeaveFamily,
+  useRemoveMember,
+  useRevokeInvitation,
   useSetOverspendNotifications,
+  useUpdateFamily,
   type Money,
 } from "@fm/api";
+import { useAuth } from "@fm/auth";
+import {
+  FamilyInvitationsCard,
+  FamilyMembersCard,
+  FamilyNameCard,
+  LeaveFamilyCard,
+  type FamilyInvitationView,
+  type FamilyMemberView,
+} from "@fm/ui";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -66,6 +83,103 @@ export default function HouseholdScreen() {
   const settings = useFinanceSettings();
   const invite = useInviteMember();
   const setOverspend = useSetOverspendNotifications();
+
+  /* ---- family management -------------------------------------------------------------
+   * Who the caller is comes from the access token's claims. It is NOT verified here and is
+   * not what grants anything: UpdateFamily, RemoveMember, RevokeInvitation and
+   * ListInvitations are all admin-gated on the server. It decides what to DRAW, so an
+   * ordinary member is not shown controls that would only come back refused.
+   */
+  const { claims, refreshNow } = useAuth();
+  const familyId = family.data?.family?.id ?? "";
+  const familyMembers = useMemo(() => family.data?.members ?? [], [family.data]);
+  // isAdmin and the last-admin rule live in @fm/api, where they are unit-tested — they gate
+  // destructive controls, and the app shell runs no tests.
+  const { isAdmin, canLeave } = useMemo(
+    () => familyStanding(familyMembers, claims?.userId),
+    [familyMembers, claims?.userId],
+  );
+
+  // Admin-only on the server, so it is not even requested otherwise.
+  const invitations = useInvitations(familyId, { enabled: isAdmin });
+
+  const renameFamily = useUpdateFamily();
+  const removeMember = useRemoveMember();
+  const revokeInvitation = useRevokeInvitation();
+  const leaveFamily = useLeaveFamily();
+
+  const [familyError, setFamilyError] = useState<string | null>(null);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const memberViews = useMemo<FamilyMemberView[]>(
+    () =>
+      familyMembers.map((member) => ({
+        userId: member.userId,
+        displayName: member.displayName,
+        email: member.email,
+        role: member.role === FamilyMemberRole.ADMIN ? "admin" : "member",
+        isSelf: member.userId === claims?.userId,
+      })),
+    [familyMembers, claims?.userId],
+  );
+
+  const invitationViews = useMemo<FamilyInvitationView[]>(
+    () =>
+      (invitations.data?.invitations ?? []).map((invitation) => ({
+        id: invitation.id,
+        email: invitation.email,
+        pending: invitation.status === InvitationStatus.PENDING,
+        expiresLabel: invitation.expiresAt
+          ? t("family.invitations.expires", {
+              date: new Date(Number(invitation.expiresAt.seconds) * 1000).toLocaleDateString(),
+            })
+          : undefined,
+      })),
+    [invitations.data, t],
+  );
+
+  const submitRename = async (name: string) => {
+    setFamilyError(null);
+    try {
+      await renameFamily.mutateAsync({ familyId, name });
+    } catch (error) {
+      setFamilyError(toDisplayError(error, t("family.name.error")).message);
+    }
+  };
+
+  const submitRemove = (member: FamilyMemberView) => {
+    setFamilyError(null);
+    setRemovingUserId(member.userId);
+    removeMember.mutate(
+      { familyId, userId: member.userId },
+      {
+        onError: (error) =>
+          setFamilyError(toDisplayError(error, t("family.members.removeError")).message),
+        onSettled: () => setRemovingUserId(null),
+      },
+    );
+  };
+
+  const submitRevoke = (invitation: FamilyInvitationView) => {
+    setFamilyError(null);
+    setRevokingId(invitation.id);
+    revokeInvitation.mutate(invitation.id, {
+      onError: (error) =>
+        setFamilyError(toDisplayError(error, t("family.invitations.revokeError")).message),
+      onSettled: () => setRevokingId(null),
+    });
+  };
+
+  const submitLeave = () => {
+    setFamilyError(null);
+    leaveFamily.mutate(familyId, {
+      // family_id is a token claim, so the session has to be reminted before the app stops
+      // believing it is still in this household.
+      onSuccess: () => void refreshNow().then(() => router.replace("/(app)/onboarding")),
+      onError: (error) => setFamilyError(toDisplayError(error, t("family.leave.error")).message),
+    });
+  };
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -204,6 +318,69 @@ export default function HouseholdScreen() {
               divider={false}
             />
           </ListSection>
+
+          {/* Family management. Drawn from @fm/ui against the Nocturne theme, so apps/recipes
+              can mount the same cards and get Organic without this screen knowing. */}
+          <View className="mt-n3 gap-n3">
+            <FamilyNameCard
+              name={familyName}
+              isAdmin={isAdmin}
+              busy={renameFamily.isPending}
+              error={familyError}
+              onRename={submitRename}
+              strings={{
+                heading: t("family.name.heading"),
+                rename: t("family.name.rename"),
+                nameLabel: t("family.name.label"),
+                save: t("family.name.save"),
+                cancel: t("family.name.cancel"),
+                required: t("family.name.required"),
+              }}
+            />
+
+            <FamilyMembersCard
+              members={memberViews}
+              isAdmin={isAdmin}
+              removingUserId={removingUserId}
+              onRemove={submitRemove}
+              strings={{
+                heading: t("family.members.heading"),
+                you: t("family.members.you"),
+                admin: t("family.members.admin"),
+                remove: t("family.members.remove"),
+                empty: t("family.members.empty"),
+              }}
+            />
+
+            {isAdmin ? (
+              <FamilyInvitationsCard
+                invitations={invitationViews}
+                revokingId={revokingId}
+                onRevoke={submitRevoke}
+                strings={{
+                  heading: t("family.invitations.heading"),
+                  revoke: t("family.invitations.revoke"),
+                  empty: t("family.invitations.empty"),
+                  expired: t("family.invitations.spent"),
+                }}
+              />
+            ) : null}
+
+            <LeaveFamilyCard
+              canLeave={canLeave}
+              busy={leaveFamily.isPending}
+              error={familyError}
+              onLeave={submitLeave}
+              strings={{
+                heading: t("family.leave.heading"),
+                body: t("family.leave.body"),
+                leave: t("family.leave.action"),
+                confirm: t("family.leave.confirm"),
+                cancel: t("family.leave.cancel"),
+                lastAdmin: t("family.leave.lastAdmin"),
+              }}
+            />
+          </View>
         </ScrollView>
       )}
 
