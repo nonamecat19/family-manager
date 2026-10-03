@@ -40,11 +40,12 @@ type Session struct {
 }
 
 type Store struct {
-	q     db.Querier
-	box   *secret.Box
-	auth  authv1connect.AuthServiceClient
-	now   func() time.Time
-	locks sync.Map
+	q       db.Querier
+	box     *secret.Box
+	auth    authv1connect.AuthServiceClient
+	now     func() time.Time
+	locksMu sync.Mutex
+	locks   map[int64]*sync.Mutex
 }
 
 type Options struct {
@@ -150,8 +151,17 @@ func (s *Store) cached(ctx context.Context, telegramUserID int64) (*Session, *db
 }
 
 func (s *Store) lockFor(telegramUserID int64) *sync.Mutex {
-	mu, _ := s.locks.LoadOrStore(telegramUserID, &sync.Mutex{})
-	return mu.(*sync.Mutex)
+	s.locksMu.Lock()
+	defer s.locksMu.Unlock()
+	if s.locks == nil {
+		s.locks = make(map[int64]*sync.Mutex)
+	}
+	mu, ok := s.locks[telegramUserID]
+	if !ok {
+		mu = &sync.Mutex{}
+		s.locks[telegramUserID] = mu
+	}
+	return mu
 }
 
 func (s *Store) refresh(ctx context.Context, link db.TelegramLink) (*Session, error) {

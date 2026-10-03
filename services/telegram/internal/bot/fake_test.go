@@ -202,10 +202,10 @@ func (f *fakeStates) ClearChatState(_ context.Context, _ db.ClearChatStateParams
 	return 1, nil
 }
 
-func callback(data string, user_id ...int64) telegram.Update {
+func callback(data string, userID ...int64) telegram.Update {
 	id := int64(42)
-	if len(user_id) > 0 {
-		id = user_id[0]
+	if len(userID) > 0 {
+		id = userID[0]
 	}
 	return telegram.Update{
 		UpdateID: 2,
