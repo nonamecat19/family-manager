@@ -28,6 +28,7 @@ edits to change it. Decisions that could reasonably have gone the other way have
 | RPC interceptors | recover · access log + request id · auth, in that order | `libs/go/rpc` | [0008](adr/0008-rpc-interceptors.md) |
 | correlation | `X-Request-Id`, HTTP and NATS headers | `libs/go/rpc`, `libs/go/events` | [0008](adr/0008-rpc-interceptors.md) |
 | tracing | OpenTelemetry → OTLP collector — **decided, not built** | — | [0006](adr/0006-observability.md) |
+| metrics | Prometheus, `client_golang`; RPC counters + latency in `rpc.Observe`, `/metrics` on the internal listener | `libs/go/rpc`, `infra/prometheus/prometheus.yml`, `docker-compose.yml` | [0015](adr/0015-prometheus-metrics.md) |
 | sign-in rate limiting | in-process, per account | `services/auth/internal/throttle` | — |
 | Go linting | golangci-lint | `.golangci.yml`, `just lint-go` | — |
 | vulnerability scanning | govulncheck, weekly | `.github/workflows/vuln.yml`, `just vuln` | — |
@@ -117,11 +118,16 @@ Details and key rotation: [ADR 0005](adr/0005-auth.md).
 `trace_id`/`span_id` stamped on every log record. Exporter is OTLP; unset endpoint = no export,
 ids still generated. [ADR 0006](adr/0006-observability.md).
 
+Metrics are built: `rpc.Observe` counts every Connect/gRPC call by procedure and code and
+times it, the default registry adds Go runtime and process metrics, and each service serves
+`/metrics` on its internal listener (auth and telegram on their only one). Prometheus scrapes
+them from `infra/prometheus/prometheus.yml`. [ADR 0015](adr/0015-prometheus-metrics.md).
+
 ## Local stack
 
 ```sh
 just tools     # buf, sqlc, air, golang-migrate, golangci-lint, govulncheck (once)
-just up        # postgres:5432  minio:9000/9001  nats:4222 (monitor :8222)
+just up        # postgres:5432  minio:9000/9001  nats:4222 (monitor :8222)  prometheus:9095
 just install
 just dev-apps
 cd services/<name> && air

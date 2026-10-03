@@ -45,6 +45,9 @@
 		-Server
 	}
 
+	@scrape path /metrics /actuator/prometheus
+	respond @scrape 404
+
 	reverse_proxy {args[0]} {
 		# The services serve Connect/JSON and gRPC off the same port via h2c, so proxy upstream
 		# with prior-knowledge HTTP/2. Caddy's default HTTP/1.1 transport carries Connect unary

@@ -76,3 +76,23 @@ func TestHealthzReportsDatabaseTrouble(t *testing.T) {
 		t.Errorf("healthz with a live pool returned %d, want 200", rec.Code)
 	}
 }
+
+func TestMetricsAreServedOnlyOnTheInternalListener(t *testing.T) {
+	internal := internalMux(handler.New(handler.Options{}), okPinger{}, nil)
+	rec := httptest.NewRecorder()
+	internal.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("internal /metrics returned %d, want 200", rec.Code)
+	}
+
+	verifier, err := fmauth.NewVerifier(fmauth.VerifierConfig{JWKSURL: "http://example.invalid/jwks"})
+	if err != nil {
+		t.Fatalf("NewVerifier: %v", err)
+	}
+	public := publicMux(handler.New(handler.Options{}), verifier, okPinger{}, nil)
+	rec = httptest.NewRecorder()
+	public.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("public /metrics returned %d, want 404", rec.Code)
+	}
+}
