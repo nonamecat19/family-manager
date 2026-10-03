@@ -300,4 +300,20 @@ export const strings = {
     tooManyAttempts: "Too many attempts. Wait a bit and try again.",
     failed: "That did not go through. Try again.",
   },
+
+  widgets: {
+    recentNotesTitle: "Recent notes",
+    recentNotesDescription: "Your most recently edited notes.",
+    starredNotesTitle: "Starred notes",
+    starredNotesDescription: "The notes you starred, at a glance.",
+    newNoteTitle: "New note",
+    newNoteDescription: "Start a note straight from your home screen.",
+    newNoteAction: "New note",
+    signIn: "Open app to sign in",
+    errorTitle: "Couldn't load this widget",
+    retry: "Retry",
+    emptyTitle: "Nothing here yet",
+    emptyBody: "Notes you write will show up here.",
+    updatedAt: (when: string) => `Updated ${when}`,
+  },
 } as const;
