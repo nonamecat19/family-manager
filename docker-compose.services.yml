@@ -122,11 +122,19 @@ services:
       NOTES_DB_USER: ${POSTGRES_USER:-admin}
       NOTES_DB_PASSWORD: ${POSTGRES_PASSWORD:-root}
       NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      NOTES_STORAGE_PROVIDER: minio
+      NOTES_STORAGE_ENDPOINT: minio:9000
+      NOTES_STORAGE_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      NOTES_STORAGE_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      NOTES_STORAGE_BUCKET: notes
+      NOTES_STORAGE_PUBLIC_URL: http://localhost:${MINIO_PORT:-9000}
     ports:
       - "${NOTES_PORT:-8085}:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
       auth:
         condition: service_healthy
     healthcheck:

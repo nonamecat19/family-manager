@@ -4,12 +4,16 @@ import com.example.notesjava.group.domain.Group;
 import com.example.notesjava.note.domain.Note;
 import com.example.notesjava.note.domain.NoteActivity;
 import com.example.notesjava.note.domain.NoteComment;
+import com.example.notesjava.share.service.NoteAccess;
 import com.google.protobuf.Timestamp;
 import com.nnc.familymanager.notes.v1.Activity;
 import com.nnc.familymanager.notes.v1.ActivityKind;
 import com.nnc.familymanager.notes.v1.Block;
 import com.nnc.familymanager.notes.v1.Comment;
 import com.nnc.familymanager.notes.v1.Notebook;
+import com.nnc.familymanager.notes.v1.Share;
+import com.nnc.familymanager.notes.v1.SharePermission;
+import com.nnc.familymanager.notes.v1.ShareSubject;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +24,7 @@ public final class NotesMapper {
     private NotesMapper() {
     }
 
-    public static com.nnc.familymanager.notes.v1.Note toProto(Note note) {
+    public static com.nnc.familymanager.notes.v1.Note toProto(Note note, NoteAccess access) {
         List<Block> blocks = BlockCodec.decode(note.getBlocks(), note.getContent());
         Group group = note.getGroup();
 
@@ -36,7 +40,12 @@ public final class NotesMapper {
                 .setPreview(BlockCodec.preview(blocks))
                 .setTaskTotal(BlockCodec.taskTotal(blocks))
                 .setTaskDone(BlockCodec.taskDone(blocks))
-                .setCanEdit(true);
+                .setCanEdit(access.canEdit())
+                .setShared(access.shared());
+
+        for (com.example.notesjava.share.domain.Share share : access.shares()) {
+            builder.addShares(toProto(share));
+        }
 
         if (group != null) {
             builder.setNotebookId(String.valueOf(group.getId()));
@@ -54,6 +63,7 @@ public final class NotesMapper {
         Notebook.Builder builder = Notebook.newBuilder()
                 .setId(String.valueOf(group.getId()))
                 .setFamilyId(text(group.getFamilyId()))
+                .setOwnerUserId(text(group.getOwnerUserId()))
                 .setName(group.getTitle())
                 .setArchived(false)
                 .setNoteCount((int) noteCount);
@@ -63,6 +73,21 @@ public final class NotesMapper {
         }
         if (group.getUpdatedAt() != null) {
             builder.setUpdatedAt(timestamp(group.getUpdatedAt()));
+        }
+        return builder.build();
+    }
+
+    public static Share toProto(com.example.notesjava.share.domain.Share share) {
+        ShareSubject subject = ShareSubject.forNumber(share.getSubject());
+        SharePermission permission = SharePermission.forNumber(share.getPermission());
+        Share.Builder builder = Share.newBuilder()
+                .setId(String.valueOf(share.getId()))
+                .setSubject(subject == null ? ShareSubject.SHARE_SUBJECT_UNSPECIFIED : subject)
+                .setMemberUserId(text(share.getMemberUserId()))
+                .setPermission(permission == null ? SharePermission.SHARE_PERMISSION_UNSPECIFIED : permission)
+                .setGrantedByUserId(text(share.getGrantedByUserId()));
+        if (share.getCreatedAt() != null) {
+            builder.setCreatedAt(timestamp(share.getCreatedAt()));
         }
         return builder.build();
     }

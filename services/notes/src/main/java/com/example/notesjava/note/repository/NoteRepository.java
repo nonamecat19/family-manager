@@ -34,17 +34,7 @@ public interface NoteRepository extends JpaRepository<Note, Long>, JpaSpecificat
 
     Optional<Note> findByIdAndFamilyId(Long id, UUID familyId);
 
-    @EntityGraph(attributePaths = {"group"})
-    @Query("""
-            SELECT n FROM Note n
-            WHERE n.familyId = :familyId
-              AND n.archived = FALSE
-              AND (LOWER(n.title) LIKE :needle OR LOWER(COALESCE(n.content, '')) LIKE :needle)
-            ORDER BY n.updatedAt DESC
-            """)
-    List<Note> searchText(@Param("familyId") UUID familyId, @Param("needle") String needle, Pageable pageable);
-
-    long countByFamilyIdAndGroupId(UUID familyId, Long groupId);
+    List<Note> findByFamilyIdAndGroup_IdAndOwnerUserId(UUID familyId, Long groupId, UUID ownerUserId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Note n SET n.group = NULL WHERE n.group.id = :groupId AND n.familyId = :familyId")

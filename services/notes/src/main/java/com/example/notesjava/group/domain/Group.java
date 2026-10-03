@@ -37,6 +37,9 @@ public class Group extends BaseEntity {
     @Column(nullable = false, length = 32)
     private GroupColor color = GroupColor.DEFAULT;
 
+    @Column(name = "owner_user_id")
+    private UUID ownerUserId;
+
     public static Group of(UUID familyId, String title) {
         return Group.builder().familyId(familyId).title(title).build();
     }
@@ -44,5 +47,9 @@ public class Group extends BaseEntity {
     public void rename(String title, GroupColor color) {
         this.title = title;
         this.color = color;
+    }
+
+    public void owner(UUID ownerUserId) {
+        this.ownerUserId = ownerUserId;
     }
 }
