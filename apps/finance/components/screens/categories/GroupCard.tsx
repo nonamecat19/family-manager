@@ -1,14 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
-import {
-  Card,
-  CategoryIconGrid,
-  Icon,
-  IconCircle,
-  nocturne,
-  tintFor,
-  type CategoryGridItem,
-} from "@/components/nocturne";
+import { Card, type CategoryGridItem, CategoryIconGrid, IconCircle, tintFor } from "@/components/kit";
+import { Icon, organic } from "@fm/ui";
 
 export interface GroupCardProps {
   name: string;
@@ -42,12 +35,12 @@ export function GroupCard({
         accessibilityLabel={name}
         accessibilityState={{ expanded }}
         onPress={onToggle}
-        className="flex-row items-center gap-n4 px-n4 py-n4"
+        className="flex-row items-center gap-[11.2px] px-[11.2px] py-[11.2px]"
         style={({ pressed }) => (pressed ? { opacity: 0.82 } : null)}
       >
         <IconCircle icon={icon} tint={tintFor(colorStep)} size={34} />
         <View className="flex-1">
-          <Text className="text-[14px] font-medium text-fg" numberOfLines={1}>
+          <Text className="text-[14px] font-fig-med text-fg" numberOfLines={1}>
             {name}
           </Text>
           <Text className="mt-[2px] text-[10.5px] text-neutral-600" numberOfLines={1}>
@@ -57,7 +50,7 @@ export function GroupCard({
         <Icon
           name={expanded ? "caret-up" : "caret-down"}
           size={14}
-          color={expanded ? nocturne.neutral[500] : nocturne.neutral[700]}
+          color={expanded ? organic.neutral[600] : organic.neutral[700]}
         />
       </Pressable>
 
@@ -66,7 +59,7 @@ export function GroupCard({
           items={categories}
           onSelect={onSelectCategory}
           more={{ label: addLabel, onPress: onAddCategory }}
-          className="px-n3 pb-n4"
+          className="px-[8.4px] pb-[11.2px]"
         />
       ) : null}
     </Card>

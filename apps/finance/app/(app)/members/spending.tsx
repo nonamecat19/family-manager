@@ -1,8 +1,8 @@
+import { LoadError } from "@/components/kit/LoadError.tsx";
 import {
   fromWire,
   InsightKind,
   monthPeriod,
-  toDisplayError,
   useMemberBreakdown,
   type Insight,
   type Money,
@@ -12,28 +12,8 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Card,
-  EmptyState,
-  formatMoney,
-  Icon,
-  iconOr,
-  Kicker,
-  memberColor,
-  MoneyText,
-  monthName,
-  monthNameLower,
-  MonthStepper,
-  nocturne,
-  parseISO,
-  Screen,
-  ScreenHeader,
-  Sheet,
-  SplitBar,
-  type SplitPart,
-  type Translate,
-} from "@/components/nocturne";
+import { Card, formatMoney, memberColor, MoneyText, monthName, monthNameLower, MonthStepper, parseISO, SplitBar, type SplitPart, type Translate } from "@/components/kit";
+import { EmptyState, Icon, iconOr, Kicker, organic, Screen, ScreenHeader, Sheet, Loading } from "@fm/ui";
 
 interface MemberSlice {
   id: string;
@@ -85,14 +65,15 @@ export default function PerMemberSpendingScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={focusMember?.name ?? t("member.title")}
-        subtitle={focusMember ? t("member.title") : undefined}
-        leading={{ icon: "arrow-left", label: t("common.back"), onPress: () => router.back() }}
-      >
+      <View className="gap-[8px] px-[22px] pt-[8px]">
+        <ScreenHeader
+          title={focusMember?.name ?? t("member.title")}
+          kicker={focusMember ? t("member.title") : undefined}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+        />
         <MonthButton label={monthName(t, month)} onPress={() => setPickerOpen(true)} />
-      </ScreenHeader>
+      </View>
 
       {breakdown.isPending ? (
         <Loading label={t("common.loadingEllipsis")} />
@@ -100,15 +81,15 @@ export default function PerMemberSpendingScreen() {
         <LoadError error={breakdown.error} onRetry={() => void breakdown.refetch()} />
       ) : members.length === 0 || total.amountMinor === 0 ? (
         <View className="flex-1 justify-center">
-          <EmptyState icon="chart-bar" title={t("charts.emptyTitle")} body={t("charts.emptyBody")} />
+          <EmptyState title={t("charts.emptyTitle")} body={t("charts.emptyBody")} />
         </View>
       ) : (
         <ScrollView
           contentContainerStyle={{
-            paddingHorizontal: nocturne.space.n4,
-            paddingTop: nocturne.space.n5,
-            paddingBottom: nocturne.space.n6,
-            gap: nocturne.space.n4,
+            paddingHorizontal: 11.2,
+            paddingTop: 16.8,
+            paddingBottom: 22.4,
+            gap: 11.2,
           }}
         >
           <SplitCard
@@ -118,13 +99,13 @@ export default function PerMemberSpendingScreen() {
             highlightId={focusMember?.id ?? ""}
           />
 
-          <View className="gap-n3">
+          <View className="gap-[8.4px]">
             <Kicker className="ml-[2px]">{t("member.byGroup")}</Kicker>
-            <Card className="gap-n5 border border-border">
+            <Card className="gap-[16.8px] border border-border">
               {(data?.groups ?? []).map((group) => (
                 <View key={group.groupId}>
-                  <View className="mb-n2 flex-row items-baseline justify-between">
-                    <Text className="text-[12.5px] font-medium text-fg">{group.name}</Text>
+                  <View className="mb-[5.6px] flex-row items-baseline justify-between">
+                    <Text className="text-[12.5px] font-fig-med text-fg">{group.name}</Text>
                     <MoneyText value={fromWire(group.total, currency)} size={12.5} weight="regular" tone="muted" />
                   </View>
                   <SplitBar
@@ -147,7 +128,7 @@ export default function PerMemberSpendingScreen() {
             ))
           ) : (
             <Card className="border border-border">
-              <EmptyState icon="trend-up" title={t("member.emptyTitle")} body={t("member.emptyBody")} />
+              <EmptyState title={t("member.emptyTitle")} body={t("member.emptyBody")} />
             </Card>
           )}
         </ScrollView>
@@ -174,10 +155,10 @@ function MonthButton({ label, onPress }: { label: string; onPress: () => void })
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={8}
-      className="mt-n1 flex-row items-center justify-end gap-n2 self-end"
+      className="mt-[2.8px] flex-row items-center justify-end gap-[5.6px] self-end"
     >
-      <Text className="text-[12px] text-neutral-400">{label}</Text>
-      <Icon name="caret-down" size={10} color={nocturne.neutral[400]} />
+      <Text className="text-[12px] text-neutral-600">{label}</Text>
+      <Icon name="caret-down" size={10} color={organic.neutral[600]} />
     </Pressable>
   );
 }
@@ -195,8 +176,8 @@ function SplitCard({
 }) {
   return (
     <Card className="border border-border">
-      <View className="mb-n4 flex-row items-baseline justify-between">
-        <Text className="text-[13px] font-medium text-fg">{title}</Text>
+      <View className="mb-[11.2px] flex-row items-baseline justify-between">
+        <Text className="text-[13px] font-fig-med text-fg">{title}</Text>
         <MoneyText value={total} size={11} weight="regular" tone="muted" />
       </View>
       <SplitBar
@@ -210,17 +191,17 @@ function SplitCard({
           }),
         )}
       />
-      <View className="mt-n4 flex-row flex-wrap gap-n5">
+      <View className="mt-[11.2px] flex-row flex-wrap gap-[16.8px]">
         {members.map((member) => (
-          <View key={member.id} className="min-w-[110px] flex-1 flex-row items-center gap-n3">
+          <View key={member.id} className="min-w-[110px] flex-1 flex-row items-center gap-[8.4px]">
             <View
               className="h-[8px] w-[8px] rounded-full"
               style={{ backgroundColor: member.color }}
             />
             <View>
               <Text
-                className={`text-[12.5px] font-medium ${
-                  highlightId === "" || member.id === highlightId ? "text-fg" : "text-neutral-500"
+                className={`text-[12.5px] font-fig-med ${
+                  highlightId === "" || member.id === highlightId ? "text-fg" : "text-neutral-600"
                 }`}
               >
                 {member.name}
@@ -247,11 +228,11 @@ function InsightCard({
 }) {
   const body = insight.body || composeBody(insight, currency, month, t);
   return (
-    <Card className="flex-row items-start gap-n4 border border-border">
-      <Icon name={iconOr(insight.icon, "trend-up")} size={18} color={nocturne.accent[400]} />
+    <Card className="flex-row items-start gap-[11.2px] border border-border">
+      <Icon name={iconOr(insight.icon, "trend-up")} size={18} color={organic.accent[600]} />
       <View className="flex-1">
-        <Text className="mb-[2px] text-[12.5px] font-medium text-fg">{insight.title}</Text>
-        {body ? <Text className="text-[11.5px] leading-[17px] text-neutral-500">{body}</Text> : null}
+        <Text className="mb-[2px] text-[12.5px] font-fig-med text-fg">{insight.title}</Text>
+        {body ? <Text className="text-[11.5px] leading-[17px] text-neutral-600">{body}</Text> : null}
       </View>
     </Card>
   );
@@ -273,28 +254,4 @@ function composeBody(insight: Insight, currency: string, month: number, t: Trans
     sentences.push(t("member.insightBudget", { percent: Math.round(insight.ratio * 100) }));
   }
   return sentences.join(" ");
-}
-
-function Loading({ label }: { label: string }) {
-  return (
-    <View className="flex-1 items-center justify-center">
-      <Text className="text-[15px] text-neutral-500">{label}</Text>
-    </View>
-  );
-}
-
-function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  const { t } = useI18n();
-  const shown = toDisplayError(error, t("common.loadFailed"));
-  return (
-    <View className="flex-1 justify-center gap-n4 px-n6">
-      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
-      {shown.reference ? (
-        <Text className="text-[12px] text-neutral-600">
-          {t("common.errorReference", { ref: shown.reference })}
-        </Text>
-      ) : null}
-      <Button title={t("common.tryAgain")} onPress={onRetry} />
-    </View>
-  );
 }

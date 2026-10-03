@@ -3,7 +3,9 @@ import { useAuth } from "@fm/auth";
 import { createI18n } from "@fm/i18n";
 import { useCallback, type ReactNode } from "react";
 
-import { nocturne } from "../nocturne/tokens.ts";
+import { defaultUiTranslate, UiLabelsProvider, type UiTranslate } from "@fm/ui";
+
+import { organic } from "../kit/tokens.ts";
 import { en } from "./translations/en.ts";
 import { uk } from "./translations/uk.ts";
 
@@ -22,12 +24,21 @@ const i18n = createI18n<Locale, typeof en>({
   defaultLocale: DEFAULT_LOCALE,
   storageKey: "fm.finance.locale",
   dictionaries: { en, uk },
-  bootBackground: nocturne.bg,
+  bootBackground: organic.bg,
 });
 
 const { I18nProvider: BaseI18nProvider, useI18n, bootT, deviceLocale } = i18n;
 
 export { useI18n, bootT, deviceLocale };
+
+function UiLabelsBridge({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
+  const translate = useCallback<UiTranslate>(
+    (key, vars) => (Object.hasOwn(en, key) ? t(key as TranslationKey, vars) : defaultUiTranslate(key, vars)),
+    [t],
+  );
+  return <UiLabelsProvider translate={translate}>{children}</UiLabelsProvider>;
+}
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { status } = useAuth();
@@ -48,7 +59,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   return (
     <BaseI18nProvider remoteLocale={remoteLocale} onLocaleChange={onLocaleChange}>
-      {children}
+      <UiLabelsBridge>{children}</UiLabelsBridge>
     </BaseI18nProvider>
   );
 }

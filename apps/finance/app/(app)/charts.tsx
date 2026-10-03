@@ -1,13 +1,12 @@
+import { LoadError } from "@/components/kit/LoadError.tsx";
 import {
   BudgetTargetFilter,
   fromWire,
   type SeriesBucket,
   SeriesStacking,
-  toDisplayError,
   TransactionKind,
   useBudgets,
   useCategoryTree,
-  useFamily,
   useSpendingSeries,
 } from "@fm/api";
 import { useRouter } from "expo-router";
@@ -15,25 +14,8 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  type BarPoint,
-  type BarSeries,
-  BudgetBar,
-  Button,
-  Card,
-  ChartLegend,
-  Drawer,
-  EmptyState,
-  memberColor,
-  monthNameLower,
-  nocturne,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  StackedBarSeries,
-  useDrawerItems,
-} from "@/components/nocturne";
-
+import { type BarPoint, type BarSeries, BudgetBar, Card, ChartLegend, memberColor, monthNameLower, SegmentedTabs, StackedBarSeries } from "@/components/kit";
+import { EmptyState, IconButton, organic, Screen, ScreenHeader } from "@fm/ui";
 
 const GRANULARITIES = ["year", "month", "week", "day"] as const;
 type Granularity = (typeof GRANULARITIES)[number];
@@ -54,8 +36,6 @@ export default function ChartsScreen() {
 
   const [kind, setKind] = useState<KindTab>("expenses");
   const [granularity, setGranularity] = useState<Granularity>("month");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const drawerItems = useDrawerItems();
 
   const series = useSpendingSeries({
     granularity,
@@ -65,7 +45,6 @@ export default function ChartsScreen() {
   });
   const budgets = useBudgets({ target: BudgetTargetFilter.GROUP });
   const tree = useCategoryTree();
-  const family = useFamily();
 
   const chart = useChartData(series.data?.buckets ?? [], t("common.family"));
   const groupNames = useMemo(() => {
@@ -101,18 +80,20 @@ export default function ChartsScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={t("charts.title")}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setMenuOpen(true) }}
-        trailing={{
-          icon: "users-three",
-          label: t("nav.household"),
-          onPress: () => router.push("/(app)/household"),
-        }}
-      >
+      <View className="gap-[16px] px-[22px] pt-[8px]">
+        <ScreenHeader
+          title={t("charts.title")}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+          actions={
+            <IconButton
+              icon="users-three"
+              label={t("nav.household")}
+              onPress={() => router.push("/(app)/household")}
+            />
+          }
+        />
         <SegmentedTabs<KindTab>
-          className="mt-n4"
           value={kind}
           onChange={setKind}
           options={[
@@ -121,27 +102,27 @@ export default function ChartsScreen() {
             { value: "income", label: t("common.income") },
           ]}
         />
-      </ScreenHeader>
+      </View>
 
       {pending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("gate.preparing")}</Text>
+          <Text className="text-[13px] text-neutral-600">{t("gate.preparing")}</Text>
         </View>
       ) : failed ? (
-        <ErrorState error={series.error ?? budgets.error} onRetry={retry} />
+        <LoadError error={series.error ?? budgets.error} onRetry={retry} />
       ) : empty ? (
         <View className="flex-1 justify-center">
-          <EmptyState icon="chart-bar" title={t("charts.emptyTitle")} body={t("charts.emptyBody")} />
+          <EmptyState title={t("charts.emptyTitle")} body={t("charts.emptyBody")} />
         </View>
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-n3 px-n4 pb-n6 pt-n4"
+          contentContainerClassName="gap-[8.4px] px-[11.2px] pb-[22.4px] pt-[11.2px]"
           showsVerticalScrollIndicator={false}
         >
           <Card>
             <GranularityStrip value={granularity} onChange={setGranularity} />
-            <View accessibilityLabel={t("charts.byMember")} className="mt-n5">
+            <View accessibilityLabel={t("charts.byMember")} className="mt-[16.8px]">
               <StackedBarSeries
                 points={chart.points}
                 series={chart.series}
@@ -150,13 +131,13 @@ export default function ChartsScreen() {
                 activeIndex={series.data?.currentBucketIndex}
               />
             </View>
-            <ChartLegend series={chart.series} className="mt-n4 justify-center" />
+            <ChartLegend series={chart.series} className="mt-[11.2px] justify-center" />
           </Card>
 
           {budgetRows.length > 0 ? (
             <Card>
-              <View className="mb-n4 flex-row items-baseline justify-between">
-                <Text className="text-[13px] font-medium text-fg">
+              <View className="mb-[11.2px] flex-row items-baseline justify-between">
+                <Text className="text-[13px] font-fig-med text-fg">
                   {t("charts.groupBudgets", { month: monthNameLower(t, month) })}
                 </Text>
                 <Text className="text-[11px] text-neutral-600">
@@ -166,7 +147,7 @@ export default function ChartsScreen() {
                   })}
                 </Text>
               </View>
-              <View className="gap-n3">
+              <View className="gap-[8.4px]">
                 {budgetRows.map((row) => (
                   <BudgetBar
                     key={row.id}
@@ -181,19 +162,6 @@ export default function ChartsScreen() {
           ) : null}
         </ScrollView>
       )}
-
-      <Drawer
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: "" }}
-        household={{ name: family.data?.family?.name ?? "" }}
-        items={drawerItems}
-        activeId="charts"
-        onSelect={(item) => {
-          setMenuOpen(false);
-          if (item.href && item.id !== "charts") router.push(item.href);
-        }}
-      />
     </Screen>
   );
 }
@@ -213,7 +181,7 @@ function GranularityStrip({
     day: t("charts.granularity.day"),
   };
   return (
-    <View className="flex-row justify-center gap-n5">
+    <View className="flex-row justify-center gap-[16.8px]">
       {GRANULARITIES.map((option) => {
         const active = option === value;
         return (
@@ -227,13 +195,13 @@ function GranularityStrip({
             className="items-center"
           >
             <Text
-              className={`pb-[3px] text-[12px] ${active ? "font-medium text-accent-400" : "text-neutral-500"}`}
+              className={`pb-[3px] text-[12px] ${active ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
             >
               {labels[option]}
             </Text>
             <View
               className="h-[2px] w-full rounded-full"
-              style={{ backgroundColor: active ? nocturne.accent.DEFAULT : "transparent" }}
+              style={{ backgroundColor: active ? organic.accent.DEFAULT : "transparent" }}
             />
           </Pressable>
         );
@@ -284,20 +252,4 @@ function useChartData(
     }));
     return { series, points };
   }, [buckets, familyLabel]);
-}
-
-function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  const { t } = useI18n();
-  const shown = toDisplayError(error, t("common.loadFailed"));
-  return (
-    <View className="flex-1 justify-center gap-n4 px-n6">
-      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
-      {shown.reference ? (
-        <Text className="text-[12px] text-neutral-600">
-          {t("common.errorReference", { ref: shown.reference })}
-        </Text>
-      ) : null}
-      <Button title={t("common.tryAgain")} onPress={onRetry} />
-    </View>
-  );
 }

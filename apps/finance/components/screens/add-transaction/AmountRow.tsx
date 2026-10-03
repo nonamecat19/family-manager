@@ -1,6 +1,5 @@
 import { Text, TextInput, View } from "react-native";
-
-import { Icon, nocturne } from "@/components/nocturne";
+import { Icon, organic } from "@fm/ui";
 
 export interface AmountRowProps {
   value: string;
@@ -12,7 +11,7 @@ export interface AmountRowProps {
 
 export function AmountRow({ value, onChangeValue, currencyCode, label, invalid = false }: AmountRowProps) {
   return (
-    <View className="flex-row items-end justify-center gap-n3">
+    <View className="flex-row items-end justify-center gap-[8.4px]">
       <TextInput
         accessibilityLabel={label}
         value={value}
@@ -20,17 +19,17 @@ export function AmountRow({ value, onChangeValue, currencyCode, label, invalid =
         keyboardType="decimal-pad"
         inputMode="decimal"
         placeholder="0"
-        placeholderTextColor={nocturne.neutral[600]}
-        selectionColor={nocturne.accent.DEFAULT}
-        className="w-[150px] pb-n2 text-right text-[30px] font-medium text-fg"
+        placeholderTextColor={organic.neutral[600]}
+        selectionColor={organic.accent.DEFAULT}
+        className="w-[150px] pb-[5.6px] text-right text-[30px] font-fig-med text-fg"
         style={{
           borderBottomWidth: 1,
-          borderBottomColor: invalid ? nocturne.overspend : nocturne.neutral[700],
+          borderBottomColor: invalid ? organic.danger : organic.neutral[700],
         }}
       />
-      <Text className="pb-n3 text-[15px] font-medium text-accent-400">{currencyCode}</Text>
-      <View className="pb-n3">
-        <Icon name="calculator" size={19} color={nocturne.neutral[500]} />
+      <Text className="pb-[8.4px] text-[15px] font-fig-med text-accent-700">{currencyCode}</Text>
+      <View className="pb-[8.4px]">
+        <Icon name="calculator" size={19} color={organic.neutral[600]} />
       </View>
     </View>
   );

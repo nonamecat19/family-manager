@@ -1,18 +1,7 @@
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 
-import {
-  BudgetBar,
-  DonutChart,
-  Icon,
-  IconCircle,
-  MemberAvatar,
-  MoneyText,
-  formatCompact,
-  iconOr,
-  nocturne,
-  seriesColor,
-} from "@/components/nocturne";
+import { BudgetBar, DonutChart, formatCompact, IconCircle, MoneyText, seriesColor } from "@/components/kit";
 
 import { WidgetAmount } from "./gallery.tsx";
 import type {
@@ -23,13 +12,13 @@ import type {
   QuickAddModel,
   RecentLine,
 } from "./data.ts";
+import { Icon, Avatar, iconOr, organic } from "@fm/ui";
 
 const COMPACT_FROM = 10_000;
 
 function EmptyLine({ label }: { label: string }) {
-  return <Text className="py-n2 text-[11px] text-neutral-600">{label}</Text>;
+  return <Text className="py-[5.6px] text-[11px] text-neutral-600">{label}</Text>;
 }
-
 
 export function QuickAddPreview({
   model,
@@ -42,11 +31,11 @@ export function QuickAddPreview({
 }) {
   return (
     <View>
-      <View className="mb-n4 flex-row items-center justify-between">
-        <Text className="text-[11px] font-medium text-neutral-400">{ownerLabel}</Text>
-        <Icon name="arrow-clockwise" size={12} color={nocturne.neutral[600]} />
+      <View className="mb-[11.2px] flex-row items-center justify-between">
+        <Text className="text-[11px] font-fig-med text-neutral-600">{ownerLabel}</Text>
+        <Icon name="arrow-clockwise" size={12} color={organic.neutral[600]} />
       </View>
-      <View className="flex-row gap-n3">
+      <View className="flex-row gap-[8.4px]">
         {model.templates.map((template, index) => (
           <TemplateCell
             key={template.id}
@@ -88,18 +77,18 @@ function TemplateCell({
       style={{
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: highlighted ? nocturne.accent[700] : nocturne.neutral[800],
-        paddingVertical: nocturne.space.n3,
-        paddingHorizontal: nocturne.space.n1,
+        borderColor: highlighted ? organic.accent[700] : organic.neutral[800],
+        paddingVertical: 8.4,
+        paddingHorizontal: 2.8,
       }}
     >
       <Icon
         name={iconOr(icon)}
         size={19}
-        color={highlighted ? nocturne.accent[300] : nocturne.neutral[400]}
+        color={highlighted ? organic.accent[300] : organic.neutral[600]}
       />
       <Text
-        className={`mt-[3px] text-[9.5px] font-medium ${highlighted ? "text-accent-300" : "text-neutral-400"}`}
+        className={`mt-[3px] text-[9.5px] font-fig-med ${highlighted ? "text-accent-700" : "text-neutral-600"}`}
         numberOfLines={1}
       >
         {label}
@@ -109,7 +98,6 @@ function TemplateCell({
   );
 }
 
-
 export function MonthPreview({
   model,
   overspentLabel,
@@ -118,7 +106,7 @@ export function MonthPreview({
   overspentLabel: string | null;
 }) {
   return (
-    <View className="flex-row items-center gap-n4">
+    <View className="flex-row items-center gap-[11.2px]">
       <DonutChart
         segments={model.slices.map((slice) => ({
           id: slice.id,
@@ -133,13 +121,12 @@ export function MonthPreview({
         <Text className="text-[9.5px] text-neutral-600">{model.label}</Text>
         <MoneyText value={model.total} size={15} className="mt-[1px]" />
         {overspentLabel ? (
-          <Text className="mt-[1px] text-[9.5px] text-overspend">{overspentLabel}</Text>
+          <Text className="mt-[1px] text-[9.5px] text-error">{overspentLabel}</Text>
         ) : null}
       </View>
     </View>
   );
 }
-
 
 export function CategoryPreview({
   model,
@@ -150,7 +137,7 @@ export function CategoryPreview({
 }) {
   if (!model) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="flex-row items-center gap-n3">
+    <View className="flex-row items-center gap-[8.4px]">
       <IconCircle icon={model.icon} index={model.index} size={28} />
       <View className="flex-1">
         <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>
@@ -161,7 +148,6 @@ export function CategoryPreview({
     </View>
   );
 }
-
 
 export function BudgetsAndFamilyPreview({
   model,
@@ -175,7 +161,7 @@ export function BudgetsAndFamilyPreview({
 
   return (
     <View>
-      <View className="gap-n3">
+      <View className="gap-[8.4px]">
         {model.budgets.map((budget) => (
           <BudgetBar
             key={budget.id}
@@ -184,19 +170,19 @@ export function BudgetsAndFamilyPreview({
             label={budget.label}
             valueLabel={`${formatCompact(budget.spent)} / ${formatCompact(budget.limit, { hideSymbol: true })}`}
             height={5}
-            color={nocturne.accent[400]}
+            color={organic.accent[600]}
           />
         ))}
       </View>
       {model.members.length > 0 ? (
         <View
-          className="mt-n4 gap-n2 pt-n4"
-          style={{ borderTopWidth: 1, borderTopColor: nocturne.neutral[800] }}
+          className="mt-[11.2px] gap-[5.6px] pt-[11.2px]"
+          style={{ borderTopWidth: 1, borderTopColor: organic.neutral[800] }}
         >
           {model.members.map((member, index) => (
-            <View key={member.id} className="flex-row items-center gap-n3">
-              <MemberAvatar name={member.name} index={index} size={20} />
-              <Text className="flex-1 text-[11px] text-neutral-400" numberOfLines={1}>
+            <View key={member.id} className="flex-row items-center gap-[8.4px]">
+              <Avatar name={member.name} index={index} size={20} />
+              <Text className="flex-1 text-[11px] text-neutral-600" numberOfLines={1}>
                 {member.name}
               </Text>
               <WidgetAmount value={member.spent} size={11} />
@@ -208,13 +194,12 @@ export function BudgetsAndFamilyPreview({
   );
 }
 
-
 export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; emptyLabel: string }) {
   if (lines.length === 0) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="gap-n3">
+    <View className="gap-[8.4px]">
       {lines.map((line, index) => (
-        <View key={line.id} className="flex-row items-center gap-n3">
+        <View key={line.id} className="flex-row items-center gap-[8.4px]">
           <View
             style={{
               width: 8,
@@ -223,7 +208,7 @@ export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; empt
               backgroundColor: seriesColor(index),
             }}
           />
-          <Text className="flex-1 text-[11.5px] text-neutral-300" numberOfLines={1}>
+          <Text className="flex-1 text-[11.5px] text-neutral-600" numberOfLines={1}>
             {line.label}
           </Text>
           <MoneyText value={line.amount} size={11.5} />
@@ -232,7 +217,6 @@ export function RecentPreview({ lines, emptyLabel }: { lines: RecentLine[]; empt
     </View>
   );
 }
-
 
 export function AccountsPreview({
   model,
@@ -243,7 +227,7 @@ export function AccountsPreview({
 }) {
   if (model.accounts.length === 0) return <EmptyLine label={emptyLabel} />;
   return (
-    <View className="flex-row gap-n5">
+    <View className="flex-row gap-[16.8px]">
       {model.accounts.map((account) => (
         <View key={account.id} className="flex-1">
           <Text className="text-[9.5px] text-neutral-600" numberOfLines={1}>

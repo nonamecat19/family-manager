@@ -1,6 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-
-import { Icon, Kicker, MemberAvatar, nocturne, type IconName } from "@/components/nocturne";
+import { Icon, Kicker, Avatar, organic, IconName } from "@fm/ui";
 
 export interface PickerFieldProps {
   label: string;
@@ -13,24 +12,24 @@ export interface PickerFieldProps {
 export function PickerField({ label, value, onPress, icon, avatar }: PickerFieldProps) {
   return (
     <View className="flex-1">
-      <Kicker className="mb-n2">{label}</Kicker>
+      <Kicker className="mb-[5.6px]">{label}</Kicker>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${value}`}
         onPress={onPress}
-        className="flex-row items-center gap-n2 rounded-md bg-surface px-n3 py-n3"
+        className="flex-row items-center gap-[5.6px] rounded-md bg-surface px-[8.4px] py-[8.4px]"
         style={({ pressed }) => ({
           borderWidth: 1,
-          borderColor: nocturne.neutral[800],
+          borderColor: organic.neutral[800],
           opacity: pressed ? 0.75 : 1,
         })}
       >
-        {avatar ? <MemberAvatar name={avatar.name} index={avatar.index} size={22} /> : null}
-        {icon ? <Icon name={icon} size={16} color={nocturne.accent[400]} /> : null}
-        <Text className="flex-1 text-[13px] font-medium text-fg" numberOfLines={1}>
+        {avatar ? <Avatar name={avatar.name} index={avatar.index} size={22} /> : null}
+        {icon ? <Icon name={icon} size={16} color={organic.accent[600]} /> : null}
+        <Text className="flex-1 text-[13px] font-fig-med text-fg" numberOfLines={1}>
           {value}
         </Text>
-        <Icon name="caret-down" size={11} color={nocturne.neutral[600]} />
+        <Icon name="caret-down" size={11} color={organic.neutral[600]} />
       </Pressable>
     </View>
   );

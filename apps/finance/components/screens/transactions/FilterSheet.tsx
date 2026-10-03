@@ -1,7 +1,8 @@
 import { View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import { Button, Chip, Kicker, Sheet } from "@/components/nocturne";
+import { ScrollSheet } from "@/components/kit";
+import { Button, Chip, Kicker } from "@fm/ui";
 
 export interface FilterOption {
   id: string;
@@ -33,41 +34,41 @@ export function FilterSheet({
 }: FilterSheetProps) {
   const { t } = useI18n();
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("transactions.filter")}>
-      <View className="gap-n5">
-        <View className="gap-n3">
+    <ScrollSheet visible={visible} onClose={onClose} title={t("transactions.filter")}>
+      <View className="gap-[16px]">
+        <View className="gap-[8px]">
           <Kicker>{t("household.members")}</Kicker>
-          <View className="flex-row flex-wrap gap-n2">
+          <View className="flex-row flex-wrap gap-[8px]">
             {members.map((member) => (
               <Chip
                 key={member.id}
                 label={member.label}
-                selected={memberIds.includes(member.id)}
+                active={memberIds.includes(member.id)}
                 onPress={() => onToggleMember(member.id)}
               />
             ))}
           </View>
         </View>
 
-        <View className="gap-n3">
+        <View className="gap-[8px]">
           <Kicker>{t("accounts.sharedSection")}</Kicker>
-          <View className="flex-row flex-wrap gap-n2">
+          <View className="flex-row flex-wrap gap-[8px]">
             {accounts.map((account) => (
               <Chip
                 key={account.id}
                 label={account.label}
-                selected={accountIds.includes(account.id)}
+                active={accountIds.includes(account.id)}
                 onPress={() => onToggleAccount(account.id)}
               />
             ))}
           </View>
         </View>
 
-        <View className="flex-row gap-n3">
-          <Button title={t("common.all")} variant="ghost" onPress={onClear} className="flex-1" />
-          <Button title={t("common.done")} onPress={onClose} className="flex-1" />
+        <View className="flex-row gap-[8px]">
+          <Button title={t("common.all")} tone="quiet" onPress={onClear} />
+          <View className="flex-1"><Button title={t("common.done")} onPress={onClose} /></View>
         </View>
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }

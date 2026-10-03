@@ -5,10 +5,9 @@ import * as Linking from "expo-linking";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 
-import { Body, Button, Caption, Field, Heading, Screen, TextLink } from "@fm/ui";
+import { Body, Button, Caption, Display, Field, Screen, TextLink, Icon, organic } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Icon, nocturne } from "../../components/nocturne/index.ts";
 
 const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
@@ -51,16 +50,14 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 justify-center gap-n5 px-n6"
+        className="flex-1 justify-center gap-[18px] px-[24px]"
       >
         <View>
-          {
-}
-          <View className="mb-n5 h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
-            <Icon name="wallet" size={22} color={nocturne.accent[400]} />
+          <View className="mb-[16px] h-[44px] w-[44px] items-center justify-center rounded-full border border-accent">
+            <Icon name="wallet" size={22} color={organic.accent[600]} />
           </View>
-          <Heading>{t("auth.title")}</Heading>
-          <View className="mt-n3">
+          <Display size={36}>{t("auth.title")}</Display>
+          <View className="mt-[10px]">
             <Body>{mode === "login" ? t("auth.signInBody") : t("auth.registerBody")}</Body>
           </View>
         </View>
@@ -114,8 +111,8 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (telegram.phase === "pending" && telegram.userCode) {
     return (
-      <View className="items-center gap-n3">
-        <Text className="text-[22px] font-semibold text-fg" style={{ letterSpacing: 3 }}>
+      <View className="items-center gap-[10px]">
+        <Text className="text-[22px] font-fig-semi text-fg" style={{ letterSpacing: 3 }}>
           {telegram.userCode}
         </Text>
         <Caption>{t("auth.telegramPendingHint")}</Caption>
@@ -135,7 +132,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
 
   if (failure) {
     return (
-      <View className="items-center gap-n3">
+      <View className="items-center gap-[10px]">
         <Caption>{failure}</Caption>
         <Button title={t("auth.telegramRetry")} onPress={() => void telegram.start()} />
       </View>

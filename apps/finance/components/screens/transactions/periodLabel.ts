@@ -1,6 +1,6 @@
 import type { DateRange, PeriodInput } from "@fm/api";
 
-import { dayHeading, monthNameGenitive, monthTitle, parseISO, type Translate } from "@/components/nocturne";
+import { dayHeading, monthNameGenitive, monthTitle, parseISO, type Translate } from "@/components/kit";
 
 export function periodLabel(t: Translate, period: PeriodInput, window: DateRange): string {
   switch (period.granularity) {

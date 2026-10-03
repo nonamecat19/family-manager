@@ -1,3 +1,4 @@
+import { LoadError } from "@/components/kit/LoadError.tsx";
 import {
   currentPeriod,
   FamilyMemberRole,
@@ -20,45 +21,13 @@ import {
   type Money,
 } from "@fm/api";
 import { useAuth } from "@fm/auth";
-import {
-  FamilyInvitationsCard,
-  FamilyMembersCard,
-  FamilyNameCard,
-  LeaveFamilyCard,
-  type FamilyInvitationView,
-  type FamilyMemberView,
-} from "@fm/ui";
+import { FamilyInvitationsCard, FamilyMembersCard, FamilyNameCard, LeaveFamilyCard, type FamilyInvitationView, type FamilyMemberView, Badge, Button, Divider, EmptyState, Field, Icon, IconButton, Kicker, Avatar, organic, Screen, ScreenHeader, ScrollBody, Sheet, SettingsToggleRow } from "@fm/ui";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Badge,
-  BottomIndicator,
-  Button,
-  Card,
-  Divider,
-  Drawer,
-  EmptyState,
-  Field,
-  Icon,
-  Kicker,
-  ListSection,
-  MemberAvatar,
-  MoneyText,
-  monthNameLower,
-  nocturne,
-  parseISO,
-  Row,
-  Screen,
-  ScreenHeader,
-  Sheet,
-  Stat,
-  ToggleRow,
-  useDrawerItems,
-  formatPercent,
-} from "@/components/nocturne";
+import { Card, formatPercent, ListSection, MoneyText, monthNameLower, parseISO, Row, Stat } from "@/components/kit";
 
 export default function HouseholdScreen() {
   const { t } = useI18n();
@@ -159,13 +128,11 @@ export default function HouseholdScreen() {
     });
   };
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [overspendPending, setOverspendPending] = useState<boolean | null>(null);
 
-  const drawerItems = useDrawerItems();
   const currency = settings.data?.baseCurrencyCode ?? "UAH";
   const data = overview.data;
   const familyName = family.data?.family?.name ?? t("household.title");
@@ -202,102 +169,101 @@ export default function HouseholdScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={familyName}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setMenuOpen(true) }}
-        trailing={{ icon: "gear", label: t("nav.settings"), onPress: () => router.push("/(app)/settings") }}
-      >
-        <View className="mt-n4 flex-row gap-n5">
+      <ScrollBody>
+        <ScreenHeader
+          title={familyName}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+          actions={
+            <IconButton
+              icon="gear"
+              label={t("nav.settings")}
+              onPress={() => router.push("/(app)/settings")}
+            />
+          }
+        />
+
+        <View className="flex-row gap-[20px]">
           <View>
             <Kicker>{t("household.sharedBalance")}</Kicker>
             <MoneyText value={sharedBalance} size={22} className="mt-[2px]" />
           </View>
-          <View className="w-[1px]" style={{ backgroundColor: nocturne.divider }} />
+          <View className="w-[1px]" style={{ backgroundColor: organic.divider }} />
           <View>
             <Kicker>{t("household.spendingIn", { month: monthNameLower(t, anchorMonth) })}</Kicker>
             <MoneyText value={periodExpense} size={22} className="mt-[2px]" />
           </View>
         </View>
-      </ScreenHeader>
 
-      {overview.isPending ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-        </View>
-      ) : overview.isError ? (
-        <LoadError error={overview.error} onRetry={() => void overview.refetch()} />
-      ) : (
-        <ScrollView className="flex-1 px-n4 pt-n4" contentContainerClassName="gap-n3 pb-n6">
-          <Kicker className="ml-[2px]">{t("household.members")}</Kicker>
+        {overview.isPending ? (
+          <View className="items-center py-[28px]">
+            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          </View>
+        ) : overview.isError ? (
+          <LoadError error={overview.error} onRetry={() => void overview.refetch()} />
+        ) : (
+          <>
+            <Kicker>{t("household.members")}</Kicker>
 
-          {members.length === 0 ? (
-            <EmptyState
-              icon="users-three"
-              title={t("household.members")}
-              action={{ label: t("household.invite"), onPress: openInvite }}
-            />
-          ) : (
-            members.map((entry, index) => (
-              <MemberCard
-                key={entry.member?.userId ?? String(index)}
-                index={index}
-                name={entry.member?.displayName ?? ""}
-                owner={entry.member?.role === MemberRole.OWNER}
-                pending={entry.member?.status === MemberStatus.PENDING}
-                privateAccountCount={entry.privateAccountCount}
-                spent={fromWire(entry.spent, currency)}
-                share={entry.share}
-                transactionCount={entry.transactionCount}
-                onPress={
-                  entry.member?.userId
-                    ? () =>
-                        router.push({
-                          pathname: "/(app)/members/spending",
-                          params: { memberId: entry.member?.userId ?? "" },
-                        })
-                    : undefined
-                }
+            {members.length === 0 ? (
+              <EmptyState
+                title={t("household.members")}
+                action={{ label: t("household.invite"), onPress: openInvite }}
               />
-            ))
-          )}
+            ) : (
+              <View className="gap-[8px]">
+                {members.map((entry, index) => (
+                  <MemberCard
+                    key={entry.member?.userId ?? String(index)}
+                    index={index}
+                    name={entry.member?.displayName ?? ""}
+                    owner={entry.member?.role === MemberRole.OWNER}
+                    pending={entry.member?.status === MemberStatus.PENDING}
+                    privateAccountCount={entry.privateAccountCount}
+                    spent={fromWire(entry.spent, currency)}
+                    share={entry.share}
+                    transactionCount={entry.transactionCount}
+                    onPress={
+                      entry.member?.userId
+                        ? () =>
+                            router.push({
+                              pathname: "/(app)/members/spending",
+                              params: { memberId: entry.member?.userId ?? "" },
+                            })
+                        : undefined
+                    }
+                  />
+                ))}
+              </View>
+            )}
 
-          {members.length > 0 ? (
-            <Button
-              title={t("household.invite")}
-              icon="user-plus"
-              variant="ghost"
-              onPress={openInvite}
-              className="border-accent"
-            />
-          ) : null}
+            {members.length > 0 ? (
+              <Button title={t("household.invite")} tone="quiet" onPress={openInvite} />
+            ) : null}
 
-          <ListSection title={t("household.shared")} className="mt-n3">
-            <Row
-              title={t("household.sharedAccounts")}
-              leading={<Icon name="wallet" size={18} color={nocturne.accent[400]} />}
-              trailing={<Count value={data?.sharedAccountCount ?? 0} />}
-              chevron
-              onPress={() => router.push("/(app)/accounts")}
-            />
-            <Row
-              title={t("household.groupBudgets")}
-              leading={<Icon name="target" size={18} color={nocturne.accent[400]} />}
-              trailing={<Count value={data?.groupBudgetCount ?? 0} />}
-              chevron
-              onPress={() => router.push("/(app)/categories")}
-            />
-            <ToggleRow
-              label={t("household.overspendNotifications")}
-              value={overspendOn}
-              onValueChange={toggleOverspend}
-              divider={false}
-            />
-          </ListSection>
+            <ListSection title={t("household.shared")}>
+              <Row
+                title={t("household.sharedAccounts")}
+                leading={<Icon name="wallet" size={18} color={organic.accent[600]} />}
+                trailing={<Count value={data?.sharedAccountCount ?? 0} />}
+                chevron
+                onPress={() => router.push("/(app)/accounts")}
+              />
+              <Row
+                title={t("household.groupBudgets")}
+                leading={<Icon name="target" size={18} color={organic.accent[600]} />}
+                trailing={<Count value={data?.groupBudgetCount ?? 0} />}
+                chevron
+                onPress={() => router.push("/(app)/categories")}
+              />
+              <SettingsToggleRow
+                label={t("household.overspendNotifications")}
+                value={overspendOn}
+                onValueChange={toggleOverspend}
+                divider={false}
+              />
+            </ListSection>
 
-          {
-}
-          <View className="mt-n3 gap-n3">
             <FamilyNameCard
               name={familyName}
               isAdmin={isAdmin}
@@ -356,11 +322,9 @@ export default function HouseholdScreen() {
                 lastAdmin: t("family.leave.lastAdmin"),
               }}
             />
-          </View>
-        </ScrollView>
-      )}
-
-      <BottomIndicator />
+          </>
+        )}
+      </ScrollBody>
 
       <Sheet visible={inviteOpen} onClose={() => setInviteOpen(false)} title={t("household.invite")}>
         <Field
@@ -372,26 +336,14 @@ export default function HouseholdScreen() {
           keyboardType="email-address"
           error={inviteError ?? undefined}
         />
-        <Button
-          title={t("household.invite")}
-          onPress={() => void submitInvite()}
-          disabled={invite.isPending || inviteEmail.trim() === ""}
-          className="mt-n4"
-        />
+        <View className="mt-[16px]">
+          <Button
+            title={t("household.invite")}
+            onPress={() => void submitInvite()}
+            disabled={invite.isPending || inviteEmail.trim() === ""}
+          />
+        </View>
       </Sheet>
-
-      <Drawer
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        account={{ name: familyName, email: "" }}
-        household={{ name: familyName, balance: sharedBalance }}
-        items={drawerItems}
-        activeId="household"
-        onSelect={(item) => {
-          setMenuOpen(false);
-          if (item.href && item.id !== "household") router.push(item.href as "/(app)");
-        }}
-      />
     </Screen>
   );
 }
@@ -429,13 +381,13 @@ function MemberCard({
       padded={false}
       onPress={onPress}
       accessibilityLabel={name}
-      className={`p-n4 border ${owner ? "border-neutral-700" : "border-neutral-800"}`}
+      className={`p-[11.2px] border ${owner ? "border-accent" : "border-divider"}`}
     >
-      <View className="flex-row items-center gap-n3">
-        <MemberAvatar name={name} index={index} size={40} />
+      <View className="flex-row items-center gap-[8.4px]">
+        <Avatar name={name} index={index} size={40} />
         <View className="flex-1">
-          <View className="flex-row items-center gap-n2">
-            <Text className="text-[14.5px] font-medium text-fg" numberOfLines={1}>
+          <View className="flex-row items-center gap-[5.6px]">
+            <Text className="text-[14.5px] font-fig-med text-fg" numberOfLines={1}>
               {name}
             </Text>
             {owner ? <Badge label={t("household.owner")} tone="accent" /> : null}
@@ -444,11 +396,11 @@ function MemberCard({
             {meta}
           </Text>
         </View>
-        {onPress ? <Icon name="caret-right" size={14} color={nocturne.neutral[600]} /> : null}
+        {onPress ? <Icon name="caret-right" size={14} color={organic.neutral[600]} /> : null}
       </View>
 
-      <Divider className="mt-n4" />
-      <View className="mt-n4 flex-row gap-n4">
+      <View className="mt-[11.2px]"><Divider /></View>
+      <View className="mt-[11.2px] flex-row gap-[11.2px]">
         <View className="flex-1">
           <Text className="text-[10.5px] uppercase text-neutral-600" style={{ letterSpacing: 0.8 }}>
             {t("household.spending")}
@@ -464,20 +416,4 @@ function MemberCard({
 
 function Count({ value }: { value: number }) {
   return <Text className="text-[12px] text-neutral-600">{String(value)}</Text>;
-}
-
-function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  const { t } = useI18n();
-  const shown = toDisplayError(error, t("common.loadFailed"));
-  return (
-    <View className="flex-1 justify-center gap-n4 px-n6">
-      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
-      {shown.reference ? (
-        <Text className="text-[12px] text-neutral-600">
-          {t("common.errorReference", { ref: shown.reference })}
-        </Text>
-      ) : null}
-      <Button title={t("common.tryAgain")} onPress={onRetry} />
-    </View>
-  );
 }

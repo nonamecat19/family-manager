@@ -10,7 +10,8 @@ import { useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import { Button, Chip, Field, Icon, Kicker, Sheet, nocturne } from "@/components/nocturne";
+import { AmountChip, ScrollSheet } from "@/components/kit";
+import { Button, Field, Icon, Kicker, organic } from "@fm/ui";
 
 export interface TransferSheetProps {
   visible: boolean;
@@ -63,8 +64,8 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
   };
 
   return (
-    <Sheet visible={visible} onClose={close} title={t("accounts.transfer")}>
-      <View className="gap-n4 pb-n4">
+    <ScrollSheet visible={visible} onClose={close} title={t("accounts.transfer")}>
+      <View className="gap-[11.2px] pb-[11.2px]">
         <AccountPicker
           label={t("add.account")}
           accounts={accounts}
@@ -76,7 +77,7 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
         />
 
         <View className="items-center">
-          <Icon name="arrows-left-right" size={18} color={nocturne.accent[400]} />
+          <Icon name="arrows-left-right" size={18} color={organic.accent[600]} />
         </View>
 
         <AccountPicker
@@ -95,17 +96,16 @@ export function TransferSheet({ visible, onClose, accounts }: TransferSheetProps
           error={error ?? undefined}
         />
 
-        <View className="flex-row gap-n3">
-          <Button title={t("common.cancel")} variant="ghost" onPress={close} className="flex-1" />
+        <View className="flex-row gap-[8.4px]">
+          <Button title={t("common.cancel")} tone="quiet" onPress={close} />
           <Button
             title={t("common.save")}
             disabled={!canSubmit}
             onPress={() => void submit()}
-            className="flex-1"
           />
         </View>
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -122,14 +122,14 @@ function AccountPicker({
 }) {
   return (
     <View>
-      <Kicker className="mb-n2">{label}</Kicker>
+      <Kicker className="mb-[5.6px]">{label}</Kicker>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: nocturne.space.n2 }}
+        contentContainerStyle={{ gap: 5.6 }}
       >
         {accounts.map((account) => (
-          <Chip
+          <AmountChip
             key={account.id}
             label={account.name}
             amount={fromWire(account.balance, account.currencyCode)}

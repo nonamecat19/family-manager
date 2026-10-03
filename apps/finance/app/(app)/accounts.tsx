@@ -1,8 +1,7 @@
+import { LoadError } from "@/components/kit/LoadError.tsx";
 import {
   fromWire,
-  toDisplayError,
   useAccounts,
-  useFamily,
   useFinanceMembers,
   type Account,
 } from "@fm/api";
@@ -11,23 +10,11 @@ import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  Fab,
-  Icon,
-  Kicker,
-  MoneyText,
-  Screen,
-  ScreenHeader,
-  formatMoney,
-  nocturne,
-  useDrawerItems,
-} from "@/components/nocturne";
+import { Fab, formatMoney, MoneyText } from "@/components/kit";
 import { AccountRow, HiddenPrivateRow } from "@/components/screens/accounts/AccountRow.tsx";
 import { NewAccountSheet } from "@/components/screens/accounts/NewAccountSheet.tsx";
 import { TransferSheet } from "@/components/screens/accounts/TransferSheet.tsx";
+import { Button, EmptyState, Icon, Kicker, Screen, ScreenHeader, organic } from "@fm/ui";
 
 export default function AccountsScreen() {
   const { t } = useI18n();
@@ -35,13 +22,9 @@ export default function AccountsScreen() {
 
   const accounts = useAccounts();
   const members = useFinanceMembers();
-  const family = useFamily();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [newAccountOpen, setNewAccountOpen] = useState(false);
-
-  const drawerItems = useDrawerItems();
 
   const data = accounts.data;
   const shared = data?.shared ?? [];
@@ -61,47 +44,42 @@ export default function AccountsScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={t("accounts.title")}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
-      >
-        <View className="items-center pt-n3">
-          <Text className="text-[11px] text-neutral-500">{t("accounts.available")}</Text>
+      <View className="gap-[20px] px-[22px] pt-[8px]">
+        <ScreenHeader title={t("accounts.title")} />
+
+        <View className="items-center">
+          <Text className="text-[11px] text-neutral-600">{t("accounts.available")}</Text>
           <MoneyText value={sharedBalance} size={27} weight="medium" className="mt-[2px]" />
           {savings.amountMinor !== 0 ? (
-            <Text className="mt-[2px] text-[11px] text-neutral-500">
+            <Text className="mt-[2px] text-[11px] text-neutral-600">
               {t("accounts.inSavings", { amount: formatMoney(savings) })}
             </Text>
           ) : null}
 
-          <View className="mt-n4 flex-row justify-center gap-n3">
+          <View className="mt-[16px] flex-row justify-center gap-[12px]">
             <Button
               title={t("accounts.history")}
-              variant="ghost"
-              icon="clock-counter-clockwise"
+              tone="quiet"
               onPress={() => router.push("/(app)/transactions")}
             />
             <Button
               title={t("accounts.transfer")}
-              variant="ghost"
-              icon="arrows-left-right"
+              tone="quiet"
               onPress={() => setTransferOpen(true)}
             />
           </View>
         </View>
-      </ScreenHeader>
+      </View>
 
       {accounts.isPending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : accounts.isError ? (
         <LoadError error={accounts.error} onRetry={() => void accounts.refetch()} />
       ) : isEmpty ? (
         <View className="flex-1 justify-center">
           <EmptyState
-            icon="wallet"
             title={t("accounts.emptyTitle")}
             body={t("accounts.emptyBody")}
             action={{ label: t("accounts.addAccount"), onPress: () => setNewAccountOpen(true) }}
@@ -111,15 +89,15 @@ export default function AccountsScreen() {
         <ScrollView
           className="flex-1"
           contentContainerStyle={{
-            paddingHorizontal: nocturne.space.n4,
-            paddingTop: nocturne.space.n5,
+            paddingHorizontal: 11.2,
+            paddingTop: 16.8,
             paddingBottom: 96,
-            gap: nocturne.space.n3,
+            gap: 8.4,
           }}
           showsVerticalScrollIndicator={false}
         >
           {shared.length > 0 ? (
-            <View className="mb-n1 flex-row items-baseline justify-between px-n1">
+            <View className="mb-[2.8px] flex-row items-baseline justify-between px-[2.8px]">
               <Kicker>{t("accounts.sharedSection")}</Kicker>
               <Text className="text-[10.5px] text-neutral-600">{t("accounts.visibleToAll")}</Text>
             </View>
@@ -129,9 +107,9 @@ export default function AccountsScreen() {
           ))}
 
           {privateOwn.length > 0 ? (
-            <View className="mb-n1 mt-n4 flex-row items-center justify-between px-n1">
+            <View className="mb-[2.8px] mt-[11.2px] flex-row items-center justify-between px-[2.8px]">
               <Kicker>{t("accounts.privateSection", { name: selfName }).trim()}</Kicker>
-              <Icon name="eye-slash" size={14} color={nocturne.neutral[600]} />
+              <Icon name="eye-slash" size={14} color={organic.neutral[600]} />
             </View>
           ) : null}
           {privateOwn.map((account) => (
@@ -156,39 +134,6 @@ export default function AccountsScreen() {
         onClose={() => setNewAccountOpen(false)}
         currencyCode={sharedBalance.currencyCode}
       />
-
-      <Drawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        account={{ name: selfName || (family.data?.family?.name ?? ""), email: self?.email ?? "" }}
-        household={
-          family.data?.family
-            ? { name: family.data.family.name, balance: sharedBalance }
-            : undefined
-        }
-        items={drawerItems}
-        activeId="accounts"
-        onSelect={(item) => {
-          setDrawerOpen(false);
-          if (item.href && item.id !== "accounts") router.push(item.href);
-        }}
-      />
     </Screen>
-  );
-}
-
-function LoadError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  const { t } = useI18n();
-  const shown = toDisplayError(error, t("common.loadFailed"));
-  return (
-    <View className="flex-1 justify-center gap-n4 px-n6">
-      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
-      {shown.reference ? (
-        <Text className="text-[12px] text-neutral-600">
-          {t("common.errorReference", { ref: shown.reference })}
-        </Text>
-      ) : null}
-      <Button title={t("common.tryAgain")} onPress={onRetry} />
-    </View>
   );
 }

@@ -11,7 +11,6 @@ import {
   useCategoryTree,
   useCreateRecurringPayment,
   useDeleteRecurringPayment,
-  useFamily,
   useFinanceSettings,
   usePostRecurringOccurrence,
   useRecurringPayments,
@@ -23,43 +22,23 @@ import {
 } from "@fm/api";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  Fab,
-  Field,
-  IconCircle,
-  ListSection,
-  MoneyText,
-  Row,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  shortDate,
-  Sheet,
-  ToggleRow,
-  useDrawerItems,
-  type Translate,
-} from "@/components/nocturne";
+import { Fab, IconCircle, ListSection, MoneyText, Row, ScrollSheet, SegmentedTabs, shortDate, type Translate } from "@/components/kit";
 import { AmountRow } from "@/components/screens/add-transaction/AmountRow";
 import { AccountSheet, CategorySheet } from "@/components/screens/add-transaction/pickers";
+import { Button, EmptyState, Field, Screen, ScreenHeader, ScrollBody, SettingsToggleRow } from "@fm/ui";
 
 export default function RecurringScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  const drawerItems = useDrawerItems();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
   const payments = useRecurringPayments(showInactive);
   const settings = useFinanceSettings();
-  const family = useFamily();
 
   const post = usePostRecurringOccurrence();
   const skip = useSkipRecurringOccurrence();
@@ -101,89 +80,83 @@ export default function RecurringScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={t("recurring.title")}
-        subtitle={t("recurring.subtitle")}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
-      />
+      <ScrollBody>
+        <ScreenHeader
+          title={t("recurring.title")}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+        />
 
-      {payments.isPending ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-        </View>
-      ) : payments.isError ? (
-        <View className="flex-1 justify-center gap-n3 px-n5">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-500">
-            {toDisplayError(payments.error, t("common.loadFailed")).message}
-          </Text>
-          <Button title={t("common.tryAgain")} onPress={() => void payments.refetch()} />
-        </View>
-      ) : list.length === 0 ? (
-        <View className="flex-1 justify-center">
+        {payments.isPending ? (
+          <View className="items-center py-[28px]">
+            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          </View>
+        ) : payments.isError ? (
+          <View className="gap-[12px] py-[18px]">
+            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+              {toDisplayError(payments.error, t("common.loadFailed")).message}
+            </Text>
+            <Button title={t("common.tryAgain")} onPress={() => void payments.refetch()} />
+          </View>
+        ) : list.length === 0 ? (
           <EmptyState
-            icon="arrows-clockwise"
             title={t("recurring.emptyTitle")}
             body={t("recurring.emptyBody")}
             action={{ label: t("recurring.new"), onPress: () => setCreating(true) }}
           />
-        </View>
-      ) : (
-        <ScrollView className="flex-1 px-n4" contentContainerClassName="pb-[96px] pt-n4">
-          {due.length > 0 ? (
-            <ListSection title={t("recurring.dueSection")}>
-              {due.map((status, index) => (
-                <View key={status.payment?.id ?? index}>
-                  {row(status, true, true)}
-                  <View className="flex-row gap-n3 px-n4 pb-n3">
-                    <Button
-                      title={t("recurring.post")}
-                      variant="ghost"
-                      icon="check"
-                      onPress={() =>
-                        post.mutate({
-                          recurringId: status.payment?.id ?? "",
-                          dueOn: status.nextDueOn,
-                        })
-                      }
-                    />
-                    <Button
-                      title={t("recurring.skip")}
-                      variant="ghost"
-                      icon="arrow-right"
-                      onPress={() =>
-                        skip.mutate({
-                          recurringId: status.payment?.id ?? "",
-                          dueOn: status.nextDueOn,
-                        })
-                      }
-                    />
+        ) : (
+          <>
+            {due.length > 0 ? (
+              <ListSection title={t("recurring.dueSection")}>
+                {due.map((status, index) => (
+                  <View key={status.payment?.id ?? index}>
+                    {row(status, true, true)}
+                    <View className="flex-row gap-[8px] px-[16px] pb-[8px]">
+                      <Button
+                        title={t("recurring.post")}
+                        tone="quiet"
+                        onPress={() =>
+                          post.mutate({
+                            recurringId: status.payment?.id ?? "",
+                            dueOn: status.nextDueOn,
+                          })
+                        }
+                      />
+                      <Button
+                        title={t("recurring.skip")}
+                        tone="quiet"
+                        onPress={() =>
+                          skip.mutate({
+                            recurringId: status.payment?.id ?? "",
+                            dueOn: status.nextDueOn,
+                          })
+                        }
+                      />
+                    </View>
+                    {index < due.length - 1 ? null : null}
                   </View>
-                  {index < due.length - 1 ? null : null}
-                </View>
-              ))}
-            </ListSection>
-          ) : null}
+                ))}
+              </ListSection>
+            ) : null}
 
-          {upcoming.length > 0 ? (
-            <ListSection title={t("recurring.upcomingSection")} className="mt-n4">
-              {upcoming.map((status, index) => row(status, false, index === upcoming.length - 1))}
-            </ListSection>
-          ) : null}
+            {upcoming.length > 0 ? (
+              <ListSection title={t("recurring.upcomingSection")}>
+                {upcoming.map((status, index) => row(status, false, index === upcoming.length - 1))}
+              </ListSection>
+            ) : null}
 
-          <View className="mt-n4 overflow-hidden rounded-lg bg-surface">
-            <ToggleRow
-              label={t("recurring.showInactive")}
-              value={showInactive}
-              onValueChange={setShowInactive}
-              divider={false}
-            />
-          </View>
-          <Text className="mt-n3 px-n2 text-[11px] text-neutral-500">
-            {t("recurring.tapHint")}
-          </Text>
-        </ScrollView>
-      )}
+            <View className="overflow-hidden rounded-2xl bg-neutral-100">
+              <SettingsToggleRow
+                label={t("recurring.showInactive")}
+                value={showInactive}
+                onValueChange={setShowInactive}
+                divider={false}
+              />
+            </View>
+            <Text className="text-[11px] text-neutral-600">{t("recurring.tapHint")}</Text>
+          </>
+        )}
+      </ScrollBody>
 
       <Fab label={t("recurring.new")} onPress={() => setCreating(true)} />
 
@@ -191,19 +164,6 @@ export default function RecurringScreen() {
         visible={creating}
         currency={currency}
         onClose={() => setCreating(false)}
-      />
-
-      <Drawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: "" }}
-        household={{ name: family.data?.family?.name ?? "" }}
-        items={drawerItems}
-        activeId="recurring"
-        onSelect={(item) => {
-          setDrawerOpen(false);
-          if (item.href && item.id !== "recurring") router.push(item.href);
-        }}
       />
     </Screen>
   );
@@ -308,8 +268,8 @@ function NewRecurringSheet({
 
   return (
     <>
-      <Sheet visible={visible} onClose={onClose} title={t("recurring.new")} scroll>
-        <View className="gap-n4">
+      <ScrollSheet visible={visible} onClose={onClose} title={t("recurring.new")} scroll>
+        <View className="gap-[11.2px]">
           <Field label={t("recurring.name")} value={name} onChangeText={setName} />
 
           <AmountRow
@@ -339,32 +299,33 @@ function NewRecurringSheet({
 
           <Button
             title={account ? account.name : t("add.account")}
-            variant="ghost"
-            icon="credit-card"
+            tone="quiet"
             onPress={() => setPicker("account")}
           />
           <Button
             title={category ? category.name : t("add.category")}
-            variant="ghost"
-            icon="squares-four"
+            tone="quiet"
+         
             onPress={() => setPicker("category")}
           />
 
           <View className="overflow-hidden rounded-lg bg-surface">
-            <ToggleRow
+            <SettingsToggleRow
               label={t("recurring.autoPost")}
-              subtitle={t("recurring.autoPostHint")}
               value={autoPost}
               onValueChange={setAutoPost}
               divider={false}
             />
+            <Text className="pb-[8.4px] font-fig text-[11.5px] text-neutral-600">
+              {t("recurring.autoPostHint")}
+            </Text>
           </View>
 
-          {error ? <Text className="text-[12.5px] text-overspend">{error}</Text> : null}
+          {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
 
           <Button title={t("common.save")} onPress={() => void save()} disabled={create.isPending} />
         </View>
-      </Sheet>
+      </ScrollSheet>
 
       <AccountSheet
         visible={picker === "account"}

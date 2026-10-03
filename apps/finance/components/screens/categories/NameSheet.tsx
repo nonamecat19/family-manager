@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-
-import { Button, Field, Sheet } from "@/components/nocturne";
+import { Button, Field } from "@fm/ui";
+import { ScrollSheet } from "@/components/kit";
 
 export interface NameSheetProps {
   visible: boolean;
@@ -33,8 +33,8 @@ export function NameSheet({
   const trimmed = name.trim();
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={title}>
-      <View className="gap-n5 pt-n2">
+    <ScrollSheet visible={visible} onClose={onClose} title={title}>
+      <View className="gap-[16.8px] pt-[5.6px]">
         <Field
           label={title}
           value={name}
@@ -45,16 +45,15 @@ export function NameSheet({
           onSubmitEditing={() => trimmed !== "" && !submitting && onSubmit(trimmed)}
           error={error ?? undefined}
         />
-        <View className="flex-row gap-n3">
-          <Button title={cancelLabel} variant="ghost" onPress={onClose} className="flex-1" />
+        <View className="flex-row gap-[8.4px]">
+          <Button title={cancelLabel} tone="quiet" onPress={onClose} />
           <Button
             title={saveLabel}
             onPress={() => onSubmit(trimmed)}
             disabled={trimmed === "" || submitting}
-            className="flex-1"
           />
         </View>
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }

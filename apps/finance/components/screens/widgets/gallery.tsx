@@ -2,7 +2,8 @@ import { minorUnits, type Money } from "@fm/api";
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 
-import { Kicker, formatCompact, formatMoney, nocturne } from "@/components/nocturne";
+import { formatCompact, formatMoney } from "@/components/kit";
+import { Kicker, organic } from "@fm/ui";
 
 export function WidgetFrame({ children }: { children: ReactNode }) {
   return (
@@ -10,9 +11,9 @@ export function WidgetFrame({ children }: { children: ReactNode }) {
       style={{
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: nocturne.neutral[800],
-        backgroundColor: nocturne.surface,
-        padding: nocturne.space.n4,
+        borderColor: organic.neutral[800],
+        backgroundColor: organic.surface,
+        padding: 11.2,
       }}
     >
       {children}
@@ -33,7 +34,7 @@ export function GalleryItem({
 }) {
   return (
     <View className={className}>
-      <View className="mb-n3 flex-row items-baseline justify-between px-[2px]">
+      <View className="mb-[8.4px] flex-row items-baseline justify-between px-[2px]">
         <Kicker>{title}</Kicker>
         <Text className="text-[10px] text-neutral-700">{size}</Text>
       </View>
@@ -46,8 +47,8 @@ export type WidgetTone = "default" | "muted" | "overspend";
 
 const TONE: Record<WidgetTone, string> = {
   default: "text-fg",
-  muted: "text-neutral-500",
-  overspend: "text-overspend",
+  muted: "text-neutral-600",
+  overspend: "text-error",
 };
 
 export function WidgetAmount({
@@ -67,7 +68,7 @@ export function WidgetAmount({
   const text = units >= compactFrom ? formatCompact(value) : formatMoney(value);
   return (
     <Text
-      className={`${weight === "medium" ? "font-medium" : "font-normal"} ${TONE[tone]}`}
+      className={`${weight === "medium" ? "font-fig-med" : "font-fig"} ${TONE[tone]}`}
       style={{ fontSize: size, lineHeight: Math.round(size * 1.25) }}
     >
       {text}

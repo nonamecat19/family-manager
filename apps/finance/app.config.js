@@ -11,6 +11,8 @@ const ENDPOINTS = {
   },
 };
 
+const organic = require("@fm/config/organic.preset.cjs").theme.extend.colors;
+
 const env = process.env.EXPO_PUBLIC_API_ENV ?? "production";
 const endpoints = ENDPOINTS[env];
 if (!endpoints) {
@@ -33,8 +35,8 @@ module.exports = {
     version: "0.1.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "dark",
-    backgroundColor: "#161826",
+    userInterfaceStyle: "light",
+    backgroundColor: organic.bg,
     newArchEnabled: true,
     plugins: [
       "expo-router",
@@ -64,7 +66,7 @@ module.exports = {
       package: "dev.familymanager.finance",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#C4643C",
+        backgroundColor: organic.accent.DEFAULT,
       },
       usesCleartextTraffic: true,
     },

@@ -2,34 +2,25 @@ import { TELEGRAM_PROVIDER, toDisplayError, useIdentities, useUnlinkIdentity } f
 import type { Identity } from "@fm/sdk/auth/v1/auth_pb";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ErrorText, Icon, organic, ScreenHeader, ScrollBody, Screen, Sheet } from "@fm/ui";
 
 import { useI18n, type TranslationKey } from "@/components/i18n";
-import {
-  Button,
-  EmptyState,
-  IconCircle,
-  Row,
-  Screen,
-  ScreenHeader,
-  Sheet,
-  nocturne,
-} from "@/components/nocturne";
 
 function providerLabel(provider: string, t: (key: TranslationKey) => string): string {
   if (provider === TELEGRAM_PROVIDER) return t("connectedAccounts.providerTelegram");
   return provider;
 }
 
-function linkedDate(linkedAt: Identity["linkedAt"]): string {
+function linkedDate(linkedAt: Identity["linkedAt"], locale: string): string {
   if (!linkedAt) return "";
   const date = new Date(Number(linkedAt.seconds) * 1000 + Math.floor(linkedAt.nanos / 1e6));
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(locale);
 }
 
 export default function ConnectedAccountsScreen() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const identities = useIdentities();
   const unlink = useUnlinkIdentity();
   const [unlinking, setUnlinking] = useState<Identity | null>(null);
@@ -41,70 +32,80 @@ export default function ConnectedAccountsScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        title={t("connectedAccounts.title")}
-        leading={{ icon: "arrow-left", label: t("common.back"), onPress: () => router.back() }}
-      />
-
-      {unlinkError ? (
-        <Text className="px-n5 pb-n3 text-[12px] text-overspend">{unlinkError}</Text>
-      ) : null}
-
-      {identities.isPending ? (
-        <Text className="px-n5 text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-      ) : identities.isError ? (
-        <EmptyState
-          icon="device-mobile"
-          title={t("gate.errorTitle")}
-          body={toDisplayError(identities.error, t("connectedAccounts.loadFailed")).message}
-          action={{ label: t("common.tryAgain"), onPress: () => void identities.refetch() }}
+      <ScrollBody>
+        <ScreenHeader
+          title={t("connectedAccounts.title")}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
         />
-      ) : rows.length === 0 ? (
-        <EmptyState
-          icon="device-mobile"
-          title={t("connectedAccounts.emptyTitle")}
-          body={t("connectedAccounts.emptyBody")}
-        />
-      ) : (
-        <View>
-          {rows.map((identity) => (
-            <Row
-              key={`${identity.provider}:${identity.externalId}`}
-              title={providerLabel(identity.provider, t)}
-              subtitle={
-                identity.linkedAt
-                  ? `${identity.externalId} · ${t("connectedAccounts.linked", { date: linkedDate(identity.linkedAt) })}`
-                  : identity.externalId
-              }
-              leading={
-                <IconCircle
-                  icon="device-mobile"
-                  size={34}
-                  tint={{ bg: nocturne.neutral[800], fg: nocturne.accent[400] }}
-                />
-              }
-              trailing={
-                <Button
-                  title={t("connectedAccounts.unlink")}
-                  variant="ghost"
+
+        {unlinkError ? <ErrorText>{unlinkError}</ErrorText> : null}
+
+        {identities.isPending ? (
+          <View className="items-center py-[28px]">
+            <ActivityIndicator color={organic.accent.DEFAULT} />
+          </View>
+        ) : identities.isError ? (
+          <Text className="text-[14px] leading-[21px] text-neutral-600">
+            {toDisplayError(identities.error, t("connectedAccounts.loadFailed")).message}
+          </Text>
+        ) : rows.length === 0 ? (
+          <View className="gap-[8px] py-[18px]">
+            <Text className="text-[15.5px] font-fig-bold text-fg">{t("connectedAccounts.emptyTitle")}</Text>
+            <Text className="text-[14px] leading-[21px] text-neutral-600">
+              {t("connectedAccounts.emptyBody")}
+            </Text>
+          </View>
+        ) : (
+          <View className="gap-[10px]">
+            {rows.map((identity) => (
+              <View
+                key={`${identity.provider}:${identity.externalId}`}
+                className="flex-row items-center gap-[12px] rounded-2xl bg-neutral-100 px-[16px] py-[14px]"
+              >
+                <View className="flex-1 gap-[3px]">
+                  <Text className="text-[15.5px] font-fig-bold text-fg">
+                    {providerLabel(identity.provider, t)}
+                  </Text>
+                  <Text className="text-[12.5px] text-neutral-600">{identity.externalId}</Text>
+                  {identity.linkedAt ? (
+                    <Text className="text-[12px] text-neutral-600">
+                      {t("connectedAccounts.linked", { date: linkedDate(identity.linkedAt, locale) })}
+                    </Text>
+                  ) : null}
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("connectedAccounts.unlink")}
                   disabled={unlink.isPending}
                   onPress={() => setUnlinking(identity)}
-                />
-              }
-            />
-          ))}
-        </View>
-      )}
+                  className="h-[36px] w-[36px] items-center justify-center rounded-full bg-neutral-200"
+                >
+                  <Icon name="trash" size={16} color={organic.neutral[700]} />
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollBody>
 
       <Sheet
         visible={unlinking !== null}
         onClose={() => setUnlinking(null)}
         title={t("connectedAccounts.unlinkConfirm")}
       >
-        <View className="gap-n3 pb-n4">
-          <Button
-            title={t("connectedAccounts.unlink")}
-            disabled={unlink.isPending}
+        <View className="flex-row gap-[10px] pt-[8px]">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("common.cancel")}
+            onPress={() => setUnlinking(null)}
+            className="flex-1 items-center justify-center rounded-full border border-divider py-[12px]"
+          >
+            <Text className="text-[14px] font-fig-bold text-fg">{t("common.cancel")}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("connectedAccounts.unlink")}
             onPress={() => {
               if (!unlinking) return;
               unlink.mutate(
@@ -112,8 +113,10 @@ export default function ConnectedAccountsScreen() {
                 { onSuccess: () => setUnlinking(null) },
               );
             }}
-          />
-          <Button title={t("common.cancel")} variant="ghost" onPress={() => setUnlinking(null)} />
+            className="flex-1 items-center justify-center rounded-full bg-error py-[12px]"
+          >
+            <Text className="text-[14px] font-fig-bold text-white">{t("connectedAccounts.unlink")}</Text>
+          </Pressable>
         </View>
       </Sheet>
     </Screen>

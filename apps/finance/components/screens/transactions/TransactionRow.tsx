@@ -1,7 +1,8 @@
 import type { Money } from "@fm/api";
 import { Pressable, Text, View } from "react-native";
 
-import { Badge, Divider, IconCircle, MemberAvatar, MoneyText } from "@/components/nocturne";
+import { IconCircle, MoneyText } from "@/components/kit";
+import { Badge, Divider, Avatar } from "@fm/ui";
 
 export interface TransactionRowProps {
   title: string;
@@ -33,14 +34,14 @@ export function TransactionRow({
   divider = true,
 }: TransactionRowProps) {
   const body = (
-    <View className="flex-row items-center gap-n3 px-n4 py-n3">
+    <View className="flex-row items-center gap-[8.4px] px-[11.2px] py-[8.4px]">
       <IconCircle icon={icon} index={iconIndex} size={32} />
       <View className="flex-1">
         <Text className="text-[13.5px] text-fg" numberOfLines={1}>
           {title}
         </Text>
-        <View className="mt-[2px] flex-row items-center gap-n2">
-          <MemberAvatar name={memberName} index={memberIndex} size={14} />
+        <View className="mt-[2px] flex-row items-center gap-[5.6px]">
+          <Avatar name={memberName} index={memberIndex} size={14} />
           <Text className="flex-shrink text-[10.5px] text-neutral-600" numberOfLines={1}>
             {meta}
           </Text>

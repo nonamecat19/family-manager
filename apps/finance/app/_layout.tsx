@@ -2,19 +2,23 @@ import "../global.css";
 
 import { ApiProvider, isRefreshRejection, usePushRegistration } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
-import { ErrorBoundary, ThemeProvider } from "@fm/ui";
-import { nocturneTheme, type Theme } from "@fm/theme";
+import { appTheme, BootSplash, ErrorBoundary, ThemeProvider } from "@fm/ui";
+import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
+import { NunitoSans_400Regular } from "@expo-google-fonts/nunito-sans/400Regular";
+import { NunitoSans_500Medium } from "@expo-google-fonts/nunito-sans/500Medium";
+import { NunitoSans_600SemiBold } from "@expo-google-fonts/nunito-sans/600SemiBold";
+import { NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans/700Bold";
+import { NunitoSans_800ExtraBold } from "@expo-google-fonts/nunito-sans/800ExtraBold";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import Constants from "expo-constants";
+import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect } from "react";
-import { Text, View } from "react-native";
 
 import { bootT } from "../components/i18n/index.tsx";
-import { nocturne } from "../components/nocturne/index.ts";
 
 const extra = Constants.expoConfig?.extra as
   | { apiBaseUrl?: string; serviceUrls?: Record<string, string> }
@@ -40,22 +44,40 @@ async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-const theme: Theme = { ...nocturneTheme, fieldStyle: "underline" };
+const theme = { ...appTheme, fieldStyle: "underline" as const };
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Alegreya_800ExtraBold,
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
+    NunitoSans_800ExtraBold,
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <ThemeProvider theme={theme}>
+        <BootSplash title={bootT("gate.appName")} label={bootT("gate.restoringSession")} />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ErrorBoundary
       message={bootT("gate.renderError")}
       onError={(error) => console.error("[finance] unhandled render error", error)}
     >
-      {
-}
       <ThemeProvider theme={theme}>
-        <AuthProvider store={secureTokenStore} refresh={refresh}
-          revoke={revoke} isRefreshRejection={isRefreshRejection}>
-        <ApiGate />
-        {}
-        <StatusBar style="light" />
+        <AuthProvider
+          store={secureTokenStore}
+          refresh={refresh}
+          revoke={revoke}
+          isRefreshRejection={isRefreshRejection}
+        >
+          <ApiGate />
+          <StatusBar style="dark" />
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
@@ -80,7 +102,9 @@ function ApiGate() {
     }
   }, [status, segments, router]);
 
-  if (status === "loading") return <BootScreen label={bootT("gate.restoringSession")} />;
+  if (status === "loading") {
+    return <BootSplash title={bootT("gate.appName")} label={bootT("gate.restoringSession")} />;
+  }
 
   return (
     <ApiProvider baseUrl={API_BASE_URL} serviceUrls={SERVICE_URLS} getAccessToken={getToken}>
@@ -93,17 +117,4 @@ function ApiGate() {
 function PushRegistration() {
   usePushRegistration({ app: "finance" });
   return null;
-}
-
-function BootScreen({ label }: { label: string }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-n3" style={{ backgroundColor: nocturne.bg }}>
-      <Text className="text-[20px] font-medium" style={{ color: nocturne.text }}>
-        {bootT("gate.appName")}
-      </Text>
-      <Text className="text-[13px]" style={{ color: nocturne.neutral[500] }}>
-        {label}
-      </Text>
-    </View>
-  );
 }

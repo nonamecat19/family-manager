@@ -154,7 +154,6 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "common.weekdayShort.7": "нд",
   "common.dayHeading": "{day} {month}, {weekday}",
 
-  "nav.menu": "Меню",
   "nav.home": "Головна",
   "nav.accounts": "Рахунки",
   "nav.charts": "Графіки",
@@ -459,7 +458,19 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "settings.notificationsFailed": "Не вдалося завантажити налаштування сповіщень.",
   "settings.version": "Версія {version} · родинна синхронізація",
   "settings.language": "Мова",
+  "settings.languageHint": "Змінює лише те, що бачите ви, а не вся родина.",
+  "settings.english": "Англійська",
+  "settings.ukrainian": "Українська",
   "settings.signOut": "Вийти",
+  "settings.statTemplates": "Шаблони",
+  "settings.statWidgets": "Віджети",
+  "settings.statAccounts": "Рахунки",
+
+  "tabs.home": "Головна",
+  "tabs.transactions": "Операції",
+  "tabs.add": "Додати",
+  "tabs.accounts": "Рахунки",
+  "tabs.you": "Ви",
 
   "connectedAccounts.title": "Підключені акаунти",
   "connectedAccounts.emptyTitle": "Нічого не підключено",

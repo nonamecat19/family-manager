@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 
-import { Icon, nocturne, relativeDay, shortDate, type Translate } from "@/components/nocturne";
+import { relativeDay, shortDate, type Translate } from "@/components/kit";
+import { Icon, organic } from "@fm/ui";
 
 export interface DateStripProps {
   value: string;
@@ -22,7 +23,7 @@ export function DateStrip({
   t,
 }: DateStripProps) {
   return (
-    <View className="flex-row items-center gap-n2">
+    <View className="flex-row items-center gap-[5.6px]">
       {options.map((iso) => {
         const selected = iso === value;
         const word = relativeDay(t, iso, today);
@@ -33,14 +34,14 @@ export function DateStrip({
             accessibilityLabel={`${shortDate(iso)} ${word}`}
             accessibilityState={{ selected }}
             onPress={() => onChange(iso)}
-            className={`items-center rounded-md px-n3 py-n2 ${selected ? "bg-accent-900" : ""}`}
+            className={`items-center rounded-md px-[8.4px] py-[5.6px] ${selected ? "bg-accent" : ""}`}
           >
             <Text
-              className={`text-[12px] ${selected ? "font-medium text-accent-200" : "text-neutral-400"}`}
+              className={`text-[12px] ${selected ? "font-fig-med text-accent-700" : "text-neutral-600"}`}
             >
               {shortDate(iso)}
             </Text>
-            <Text className={`text-[10px] ${selected ? "text-accent-200" : "text-neutral-600"}`}>
+            <Text className={`text-[10px] ${selected ? "text-accent-700" : "text-neutral-600"}`}>
               {word}
             </Text>
           </Pressable>
@@ -54,7 +55,7 @@ export function DateStrip({
         hitSlop={8}
         className="h-9 w-9 items-center justify-center rounded-full"
       >
-        <Icon name="calendar-dots" size={20} color={nocturne.neutral[500]} />
+        <Icon name="calendar-dots" size={20} color={organic.neutral[600]} />
       </Pressable>
     </View>
   );

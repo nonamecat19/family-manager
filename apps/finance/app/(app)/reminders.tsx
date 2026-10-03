@@ -2,43 +2,25 @@ import {
   ReminderKind,
   toDisplayError,
   useDeleteReminder,
-  useFamily,
   useReminders,
   useUpsertReminder,
   type Reminder,
 } from "@fm/api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  Fab,
-  Field,
-  IconCircle,
-  ListSection,
-  Row,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  Sheet,
-  useDrawerItems,
-  type IconName,
-} from "@/components/nocturne";
+import { Fab, IconCircle, ListSection, Row, ScrollSheet, SegmentedTabs } from "@/components/kit";
+import { Button, EmptyState, Field, Screen, ScreenHeader, ScrollBody, IconName } from "@fm/ui";
 
 export default function RemindersScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  const drawerItems = useDrawerItems();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
   const reminders = useReminders(true);
-  const family = useFamily();
   const upsert = useUpsertReminder();
   const remove = useDeleteReminder();
 
@@ -53,81 +35,66 @@ export default function RemindersScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={t("reminders.title")}
-        subtitle={t("reminders.subtitle")}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
-      />
+      <ScrollBody>
+        <ScreenHeader
+          title={t("reminders.title")}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+        />
 
-      {reminders.isPending ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-        </View>
-      ) : reminders.isError ? (
-        <View className="flex-1 justify-center gap-n3 px-n5">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-500">
-            {toDisplayError(reminders.error, t("common.loadFailed")).message}
-          </Text>
-          <Button title={t("common.tryAgain")} onPress={() => void reminders.refetch()} />
-        </View>
-      ) : list.length === 0 ? (
-        <View className="flex-1 justify-center">
+        {reminders.isPending ? (
+          <View className="items-center py-[28px]">
+            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          </View>
+        ) : reminders.isError ? (
+          <View className="gap-[12px] py-[18px]">
+            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+              {toDisplayError(reminders.error, t("common.loadFailed")).message}
+            </Text>
+            <Button title={t("common.tryAgain")} onPress={() => void reminders.refetch()} />
+          </View>
+        ) : list.length === 0 ? (
           <EmptyState
-            icon="bell"
             title={t("reminders.emptyTitle")}
             body={t("reminders.emptyBody")}
             action={{ label: t("reminders.new"), onPress: () => setCreating(true) }}
           />
-        </View>
-      ) : (
-        <ScrollView className="flex-1 px-n4" contentContainerClassName="pb-[96px] pt-n4">
-          <ListSection title={t("reminders.all")}>
-            {list.map((reminder, index) => (
-              <Row
-                key={reminder.id}
-                title={reminder.title}
-                subtitle={t(kindKey(reminder.kind))}
-                leading={<IconCircle icon={kindIcon(reminder.kind)} />}
-                trailing={
-                  <Text className="text-[12px] text-neutral-500">
-                    {reminder.enabled ? t("reminders.on") : t("reminders.off")}
-                  </Text>
-                }
-                onPress={() =>
-                  upsert.mutate({
-                    reminderId: reminder.id,
-                    kind: reminder.kind,
-                    title: reminder.title,
-                    enabled: !reminder.enabled,
-                  })
-                }
-                onLongPress={() => confirmRemove(reminder)}
-                divider={index < list.length - 1}
-              />
-            ))}
-          </ListSection>
+        ) : (
+          <>
+            <ListSection title={t("reminders.all")}>
+              {list.map((reminder, index) => (
+                <Row
+                  key={reminder.id}
+                  title={reminder.title}
+                  subtitle={t(kindKey(reminder.kind))}
+                  leading={<IconCircle icon={kindIcon(reminder.kind)} />}
+                  trailing={
+                    <Text className="text-[12px] text-neutral-600">
+                      {reminder.enabled ? t("reminders.on") : t("reminders.off")}
+                    </Text>
+                  }
+                  onPress={() =>
+                    upsert.mutate({
+                      reminderId: reminder.id,
+                      kind: reminder.kind,
+                      title: reminder.title,
+                      enabled: !reminder.enabled,
+                    })
+                  }
+                  onLongPress={() => confirmRemove(reminder)}
+                  divider={index < list.length - 1}
+                />
+              ))}
+            </ListSection>
 
-          <Text className="mt-n3 px-n2 text-[11px] text-neutral-500">{t("reminders.tapHint")}</Text>
-        </ScrollView>
-      )}
+            <Text className="text-[11px] text-neutral-600">{t("reminders.tapHint")}</Text>
+          </>
+        )}
+      </ScrollBody>
 
       <Fab label={t("reminders.new")} onPress={() => setCreating(true)} />
 
       <NewReminderSheet visible={creating} onClose={() => setCreating(false)} />
-
-      <Drawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: "" }}
-        household={{ name: family.data?.family?.name ?? "" }}
-        items={drawerItems}
-        activeId="reminders"
-        onSelect={(item) => {
-          setDrawerOpen(false);
-          if (item.href && item.id !== "reminders") router.push(item.href);
-        }}
-      />
     </Screen>
   );
 }
@@ -180,8 +147,8 @@ function NewReminderSheet({ visible, onClose }: { visible: boolean; onClose: () 
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("reminders.new")} scroll>
-      <View className="gap-n4">
+    <ScrollSheet visible={visible} onClose={onClose} title={t("reminders.new")} scroll>
+      <View className="gap-[11.2px]">
         <Field label={t("reminders.titleField")} value={title} onChangeText={setTitle} />
 
         <SegmentedTabs<Kind>
@@ -194,10 +161,10 @@ function NewReminderSheet({ visible, onClose }: { visible: boolean; onClose: () 
           ]}
         />
 
-        {error ? <Text className="text-[12.5px] text-overspend">{error}</Text> : null}
+        {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
 
         <Button title={t("common.save")} onPress={() => void save()} disabled={upsert.isPending} />
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }
