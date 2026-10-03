@@ -49,6 +49,7 @@ module.exports = {
     extra: {
       "//": "Endpoints come from EXPO_PUBLIC_API_ENV (default: production). See the top of this file.",
       apiEnv: env,
+      telegramBot: process.env.EXPO_PUBLIC_TELEGRAM_BOT ?? "",
       apiBaseUrl,
       serviceUrls: {
         auth: authUrl,
