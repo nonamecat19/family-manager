@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, Text, View, type ViewProps } from "react-native";
+import { KeyboardAvoidingView, Modal, Pressable, Text, View, type ViewProps } from "react-native";
 
 import { useUiTranslate } from "./labels.tsx";
 import { Display } from "./primitives.tsx";
@@ -23,7 +23,7 @@ export function Sheet({
   const tLabel = useUiTranslate();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end">
+      <KeyboardAvoidingView behavior="padding" className="flex-1 justify-end">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={tLabel("common.close")}
@@ -37,7 +37,7 @@ export function Sheet({
           </Display>
           {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

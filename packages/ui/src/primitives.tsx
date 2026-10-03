@@ -256,11 +256,17 @@ export function Field({ label, error, className = "", ...input }: FieldProps) {
   return (
     <View className={className} style={{ gap: 6 }}>
       {label ? (
-        <Text style={{ color: t.muted, fontSize: 12, fontFamily: t.fonts?.medium, ...labelCase(t, 0.6) }}>
+        <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={{ color: t.muted, fontSize: 12, fontFamily: t.fonts?.medium, ...labelCase(t, 0.6) }}
+        >
           {label}
         </Text>
       ) : null}
       <TextInput
+        accessibilityLabel={label}
+        accessibilityHint={invalid ? error ?? undefined : undefined}
         {...input}
         placeholderTextColor={t.neutral[600]}
         style={{
