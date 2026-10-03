@@ -13,6 +13,8 @@ const PUBLIC_PROCEDURES = new Set([
   `${AuthService.typeName}/${AuthService.method.login.name}`,
   `${AuthService.typeName}/${AuthService.method.register.name}`,
   `${AuthService.typeName}/${AuthService.method.refresh.name}`,
+  `${AuthService.typeName}/${AuthService.method.startDeviceLogin.name}`,
+  `${AuthService.typeName}/${AuthService.method.pollDeviceLogin.name}`,
 ]);
 
 export type ServiceName = "auth" | "family" | "finance" | "recipes" | "notes";

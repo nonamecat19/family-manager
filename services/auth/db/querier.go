@@ -11,16 +11,23 @@ import (
 )
 
 type Querier interface {
+	ApproveLoginGrant(ctx context.Context, arg ApproveLoginGrantParams) (LoginGrant, error)
+	ConsumeLoginGrant(ctx context.Context, id pgtype.UUID) (int64, error)
 	CreateLinkToken(ctx context.Context, arg CreateLinkTokenParams) (LinkToken, error)
+	CreateLoginGrant(ctx context.Context, arg CreateLoginGrantParams) (LoginGrant, error)
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
+	DeleteExpiredLoginGrants(ctx context.Context) (int64, error)
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 	DeleteIdentity(ctx context.Context, arg DeleteIdentityParams) (Identity, error)
 	DeleteOrphanChains(ctx context.Context) (int64, error)
+	DenyLoginGrant(ctx context.Context, arg DenyLoginGrantParams) (int64, error)
 	EnsureChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
 	GetIdentity(ctx context.Context, arg GetIdentityParams) (Identity, error)
 	GetLinkToken(ctx context.Context, tokenHash string) (LinkToken, error)
+	GetLoginGrantByDeviceCode(ctx context.Context, deviceCodeHash string) (LoginGrant, error)
+	GetLoginGrantByUserCode(ctx context.Context, userCodeHash string) (LoginGrant, error)
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
@@ -32,6 +39,7 @@ type Querier interface {
 	RevokeAllForUser(ctx context.Context, userID pgtype.UUID) (int64, error)
 	RevokeChain(ctx context.Context, chainID pgtype.UUID) (int64, error)
 	TombstoneChain(ctx context.Context, id pgtype.UUID) error
+	TouchLoginGrant(ctx context.Context, arg TouchLoginGrantParams) (int64, error)
 	UpsertIdentity(ctx context.Context, arg UpsertIdentityParams) (Identity, error)
 }
 

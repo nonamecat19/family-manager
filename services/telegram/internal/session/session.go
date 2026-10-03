@@ -31,6 +31,9 @@ var (
 	ErrNotLinked = errors.New("session: this telegram account is not linked")
 	ErrLinkAgain = errors.New("session: the link expired; start over from the app")
 	ErrTaken     = errors.New("session: this telegram account is linked to another user")
+
+	ErrLoginExpired   = errors.New("session: the sign-in code expired or was already used")
+	ErrLoginThrottled = errors.New("session: too many sign-in codes tried; wait and try again")
 )
 
 type Session struct {
@@ -282,4 +285,39 @@ func (s *Store) expiry(expiresIn int64) time.Time {
 		expiresIn = int64((15 * time.Minute).Seconds())
 	}
 	return s.now().Add(time.Duration(expiresIn) * time.Second)
+}
+
+func (s *Store) ApproveLogin(ctx context.Context, telegramUserID int64, userCode string) error {
+	return s.decideLogin(ctx, telegramUserID, func(bearer string) error {
+		req := connect.NewRequest(&authv1.ApproveDeviceLoginRequest{UserCode: userCode})
+		req.Header().Set("Authorization", bearer)
+		_, err := s.auth.ApproveDeviceLogin(ctx, req)
+		return err
+	})
+}
+
+func (s *Store) DenyLogin(ctx context.Context, telegramUserID int64, userCode string) error {
+	return s.decideLogin(ctx, telegramUserID, func(bearer string) error {
+		req := connect.NewRequest(&authv1.DenyDeviceLoginRequest{UserCode: userCode})
+		req.Header().Set("Authorization", bearer)
+		_, err := s.auth.DenyDeviceLogin(ctx, req)
+		return err
+	})
+}
+
+func (s *Store) decideLogin(ctx context.Context, telegramUserID int64, call func(bearer string) error) error {
+	current, err := s.Session(ctx, telegramUserID)
+	if err != nil {
+		return err
+	}
+	if err := call("Bearer " + current.AccessToken); err != nil {
+		switch connect.CodeOf(err) {
+		case connect.CodeNotFound, connect.CodeInvalidArgument:
+			return ErrLoginExpired
+		case connect.CodeResourceExhausted:
+			return ErrLoginThrottled
+		}
+		return fmt.Errorf("session: decide login: %w", err)
+	}
+	return nil
 }

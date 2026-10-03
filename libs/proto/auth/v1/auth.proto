@@ -14,6 +14,10 @@ service AuthService {
   rpc RedeemLinkToken(RedeemLinkTokenRequest) returns (RedeemLinkTokenResponse);
   rpc ListIdentities(ListIdentitiesRequest) returns (ListIdentitiesResponse);
   rpc Unlink(UnlinkRequest) returns (UnlinkResponse);
+  rpc StartDeviceLogin(StartDeviceLoginRequest) returns (StartDeviceLoginResponse);
+  rpc PollDeviceLogin(PollDeviceLoginRequest) returns (PollDeviceLoginResponse);
+  rpc ApproveDeviceLogin(ApproveDeviceLoginRequest) returns (ApproveDeviceLoginResponse);
+  rpc DenyDeviceLogin(DenyDeviceLoginRequest) returns (DenyDeviceLoginResponse);
 }
 
 message LoginRequest {
@@ -93,3 +97,56 @@ message UnlinkRequest {
 }
 
 message UnlinkResponse {}
+
+enum DeviceLoginKind {
+  DEVICE_LOGIN_KIND_UNSPECIFIED = 0;
+  DEVICE_LOGIN_KIND_DEVICE = 1;
+  DEVICE_LOGIN_KIND_TELEGRAM = 2;
+}
+
+enum DeviceLoginStatus {
+  DEVICE_LOGIN_STATUS_UNSPECIFIED = 0;
+  DEVICE_LOGIN_STATUS_PENDING = 1;
+  DEVICE_LOGIN_STATUS_SLOW_DOWN = 2;
+  DEVICE_LOGIN_STATUS_APPROVED = 3;
+  DEVICE_LOGIN_STATUS_DENIED = 4;
+  DEVICE_LOGIN_STATUS_EXPIRED = 5;
+}
+
+message StartDeviceLoginRequest {
+  DeviceLoginKind kind = 1;
+}
+
+message StartDeviceLoginResponse {
+  string device_code = 1;
+  string user_code = 2;
+  google.protobuf.Timestamp expires_at = 3;
+  int32 interval_seconds = 4;
+  string telegram_start_payload = 5;
+}
+
+message PollDeviceLoginRequest {
+  string device_code = 1;
+}
+
+message PollDeviceLoginResponse {
+  DeviceLoginStatus status = 1;
+  int32 interval_seconds = 2;
+  string access_token = 3;
+  string refresh_token = 4;
+  int64 expires_in = 5;
+}
+
+message ApproveDeviceLoginRequest {
+  string user_code = 1;
+}
+
+message ApproveDeviceLoginResponse {
+  DeviceLoginKind kind = 1;
+}
+
+message DenyDeviceLoginRequest {
+  string user_code = 1;
+}
+
+message DenyDeviceLoginResponse {}

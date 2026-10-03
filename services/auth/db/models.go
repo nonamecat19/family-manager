@@ -35,6 +35,20 @@ type LinkToken struct {
 	CreatedAt  pgtype.Timestamptz
 }
 
+type LoginGrant struct {
+	ID             pgtype.UUID
+	Kind           string
+	DeviceCodeHash string
+	UserCodeHash   string
+	UserID         pgtype.UUID
+	ApprovedAt     pgtype.Timestamptz
+	DeniedAt       pgtype.Timestamptz
+	ConsumedAt     pgtype.Timestamptz
+	LastPolledAt   pgtype.Timestamptz
+	ExpiresAt      pgtype.Timestamptz
+	CreatedAt      pgtype.Timestamptz
+}
+
 type RefreshToken struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID

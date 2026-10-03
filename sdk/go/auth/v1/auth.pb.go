@@ -22,6 +22,113 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type DeviceLoginKind int32
+
+const (
+	DeviceLoginKind_DEVICE_LOGIN_KIND_UNSPECIFIED DeviceLoginKind = 0
+	DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE      DeviceLoginKind = 1
+	DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM    DeviceLoginKind = 2
+)
+
+// Enum value maps for DeviceLoginKind.
+var (
+	DeviceLoginKind_name = map[int32]string{
+		0: "DEVICE_LOGIN_KIND_UNSPECIFIED",
+		1: "DEVICE_LOGIN_KIND_DEVICE",
+		2: "DEVICE_LOGIN_KIND_TELEGRAM",
+	}
+	DeviceLoginKind_value = map[string]int32{
+		"DEVICE_LOGIN_KIND_UNSPECIFIED": 0,
+		"DEVICE_LOGIN_KIND_DEVICE":      1,
+		"DEVICE_LOGIN_KIND_TELEGRAM":    2,
+	}
+)
+
+func (x DeviceLoginKind) Enum() *DeviceLoginKind {
+	p := new(DeviceLoginKind)
+	*p = x
+	return p
+}
+
+func (x DeviceLoginKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DeviceLoginKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_auth_v1_auth_proto_enumTypes[0].Descriptor()
+}
+
+func (DeviceLoginKind) Type() protoreflect.EnumType {
+	return &file_auth_v1_auth_proto_enumTypes[0]
+}
+
+func (x DeviceLoginKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DeviceLoginKind.Descriptor instead.
+func (DeviceLoginKind) EnumDescriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{0}
+}
+
+type DeviceLoginStatus int32
+
+const (
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_UNSPECIFIED DeviceLoginStatus = 0
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_PENDING     DeviceLoginStatus = 1
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_SLOW_DOWN   DeviceLoginStatus = 2
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_APPROVED    DeviceLoginStatus = 3
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_DENIED      DeviceLoginStatus = 4
+	DeviceLoginStatus_DEVICE_LOGIN_STATUS_EXPIRED     DeviceLoginStatus = 5
+)
+
+// Enum value maps for DeviceLoginStatus.
+var (
+	DeviceLoginStatus_name = map[int32]string{
+		0: "DEVICE_LOGIN_STATUS_UNSPECIFIED",
+		1: "DEVICE_LOGIN_STATUS_PENDING",
+		2: "DEVICE_LOGIN_STATUS_SLOW_DOWN",
+		3: "DEVICE_LOGIN_STATUS_APPROVED",
+		4: "DEVICE_LOGIN_STATUS_DENIED",
+		5: "DEVICE_LOGIN_STATUS_EXPIRED",
+	}
+	DeviceLoginStatus_value = map[string]int32{
+		"DEVICE_LOGIN_STATUS_UNSPECIFIED": 0,
+		"DEVICE_LOGIN_STATUS_PENDING":     1,
+		"DEVICE_LOGIN_STATUS_SLOW_DOWN":   2,
+		"DEVICE_LOGIN_STATUS_APPROVED":    3,
+		"DEVICE_LOGIN_STATUS_DENIED":      4,
+		"DEVICE_LOGIN_STATUS_EXPIRED":     5,
+	}
+)
+
+func (x DeviceLoginStatus) Enum() *DeviceLoginStatus {
+	p := new(DeviceLoginStatus)
+	*p = x
+	return p
+}
+
+func (x DeviceLoginStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DeviceLoginStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_auth_v1_auth_proto_enumTypes[1].Descriptor()
+}
+
+func (DeviceLoginStatus) Type() protoreflect.EnumType {
+	return &file_auth_v1_auth_proto_enumTypes[1]
+}
+
+func (x DeviceLoginStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DeviceLoginStatus.Descriptor instead.
+func (DeviceLoginStatus) EnumDescriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{1}
+}
+
 type LoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
@@ -874,6 +981,414 @@ func (*UnlinkResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{16}
 }
 
+type StartDeviceLoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          DeviceLoginKind        `protobuf:"varint,1,opt,name=kind,proto3,enum=auth.v1.DeviceLoginKind" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartDeviceLoginRequest) Reset() {
+	*x = StartDeviceLoginRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartDeviceLoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartDeviceLoginRequest) ProtoMessage() {}
+
+func (x *StartDeviceLoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartDeviceLoginRequest.ProtoReflect.Descriptor instead.
+func (*StartDeviceLoginRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *StartDeviceLoginRequest) GetKind() DeviceLoginKind {
+	if x != nil {
+		return x.Kind
+	}
+	return DeviceLoginKind_DEVICE_LOGIN_KIND_UNSPECIFIED
+}
+
+type StartDeviceLoginResponse struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	DeviceCode           string                 `protobuf:"bytes,1,opt,name=device_code,json=deviceCode,proto3" json:"device_code,omitempty"`
+	UserCode             string                 `protobuf:"bytes,2,opt,name=user_code,json=userCode,proto3" json:"user_code,omitempty"`
+	ExpiresAt            *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	IntervalSeconds      int32                  `protobuf:"varint,4,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
+	TelegramStartPayload string                 `protobuf:"bytes,5,opt,name=telegram_start_payload,json=telegramStartPayload,proto3" json:"telegram_start_payload,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *StartDeviceLoginResponse) Reset() {
+	*x = StartDeviceLoginResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartDeviceLoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartDeviceLoginResponse) ProtoMessage() {}
+
+func (x *StartDeviceLoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartDeviceLoginResponse.ProtoReflect.Descriptor instead.
+func (*StartDeviceLoginResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *StartDeviceLoginResponse) GetDeviceCode() string {
+	if x != nil {
+		return x.DeviceCode
+	}
+	return ""
+}
+
+func (x *StartDeviceLoginResponse) GetUserCode() string {
+	if x != nil {
+		return x.UserCode
+	}
+	return ""
+}
+
+func (x *StartDeviceLoginResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *StartDeviceLoginResponse) GetIntervalSeconds() int32 {
+	if x != nil {
+		return x.IntervalSeconds
+	}
+	return 0
+}
+
+func (x *StartDeviceLoginResponse) GetTelegramStartPayload() string {
+	if x != nil {
+		return x.TelegramStartPayload
+	}
+	return ""
+}
+
+type PollDeviceLoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceCode    string                 `protobuf:"bytes,1,opt,name=device_code,json=deviceCode,proto3" json:"device_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PollDeviceLoginRequest) Reset() {
+	*x = PollDeviceLoginRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PollDeviceLoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PollDeviceLoginRequest) ProtoMessage() {}
+
+func (x *PollDeviceLoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PollDeviceLoginRequest.ProtoReflect.Descriptor instead.
+func (*PollDeviceLoginRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *PollDeviceLoginRequest) GetDeviceCode() string {
+	if x != nil {
+		return x.DeviceCode
+	}
+	return ""
+}
+
+type PollDeviceLoginResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Status          DeviceLoginStatus      `protobuf:"varint,1,opt,name=status,proto3,enum=auth.v1.DeviceLoginStatus" json:"status,omitempty"`
+	IntervalSeconds int32                  `protobuf:"varint,2,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
+	AccessToken     string                 `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken    string                 `protobuf:"bytes,4,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	ExpiresIn       int64                  `protobuf:"varint,5,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *PollDeviceLoginResponse) Reset() {
+	*x = PollDeviceLoginResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PollDeviceLoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PollDeviceLoginResponse) ProtoMessage() {}
+
+func (x *PollDeviceLoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PollDeviceLoginResponse.ProtoReflect.Descriptor instead.
+func (*PollDeviceLoginResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *PollDeviceLoginResponse) GetStatus() DeviceLoginStatus {
+	if x != nil {
+		return x.Status
+	}
+	return DeviceLoginStatus_DEVICE_LOGIN_STATUS_UNSPECIFIED
+}
+
+func (x *PollDeviceLoginResponse) GetIntervalSeconds() int32 {
+	if x != nil {
+		return x.IntervalSeconds
+	}
+	return 0
+}
+
+func (x *PollDeviceLoginResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *PollDeviceLoginResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *PollDeviceLoginResponse) GetExpiresIn() int64 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
+type ApproveDeviceLoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserCode      string                 `protobuf:"bytes,1,opt,name=user_code,json=userCode,proto3" json:"user_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApproveDeviceLoginRequest) Reset() {
+	*x = ApproveDeviceLoginRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApproveDeviceLoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApproveDeviceLoginRequest) ProtoMessage() {}
+
+func (x *ApproveDeviceLoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApproveDeviceLoginRequest.ProtoReflect.Descriptor instead.
+func (*ApproveDeviceLoginRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ApproveDeviceLoginRequest) GetUserCode() string {
+	if x != nil {
+		return x.UserCode
+	}
+	return ""
+}
+
+type ApproveDeviceLoginResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          DeviceLoginKind        `protobuf:"varint,1,opt,name=kind,proto3,enum=auth.v1.DeviceLoginKind" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApproveDeviceLoginResponse) Reset() {
+	*x = ApproveDeviceLoginResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApproveDeviceLoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApproveDeviceLoginResponse) ProtoMessage() {}
+
+func (x *ApproveDeviceLoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApproveDeviceLoginResponse.ProtoReflect.Descriptor instead.
+func (*ApproveDeviceLoginResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ApproveDeviceLoginResponse) GetKind() DeviceLoginKind {
+	if x != nil {
+		return x.Kind
+	}
+	return DeviceLoginKind_DEVICE_LOGIN_KIND_UNSPECIFIED
+}
+
+type DenyDeviceLoginRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserCode      string                 `protobuf:"bytes,1,opt,name=user_code,json=userCode,proto3" json:"user_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DenyDeviceLoginRequest) Reset() {
+	*x = DenyDeviceLoginRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DenyDeviceLoginRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenyDeviceLoginRequest) ProtoMessage() {}
+
+func (x *DenyDeviceLoginRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DenyDeviceLoginRequest.ProtoReflect.Descriptor instead.
+func (*DenyDeviceLoginRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *DenyDeviceLoginRequest) GetUserCode() string {
+	if x != nil {
+		return x.UserCode
+	}
+	return ""
+}
+
+type DenyDeviceLoginResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DenyDeviceLoginResponse) Reset() {
+	*x = DenyDeviceLoginResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DenyDeviceLoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenyDeviceLoginResponse) ProtoMessage() {}
+
+func (x *DenyDeviceLoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DenyDeviceLoginResponse.ProtoReflect.Descriptor instead.
+func (*DenyDeviceLoginResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{24}
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
@@ -934,7 +1449,45 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1f\n" +
 	"\vexternal_id\x18\x02 \x01(\tR\n" +
 	"externalId\"\x10\n" +
-	"\x0eUnlinkResponse2\xb9\x04\n" +
+	"\x0eUnlinkResponse\"G\n" +
+	"\x17StartDeviceLoginRequest\x12,\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x18.auth.v1.DeviceLoginKindR\x04kind\"\xf4\x01\n" +
+	"\x18StartDeviceLoginResponse\x12\x1f\n" +
+	"\vdevice_code\x18\x01 \x01(\tR\n" +
+	"deviceCode\x12\x1b\n" +
+	"\tuser_code\x18\x02 \x01(\tR\buserCode\x129\n" +
+	"\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12)\n" +
+	"\x10interval_seconds\x18\x04 \x01(\x05R\x0fintervalSeconds\x124\n" +
+	"\x16telegram_start_payload\x18\x05 \x01(\tR\x14telegramStartPayload\"9\n" +
+	"\x16PollDeviceLoginRequest\x12\x1f\n" +
+	"\vdevice_code\x18\x01 \x01(\tR\n" +
+	"deviceCode\"\xdf\x01\n" +
+	"\x17PollDeviceLoginResponse\x122\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x1a.auth.v1.DeviceLoginStatusR\x06status\x12)\n" +
+	"\x10interval_seconds\x18\x02 \x01(\x05R\x0fintervalSeconds\x12!\n" +
+	"\faccess_token\x18\x03 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x05 \x01(\x03R\texpiresIn\"8\n" +
+	"\x19ApproveDeviceLoginRequest\x12\x1b\n" +
+	"\tuser_code\x18\x01 \x01(\tR\buserCode\"J\n" +
+	"\x1aApproveDeviceLoginResponse\x12,\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x18.auth.v1.DeviceLoginKindR\x04kind\"5\n" +
+	"\x16DenyDeviceLoginRequest\x12\x1b\n" +
+	"\tuser_code\x18\x01 \x01(\tR\buserCode\"\x19\n" +
+	"\x17DenyDeviceLoginResponse*r\n" +
+	"\x0fDeviceLoginKind\x12!\n" +
+	"\x1dDEVICE_LOGIN_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18DEVICE_LOGIN_KIND_DEVICE\x10\x01\x12\x1e\n" +
+	"\x1aDEVICE_LOGIN_KIND_TELEGRAM\x10\x02*\xdf\x01\n" +
+	"\x11DeviceLoginStatus\x12#\n" +
+	"\x1fDEVICE_LOGIN_STATUS_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bDEVICE_LOGIN_STATUS_PENDING\x10\x01\x12!\n" +
+	"\x1dDEVICE_LOGIN_STATUS_SLOW_DOWN\x10\x02\x12 \n" +
+	"\x1cDEVICE_LOGIN_STATUS_APPROVED\x10\x03\x12\x1e\n" +
+	"\x1aDEVICE_LOGIN_STATUS_DENIED\x10\x04\x12\x1f\n" +
+	"\x1bDEVICE_LOGIN_STATUS_EXPIRED\x10\x052\x9d\a\n" +
 	"\vAuthService\x126\n" +
 	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\x12?\n" +
 	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\x12<\n" +
@@ -943,7 +1496,11 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x0fCreateLinkToken\x12\x1f.auth.v1.CreateLinkTokenRequest\x1a .auth.v1.CreateLinkTokenResponse\x12T\n" +
 	"\x0fRedeemLinkToken\x12\x1f.auth.v1.RedeemLinkTokenRequest\x1a .auth.v1.RedeemLinkTokenResponse\x12Q\n" +
 	"\x0eListIdentities\x12\x1e.auth.v1.ListIdentitiesRequest\x1a\x1f.auth.v1.ListIdentitiesResponse\x129\n" +
-	"\x06Unlink\x12\x16.auth.v1.UnlinkRequest\x1a\x17.auth.v1.UnlinkResponseB\x8a\x01\n" +
+	"\x06Unlink\x12\x16.auth.v1.UnlinkRequest\x1a\x17.auth.v1.UnlinkResponse\x12W\n" +
+	"\x10StartDeviceLogin\x12 .auth.v1.StartDeviceLoginRequest\x1a!.auth.v1.StartDeviceLoginResponse\x12T\n" +
+	"\x0fPollDeviceLogin\x12\x1f.auth.v1.PollDeviceLoginRequest\x1a .auth.v1.PollDeviceLoginResponse\x12]\n" +
+	"\x12ApproveDeviceLogin\x12\".auth.v1.ApproveDeviceLoginRequest\x1a#.auth.v1.ApproveDeviceLoginResponse\x12T\n" +
+	"\x0fDenyDeviceLogin\x12\x1f.auth.v1.DenyDeviceLoginRequest\x1a .auth.v1.DenyDeviceLoginResponseB\x8a\x01\n" +
 	"\vcom.auth.v1B\tAuthProtoP\x01Z3github.com/nnc/family-manager/sdk/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
@@ -958,51 +1515,74 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_auth_v1_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*LoginRequest)(nil),            // 0: auth.v1.LoginRequest
-	(*LoginResponse)(nil),           // 1: auth.v1.LoginResponse
-	(*RegisterRequest)(nil),         // 2: auth.v1.RegisterRequest
-	(*RegisterResponse)(nil),        // 3: auth.v1.RegisterResponse
-	(*RefreshRequest)(nil),          // 4: auth.v1.RefreshRequest
-	(*RefreshResponse)(nil),         // 5: auth.v1.RefreshResponse
-	(*LogoutRequest)(nil),           // 6: auth.v1.LogoutRequest
-	(*LogoutResponse)(nil),          // 7: auth.v1.LogoutResponse
-	(*CreateLinkTokenRequest)(nil),  // 8: auth.v1.CreateLinkTokenRequest
-	(*CreateLinkTokenResponse)(nil), // 9: auth.v1.CreateLinkTokenResponse
-	(*RedeemLinkTokenRequest)(nil),  // 10: auth.v1.RedeemLinkTokenRequest
-	(*RedeemLinkTokenResponse)(nil), // 11: auth.v1.RedeemLinkTokenResponse
-	(*Identity)(nil),                // 12: auth.v1.Identity
-	(*ListIdentitiesRequest)(nil),   // 13: auth.v1.ListIdentitiesRequest
-	(*ListIdentitiesResponse)(nil),  // 14: auth.v1.ListIdentitiesResponse
-	(*UnlinkRequest)(nil),           // 15: auth.v1.UnlinkRequest
-	(*UnlinkResponse)(nil),          // 16: auth.v1.UnlinkResponse
-	(*timestamppb.Timestamp)(nil),   // 17: google.protobuf.Timestamp
+	(DeviceLoginKind)(0),               // 0: auth.v1.DeviceLoginKind
+	(DeviceLoginStatus)(0),             // 1: auth.v1.DeviceLoginStatus
+	(*LoginRequest)(nil),               // 2: auth.v1.LoginRequest
+	(*LoginResponse)(nil),              // 3: auth.v1.LoginResponse
+	(*RegisterRequest)(nil),            // 4: auth.v1.RegisterRequest
+	(*RegisterResponse)(nil),           // 5: auth.v1.RegisterResponse
+	(*RefreshRequest)(nil),             // 6: auth.v1.RefreshRequest
+	(*RefreshResponse)(nil),            // 7: auth.v1.RefreshResponse
+	(*LogoutRequest)(nil),              // 8: auth.v1.LogoutRequest
+	(*LogoutResponse)(nil),             // 9: auth.v1.LogoutResponse
+	(*CreateLinkTokenRequest)(nil),     // 10: auth.v1.CreateLinkTokenRequest
+	(*CreateLinkTokenResponse)(nil),    // 11: auth.v1.CreateLinkTokenResponse
+	(*RedeemLinkTokenRequest)(nil),     // 12: auth.v1.RedeemLinkTokenRequest
+	(*RedeemLinkTokenResponse)(nil),    // 13: auth.v1.RedeemLinkTokenResponse
+	(*Identity)(nil),                   // 14: auth.v1.Identity
+	(*ListIdentitiesRequest)(nil),      // 15: auth.v1.ListIdentitiesRequest
+	(*ListIdentitiesResponse)(nil),     // 16: auth.v1.ListIdentitiesResponse
+	(*UnlinkRequest)(nil),              // 17: auth.v1.UnlinkRequest
+	(*UnlinkResponse)(nil),             // 18: auth.v1.UnlinkResponse
+	(*StartDeviceLoginRequest)(nil),    // 19: auth.v1.StartDeviceLoginRequest
+	(*StartDeviceLoginResponse)(nil),   // 20: auth.v1.StartDeviceLoginResponse
+	(*PollDeviceLoginRequest)(nil),     // 21: auth.v1.PollDeviceLoginRequest
+	(*PollDeviceLoginResponse)(nil),    // 22: auth.v1.PollDeviceLoginResponse
+	(*ApproveDeviceLoginRequest)(nil),  // 23: auth.v1.ApproveDeviceLoginRequest
+	(*ApproveDeviceLoginResponse)(nil), // 24: auth.v1.ApproveDeviceLoginResponse
+	(*DenyDeviceLoginRequest)(nil),     // 25: auth.v1.DenyDeviceLoginRequest
+	(*DenyDeviceLoginResponse)(nil),    // 26: auth.v1.DenyDeviceLoginResponse
+	(*timestamppb.Timestamp)(nil),      // 27: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	17, // 0: auth.v1.Identity.linked_at:type_name -> google.protobuf.Timestamp
-	12, // 1: auth.v1.ListIdentitiesResponse.identities:type_name -> auth.v1.Identity
-	0,  // 2: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
-	2,  // 3: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
-	4,  // 4: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
-	6,  // 5: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
-	8,  // 6: auth.v1.AuthService.CreateLinkToken:input_type -> auth.v1.CreateLinkTokenRequest
-	10, // 7: auth.v1.AuthService.RedeemLinkToken:input_type -> auth.v1.RedeemLinkTokenRequest
-	13, // 8: auth.v1.AuthService.ListIdentities:input_type -> auth.v1.ListIdentitiesRequest
-	15, // 9: auth.v1.AuthService.Unlink:input_type -> auth.v1.UnlinkRequest
-	1,  // 10: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
-	3,  // 11: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
-	5,  // 12: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
-	7,  // 13: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
-	9,  // 14: auth.v1.AuthService.CreateLinkToken:output_type -> auth.v1.CreateLinkTokenResponse
-	11, // 15: auth.v1.AuthService.RedeemLinkToken:output_type -> auth.v1.RedeemLinkTokenResponse
-	14, // 16: auth.v1.AuthService.ListIdentities:output_type -> auth.v1.ListIdentitiesResponse
-	16, // 17: auth.v1.AuthService.Unlink:output_type -> auth.v1.UnlinkResponse
-	10, // [10:18] is the sub-list for method output_type
-	2,  // [2:10] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	27, // 0: auth.v1.Identity.linked_at:type_name -> google.protobuf.Timestamp
+	14, // 1: auth.v1.ListIdentitiesResponse.identities:type_name -> auth.v1.Identity
+	0,  // 2: auth.v1.StartDeviceLoginRequest.kind:type_name -> auth.v1.DeviceLoginKind
+	27, // 3: auth.v1.StartDeviceLoginResponse.expires_at:type_name -> google.protobuf.Timestamp
+	1,  // 4: auth.v1.PollDeviceLoginResponse.status:type_name -> auth.v1.DeviceLoginStatus
+	0,  // 5: auth.v1.ApproveDeviceLoginResponse.kind:type_name -> auth.v1.DeviceLoginKind
+	2,  // 6: auth.v1.AuthService.Login:input_type -> auth.v1.LoginRequest
+	4,  // 7: auth.v1.AuthService.Register:input_type -> auth.v1.RegisterRequest
+	6,  // 8: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshRequest
+	8,  // 9: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutRequest
+	10, // 10: auth.v1.AuthService.CreateLinkToken:input_type -> auth.v1.CreateLinkTokenRequest
+	12, // 11: auth.v1.AuthService.RedeemLinkToken:input_type -> auth.v1.RedeemLinkTokenRequest
+	15, // 12: auth.v1.AuthService.ListIdentities:input_type -> auth.v1.ListIdentitiesRequest
+	17, // 13: auth.v1.AuthService.Unlink:input_type -> auth.v1.UnlinkRequest
+	19, // 14: auth.v1.AuthService.StartDeviceLogin:input_type -> auth.v1.StartDeviceLoginRequest
+	21, // 15: auth.v1.AuthService.PollDeviceLogin:input_type -> auth.v1.PollDeviceLoginRequest
+	23, // 16: auth.v1.AuthService.ApproveDeviceLogin:input_type -> auth.v1.ApproveDeviceLoginRequest
+	25, // 17: auth.v1.AuthService.DenyDeviceLogin:input_type -> auth.v1.DenyDeviceLoginRequest
+	3,  // 18: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResponse
+	5,  // 19: auth.v1.AuthService.Register:output_type -> auth.v1.RegisterResponse
+	7,  // 20: auth.v1.AuthService.Refresh:output_type -> auth.v1.RefreshResponse
+	9,  // 21: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResponse
+	11, // 22: auth.v1.AuthService.CreateLinkToken:output_type -> auth.v1.CreateLinkTokenResponse
+	13, // 23: auth.v1.AuthService.RedeemLinkToken:output_type -> auth.v1.RedeemLinkTokenResponse
+	16, // 24: auth.v1.AuthService.ListIdentities:output_type -> auth.v1.ListIdentitiesResponse
+	18, // 25: auth.v1.AuthService.Unlink:output_type -> auth.v1.UnlinkResponse
+	20, // 26: auth.v1.AuthService.StartDeviceLogin:output_type -> auth.v1.StartDeviceLoginResponse
+	22, // 27: auth.v1.AuthService.PollDeviceLogin:output_type -> auth.v1.PollDeviceLoginResponse
+	24, // 28: auth.v1.AuthService.ApproveDeviceLogin:output_type -> auth.v1.ApproveDeviceLoginResponse
+	26, // 29: auth.v1.AuthService.DenyDeviceLogin:output_type -> auth.v1.DenyDeviceLoginResponse
+	18, // [18:30] is the sub-list for method output_type
+	6,  // [6:18] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -1015,13 +1595,14 @@ func file_auth_v1_auth_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   17,
+			NumEnums:      2,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_auth_v1_auth_proto_goTypes,
 		DependencyIndexes: file_auth_v1_auth_proto_depIdxs,
+		EnumInfos:         file_auth_v1_auth_proto_enumTypes,
 		MessageInfos:      file_auth_v1_auth_proto_msgTypes,
 	}.Build()
 	File_auth_v1_auth_proto = out.File

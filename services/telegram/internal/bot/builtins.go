@@ -39,6 +39,7 @@ func builtins() []Command {
 func builtinCallbacks() []Callback {
 	return []Callback{
 		{Prefix: "noop", Run: func(ctx context.Context, c *Context) error { return c.Toast(ctx, "") }},
+		{Prefix: loginCallback, Run: decideLogin},
 	}
 }
 
@@ -51,6 +52,9 @@ func start(ctx context.Context, c *Context) error {
 			return c.Bot.welcome(ctx, c, c.T(i18n.LinkedAlready))
 		}
 		return c.Reply(ctx, c.Bot.linkPrompt(c.Locale()))
+	}
+	if code, ok := strings.CutPrefix(payload, loginPayloadPrefix); ok {
+		return confirmLogin(ctx, c, code)
 	}
 
 	s, err := c.Bot.sessions.Redeem(ctx, payload, c.From, c.Chat)
