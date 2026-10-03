@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package notifications.v1;
+
+service NotificationsService {
+  rpc RegisterPushToken(RegisterPushTokenRequest) returns (RegisterPushTokenResponse);
+  rpc UnregisterPushToken(UnregisterPushTokenRequest) returns (UnregisterPushTokenResponse);
+
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
+  rpc SetPreferences(SetPreferencesRequest) returns (SetPreferencesResponse);
+}
+
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_IOS = 1;
+  PLATFORM_ANDROID = 2;
+}
+
+enum App {
+  APP_UNSPECIFIED = 0;
+  APP_NOTES = 1;
+  APP_FINANCE = 2;
+  APP_RECIPES = 3;
+}
+
+message RegisterPushTokenRequest {
+  string token = 1;
+  Platform platform = 2;
+  App app = 3;
+  string device_id = 4;
+}
+
+message RegisterPushTokenResponse {}
+
+message UnregisterPushTokenRequest {
+  string token = 1;
+}
+
+message UnregisterPushTokenResponse {}
+
+message Topic {
+  string key = 1;
+  string domain = 2;
+}
+
+message GetPreferencesRequest {}
+
+message GetPreferencesResponse {
+  repeated string muted = 1;
+  repeated Topic topics = 2;
+}
+
+message SetPreferencesRequest {
+  repeated string muted = 1;
+}
+
+message SetPreferencesResponse {
+  repeated string muted = 1;
+}
