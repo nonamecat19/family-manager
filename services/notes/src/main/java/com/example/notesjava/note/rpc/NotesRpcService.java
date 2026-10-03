@@ -7,8 +7,14 @@ import com.example.notesjava.common.security.CallerContext;
 import com.example.notesjava.group.domain.Group;
 import com.example.notesjava.group.repository.GroupRepository;
 import com.example.notesjava.note.domain.Note;
+import com.example.notesjava.note.domain.NoteActivity;
+import com.example.notesjava.note.domain.NoteComment;
+import com.example.notesjava.note.repository.NoteActivityRepository;
+import com.example.notesjava.note.repository.NoteCommentRepository;
 import com.example.notesjava.note.repository.NoteRepository;
+import com.nnc.familymanager.notes.v1.ActivityKind;
 import com.nnc.familymanager.notes.v1.AddCommentRequest;
+import com.nnc.familymanager.notes.v1.AddCommentResponse;
 import com.nnc.familymanager.notes.v1.ArchiveNoteRequest;
 import com.nnc.familymanager.notes.v1.ArchiveNoteResponse;
 import com.nnc.familymanager.notes.v1.Block;
@@ -23,7 +29,9 @@ import com.nnc.familymanager.notes.v1.DeleteNotebookResponse;
 import com.nnc.familymanager.notes.v1.GetNoteRequest;
 import com.nnc.familymanager.notes.v1.GetNoteResponse;
 import com.nnc.familymanager.notes.v1.ListActivityRequest;
+import com.nnc.familymanager.notes.v1.ListActivityResponse;
 import com.nnc.familymanager.notes.v1.ListCommentsRequest;
+import com.nnc.familymanager.notes.v1.ListCommentsResponse;
 import com.nnc.familymanager.notes.v1.ListNotebooksRequest;
 import com.nnc.familymanager.notes.v1.ListNotebooksResponse;
 import com.nnc.familymanager.notes.v1.ListNotesRequest;
@@ -34,6 +42,7 @@ import com.nnc.familymanager.notes.v1.MoveNoteRequest;
 import com.nnc.familymanager.notes.v1.MoveNoteResponse;
 import com.nnc.familymanager.notes.v1.NoteSort;
 import com.nnc.familymanager.notes.v1.ResolveCommentRequest;
+import com.nnc.familymanager.notes.v1.ResolveCommentResponse;
 import com.nnc.familymanager.notes.v1.SearchFacet;
 import com.nnc.familymanager.notes.v1.SearchHit;
 import com.nnc.familymanager.notes.v1.SearchRequest;
@@ -69,17 +78,25 @@ public class NotesRpcService extends ConnectService {
     private static final int DEFAULT_PAGE_SIZE = 50;
     private static final int MAX_PAGE_SIZE = 200;
     private static final int DEFAULT_SEARCH_LIMIT = 20;
+    private static final int DEFAULT_ACTIVITY_LIMIT = 50;
+    private static final int MAX_ACTIVITY_LIMIT = 200;
+    private static final int MAX_COMMENT_CODE_POINTS = 100_000;
 
     private final NoteRepository notes;
     private final GroupRepository groups;
+    private final NoteCommentRepository comments;
+    private final NoteActivityRepository activity;
     private final CallerContext callers;
     private final TransactionTemplate write;
     private final TransactionTemplate read;
 
-    public NotesRpcService(NoteRepository notes, GroupRepository groups, CallerContext callers,
+    public NotesRpcService(NoteRepository notes, GroupRepository groups, NoteCommentRepository comments,
+                           NoteActivityRepository activity, CallerContext callers,
                            PlatformTransactionManager transactions) {
         this.notes = notes;
         this.groups = groups;
+        this.comments = comments;
+        this.activity = activity;
         this.callers = callers;
         this.write = new TransactionTemplate(transactions);
         this.read = new TransactionTemplate(transactions);
@@ -99,6 +116,11 @@ public class NotesRpcService extends ConnectService {
         register("ArchiveNote", ArchiveNoteRequest.getDefaultInstance(), inTransaction(write, this::archiveNote));
         register("DeleteNote", DeleteNoteRequest.getDefaultInstance(), inTransaction(write, this::deleteNote));
         register("Search", SearchRequest.getDefaultInstance(), inTransaction(read, this::search));
+
+        register("AddComment", AddCommentRequest.getDefaultInstance(), inTransaction(write, this::addComment));
+        register("ListComments", ListCommentsRequest.getDefaultInstance(), inTransaction(read, this::listComments));
+        register("ResolveComment", ResolveCommentRequest.getDefaultInstance(), inTransaction(write, this::resolveComment));
+        register("ListActivity", ListActivityRequest.getDefaultInstance(), inTransaction(read, this::listActivity));
 
         registerUnimplemented();
     }
@@ -129,14 +151,6 @@ public class NotesRpcService extends ConnectService {
                 req -> { throw ConnectException.unimplemented("ListShares"); });
         register("ListSharedWithMe", ListSharedWithMeRequest.getDefaultInstance(),
                 req -> { throw ConnectException.unimplemented("ListSharedWithMe"); });
-        register("AddComment", AddCommentRequest.getDefaultInstance(),
-                req -> { throw ConnectException.unimplemented("AddComment"); });
-        register("ListComments", ListCommentsRequest.getDefaultInstance(),
-                req -> { throw ConnectException.unimplemented("ListComments"); });
-        register("ResolveComment", ResolveCommentRequest.getDefaultInstance(),
-                req -> { throw ConnectException.unimplemented("ResolveComment"); });
-        register("ListActivity", ListActivityRequest.getDefaultInstance(),
-                req -> { throw ConnectException.unimplemented("ListActivity"); });
     }
 
     ListNotebooksResponse listNotebooks(ListNotebooksRequest request) {
@@ -232,22 +246,29 @@ public class NotesRpcService extends ConnectService {
         Note note = Note.of(familyId, title, BlockCodec.toPlainText(blocks), group);
         note.owner(userId(caller));
         note.writeBlocks(BlockCodec.encode(blocks), BlockCodec.toPlainText(blocks));
+        Note saved = notes.save(note);
+        record(caller, saved.getId(), ActivityKind.ACTIVITY_KIND_CREATED, "");
 
         return CreateNoteResponse.newBuilder()
-                .setNote(NotesMapper.toProto(notes.save(note)))
+                .setNote(NotesMapper.toProto(saved))
                 .build();
     }
 
     UpdateNoteResponse updateNote(UpdateNoteRequest request) {
-        UUID familyId = callers.requireFamilyId();
-        Note note = note(request.getNoteId(), familyId);
+        Caller caller = callers.require();
+        Note note = note(request.getNoteId(), caller.familyId());
 
         String title = request.getTitle().trim();
+        List<Block> blocks = request.getBlocksList();
+        EditKind edit = EditKind.classify(
+                note.getTitle(), BlockCodec.decode(note.getBlocks(), note.getContent()),
+                title.isEmpty() ? note.getTitle() : title, blocks);
+
         if (!title.isEmpty()) {
             note.rename(title);
         }
-        List<Block> blocks = request.getBlocksList();
         note.writeBlocks(BlockCodec.encode(blocks), BlockCodec.toPlainText(blocks));
+        record(caller, note.getId(), edit.kind(), edit.detail());
 
         return UpdateNoteResponse.newBuilder().setNote(NotesMapper.toProto(note)).build();
     }
@@ -322,6 +343,71 @@ public class NotesRpcService extends ConnectService {
                 .build();
     }
 
+    AddCommentResponse addComment(AddCommentRequest request) {
+        Caller caller = callers.require();
+        Note note = note(request.getNoteId(), caller.familyId());
+
+        String body = request.getBody().trim();
+        if (body.isEmpty()) {
+            throw ConnectException.invalidArgument("body is required");
+        }
+        if (body.codePointCount(0, body.length()) > MAX_COMMENT_CODE_POINTS) {
+            throw ConnectException.invalidArgument(
+                    "a comment holds at most " + MAX_COMMENT_CODE_POINTS + " characters");
+        }
+
+        NoteComment comment = comments.save(
+                NoteComment.of(caller.familyId(), note.getId(), requireUserId(caller), body));
+        record(caller, note.getId(), ActivityKind.ACTIVITY_KIND_COMMENTED, BlockCodec.preview(body));
+
+        return AddCommentResponse.newBuilder().setComment(NotesMapper.toProto(comment)).build();
+    }
+
+    ListCommentsResponse listComments(ListCommentsRequest request) {
+        UUID familyId = callers.requireFamilyId();
+        Long noteId = id(request.getNoteId(), "note_id");
+
+        ListCommentsResponse.Builder response = ListCommentsResponse.newBuilder();
+        comments.findForNote(familyId, noteId, request.getIncludeResolved())
+                .forEach(comment -> response.addComments(NotesMapper.toProto(comment)));
+        return response.build();
+    }
+
+    ResolveCommentResponse resolveComment(ResolveCommentRequest request) {
+        Caller caller = callers.require();
+        UUID userId = requireUserId(caller);
+
+        NoteComment comment = comments.findByIdAndFamilyId(id(request.getCommentId(), "comment_id"), caller.familyId())
+                .orElseThrow(() -> ConnectException.notFound("comment not found"));
+        Note note = notes.findByIdAndFamilyId(comment.getNoteId(), caller.familyId())
+                .orElseThrow(() -> ConnectException.notFound("comment not found"));
+
+        if (!userId.equals(comment.getAuthorUserId()) && !userId.equals(note.getOwnerUserId())) {
+            throw ConnectException.notFound("comment not found");
+        }
+
+        comment.resolve(request.getResolved());
+        return ResolveCommentResponse.newBuilder().setComment(NotesMapper.toProto(comment)).build();
+    }
+
+    ListActivityResponse listActivity(ListActivityRequest request) {
+        UUID familyId = callers.requireFamilyId();
+        Long noteId = id(request.getNoteId(), "note_id");
+
+        int limit = request.getLimit() > 0
+                ? Math.min(request.getLimit(), MAX_ACTIVITY_LIMIT)
+                : DEFAULT_ACTIVITY_LIMIT;
+
+        ListActivityResponse.Builder response = ListActivityResponse.newBuilder();
+        activity.findForNote(familyId, noteId, PageRequest.of(0, limit))
+                .forEach(entry -> response.addActivity(NotesMapper.toProto(entry)));
+        return response.build();
+    }
+
+    private void record(Caller caller, Long noteId, ActivityKind kind, String detail) {
+        activity.save(NoteActivity.of(caller.familyId(), noteId, requireUserId(caller), kind.getNumber(), detail));
+    }
+
     private static Specification<Note> filter(
             UUID familyId, Long notebookId, boolean starredOnly, boolean includeArchived, boolean archivedOnly) {
         return (root, query, builder) -> {
@@ -367,6 +453,14 @@ public class NotesRpcService extends ConnectService {
         } catch (NumberFormatException ex) {
             throw ConnectException.invalidArgument(field + " is not a valid id");
         }
+    }
+
+    private static UUID requireUserId(Caller caller) {
+        UUID userId = userId(caller);
+        if (userId == null) {
+            throw ConnectException.invalidArgument("the caller's subject is not a user id");
+        }
+        return userId;
     }
 
     private static UUID userId(Caller caller) {
