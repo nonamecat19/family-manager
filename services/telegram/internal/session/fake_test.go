@@ -138,6 +138,9 @@ type fakeAuth struct {
 	unlinked   []*authv1.UnlinkRequest
 	bearers    []string
 	unlinkErr  error
+	decideErr  error
+	approved   []*authv1.ApproveDeviceLoginRequest
+	denied     []*authv1.DenyDeviceLoginRequest
 	onRefresh  func()
 	refreshed  []string
 	loggedOut  []string
@@ -272,4 +275,40 @@ func (f *fakeAuth) Unlink(
 		return nil, f.unlinkErr
 	}
 	return connect.NewResponse(&authv1.UnlinkResponse{}), nil
+}
+
+func (f *fakeAuth) StartDeviceLogin(
+	context.Context, *connect.Request[authv1.StartDeviceLoginRequest],
+) (*connect.Response[authv1.StartDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errUnused)
+}
+
+func (f *fakeAuth) PollDeviceLogin(
+	context.Context, *connect.Request[authv1.PollDeviceLoginRequest],
+) (*connect.Response[authv1.PollDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errUnused)
+}
+
+func (f *fakeAuth) ApproveDeviceLogin(
+	_ context.Context, req *connect.Request[authv1.ApproveDeviceLoginRequest],
+) (*connect.Response[authv1.ApproveDeviceLoginResponse], error) {
+	f.bearers = append(f.bearers, req.Header().Get("Authorization"))
+	if f.decideErr != nil {
+		return nil, f.decideErr
+	}
+	f.approved = append(f.approved, req.Msg)
+	return connect.NewResponse(&authv1.ApproveDeviceLoginResponse{
+		Kind: authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_TELEGRAM,
+	}), nil
+}
+
+func (f *fakeAuth) DenyDeviceLogin(
+	_ context.Context, req *connect.Request[authv1.DenyDeviceLoginRequest],
+) (*connect.Response[authv1.DenyDeviceLoginResponse], error) {
+	f.bearers = append(f.bearers, req.Header().Get("Authorization"))
+	if f.decideErr != nil {
+		return nil, f.decideErr
+	}
+	f.denied = append(f.denied, req.Msg)
+	return connect.NewResponse(&authv1.DenyDeviceLoginResponse{}), nil
 }

@@ -21,6 +21,7 @@ type fakeStore struct {
 	links  map[string]db.LinkToken
 	idents map[string]db.Identity
 	chains map[string]pgtype.Timestamptz
+	grants map[string]db.LoginGrant
 
 	failOn map[string]error
 }
@@ -33,6 +34,7 @@ func newFakeStore() *fakeStore {
 		links:  map[string]db.LinkToken{},
 		idents: map[string]db.Identity{},
 		chains: map[string]pgtype.Timestamptz{},
+		grants: map[string]db.LoginGrant{},
 		failOn: map[string]error{},
 	}
 }
@@ -360,3 +362,96 @@ func (s *fakeStore) LockChain(_ context.Context, id pgtype.UUID) (pgtype.Timesta
 	}
 	return revokedAt, nil
 }
+
+func (s *fakeStore) CreateLoginGrant(_ context.Context, arg db.CreateLoginGrantParams) (db.LoginGrant, error) {
+	if err := s.fail("CreateLoginGrant"); err != nil {
+		return db.LoginGrant{}, err
+	}
+	for _, g := range s.grants {
+		if g.UserCodeHash == arg.UserCodeHash || g.DeviceCodeHash == arg.DeviceCodeHash {
+			return db.LoginGrant{}, uniqueViolation{}
+		}
+	}
+	g := db.LoginGrant{
+		ID:             mustChainID(),
+		Kind:           arg.Kind,
+		DeviceCodeHash: arg.DeviceCodeHash,
+		UserCodeHash:   arg.UserCodeHash,
+		ExpiresAt:      arg.ExpiresAt,
+		CreatedAt:      pgtype.Timestamptz{Time: time.Now(), Valid: true},
+	}
+	s.grants[pgconv.UUIDString(g.ID)] = g
+	return g, nil
+}
+
+func (s *fakeStore) GetLoginGrantByDeviceCode(_ context.Context, hash string) (db.LoginGrant, error) {
+	for _, g := range s.grants {
+		if g.DeviceCodeHash == hash {
+			return g, nil
+		}
+	}
+	return db.LoginGrant{}, pgx.ErrNoRows
+}
+
+func (s *fakeStore) GetLoginGrantByUserCode(_ context.Context, hash string) (db.LoginGrant, error) {
+	for _, g := range s.grants {
+		if g.UserCodeHash == hash {
+			return g, nil
+		}
+	}
+	return db.LoginGrant{}, pgx.ErrNoRows
+}
+
+func (s *fakeStore) TouchLoginGrant(_ context.Context, arg db.TouchLoginGrantParams) (int64, error) {
+	key := pgconv.UUIDString(arg.ID)
+	g, ok := s.grants[key]
+	if !ok || g.LastPolledAt.Valid && g.LastPolledAt.Time.After(arg.NotAfter.Time) {
+		return 0, nil
+	}
+	g.LastPolledAt = arg.PolledAt
+	s.grants[key] = g
+	return 1, nil
+}
+
+func (s *fakeStore) decidable(hash string, at pgtype.Timestamptz) (string, db.LoginGrant, bool) {
+	for key, g := range s.grants {
+		if g.UserCodeHash == hash && !g.ApprovedAt.Valid && !g.DeniedAt.Valid &&
+			g.ExpiresAt.Time.After(at.Time) {
+			return key, g, true
+		}
+	}
+	return "", db.LoginGrant{}, false
+}
+
+func (s *fakeStore) ApproveLoginGrant(_ context.Context, arg db.ApproveLoginGrantParams) (db.LoginGrant, error) {
+	key, g, ok := s.decidable(arg.UserCodeHash, arg.DecidedAt)
+	if !ok {
+		return db.LoginGrant{}, pgx.ErrNoRows
+	}
+	g.UserID, g.ApprovedAt = arg.UserID, arg.DecidedAt
+	s.grants[key] = g
+	return g, nil
+}
+
+func (s *fakeStore) DenyLoginGrant(_ context.Context, arg db.DenyLoginGrantParams) (int64, error) {
+	key, g, ok := s.decidable(arg.UserCodeHash, arg.DecidedAt)
+	if !ok {
+		return 0, nil
+	}
+	g.UserID, g.DeniedAt = arg.UserID, arg.DecidedAt
+	s.grants[key] = g
+	return 1, nil
+}
+
+func (s *fakeStore) ConsumeLoginGrant(_ context.Context, id pgtype.UUID) (int64, error) {
+	key := pgconv.UUIDString(id)
+	g, ok := s.grants[key]
+	if !ok || !g.ApprovedAt.Valid || g.DeniedAt.Valid || g.ConsumedAt.Valid {
+		return 0, nil
+	}
+	g.ConsumedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	s.grants[key] = g
+	return 1, nil
+}
+
+func (s *fakeStore) DeleteExpiredLoginGrants(context.Context) (int64, error) { return 0, nil }

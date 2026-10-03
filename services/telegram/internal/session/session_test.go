@@ -337,3 +337,66 @@ func TestDeadRefreshKeepsANewerLink(t *testing.T) {
 		t.Fatalf("newer link was dropped: %v", err)
 	}
 }
+
+func TestApproveLoginActsAsTheLinkedUser(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+
+	if err := f.store.ApproveLogin(context.Background(), 42, "BCDFGHJK"); err != nil {
+		t.Fatalf("ApproveLogin: %v", err)
+	}
+	if len(f.auth.approved) != 1 || f.auth.approved[0].GetUserCode() != "BCDFGHJK" {
+		t.Fatalf("approved = %v, want the code passed through", f.auth.approved)
+	}
+	if f.auth.bearers[0] != "Bearer access-0" {
+		t.Fatalf("bearer = %q, want the linked user's access token", f.auth.bearers[0])
+	}
+}
+
+func TestDenyLoginActsAsTheLinkedUser(t *testing.T) {
+	f := newFixture(t)
+	f.link(t)
+
+	if err := f.store.DenyLogin(context.Background(), 42, "BCDFGHJK"); err != nil {
+		t.Fatalf("DenyLogin: %v", err)
+	}
+	if len(f.auth.denied) != 1 || f.auth.bearers[0] != "Bearer access-0" {
+		t.Fatalf("denied = %v bearers = %v", f.auth.denied, f.auth.bearers)
+	}
+}
+
+func TestApproveLoginWithoutALinkNeverReachesAuth(t *testing.T) {
+	f := newFixture(t)
+
+	if err := f.store.ApproveLogin(context.Background(), 42, "BCDFGHJK"); !errors.Is(err, ErrNotLinked) {
+		t.Fatalf("err = %v, want ErrNotLinked", err)
+	}
+	if len(f.auth.bearers) != 0 {
+		t.Fatal("an unlinked telegram user reached ApproveDeviceLogin")
+	}
+}
+
+func TestApproveLoginMapsAuthRefusals(t *testing.T) {
+	cases := map[connect.Code]error{
+		connect.CodeNotFound:          ErrLoginExpired,
+		connect.CodeInvalidArgument:   ErrLoginExpired,
+		connect.CodeResourceExhausted: ErrLoginThrottled,
+	}
+	for code, want := range cases {
+		f := newFixture(t)
+		f.link(t)
+		f.auth.decideErr = connect.NewError(code, errors.New("refused"))
+
+		if err := f.store.ApproveLogin(context.Background(), 42, "BCDFGHJK"); !errors.Is(err, want) {
+			t.Errorf("%v: err = %v, want %v", code, err, want)
+		}
+	}
+
+	f := newFixture(t)
+	f.link(t)
+	f.auth.decideErr = connect.NewError(connect.CodeUnavailable, errors.New("down"))
+	err := f.store.ApproveLogin(context.Background(), 42, "BCDFGHJK")
+	if err == nil || errors.Is(err, ErrLoginExpired) || errors.Is(err, ErrLoginThrottled) {
+		t.Fatalf("err = %v, want an opaque failure", err)
+	}
+}

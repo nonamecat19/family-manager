@@ -165,6 +165,8 @@ var publicProcedures = []string{
 	authv1connect.AuthServiceRefreshProcedure,
 	authv1connect.AuthServiceLogoutProcedure,
 	authv1connect.AuthServiceRedeemLinkTokenProcedure,
+	authv1connect.AuthServiceStartDeviceLoginProcedure,
+	authv1connect.AuthServicePollDeviceLoginProcedure,
 }
 
 func newMux(h authv1connect.AuthServiceHandler, keys sessionVerifier, pool database.Pinger, log *slog.Logger) *http.ServeMux {
@@ -189,6 +191,7 @@ func newMux(h authv1connect.AuthServiceHandler, keys sessionVerifier, pool datab
 	})
 
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
+	mux.Handle("GET "+rpc.MetricsPath, rpc.MetricsHandler())
 
 	return mux
 }
@@ -197,6 +200,7 @@ type sweeper interface {
 	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
 	DeleteExpiredLinkTokens(ctx context.Context) (int64, error)
 	DeleteOrphanChains(ctx context.Context) (int64, error)
+	DeleteExpiredLoginGrants(ctx context.Context) (int64, error)
 }
 
 func sweepExpiredTokens(ctx context.Context, q sweeper, log *slog.Logger, interval time.Duration) {
@@ -234,6 +238,13 @@ func sweepOnce(ctx context.Context, q sweeper, log *slog.Logger) {
 		log.WarnContext(ctx, "sweep orphan chains", slog.String("error", err.Error()))
 	} else if deleted > 0 {
 		log.InfoContext(ctx, "swept orphan chains", slog.Int64("rows", deleted))
+	}
+
+	deleted, err = q.DeleteExpiredLoginGrants(ctx)
+	if err != nil {
+		log.WarnContext(ctx, "sweep expired login grants", slog.String("error", err.Error()))
+	} else if deleted > 0 {
+		log.InfoContext(ctx, "swept expired login grants", slog.Int64("rows", deleted))
 	}
 }
 

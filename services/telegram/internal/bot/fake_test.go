@@ -227,6 +227,9 @@ type fakeSessions struct {
 	unlinked []int64
 	expired  []int64
 	err      error
+	approved []string
+	denied   []string
+	decide   error
 }
 
 func newFakeSessions() *fakeSessions {
@@ -311,4 +314,26 @@ func (f *fakePrefs) SetLocale(_ context.Context, _, locale string) (string, erro
 	f.saved = append(f.saved, locale)
 	f.locale = locale
 	return locale, nil
+}
+
+func (f *fakeSessions) ApproveLogin(_ context.Context, id int64, code string) error {
+	if _, ok := f.linked[id]; !ok {
+		return session.ErrNotLinked
+	}
+	if f.decide != nil {
+		return f.decide
+	}
+	f.approved = append(f.approved, code)
+	return nil
+}
+
+func (f *fakeSessions) DenyLogin(_ context.Context, id int64, code string) error {
+	if _, ok := f.linked[id]; !ok {
+		return session.ErrNotLinked
+	}
+	if f.decide != nil {
+		return f.decide
+	}
+	f.denied = append(f.denied, code)
+	return nil
 }

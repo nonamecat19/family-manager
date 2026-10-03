@@ -52,6 +52,18 @@ const (
 	AuthServiceListIdentitiesProcedure = "/auth.v1.AuthService/ListIdentities"
 	// AuthServiceUnlinkProcedure is the fully-qualified name of the AuthService's Unlink RPC.
 	AuthServiceUnlinkProcedure = "/auth.v1.AuthService/Unlink"
+	// AuthServiceStartDeviceLoginProcedure is the fully-qualified name of the AuthService's
+	// StartDeviceLogin RPC.
+	AuthServiceStartDeviceLoginProcedure = "/auth.v1.AuthService/StartDeviceLogin"
+	// AuthServicePollDeviceLoginProcedure is the fully-qualified name of the AuthService's
+	// PollDeviceLogin RPC.
+	AuthServicePollDeviceLoginProcedure = "/auth.v1.AuthService/PollDeviceLogin"
+	// AuthServiceApproveDeviceLoginProcedure is the fully-qualified name of the AuthService's
+	// ApproveDeviceLogin RPC.
+	AuthServiceApproveDeviceLoginProcedure = "/auth.v1.AuthService/ApproveDeviceLogin"
+	// AuthServiceDenyDeviceLoginProcedure is the fully-qualified name of the AuthService's
+	// DenyDeviceLogin RPC.
+	AuthServiceDenyDeviceLoginProcedure = "/auth.v1.AuthService/DenyDeviceLogin"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -64,6 +76,10 @@ type AuthServiceClient interface {
 	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
 	ListIdentities(context.Context, *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error)
 	Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error)
+	StartDeviceLogin(context.Context, *connect.Request[v1.StartDeviceLoginRequest]) (*connect.Response[v1.StartDeviceLoginResponse], error)
+	PollDeviceLogin(context.Context, *connect.Request[v1.PollDeviceLoginRequest]) (*connect.Response[v1.PollDeviceLoginResponse], error)
+	ApproveDeviceLogin(context.Context, *connect.Request[v1.ApproveDeviceLoginRequest]) (*connect.Response[v1.ApproveDeviceLoginResponse], error)
+	DenyDeviceLogin(context.Context, *connect.Request[v1.DenyDeviceLoginRequest]) (*connect.Response[v1.DenyDeviceLoginResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -125,19 +141,47 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("Unlink")),
 			connect.WithClientOptions(opts...),
 		),
+		startDeviceLogin: connect.NewClient[v1.StartDeviceLoginRequest, v1.StartDeviceLoginResponse](
+			httpClient,
+			baseURL+AuthServiceStartDeviceLoginProcedure,
+			connect.WithSchema(authServiceMethods.ByName("StartDeviceLogin")),
+			connect.WithClientOptions(opts...),
+		),
+		pollDeviceLogin: connect.NewClient[v1.PollDeviceLoginRequest, v1.PollDeviceLoginResponse](
+			httpClient,
+			baseURL+AuthServicePollDeviceLoginProcedure,
+			connect.WithSchema(authServiceMethods.ByName("PollDeviceLogin")),
+			connect.WithClientOptions(opts...),
+		),
+		approveDeviceLogin: connect.NewClient[v1.ApproveDeviceLoginRequest, v1.ApproveDeviceLoginResponse](
+			httpClient,
+			baseURL+AuthServiceApproveDeviceLoginProcedure,
+			connect.WithSchema(authServiceMethods.ByName("ApproveDeviceLogin")),
+			connect.WithClientOptions(opts...),
+		),
+		denyDeviceLogin: connect.NewClient[v1.DenyDeviceLoginRequest, v1.DenyDeviceLoginResponse](
+			httpClient,
+			baseURL+AuthServiceDenyDeviceLoginProcedure,
+			connect.WithSchema(authServiceMethods.ByName("DenyDeviceLogin")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // authServiceClient implements AuthServiceClient.
 type authServiceClient struct {
-	login           *connect.Client[v1.LoginRequest, v1.LoginResponse]
-	register        *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
-	refresh         *connect.Client[v1.RefreshRequest, v1.RefreshResponse]
-	logout          *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
-	createLinkToken *connect.Client[v1.CreateLinkTokenRequest, v1.CreateLinkTokenResponse]
-	redeemLinkToken *connect.Client[v1.RedeemLinkTokenRequest, v1.RedeemLinkTokenResponse]
-	listIdentities  *connect.Client[v1.ListIdentitiesRequest, v1.ListIdentitiesResponse]
-	unlink          *connect.Client[v1.UnlinkRequest, v1.UnlinkResponse]
+	login              *connect.Client[v1.LoginRequest, v1.LoginResponse]
+	register           *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
+	refresh            *connect.Client[v1.RefreshRequest, v1.RefreshResponse]
+	logout             *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
+	createLinkToken    *connect.Client[v1.CreateLinkTokenRequest, v1.CreateLinkTokenResponse]
+	redeemLinkToken    *connect.Client[v1.RedeemLinkTokenRequest, v1.RedeemLinkTokenResponse]
+	listIdentities     *connect.Client[v1.ListIdentitiesRequest, v1.ListIdentitiesResponse]
+	unlink             *connect.Client[v1.UnlinkRequest, v1.UnlinkResponse]
+	startDeviceLogin   *connect.Client[v1.StartDeviceLoginRequest, v1.StartDeviceLoginResponse]
+	pollDeviceLogin    *connect.Client[v1.PollDeviceLoginRequest, v1.PollDeviceLoginResponse]
+	approveDeviceLogin *connect.Client[v1.ApproveDeviceLoginRequest, v1.ApproveDeviceLoginResponse]
+	denyDeviceLogin    *connect.Client[v1.DenyDeviceLoginRequest, v1.DenyDeviceLoginResponse]
 }
 
 // Login calls auth.v1.AuthService.Login.
@@ -180,6 +224,26 @@ func (c *authServiceClient) Unlink(ctx context.Context, req *connect.Request[v1.
 	return c.unlink.CallUnary(ctx, req)
 }
 
+// StartDeviceLogin calls auth.v1.AuthService.StartDeviceLogin.
+func (c *authServiceClient) StartDeviceLogin(ctx context.Context, req *connect.Request[v1.StartDeviceLoginRequest]) (*connect.Response[v1.StartDeviceLoginResponse], error) {
+	return c.startDeviceLogin.CallUnary(ctx, req)
+}
+
+// PollDeviceLogin calls auth.v1.AuthService.PollDeviceLogin.
+func (c *authServiceClient) PollDeviceLogin(ctx context.Context, req *connect.Request[v1.PollDeviceLoginRequest]) (*connect.Response[v1.PollDeviceLoginResponse], error) {
+	return c.pollDeviceLogin.CallUnary(ctx, req)
+}
+
+// ApproveDeviceLogin calls auth.v1.AuthService.ApproveDeviceLogin.
+func (c *authServiceClient) ApproveDeviceLogin(ctx context.Context, req *connect.Request[v1.ApproveDeviceLoginRequest]) (*connect.Response[v1.ApproveDeviceLoginResponse], error) {
+	return c.approveDeviceLogin.CallUnary(ctx, req)
+}
+
+// DenyDeviceLogin calls auth.v1.AuthService.DenyDeviceLogin.
+func (c *authServiceClient) DenyDeviceLogin(ctx context.Context, req *connect.Request[v1.DenyDeviceLoginRequest]) (*connect.Response[v1.DenyDeviceLoginResponse], error) {
+	return c.denyDeviceLogin.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	Login(context.Context, *connect.Request[v1.LoginRequest]) (*connect.Response[v1.LoginResponse], error)
@@ -190,6 +254,10 @@ type AuthServiceHandler interface {
 	RedeemLinkToken(context.Context, *connect.Request[v1.RedeemLinkTokenRequest]) (*connect.Response[v1.RedeemLinkTokenResponse], error)
 	ListIdentities(context.Context, *connect.Request[v1.ListIdentitiesRequest]) (*connect.Response[v1.ListIdentitiesResponse], error)
 	Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error)
+	StartDeviceLogin(context.Context, *connect.Request[v1.StartDeviceLoginRequest]) (*connect.Response[v1.StartDeviceLoginResponse], error)
+	PollDeviceLogin(context.Context, *connect.Request[v1.PollDeviceLoginRequest]) (*connect.Response[v1.PollDeviceLoginResponse], error)
+	ApproveDeviceLogin(context.Context, *connect.Request[v1.ApproveDeviceLoginRequest]) (*connect.Response[v1.ApproveDeviceLoginResponse], error)
+	DenyDeviceLogin(context.Context, *connect.Request[v1.DenyDeviceLoginRequest]) (*connect.Response[v1.DenyDeviceLoginResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -247,6 +315,30 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("Unlink")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceStartDeviceLoginHandler := connect.NewUnaryHandler(
+		AuthServiceStartDeviceLoginProcedure,
+		svc.StartDeviceLogin,
+		connect.WithSchema(authServiceMethods.ByName("StartDeviceLogin")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServicePollDeviceLoginHandler := connect.NewUnaryHandler(
+		AuthServicePollDeviceLoginProcedure,
+		svc.PollDeviceLogin,
+		connect.WithSchema(authServiceMethods.ByName("PollDeviceLogin")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceApproveDeviceLoginHandler := connect.NewUnaryHandler(
+		AuthServiceApproveDeviceLoginProcedure,
+		svc.ApproveDeviceLogin,
+		connect.WithSchema(authServiceMethods.ByName("ApproveDeviceLogin")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceDenyDeviceLoginHandler := connect.NewUnaryHandler(
+		AuthServiceDenyDeviceLoginProcedure,
+		svc.DenyDeviceLogin,
+		connect.WithSchema(authServiceMethods.ByName("DenyDeviceLogin")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceLoginProcedure:
@@ -265,6 +357,14 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceListIdentitiesHandler.ServeHTTP(w, r)
 		case AuthServiceUnlinkProcedure:
 			authServiceUnlinkHandler.ServeHTTP(w, r)
+		case AuthServiceStartDeviceLoginProcedure:
+			authServiceStartDeviceLoginHandler.ServeHTTP(w, r)
+		case AuthServicePollDeviceLoginProcedure:
+			authServicePollDeviceLoginHandler.ServeHTTP(w, r)
+		case AuthServiceApproveDeviceLoginProcedure:
+			authServiceApproveDeviceLoginHandler.ServeHTTP(w, r)
+		case AuthServiceDenyDeviceLoginProcedure:
+			authServiceDenyDeviceLoginHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -304,4 +404,20 @@ func (UnimplementedAuthServiceHandler) ListIdentities(context.Context, *connect.
 
 func (UnimplementedAuthServiceHandler) Unlink(context.Context, *connect.Request[v1.UnlinkRequest]) (*connect.Response[v1.UnlinkResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.Unlink is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) StartDeviceLogin(context.Context, *connect.Request[v1.StartDeviceLoginRequest]) (*connect.Response[v1.StartDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.StartDeviceLogin is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) PollDeviceLogin(context.Context, *connect.Request[v1.PollDeviceLoginRequest]) (*connect.Response[v1.PollDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.PollDeviceLogin is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) ApproveDeviceLogin(context.Context, *connect.Request[v1.ApproveDeviceLoginRequest]) (*connect.Response[v1.ApproveDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.ApproveDeviceLogin is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) DenyDeviceLogin(context.Context, *connect.Request[v1.DenyDeviceLoginRequest]) (*connect.Response[v1.DenyDeviceLoginResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.DenyDeviceLogin is not implemented"))
 }

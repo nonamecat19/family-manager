@@ -28,6 +28,8 @@ type Sessions interface {
 	Redeem(ctx context.Context, linkToken string, from telegram.User, chatID int64) (*session.Session, error)
 	Unlink(ctx context.Context, telegramUserID int64) error
 	ExpireAccess(ctx context.Context, telegramUserID int64) error
+	ApproveLogin(ctx context.Context, telegramUserID int64, userCode string) error
+	DenyLogin(ctx context.Context, telegramUserID int64, userCode string) error
 }
 
 type Command struct {

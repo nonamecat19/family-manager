@@ -108,10 +108,39 @@ func TestAuthProceduresAreRegistered(t *testing.T) {
 		authv1connect.AuthServiceRedeemLinkTokenProcedure,
 		authv1connect.AuthServiceListIdentitiesProcedure,
 		authv1connect.AuthServiceUnlinkProcedure,
+		authv1connect.AuthServiceStartDeviceLoginProcedure,
+		authv1connect.AuthServicePollDeviceLoginProcedure,
+		authv1connect.AuthServiceApproveDeviceLoginProcedure,
+		authv1connect.AuthServiceDenyDeviceLoginProcedure,
 	} {
 		_, pattern := mux.Handler(httptest.NewRequest(http.MethodPost, procedure, nil))
 		if pattern == "" {
 			t.Errorf("%s is not routed", procedure)
+		}
+	}
+}
+
+func TestDeviceLoginStartAndPollNeedNoToken(t *testing.T) {
+	mux := newMux(handler.New(handler.Options{}), testSigner(t), okPinger{}, nil)
+
+	for procedure, want := range map[string]int{
+		authv1connect.AuthServiceStartDeviceLoginProcedure:   http.StatusBadRequest,
+		authv1connect.AuthServicePollDeviceLoginProcedure:    http.StatusBadRequest,
+		authv1connect.AuthServiceApproveDeviceLoginProcedure: http.StatusUnauthorized,
+		authv1connect.AuthServiceDenyDeviceLoginProcedure:    http.StatusUnauthorized,
+	} {
+		body := `{}`
+		if procedure == authv1connect.AuthServiceStartDeviceLoginProcedure {
+			body = `{"kind":99}`
+		}
+		req := httptest.NewRequest(http.MethodPost, procedure, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		if rec.Code != want {
+			t.Errorf("%s = %d, want %d (body=%s)", procedure, rec.Code, want, rec.Body.String())
 		}
 	}
 }
@@ -157,6 +186,10 @@ func (c *countingSweeper) DeleteExpiredLinkTokens(context.Context) (int64, error
 }
 
 func (c *countingSweeper) DeleteOrphanChains(context.Context) (int64, error) {
+	return 1, c.err
+}
+
+func (c *countingSweeper) DeleteExpiredLoginGrants(context.Context) (int64, error) {
 	return 1, c.err
 }
 
