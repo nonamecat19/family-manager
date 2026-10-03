@@ -1,0 +1,9 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: java_package_prefix
+      value: com.nnc.familymanager
+plugins:
+  - remote: buf.build/protocolbuffers/java
+    out: ../../sdk/java/src/main/java

@@ -18,6 +18,14 @@ repositories {
 	mavenCentral()
 }
 
+sourceSets {
+	main {
+		java {
+			srcDir rootProject.file('../../sdk/java/src/main/java')
+		}
+	}
+}
+
 dependencyManagement {
 	imports {
 		mavenBom "org.testcontainers:testcontainers-bom:1.21.3"
@@ -32,6 +40,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'com.google.protobuf:protobuf-java:4.36.2'
+	implementation 'com.google.protobuf:protobuf-java-util:4.36.2'
 	runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly 'org.postgresql:postgresql'
 
