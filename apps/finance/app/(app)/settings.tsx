@@ -206,6 +206,11 @@ export default function SettingsScreen() {
           onPress={() => setSheet("appearance")}
         />
         <SettingsRow icon="database" label={t("settings.data")} onPress={() => setSheet("data")} />
+        <SettingsRow
+          icon="device-mobile"
+          label={t("settings.connectedAccounts")}
+          onPress={() => openRoute("/(app)/connected-accounts")}
+        />
         {telegram.available ? (
           <SettingsRow
             icon="device-mobile"

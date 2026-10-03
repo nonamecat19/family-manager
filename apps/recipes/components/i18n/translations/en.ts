@@ -66,6 +66,17 @@ export const en = {
   "preferences.telegramWaiting": "Waiting for Telegram. Press Start in the bot.",
   "preferences.telegramDisconnect": "Disconnect",
   "preferences.telegramFailed": "Telegram linking did not respond. Try again.",
+  "preferences.connectedAccounts": "Connected accounts",
+
+  "connectedAccounts.title": "Connected accounts",
+  "connectedAccounts.emptyTitle": "Nothing connected",
+  "connectedAccounts.emptyBody": "Link Telegram from Preferences to see it here.",
+  "connectedAccounts.loadFailed": "Connected accounts did not load.",
+  "connectedAccounts.providerTelegram": "Telegram",
+  "connectedAccounts.linked": "Linked {date}",
+  "connectedAccounts.unlink": "Disconnect",
+  "connectedAccounts.unlinkConfirm": "Disconnect this account?",
+  "connectedAccounts.unlinkFailed": "Could not disconnect. Try again.",
 
   "home.title": "The family\ncookbook",
   "home.yourProfile": "Your profile",

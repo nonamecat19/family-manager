@@ -3,12 +3,13 @@ import { useAuth } from "@fm/auth";
 import { useTheme } from "@fm/ui";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { strings } from "../../components/i18n/index.ts";
 import { offlineCopy, useCaptureQueue } from "../../components/offline/index.ts";
-import { Avatar, Divider, PrimaryButton, Screen } from "../../components/nocturne/index.ts";
+import { Avatar, Divider, Icon, PrimaryButton, Screen, nocturne } from "../../components/nocturne/index.ts";
 
 const SIGN_OUT_FLUSH_MS = 4_000;
 
@@ -16,6 +17,7 @@ const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | u
 
 export default function SettingsScreen() {
   const family = useFamily();
+  const router = useRouter();
   const { signOut } = useAuth();
   const queue = useCaptureQueue();
   const [signingOut, setSigningOut] = useState(false);
@@ -157,6 +159,22 @@ export default function SettingsScreen() {
             </View>
           </>
         ) : null}
+
+        <Divider />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={strings.settings.connectedAccounts}
+          onPress={() => router.push("/(app)/connected-accounts")}
+          className="flex-row items-center gap-[10px]"
+        >
+          <Text className="flex-1 font-sans text-[15px] text-fg">
+            {strings.settings.connectedAccounts}
+          </Text>
+          <View style={{ transform: [{ rotate: "180deg" }] }}>
+            <Icon name="caret-left" size={14} color={nocturne.neutral[600]} />
+          </View>
+        </Pressable>
 
         <Divider />
 
