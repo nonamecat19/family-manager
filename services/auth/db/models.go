@@ -36,17 +36,19 @@ type LinkToken struct {
 }
 
 type LoginGrant struct {
-	ID             pgtype.UUID
-	Kind           string
-	DeviceCodeHash string
-	UserCodeHash   string
-	UserID         pgtype.UUID
-	ApprovedAt     pgtype.Timestamptz
-	DeniedAt       pgtype.Timestamptz
-	ConsumedAt     pgtype.Timestamptz
-	LastPolledAt   pgtype.Timestamptz
-	ExpiresAt      pgtype.Timestamptz
-	CreatedAt      pgtype.Timestamptz
+	ID              pgtype.UUID
+	Kind            string
+	DeviceCodeHash  string
+	UserCodeHash    string
+	UserID          pgtype.UUID
+	ApproverChainID pgtype.UUID
+	ChainID         pgtype.UUID
+	ApprovedAt      pgtype.Timestamptz
+	DeniedAt        pgtype.Timestamptz
+	ConsumedAt      pgtype.Timestamptz
+	LastPolledAt    pgtype.Timestamptz
+	ExpiresAt       pgtype.Timestamptz
+	CreatedAt       pgtype.Timestamptz
 }
 
 type RefreshToken struct {

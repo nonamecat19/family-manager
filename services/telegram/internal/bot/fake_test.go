@@ -215,7 +215,7 @@ func callback(data string, userID ...int64) telegram.Update {
 			Data: data,
 			Message: &telegram.Message{
 				MessageID: 555,
-				Chat:      telegram.Chat{ID: 99, Type: "private"},
+				Chat:      telegram.Chat{ID: id, Type: "private"},
 			},
 		},
 	}
@@ -279,7 +279,7 @@ func message(text string) telegram.Update {
 		Message: &telegram.Message{
 			MessageID: 1,
 			From:      &telegram.User{ID: 42, FirstName: "Ada", Username: "ada"},
-			Chat:      telegram.Chat{ID: 99, Type: "private"},
+			Chat:      telegram.Chat{ID: 42, Type: "private"},
 			Text:      text,
 		},
 	}

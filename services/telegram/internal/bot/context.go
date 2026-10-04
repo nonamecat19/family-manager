@@ -15,6 +15,7 @@ import (
 type Context struct {
 	Bot       *Bot
 	Chat      int64
+	ChatType  string
 	MessageID int64
 	From      telegram.User
 	Command   string

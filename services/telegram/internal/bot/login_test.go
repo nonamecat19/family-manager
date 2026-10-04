@@ -6,6 +6,7 @@ import (
 
 	"github.com/nnc/family-manager/services/telegram/internal/i18n"
 	"github.com/nnc/family-manager/services/telegram/internal/session"
+	"github.com/nnc/family-manager/services/telegram/internal/telegram"
 )
 
 func (f *fixture) linkAda() {
@@ -22,8 +23,8 @@ func TestStartLoginAsksForConfirmation(t *testing.T) {
 	contains(t, f.api.last(t), "BCDF-GHJK")
 	buttons := f.api.buttons(t)
 	want := []string{
-		i18n.T(i18n.EN, i18n.LoginApprove) + "=login:ok:BCDFGHJK",
-		i18n.T(i18n.EN, i18n.LoginDeny) + "=login:no:BCDFGHJK",
+		i18n.T(i18n.EN, i18n.LoginApprove) + "=login:ok:BCDFGHJK:42",
+		i18n.T(i18n.EN, i18n.LoginDeny) + "=login:no:BCDFGHJK:42",
 	}
 	if len(buttons) != 2 || buttons[0] != want[0] || buttons[1] != want[1] {
 		t.Fatalf("buttons = %v, want %v", buttons, want)
@@ -60,7 +61,7 @@ func TestApproveButtonApprovesAsTheLinkedUser(t *testing.T) {
 	f := newFixture(t)
 	f.linkAda()
 
-	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK"))
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK:42"))
 
 	if len(f.sessions.approved) != 1 || f.sessions.approved[0] != "BCDFGHJK" {
 		t.Fatalf("approved = %v", f.sessions.approved)
@@ -79,7 +80,7 @@ func TestDenyButtonDenies(t *testing.T) {
 	f := newFixture(t)
 	f.linkAda()
 
-	f.bot.Handle(context.Background(), callback("login:no:BCDFGHJK"))
+	f.bot.Handle(context.Background(), callback("login:no:BCDFGHJK:42"))
 
 	if len(f.sessions.denied) != 1 || len(f.sessions.approved) != 0 {
 		t.Fatalf("denied = %v approved = %v", f.sessions.denied, f.sessions.approved)
@@ -92,7 +93,7 @@ func TestApproveAnExpiredCodeExplains(t *testing.T) {
 	f.linkAda()
 	f.sessions.decide = session.ErrLoginExpired
 
-	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK"))
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK:42"))
 
 	contains(t, f.api.last(t), i18n.T(i18n.EN, i18n.LoginExpired))
 }
@@ -102,7 +103,7 @@ func TestApproveWhenThrottledExplains(t *testing.T) {
 	f.linkAda()
 	f.sessions.decide = session.ErrLoginThrottled
 
-	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK"))
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK:42"))
 
 	contains(t, f.api.last(t), i18n.T(i18n.EN, i18n.LoginThrottled))
 }
@@ -110,7 +111,7 @@ func TestApproveWhenThrottledExplains(t *testing.T) {
 func TestApproveFromAnUnlinkedChatIsRefused(t *testing.T) {
 	f := newFixture(t)
 
-	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK"))
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK:42"))
 
 	if len(f.sessions.approved) != 0 {
 		t.Fatal("an unlinked chat approved a login")
@@ -125,5 +126,69 @@ func TestStartWithALinkTokenStillRedeems(t *testing.T) {
 
 	if len(f.sessions.redeemed) != 1 || f.sessions.redeemed[0] != "loginless-token" {
 		t.Fatalf("redeemed = %v", f.sessions.redeemed)
+	}
+}
+
+func inGroup(u telegram.Update) telegram.Update {
+	group := telegram.Chat{ID: -100777, Type: "supergroup", Title: "Family"}
+	if u.Message != nil {
+		u.Message.Chat = group
+	}
+	if u.CallbackQuery != nil && u.CallbackQuery.Message != nil {
+		u.CallbackQuery.Message.Chat = group
+	}
+	return u
+}
+
+func TestStartLoginInAGroupIsRefused(t *testing.T) {
+	f := newFixture(t)
+	f.linkAda()
+
+	f.bot.Handle(context.Background(), inGroup(message("/start login_BCDFGHJK")))
+
+	contains(t, f.api.last(t), i18n.T(i18n.EN, i18n.LoginPrivateOnly))
+	if f.api.lastMessage(t).ReplyMarkup != nil {
+		t.Fatal("a group chat was offered sign-in buttons")
+	}
+}
+
+func TestApproveButtonPressedInAGroupIsRefused(t *testing.T) {
+	f := newFixture(t)
+	f.linkAda()
+
+	f.bot.Handle(context.Background(), inGroup(callback("login:ok:BCDFGHJK:42")))
+
+	if len(f.sessions.approved) != 0 {
+		t.Fatalf("a group press approved %v", f.sessions.approved)
+	}
+	if got := f.api.lastToast(t); got != i18n.T(i18n.EN, i18n.LoginPrivateOnly) {
+		t.Fatalf("answer = %q", got)
+	}
+}
+
+func TestApproveButtonPressedBySomeoneElseIsRefused(t *testing.T) {
+	f := newFixture(t)
+	f.linkAda()
+	f.sessions.linked[7] = &session.Session{UserID: "user-2", AccessToken: "access-2", Locale: "en"}
+
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK:42", 7))
+	f.bot.Handle(context.Background(), callback("login:no:BCDFGHJK:42", 7))
+
+	if len(f.sessions.approved) != 0 || len(f.sessions.denied) != 0 {
+		t.Fatalf("a foreign press decided: approved %v denied %v", f.sessions.approved, f.sessions.denied)
+	}
+	if got := f.api.lastToast(t); got != i18n.T(i18n.EN, i18n.StaleButton) {
+		t.Fatalf("answer = %q", got)
+	}
+}
+
+func TestApproveButtonWithoutAnOwnerIsStale(t *testing.T) {
+	f := newFixture(t)
+	f.linkAda()
+
+	f.bot.Handle(context.Background(), callback("login:ok:BCDFGHJK"))
+
+	if len(f.sessions.approved) != 0 {
+		t.Fatal("an unbound button approved a login")
 	}
 }

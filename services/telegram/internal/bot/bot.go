@@ -220,11 +220,12 @@ func (b *Bot) Handle(parent context.Context, update telegram.Update) {
 func (b *Bot) handleMessage(ctx context.Context, msg *telegram.Message) {
 	name, args := b.parse(msg.Text)
 	c := &Context{
-		Bot:     b,
-		Chat:    msg.Chat.ID,
-		From:    *msg.From,
-		Command: name,
-		Args:    args,
+		Bot:      b,
+		Chat:     msg.Chat.ID,
+		ChatType: msg.Chat.Type,
+		From:     *msg.From,
+		Command:  name,
+		Args:     args,
 	}
 
 	log := b.log.With(
@@ -274,6 +275,7 @@ func (b *Bot) handleCallback(ctx context.Context, q *telegram.CallbackQuery) {
 	}
 	if q.Message != nil {
 		c.Chat = q.Message.Chat.ID
+		c.ChatType = q.Message.Chat.Type
 		c.MessageID = q.Message.MessageID
 	}
 

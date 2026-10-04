@@ -26,6 +26,7 @@ import (
 	"github.com/nnc/family-manager/services/auth/internal/family"
 	"github.com/nnc/family-manager/services/auth/internal/handler"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/ratelimit"
 	"github.com/nnc/family-manager/services/auth/internal/store"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
@@ -118,6 +119,9 @@ func run() error {
 			Base:      cfg.LoginLockoutBase,
 			Max:       cfg.LoginLockoutMax,
 		}, nil),
+		Decisions:  throttle.New(throttle.DefaultParams(), nil),
+		Starts:     ratelimit.New(cfg.DeviceLoginPerIP, cfg.DeviceLoginWindow, nil),
+		MaxPending: cfg.DeviceLoginMaxActive,
 		RefreshTTL: cfg.RefreshTTL,
 	})
 

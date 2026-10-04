@@ -45,7 +45,7 @@ func bindIdentity(
 	}
 
 	if prev.ChainID.Valid {
-		if err := revokeChain(ctx, q, prev.ChainID); err != nil {
+		if err := revokeLineage(ctx, q, prev.ChainID); err != nil {
 			return err
 		}
 	}
@@ -103,7 +103,7 @@ func (h *Handler) Unlink(
 		if err != nil {
 			return err
 		}
-		return revokeChain(ctx, q, gone.ChainID)
+		return revokeLineage(ctx, q, gone.ChainID)
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -124,6 +124,22 @@ func revokeChain(ctx context.Context, q db.Querier, chainID pgtype.UUID) error {
 	}
 	_, err := q.RevokeChain(ctx, chainID)
 	return err
+}
+
+func revokeLineage(ctx context.Context, q db.Querier, root pgtype.UUID) error {
+	if err := revokeChain(ctx, q, root); err != nil {
+		return err
+	}
+	approved, err := q.ListChainsApprovedFrom(ctx, root)
+	if err != nil {
+		return err
+	}
+	for _, chainID := range approved {
+		if err := revokeChain(ctx, q, chainID); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func lockChain(ctx context.Context, q db.Querier, chainID pgtype.UUID, fresh bool) (pgtype.Timestamptz, error) {

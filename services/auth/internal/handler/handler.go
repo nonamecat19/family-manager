@@ -22,6 +22,7 @@ import (
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
 	"github.com/nnc/family-manager/services/auth/db"
 	"github.com/nnc/family-manager/services/auth/internal/password"
+	"github.com/nnc/family-manager/services/auth/internal/ratelimit"
 	"github.com/nnc/family-manager/services/auth/internal/throttle"
 	"github.com/nnc/family-manager/services/auth/internal/token"
 )
@@ -29,6 +30,7 @@ import (
 type Signer interface {
 	Sign(c token.Claims) (string, error)
 	TTL() time.Duration
+	ChainOf(ctx context.Context, signed string) (string, error)
 }
 
 type FamilyLookup interface {
@@ -49,6 +51,9 @@ type Handler struct {
 	hashParams password.Params
 	hashGate   *password.Gate
 	throttle   *throttle.Throttle
+	decisions  *throttle.Throttle
+	starts     *ratelimit.Limiter
+	maxPending int64
 	refreshTTL time.Duration
 	now        func() time.Time
 }
@@ -62,6 +67,9 @@ type Options struct {
 	HashParams password.Params
 	HashGate   *password.Gate
 	Throttle   *throttle.Throttle
+	Decisions  *throttle.Throttle
+	Starts     *ratelimit.Limiter
+	MaxPending int64
 	RefreshTTL time.Duration
 	Now        func() time.Time
 }
@@ -76,6 +84,9 @@ func New(opts Options) *Handler {
 		hashParams: opts.HashParams,
 		hashGate:   opts.HashGate,
 		throttle:   opts.Throttle,
+		decisions:  opts.Decisions,
+		starts:     opts.Starts,
+		maxPending: opts.MaxPending,
 		refreshTTL: opts.RefreshTTL,
 		now:        opts.Now,
 	}
@@ -93,6 +104,9 @@ func New(opts Options) *Handler {
 	}
 	if h.tx == nil {
 		h.tx = withoutTx{h.q}
+	}
+	if h.decisions == nil {
+		h.decisions = throttle.New(throttle.DefaultParams(), nil)
 	}
 	return h
 }
@@ -313,6 +327,7 @@ func (h *Handler) mintSession(
 		Email:    user.Email,
 		FamilyID: familyID,
 		Locale:   locale,
+		ChainID:  pgconv.UUIDString(chainID),
 	})
 	if err != nil {
 		return session{}, h.internal(ctx, err, "sign access token")

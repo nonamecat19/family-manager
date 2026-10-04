@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"maps"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -203,6 +204,7 @@ func (s *fakeStore) DeleteExpiredLinkTokens(context.Context) (int64, error) { re
 
 type stubSigner struct {
 	signed []token.Claims
+	issued map[string]token.Claims
 	err    error
 	serial int
 }
@@ -213,7 +215,20 @@ func (s *stubSigner) Sign(c token.Claims) (string, error) {
 	}
 	s.signed = append(s.signed, c)
 	s.serial++
-	return "access-token-" + string(rune('a'+s.serial-1)), nil
+	signed := "access-token-" + strconv.Itoa(s.serial)
+	if s.issued == nil {
+		s.issued = map[string]token.Claims{}
+	}
+	s.issued[signed] = c
+	return signed, nil
+}
+
+func (s *stubSigner) ChainOf(_ context.Context, signed string) (string, error) {
+	c, ok := s.issued[signed]
+	if !ok {
+		return "", errors.New("unknown token")
+	}
+	return c.ChainID, nil
 }
 
 func (s *stubSigner) TTL() time.Duration { return 15 * time.Minute }
@@ -428,7 +443,7 @@ func (s *fakeStore) ApproveLoginGrant(_ context.Context, arg db.ApproveLoginGran
 	if !ok {
 		return db.LoginGrant{}, pgx.ErrNoRows
 	}
-	g.UserID, g.ApprovedAt = arg.UserID, arg.DecidedAt
+	g.UserID, g.ApprovedAt, g.ApproverChainID = arg.UserID, arg.DecidedAt, arg.ApproverChainID
 	s.grants[key] = g
 	return g, nil
 }
@@ -443,15 +458,56 @@ func (s *fakeStore) DenyLoginGrant(_ context.Context, arg db.DenyLoginGrantParam
 	return 1, nil
 }
 
-func (s *fakeStore) ConsumeLoginGrant(_ context.Context, id pgtype.UUID) (int64, error) {
-	key := pgconv.UUIDString(id)
+func (s *fakeStore) ConsumeLoginGrant(_ context.Context, arg db.ConsumeLoginGrantParams) (int64, error) {
+	key := pgconv.UUIDString(arg.ID)
 	g, ok := s.grants[key]
-	if !ok || !g.ApprovedAt.Valid || g.DeniedAt.Valid || g.ConsumedAt.Valid {
+	if !ok || !g.ApprovedAt.Valid || g.DeniedAt.Valid || g.ConsumedAt.Valid ||
+		!g.ExpiresAt.Time.After(time.Now()) {
 		return 0, nil
 	}
+	if g.ApproverChainID.Valid {
+		revokedAt, exists := s.chains[pgconv.UUIDString(g.ApproverChainID)]
+		if !exists || revokedAt.Valid {
+			return 0, nil
+		}
+	}
 	g.ConsumedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
+	g.ChainID = arg.ChainID
 	s.grants[key] = g
 	return 1, nil
+}
+
+func (s *fakeStore) CountPendingLoginGrants(context.Context) (int64, error) {
+	var n int64
+	for _, g := range s.grants {
+		if !g.ConsumedAt.Valid && !g.DeniedAt.Valid && g.ExpiresAt.Time.After(time.Now()) {
+			n++
+		}
+	}
+	return n, nil
+}
+
+func (s *fakeStore) ListChainsApprovedFrom(_ context.Context, root pgtype.UUID) ([]pgtype.UUID, error) {
+	seen := map[string]bool{}
+	frontier := []pgtype.UUID{root}
+	var out []pgtype.UUID
+	for len(frontier) > 0 {
+		parent := pgconv.UUIDString(frontier[0])
+		frontier = frontier[1:]
+		for _, g := range s.grants {
+			if !g.ChainID.Valid || pgconv.UUIDString(g.ApproverChainID) != parent {
+				continue
+			}
+			child := pgconv.UUIDString(g.ChainID)
+			if seen[child] {
+				continue
+			}
+			seen[child] = true
+			out = append(out, g.ChainID)
+			frontier = append(frontier, g.ChainID)
+		}
+	}
+	return out, nil
 }
 
 func (s *fakeStore) DeleteExpiredLoginGrants(context.Context) (int64, error) { return 0, nil }
