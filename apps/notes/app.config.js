@@ -3,11 +3,19 @@ const ENDPOINTS = {
     auth: "https://auth.nonamecat.pp.ua",
     family: "https://family.nonamecat.pp.ua",
     notes: "https://notes.nonamecat.pp.ua",
+    notifications: "https://notifications.nonamecat.pp.ua",
   },
   local: {
     auth: "http://localhost:8081",
     family: "http://localhost:8082",
     notes: "http://localhost:8085",
+    notifications: "http://localhost:8087",
+  },
+  emulator: {
+    auth: "http://10.0.2.2:8081",
+    family: "http://10.0.2.2:8082",
+    notes: "http://10.0.2.2:8085",
+    notifications: "http://10.0.2.2:8087",
   },
 };
 
@@ -24,6 +32,7 @@ if (!endpoints) {
 
 const authUrl = process.env.EXPO_PUBLIC_AUTH_URL ?? endpoints.auth;
 const familyUrl = process.env.EXPO_PUBLIC_FAMILY_URL ?? endpoints.family;
+const notificationsUrl = process.env.EXPO_PUBLIC_NOTIFICATIONS_URL ?? endpoints.notifications;
 const notesUrl = process.env.EXPO_PUBLIC_NOTES_URL ?? endpoints.notes;
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? notesUrl;
 
@@ -39,6 +48,7 @@ module.exports = {
     backgroundColor: organic.bg,
     newArchEnabled: true,
     plugins: [
+      ...(env === "production" ? [] : [require("@fm/config/cleartext.plugin.cjs")]),
       "expo-router",
       "expo-secure-store",
       "expo-localization",
@@ -55,6 +65,7 @@ module.exports = {
       serviceUrls: {
         auth: authUrl,
         family: familyUrl,
+        notifications: notificationsUrl,
         notes: notesUrl,
       },
     },
@@ -68,7 +79,6 @@ module.exports = {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: organic.accent.DEFAULT,
       },
-      usesCleartextTraffic: true,
     },
     web: {
       bundler: "metro",
