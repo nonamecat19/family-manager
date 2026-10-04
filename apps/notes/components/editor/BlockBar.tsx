@@ -2,7 +2,7 @@ import { BlockType } from "@fm/sdk/notes/v1/notes_pb";
 import { Pressable, Text, View } from "react-native";
 
 import { strings } from "../i18n/index.ts";
-import { Icon, nocturne, type IconName } from "../nocturne/index.ts";
+import { Icon, organic, type IconName } from "@fm/ui";
 
 
 export interface BlockBarProps {
@@ -46,8 +46,8 @@ export function BlockBar({
     <View
       className={
         floating
-          ? "flex-row items-center gap-[2px] self-center rounded-lg bg-surface px-[7px] py-[5px]"
-          : "flex-row items-center gap-[2px] border-t border-neutral-800 bg-surface px-[10px] py-[7px]"
+          ? "flex-row items-center gap-[2px] self-center rounded-2xl bg-surface px-[7px] py-[5px]"
+          : "flex-row items-center gap-[2px] border-t border-neutral-300 bg-surface px-[10px] py-[7px]"
       }
     >
       {ITEMS.map((item) => (
@@ -83,7 +83,7 @@ export function BlockBar({
           onPress={onDone}
           className="ml-auto px-[6px] py-[4px]"
         >
-          <Text className="font-med text-[14px] text-accent">{strings.note.done}</Text>
+          <Text className="font-fig-med text-[14px] text-accent-700">{strings.note.done}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -92,7 +92,7 @@ export function BlockBar({
 
 function Separator({ visible }: { visible: boolean }) {
   if (!visible) return null;
-  return <View className="mx-[4px] h-[16px] w-[1px] bg-neutral-800" />;
+  return <View className="mx-[4px] h-[16px] w-[1px] bg-neutral-400" />;
 }
 
 function BarButton({
@@ -118,12 +118,12 @@ function BarButton({
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      className={`items-center justify-center rounded-sm p-[5px] ${disabled ? "opacity-40" : ""}`}
+      className={`items-center justify-center rounded-md p-[5px] ${disabled ? "opacity-40" : ""}`}
     >
       <Icon
         name={icon}
         size={size}
-        color={active ? nocturne.accent.DEFAULT : nocturne.neutral[400]}
+        color={active ? organic.accent.DEFAULT : organic.neutral[800]}
         weight={active && icon === "check-square" ? "fill" : "regular"}
       />
     </Pressable>

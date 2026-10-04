@@ -1,16 +1,26 @@
-import { toDisplayError, useFamily, useTelegramLink } from "@fm/api";
+import { toDisplayError, useFamily, useNotificationPreferences, useSetNotificationPreferences, useTelegramLink } from "@fm/api";
 import { useAuth } from "@fm/auth";
-import { useTheme } from "@fm/ui";
+import {
+  Avatar,
+  DangerLink,
+  NotificationsSection,
+  PrimaryButton,
+  Screen,
+  ScreenHeader,
+  ScrollBody,
+  SettingsGroup,
+  SettingsLinkRow,
+  SettingsSection,
+  TelegramSection,
+} from "@fm/ui";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { strings } from "../../components/i18n/index.ts";
 import { offlineCopy, useCaptureQueue } from "../../components/offline/index.ts";
-import { Avatar, Divider, Icon, PrimaryButton, Screen, nocturne } from "../../components/nocturne/index.ts";
-import { NotificationsSection } from "../../components/settings/NotificationsSection.tsx";
 
 const SIGN_OUT_FLUSH_MS = 4_000;
 
@@ -23,7 +33,8 @@ export default function SettingsScreen() {
   const queue = useCaptureQueue();
   const [signingOut, setSigningOut] = useState(false);
   const telegram = useTelegramLink({ bot: telegramBot, open: Linking.openURL });
-  const theme = useTheme();
+  const notifications = useNotificationPreferences();
+  const setNotifications = useSetNotificationPreferences();
   const members = family.data?.members ?? [];
   const telegramError = telegram.error
     ? toDisplayError(telegram.error, strings.settings.telegramFailed).message
@@ -52,67 +63,65 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerClassName="gap-[20px] px-[20px] py-[18px]">
-        <Text className="font-med text-[26px] text-fg" style={{ letterSpacing: -0.5 }}>
-          {strings.settings.title}
-        </Text>
+      <ScrollBody>
+        <ScreenHeader title={strings.settings.title} />
 
-        <View className="gap-[8px]">
-          <Section label={strings.settings.family} />
-          <Text className="font-sans text-[15px] text-fg">{family.data?.family?.name ?? ""}</Text>
-        </View>
+        <SettingsSection title={strings.settings.family}>
+          <SettingsGroup className="py-[14px]">
+            <Text className="font-fig-bold text-[15.5px] text-fg">{family.data?.family?.name ?? ""}</Text>
+          </SettingsGroup>
+        </SettingsSection>
 
-        <Divider />
-
-        <View className="gap-[10px]">
-          <Section label={strings.settings.members} />
-          {members.map((member) => (
-            <View key={member.userId} className="flex-row items-center gap-[10px]">
-              <Avatar name={member.displayName || member.email} size={26} />
-              <View>
-                <Text className="font-sans text-[14px] text-fg">
-                  {member.displayName || member.email}
-                </Text>
-                <Text className="font-sans text-[11.5px] text-neutral-600">{member.email}</Text>
+        <SettingsSection title={strings.settings.members}>
+          <SettingsGroup className="py-[4px]">
+            {members.map((member, i) => (
+              <View
+                key={member.userId}
+                className={`flex-row items-center gap-[10px] py-[12px] ${
+                  i === members.length - 1 ? "" : "border-b border-divider"
+                }`}
+              >
+                <Avatar name={member.displayName || member.email} size={32} />
+                <View className="flex-1">
+                  <Text className="font-fig-bold text-[14.5px] text-fg" numberOfLines={1}>
+                    {member.displayName || member.email}
+                  </Text>
+                  <Text className="font-fig text-[11.5px] text-neutral-600">{member.email}</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </SettingsGroup>
+        </SettingsSection>
 
-        <Divider />
-
-        <View className="gap-[10px]">
-          <Section label={strings.settings.offlineQueue} />
-          <Text className="font-sans text-[13px] text-neutral-400">
-            {queue.pending.length === 0
-              ? strings.settings.queueEmpty
-              : strings.capture.queued(queue.pending.length)}
-          </Text>
-          {queue.pending.length > 0 ? (
-            <PrimaryButton
-              title={strings.settings.flushNow}
-              disabled={queue.syncing || !queue.online}
-              onPress={() => void queue.flush()}
-            />
-          ) : null}
-        </View>
+        <SettingsSection title={strings.settings.offlineQueue}>
+          <SettingsGroup className="gap-[10px] py-[14px]">
+            <Text className="font-fig text-[13.5px] text-neutral-700">
+              {queue.pending.length === 0
+                ? strings.settings.queueEmpty
+                : strings.capture.queued(queue.pending.length)}
+            </Text>
+            {queue.pending.length > 0 ? (
+              <PrimaryButton
+                title={strings.settings.flushNow}
+                disabled={queue.syncing || !queue.online}
+                onPress={() => void queue.flush()}
+              />
+            ) : null}
+          </SettingsGroup>
+        </SettingsSection>
 
         {queue.rejected.length > 0 ? (
-          <>
-            <Divider />
-            <View className="gap-[10px]">
-              <Section label={offlineCopy.refusedTitle} />
-              {
-}
-              <Text className="font-sans text-[13px] text-neutral-400">
+          <SettingsSection title={offlineCopy.refusedTitle}>
+            <SettingsGroup className="gap-[12px] py-[14px]">
+              <Text className="font-fig text-[13.5px] text-neutral-700">
                 {offlineCopy.refusedBody(queue.rejected.length)}
               </Text>
               {queue.rejected.map((item) => (
                 <View key={item.clientId} className="gap-[6px]">
-                  <Text className="font-sans text-[14px] text-fg">
+                  <Text className="font-fig-bold text-[14px] text-fg">
                     {item.title || strings.common.untitled}
                   </Text>
-                  <Text className="font-sans text-[11.5px] text-neutral-600">
+                  <Text className="font-fig text-[11.5px] text-neutral-600">
                     {item.rejection?.reason ?? ""}
                   </Text>
                   <PrimaryButton
@@ -122,114 +131,67 @@ export default function SettingsScreen() {
                   />
                 </View>
               ))}
-            </View>
-          </>
+            </SettingsGroup>
+          </SettingsSection>
         ) : null}
 
-        {telegram.available ? (
-          <>
-            <Divider />
-            <View className="gap-[10px]">
-              <Section label={strings.settings.telegram} />
-              <Text className="font-sans text-[14px] text-fg">
-                {telegram.identity
-                  ? strings.settings.telegramConnected
-                  : strings.settings.telegramNotConnected}
-              </Text>
-              <Text className="font-sans text-[13px] text-neutral-400">
-                {telegram.awaiting ? strings.settings.telegramWaiting : strings.settings.telegramHint}
-              </Text>
-              {telegramError ? (
-                <Text className="font-sans text-[12px]" style={{ color: theme.danger }}>
-                  {telegramError}
-                </Text>
-              ) : null}
-              {telegram.identity ? (
-                <PrimaryButton
-                  title={strings.settings.telegramDisconnect}
-                  disabled={telegram.unlinking}
-                  onPress={() => void telegram.unlink().catch(() => undefined)}
-                />
-              ) : (
-                <PrimaryButton
-                  title={strings.settings.telegramConnect}
-                  disabled={telegram.connecting || telegram.loading}
-                  onPress={() => void telegram.connect().catch(() => undefined)}
-                />
-              )}
-            </View>
-          </>
-        ) : null}
+        <TelegramSection
+          strings={{
+            title: strings.settings.telegram,
+            hint: strings.settings.telegramHint,
+            waiting: strings.settings.telegramWaiting,
+            connected: strings.settings.telegramConnected,
+            notConnected: strings.settings.telegramNotConnected,
+            connect: strings.settings.telegramConnect,
+            disconnect: strings.settings.telegramDisconnect,
+          }}
+          telegram={telegram}
+          error={telegramError}
+        />
 
-        <Divider />
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={strings.settings.connectedAccounts}
-          onPress={() => router.push("/(app)/connected-accounts")}
-          className="flex-row items-center gap-[10px]"
-        >
-          <Text className="flex-1 font-sans text-[15px] text-fg">
-            {strings.settings.connectedAccounts}
-          </Text>
-          <View style={{ transform: [{ rotate: "180deg" }] }}>
-            <Icon name="caret-left" size={14} color={nocturne.neutral[600]} />
+        <SettingsSection title={strings.settings.account}>
+          <View className="gap-[10px]">
+            <SettingsLinkRow
+              label={strings.settings.connectedAccounts}
+              onPress={() => router.push("/(app)/connected-accounts")}
+            />
+            <SettingsLinkRow
+              label={strings.settings.approveDevice}
+              onPress={() => router.push("/(app)/approve-device")}
+            />
           </View>
-        </Pressable>
+        </SettingsSection>
 
-        <Divider />
+        <NotificationsSection
+          title={strings.settings.notifications}
+          failedText={strings.settings.notificationsLoadFailed}
+          isError={notifications.isError}
+          topics={notifications.data?.topics ?? []}
+          muted={notifications.data?.muted ?? []}
+          onChange={(next) => setNotifications.mutate(next)}
+        />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={strings.settings.approveDevice}
-          onPress={() => router.push("/(app)/approve-device")}
-          className="flex-row items-center gap-[10px]"
-        >
-          <Text className="flex-1 font-sans text-[15px] text-fg">
-            {strings.settings.approveDevice}
-          </Text>
-          <View style={{ transform: [{ rotate: "180deg" }] }}>
-            <Icon name="caret-left" size={14} color={nocturne.neutral[600]} />
-          </View>
-        </Pressable>
-
-        <Divider />
-
-        <View className="gap-[10px]">
-          <Section label={strings.settings.notifications} />
-          <NotificationsSection />
-        </View>
-
-        <Divider />
-
-        <View className="gap-[10px]">
-          <Section label={strings.settings.about} />
-          <Text className="font-sans text-[13px] leading-[20px] text-neutral-500">
+        <SettingsSection title={strings.settings.about}>
+          <Text className="font-fig text-[13px] leading-[20px] text-neutral-700">
             {strings.settings.aboutBody}
           </Text>
-        </View>
+        </SettingsSection>
 
         <View className="gap-[8px]">
           {unsynced > 0 ? (
-            <Text className="font-sans text-[12px] text-neutral-500">
+            <Text className="text-center font-fig text-[12px] text-neutral-700">
               {offlineCopy.unsyncedOnSignOut(unsynced)}
             </Text>
           ) : null}
-          <PrimaryButton
+          <DangerLink
             title={signingOut ? offlineCopy.signingOut : strings.settings.signOut}
-            disabled={signingOut}
-            onPress={() => void endSession()}
+            onPress={() => {
+              if (signingOut) return;
+              void endSession();
+            }}
           />
         </View>
-      </ScrollView>
+      </ScrollBody>
     </Screen>
-  );
-}
-
-function Section({ label }: { label: string }) {
-  return (
-    <Text className="font-semi text-[10px] uppercase text-neutral-500" style={{ letterSpacing: 1 }}>
-      {label}
-    </Text>
   );
 }

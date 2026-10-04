@@ -5,7 +5,7 @@ import * as Linking from "expo-linking";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 
-import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
+import { Body, Button, Caption, Display, Field, Screen, TextLink } from "@fm/ui";
 
 import { strings } from "../../components/i18n/index.ts";
 
@@ -52,16 +52,11 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1 justify-center gap-[18px] px-[24px]"
       >
-        <View className="gap-[10px]">
-          <View className="flex-row items-center gap-[10px]">
-            <View className="h-[26px] w-[26px] items-center justify-center rounded-md border border-accent">
-              <Text className="font-semi text-[13px] text-accent">C</Text>
-            </View>
-            <Text className="font-semi text-[30px] text-fg" style={{ letterSpacing: -0.6 }}>
-              {strings.app.name}
-            </Text>
+        <View>
+          <Display size={36}>{strings.app.name}</Display>
+          <View className="mt-[10px]">
+            <Body>{mode === "login" ? strings.login.signInBody : strings.login.registerBody}</Body>
           </View>
-          <Body>{mode === "login" ? strings.login.signInBody : strings.login.registerBody}</Body>
         </View>
 
         {mode === "register" ? (
@@ -112,7 +107,7 @@ function TelegramLogin({ telegram }: { telegram: ReturnType<typeof useTelegramLo
   if (telegram.phase === "pending" && telegram.userCode) {
     return (
       <View className="items-center gap-[10px]">
-        <Text className="font-semi text-[22px] text-fg" style={{ letterSpacing: 3 }}>
+        <Text className="font-cap text-[22px] text-fg" style={{ letterSpacing: 3 }}>
           {telegram.userCode}
         </Text>
         <Caption>{strings.login.telegramPendingHint}</Caption>

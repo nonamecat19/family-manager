@@ -1,25 +1,24 @@
 import "../global.css";
 
-import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
-import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
-import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
-import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
-import { createClient } from "@connectrpc/connect";
-import { createConnectTransport } from "@connectrpc/connect-web";
 import { ApiProvider, createQueryClient, isRefreshRejection, usePushRegistration } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
+import { appTheme, ErrorBoundary, Loading, ThemeProvider } from "@fm/ui";
+import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
+import { NunitoSans_400Regular } from "@expo-google-fonts/nunito-sans/400Regular";
+import { NunitoSans_500Medium } from "@expo-google-fonts/nunito-sans/500Medium";
+import { NunitoSans_600SemiBold } from "@expo-google-fonts/nunito-sans/600SemiBold";
+import { NunitoSans_700Bold } from "@expo-google-fonts/nunito-sans/700Bold";
+import { NunitoSans_800ExtraBold } from "@expo-google-fonts/nunito-sans/800ExtraBold";
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
-import { ErrorBoundary, ThemeProvider } from "@fm/ui";
-import { nocturneTheme, type Theme } from "@fm/theme";
 import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
 
 import { strings } from "../components/i18n/index.ts";
-import { nocturne } from "../components/nocturne/index.ts";
 import { resetCaptureQueue } from "../components/offline/index.ts";
 
 const extra = Constants.expoConfig?.extra as
@@ -46,34 +45,30 @@ async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-const theme: Theme = {
-  ...nocturneTheme,
-  fonts: {
-    body: "Inter_400Regular",
-    medium: "Inter_500Medium",
-    semibold: "Inter_600SemiBold",
-    display: "Inter_600SemiBold",
-  },
-};
-
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    Alegreya_800ExtraBold,
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
+    NunitoSans_800ExtraBold,
   });
 
-  if (!fontsLoaded) return <Booting label={strings.app.booting} />;
+  if (!fontsLoaded) {
+    return (
+      <ThemeProvider theme={appTheme}>
+        <Loading label={strings.app.booting} />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ErrorBoundary
       message={strings.app.crashed}
       onError={(error) => console.error("[notes] unhandled render error", error)}
     >
-      {
-}
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={appTheme}>
         <AuthProvider
           store={secureTokenStore}
           refresh={refresh}
@@ -81,7 +76,7 @@ export default function RootLayout() {
           isRefreshRejection={isRefreshRejection}
         >
           <ApiGate />
-          <StatusBar style="light" />
+          <StatusBar style="dark" />
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
@@ -128,7 +123,7 @@ function ApiGate() {
     }
   }, [status, segments, router]);
 
-  if (status === "loading") return <Booting label={strings.app.restoring} />;
+  if (status === "loading") return <Loading label={strings.app.restoring} />;
 
   return (
     <ApiProvider
@@ -146,13 +141,4 @@ function ApiGate() {
 function PushRegistration() {
   usePushRegistration({ app: "notes" });
   return null;
-}
-
-function Booting({ label }: { label: string }) {
-  return (
-    <View className="flex-1 items-center justify-center gap-[10px] bg-bg">
-      <ActivityIndicator color={nocturne.accent.DEFAULT} />
-      <Text style={{ color: nocturne.neutral[500], fontSize: 13 }}>{label}</Text>
-    </View>
-  );
 }

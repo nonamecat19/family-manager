@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { View } from "react-native";
 
 import { strings } from "../../components/i18n/index.ts";
-import { EmptyState, IconButton, Screen, nocturne } from "../../components/nocturne/index.ts";
+import { EmptyState, RoundButton, Screen } from "@fm/ui";
 import {
   MobileListHeader,
   NoteListBody,
@@ -31,7 +31,6 @@ export default function ArchiveScreen() {
         <EmptyState
           title={strings.list.pickANote}
           body={strings.list.pickANoteBody}
-          icon="archive"
         />
       </View>
     );
@@ -40,13 +39,7 @@ export default function ArchiveScreen() {
   return (
     <Screen>
       <View className="flex-row items-center px-[16px] pt-[6px]">
-        <IconButton
-          icon="caret-left"
-          label={strings.note.back}
-          size={20}
-          color={nocturne.accent.DEFAULT}
-          onPress={() => router.back()}
-        />
+        <RoundButton icon="back" label={strings.note.back} onPress={() => router.back()} />
       </View>
       <MobileListHeader title={strings.rail.archive} count={rows.length} />
       <NoteListBody

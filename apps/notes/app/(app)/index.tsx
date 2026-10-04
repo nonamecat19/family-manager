@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 
 import { strings } from "../../components/i18n/index.ts";
 import { CaptureSheet, useCaptureQueue } from "../../components/offline/index.ts";
-import { EmptyState, Screen } from "../../components/nocturne/index.ts";
+import { EmptyState, Screen } from "@fm/ui";
 import {
   CaptureFab,
   MobileListHeader,
@@ -28,7 +28,6 @@ export default function NotesScreen() {
         <EmptyState
           title={strings.list.pickANote}
           body={strings.list.pickANoteBody}
-          icon="file-text"
           action={{ label: strings.list.newNote, onPress: () => shell.newNote() }}
         />
       </View>
@@ -49,7 +48,7 @@ export default function NotesScreen() {
         onNewNote={shell.openCapture}
       />
       {queue.queued.length > 0 ? (
-        <Text className="px-[20px] py-[6px] font-sans text-[11px] text-neutral-600">
+        <Text className="px-[20px] py-[6px] font-fig text-[11px] text-neutral-600">
           {strings.capture.queued(queue.queued.length)}
         </Text>
       ) : null}

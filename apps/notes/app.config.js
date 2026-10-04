@@ -11,7 +11,7 @@ const ENDPOINTS = {
   },
 };
 
-const { bg } = require("./tailwind.config.js").theme.extend.colors;
+const organic = require("@fm/config/organic.preset.cjs").theme.extend.colors;
 
 const env = process.env.EXPO_PUBLIC_API_ENV ?? "production";
 const endpoints = ENDPOINTS[env];
@@ -35,8 +35,8 @@ module.exports = {
     version: "0.1.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "dark",
-    backgroundColor: bg,
+    userInterfaceStyle: "light",
+    backgroundColor: organic.bg,
     newArchEnabled: true,
     plugins: [
       "expo-router",
@@ -66,7 +66,7 @@ module.exports = {
       package: "dev.familymanager.notes",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: bg,
+        backgroundColor: organic.accent.DEFAULT,
       },
       usesCleartextTraffic: true,
     },

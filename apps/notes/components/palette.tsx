@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { strings } from "./i18n/index.ts";
-import { Icon, Kbd, nocturne, type IconName } from "./nocturne/index.ts";
+import { Icon, organic, type IconName } from "@fm/ui";
+import { Kbd } from "./kit/index.ts";
 
 
 export interface PaletteProps {
@@ -31,10 +32,10 @@ export function FacetPill({
       accessibilityState={{ selected: active }}
       onPress={onPress}
       className={`flex-none rounded-full border px-[9px] py-[3px] ${
-        active ? "border-accent bg-accent-900" : "border-transparent bg-neutral-900"
+        active ? "border-accent bg-accent-100" : "border-transparent bg-neutral-200"
       }`}
     >
-      <Text className={`font-sans text-[11.5px] ${active ? "text-accent-300" : "text-neutral-400"}`}>
+      <Text className={`font-fig text-[11.5px] ${active ? "text-accent-800" : "text-neutral-800"}`}>
         {label}
       </Text>
     </Pressable>
@@ -139,18 +140,18 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
         <Pressable
           accessibilityRole="none"
           onPress={() => undefined}
-          className="mt-[96px] w-[660px] max-w-[92%] overflow-hidden rounded-lg bg-surface"
+          className="mt-[96px] w-[660px] max-w-[92%] overflow-hidden rounded-2xl bg-surface"
         >
-          <View className="flex-row items-center gap-[11px] border-b border-neutral-800 px-[18px] py-[15px]">
-            <Icon name="magnifying-glass" size={18} color={nocturne.accent.DEFAULT} />
+          <View className="flex-row items-center gap-[11px] border-b border-neutral-300 px-[18px] py-[15px]">
+            <Icon name="magnifying-glass" size={18} color={organic.accent.DEFAULT} />
             <TextInput
               value={query}
               onChangeText={setQuery}
               autoFocus
               placeholder={strings.palette.placeholder}
-              placeholderTextColor={nocturne.neutral[600]}
+              placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.palette.placeholder}
-              className="flex-1 font-sans text-[17px] text-fg"
+              className="flex-1 font-fig text-[17px] text-fg"
             />
             <Kbd>{strings.palette.esc}</Kbd>
           </View>
@@ -168,14 +169,14 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
 
           <ScrollView className="max-h-[420px] px-[8px] pb-[6px] pt-[8px]">
             {query.trim() === "" ? (
-              <Text className="px-[10px] py-[14px] font-sans text-[12.5px] text-neutral-500">
+              <Text className="px-[10px] py-[14px] font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.hint}
               </Text>
             ) : null}
 
             {grouped.map((group) => (
               <View key={group.label}>
-                <Text className="px-[10px] pb-[5px] pt-[10px] font-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
+                <Text className="px-[10px] pb-[5px] pt-[10px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 0.9 }}>
                   {group.label}
                 </Text>
                 {group.hits.map((hit) => {
@@ -195,7 +196,7 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ))}
 
             {query.trim() !== "" && hits.length === 0 && !search.isPending ? (
-              <Text className="px-[10px] py-[14px] font-sans text-[12.5px] text-neutral-500">
+              <Text className="px-[10px] py-[14px] font-fig text-[12.5px] text-neutral-700">
                 {strings.palette.empty}
               </Text>
             ) : null}
@@ -205,10 +206,10 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
                 accessibilityRole="button"
                 accessibilityLabel={strings.palette.createNote(query.trim())}
                 onPress={create}
-                className="mt-[6px] flex-row items-center gap-[11px] rounded-md px-[10px] py-[9px]"
+                className="mt-[6px] flex-row items-center gap-[11px] rounded-xl px-[10px] py-[9px]"
               >
-                <Icon name="plus-circle" size={16} color={nocturne.accent.DEFAULT} />
-                <Text className="font-sans text-[13.5px] text-fg">
+                <Icon name="plus-circle" size={16} color={organic.accent.DEFAULT} />
+                <Text className="font-fig text-[13.5px] text-fg">
                   {strings.palette.createNote(query.trim())}
                 </Text>
                 <View className="ml-auto">
@@ -218,11 +219,11 @@ export function Palette({ visible, onClose, onOpenNote, onOpenNotebook, onCreate
             ) : null}
           </ScrollView>
 
-          <View className="flex-row items-center gap-[16px] border-t border-neutral-800 px-[18px] py-[9px]">
+          <View className="flex-row items-center gap-[16px] border-t border-neutral-300 px-[18px] py-[9px]">
             <FooterHint keys="↑↓" label={strings.palette.navigate} />
             <FooterHint keys="⇥" label={strings.palette.filter} />
             <FooterHint keys="⌘⏎" label={strings.palette.newNote} />
-            <Text className="ml-auto font-sans text-[11px] text-neutral-500">
+            <Text className="ml-auto font-fig text-[11px] text-neutral-700">
               {search.data
                 ? strings.palette.footer(search.data.searchedNotes, search.data.elapsedMs)
                 : ""}
@@ -238,7 +239,7 @@ function FooterHint({ keys, label }: { keys: string; label: string }) {
   return (
     <View className="flex-row items-center gap-[5px]">
       <Kbd>{keys}</Kbd>
-      <Text className="font-sans text-[11px] text-neutral-500">{label}</Text>
+      <Text className="font-fig text-[11px] text-neutral-700">{label}</Text>
     </View>
   );
 }
@@ -260,23 +261,23 @@ function HitRow({
       accessibilityLabel={hit.title}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-row items-center gap-[11px] rounded-md px-[10px] py-[9px] ${
-        selected ? "bg-accent-900" : ""
+      className={`flex-row items-center gap-[11px] rounded-xl px-[10px] py-[9px] ${
+        selected ? "bg-accent-100" : ""
       }`}
     >
       <Icon
         name={GLYPH[hit.kind] ?? "file-text"}
         size={16}
-        color={selected ? nocturne.accent[300] : nocturne.neutral[500]}
+        color={selected ? organic.accent[700] : organic.neutral[700]}
       />
       <View className="min-w-0 flex-1 gap-[2px]">
         <Highlighted
           text={hit.title}
           query={query}
-          className="font-med text-[13.5px] text-fg"
+          className="font-fig-med text-[13.5px] text-fg"
         />
         {hit.context !== "" || hit.snippet !== "" ? (
-          <Text numberOfLines={1} className="font-sans text-[11.5px] text-neutral-500">
+          <Text numberOfLines={1} className="font-fig text-[11.5px] text-neutral-700">
             {[hit.context, hit.snippet].filter((part) => part !== "").join(" · ")}
           </Text>
         ) : null}
@@ -299,7 +300,7 @@ function Highlighted({ text, query, className }: { text: string; query: string; 
   return (
     <Text numberOfLines={1} className={className}>
       {text.slice(0, at)}
-      <Text style={{ backgroundColor: nocturne.accent[800] }}>{text.slice(at, at + term.length)}</Text>
+      <Text style={{ backgroundColor: organic.accent[200] }}>{text.slice(at, at + term.length)}</Text>
       {text.slice(at + term.length)}
     </Text>
   );
@@ -359,4 +360,4 @@ export function useDesktopShortcuts({
   }, [onPalette, onNewNote]);
 }
 
-const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;
+const SCRIM = { backgroundColor: organic.bg, opacity: 0.62 } as const;
