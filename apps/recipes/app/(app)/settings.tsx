@@ -3,20 +3,11 @@ import { useAuth } from "@fm/auth";
 import { Role } from "@fm/sdk/family/v1/family_pb";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
+import { initialOf, organic, tintFor, Avatar, DangerLink, DashedButton, Display, Kicker, PillButton, PrimaryButton, Screen, SettingsGroup, SettingsSection, Sheet, StatTile } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
-import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
-import {
-  Avatar,
-  DashedButton,
-  Display,
-  Kicker,
-  PrimaryButton,
-  Screen,
-  Sheet,
-} from "../../components/organic/ui.tsx";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -53,14 +44,13 @@ export default function ProfileScreen() {
         </View>
 
         <View className="flex-row gap-[10px]">
-          <Stat value={`${all.length}`} label={t("profile.statRecipes")} />
-          <Stat value={`${members.data?.members.length ?? cooks}`} label={t("profile.statCooks")} />
-          <Stat value={formatDuration(totalMinutes, t) || "—"} label={t("profile.statTimeWrittenDown")} />
+          <StatTile value={`${all.length}`} label={t("profile.statRecipes")} />
+          <StatTile value={`${members.data?.members.length ?? cooks}`} label={t("profile.statCooks")} />
+          <StatTile value={formatDuration(totalMinutes, t) || "—"} label={t("profile.statTimeWrittenDown")} />
         </View>
 
-        <View>
-          <Kicker className="mb-[11px]">{t("profile.family")}</Kicker>
-          <View className="rounded-2xl bg-neutral-100 px-[16px] py-[4px]">
+        <SettingsSection title={t("profile.family")}>
+          <SettingsGroup className="py-[4px]">
             {(members.data?.members ?? []).map((member, i, list) => (
               <View
                 key={member.userId}
@@ -86,42 +76,22 @@ export default function ProfileScreen() {
                 {t("profile.justYouSoFar")}
               </Text>
             )}
-          </View>
-        </View>
+          </SettingsGroup>
+        </SettingsSection>
 
         <DashedButton title={t("profile.inviteSomeone")} onPress={() => setInviteOpen(true)} />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("profile.favorites")}
-          onPress={() => router.push("/(app)/favorites")}
-          className="items-center rounded-full bg-neutral-200 py-[13px]"
-        >
-          <Text className="font-fig-bold text-[14.5px] text-neutral-700">{t("profile.yourFavourites")}</Text>
-        </Pressable>
+        <PillButton title={t("profile.yourFavourites")} onPress={() => router.push("/(app)/favorites")} />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("profile.preferences")}
-          onPress={() => router.push("/(app)/preferences")}
-          className="items-center rounded-full bg-neutral-200 py-[13px]"
-        >
-          <Text className="font-fig-bold text-[14.5px] text-neutral-700">{t("profile.preferences")}</Text>
-        </Pressable>
+        <PillButton title={t("profile.preferences")} onPress={() => router.push("/(app)/preferences")} />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={status === "authenticated" ? t("profile.signOut") : t("profile.signIn")}
+        <DangerLink
+          title={status === "authenticated" ? t("profile.signOut") : t("profile.signIn")}
           onPress={() => {
             void signOut();
             router.replace("/(auth)/login");
           }}
-          className="items-center pt-[4px]"
-        >
-          <Text className="font-fig-semi text-[14px]" style={{ color: organic.danger }}>
-            {status === "authenticated" ? t("profile.signOut") : t("profile.signIn")}
-          </Text>
-        </Pressable>
+        />
       </ScrollView>
 
       <Sheet visible={inviteOpen} onClose={() => setInviteOpen(false)} title={t("profile.inviteACook")}>
@@ -153,14 +123,5 @@ export default function ProfileScreen() {
         />
       </Sheet>
     </Screen>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <View className="flex-1 rounded-2xl bg-neutral-100 px-[14px] py-[15px]">
-      <Text className="font-cap text-[24px] text-accent-700">{value}</Text>
-      <Text className="mt-[3px] font-fig-bold text-[12px] text-neutral-600">{label}</Text>
-    </View>
   );
 }

@@ -10,26 +10,13 @@ import { MealSlot } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Icon, initialOf, organic, tintFor, Avatar, Chip, DashedButton, Display, Kicker, PrimaryButton, Screen, SegTabs, Sheet, Stepper } from "@fm/ui";
 
 import { useBasket } from "../../components/basket.tsx";
 import { useI18n, type TranslationKey } from "../../components/i18n/index.tsx";
-import { Icon } from "../../components/organic/icons.tsx";
 import { formatDuration, formatTotalTime, metaLine } from "../../components/organic/format.ts";
-import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
 import { buildWeek } from "../../components/organic/week.ts";
 import { weekRange } from "../../components/organic/week.ts";
-import {
-  Avatar,
-  Chip,
-  DashedButton,
-  Display,
-  Kicker,
-  PrimaryButton,
-  Screen,
-  SegTabs,
-  Sheet,
-  Stepper,
-} from "../../components/organic/ui.tsx";
 
 const TABS = ["Basket", "Week"] as const;
 type Tab = (typeof TABS)[number];

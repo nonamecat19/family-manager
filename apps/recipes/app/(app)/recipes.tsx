@@ -4,21 +4,10 @@ import { RecipeSort } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Icon, initialOf, organic, tintFor, Avatar, Chip, Display, Kicker, PrimaryButton, RatingMark, Screen, Sheet } from "@fm/ui";
 
 import { useI18n, type TranslationKey } from "../../components/i18n/index.tsx";
-import { Icon } from "../../components/organic/icons.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
-import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
-import {
-  Avatar,
-  Chip,
-  Display,
-  Kicker,
-  PrimaryButton,
-  RatingMark,
-  Screen,
-  Sheet,
-} from "../../components/organic/ui.tsx";
 
 const SORTS: { labelKey: TranslationKey; value: RecipeSort }[] = [
   { labelKey: "recipesList.sortRating", value: RecipeSort.RATING },
@@ -119,7 +108,7 @@ export default function RecipeListScreen() {
                 onPress={() => setFilterOpen(true)}
                 className="flex-none flex-row items-center gap-[8px] rounded-full bg-accent px-[17px] py-[11px]"
               >
-                <Icon name="filter" size={16} color="#ffffff" />
+                <Icon name="filter" size={16} color={organic.accentFg} />
                 <Text className="font-fig-bold text-[14px] text-white">
                   {activeFilters > 0 ? t("recipesList.filterCount", { count: activeFilters }) : t("recipesList.filter")}
                 </Text>
@@ -204,10 +193,9 @@ export default function RecipeListScreen() {
         accessibilityRole="button"
         accessibilityLabel={t("recipesList.addRecipe")}
         onPress={() => router.push("/(app)/recipe-edit/new")}
-        className="absolute bottom-[24px] right-[22px] h-[58px] w-[58px] items-center justify-center rounded-full bg-accent"
-        style={{ boxShadow: "0 12px 32px rgba(46,43,37,0.22)" }}
+        className="absolute bottom-[24px] right-[22px] h-[58px] w-[58px] items-center justify-center rounded-full bg-accent shadow-fab"
       >
-        <Icon name="plus" size={26} color="#ffffff" />
+        <Icon name="plus" size={26} color={organic.accentFg} />
       </Pressable>
 
       <Sheet visible={filterOpen} onClose={() => setFilterOpen(false)} title={t("recipesList.filterSheetTitle")}>
@@ -313,8 +301,7 @@ function RecipeRow({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-row items-center gap-[14px] rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px]"
-      style={{ boxShadow: "0 1px 2px rgba(46,43,37,0.14)" }}
+      className="flex-row items-center gap-[14px] rounded-2xl bg-neutral-100 py-[12px] pl-[12px] pr-[16px] shadow-card"
     >
       {recipe.imageUrl !== "" ? (
         <Image

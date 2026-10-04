@@ -3,12 +3,10 @@ import type { Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { SearchIcon, initialOf, organic, tintFor, Avatar, Kicker, RoundButton, Screen } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { SearchIcon } from "../../components/organic/icons.tsx";
 import { formatDuration, metaLine } from "../../components/organic/format.ts";
-import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
-import { Avatar, Kicker, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function SearchScreen() {
   const router = useRouter();

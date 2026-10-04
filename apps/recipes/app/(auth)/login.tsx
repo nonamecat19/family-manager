@@ -4,11 +4,9 @@ import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
-
-import { Body, Button, Caption, Field, Screen, TextLink } from "@fm/ui";
+import { Body, Button, Caption, Display, Field, Screen, TextLink } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Display } from "../../components/organic/ui.tsx";
 
 const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
@@ -57,8 +55,6 @@ export default function LoginScreen() {
         className="flex-1 justify-center gap-[18px] px-[24px]"
       >
         <View>
-          {
-}
           <Display size={36}>{t("login.appName")}</Display>
           <View className="mt-[10px]">
             <Body>{mode === "login" ? t("login.signInBody") : t("login.registerBody")}</Body>

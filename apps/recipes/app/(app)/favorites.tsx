@@ -2,11 +2,10 @@ import { useFavoriteRecipes } from "@fm/api";
 import type { Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { initialOf, tintFor, Screen, ScreenHeader } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
 import { formatDuration, metaLine } from "../../components/organic/format.ts";
-import { initialOf, tintFor } from "../../components/organic/tokens.ts";
-import { Display, RoundButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function FavoritesScreen() {
   const router = useRouter();
@@ -21,10 +20,7 @@ export default function FavoritesScreen() {
         contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]"
         refreshControl={undefined}
       >
-        <View className="flex-row items-center gap-[12px]">
-          <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
-          <Display size={28}>{t("favorites.title")}</Display>
-        </View>
+        <ScreenHeader title={t("favorites.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
         <View className="flex-row flex-wrap gap-[12px]">
           {recipes.map((recipe, index) => (
@@ -63,8 +59,7 @@ function FavoriteCard({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="flex-1 basis-[45%] rounded-2xl bg-neutral-100 p-[14px]"
-      style={{ boxShadow: "0 1px 2px rgba(46,43,37,0.14)" }}
+      className="flex-1 basis-[45%] rounded-2xl bg-neutral-100 p-[14px] shadow-card"
     >
       <View
         className="h-[88px] items-center justify-center overflow-hidden rounded-xl"

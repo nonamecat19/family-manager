@@ -12,26 +12,12 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ClockIcon, HeartIcon, Icon, StarIcon, initialOf, organic, tintFor, Display, Kicker, NutritionStrip, OutlineButton, PrimaryButton, RoundButton, Screen, SegTabs, StarPicker, Stepper, Tag, Loading } from "@fm/ui";
 
 import { useBasket } from "../../../components/basket.tsx";
 import { useI18n } from "../../../components/i18n/index.tsx";
-import { ClockIcon, HeartIcon, Icon, StarIcon } from "../../../components/organic/icons.tsx";
 import { formatDuration } from "../../../components/organic/format.ts";
 import { scaleAmount } from "../../../components/organic/scale.ts";
-import { initialOf, organic, tintFor } from "../../../components/organic/tokens.ts";
-import {
-  Display,
-  Kicker,
-  NutritionStrip,
-  OutlineButton,
-  PrimaryButton,
-  RoundButton,
-  Screen,
-  SegTabs,
-  StarPicker,
-  Stepper,
-  Tag,
-} from "../../../components/organic/ui.tsx";
 
 const TABS = ["Ingredients", "Steps", "Notes"] as const;
 type Tab = (typeof TABS)[number];
@@ -54,7 +40,7 @@ export default function RecipeDetailScreen() {
   const [batch, setBatch] = useState(1);
   const [commentBody, setCommentBody] = useState("");
 
-  if (recipe.isPending) return <Loading />;
+  if (recipe.isPending) return <Fetching />;
   if (recipe.isError) {
     const shown = toDisplayError(recipe.error, t("common.loadFailed"));
     return (
@@ -97,8 +83,6 @@ export default function RecipeDetailScreen() {
     <Screen edges={["bottom"]}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-[28px]">
-          {
-}
           <View
             className="rounded-b-3xl px-[22px] pb-[16px] pt-[56px]"
             style={{ backgroundColor: tint.bg }}
@@ -170,8 +154,6 @@ export default function RecipeDetailScreen() {
                   {r.description}
                 </Text>
               )}
-              {
-}
               <NutritionStrip
                 className="mt-[14px]"
                 kcal={r.nutrition?.kcal ?? 0}
@@ -332,13 +314,11 @@ export default function RecipeDetailScreen() {
   );
 }
 
-function Loading() {
+function Fetching() {
   const { t } = useI18n();
   return (
     <Screen>
-      <View className="flex-1 items-center justify-center">
-        <Text className="font-fig-semi text-[14px] text-neutral-600">{t("recipeDetail.fetching")}</Text>
-      </View>
+      <Loading label={t("recipeDetail.fetching")} />
     </Screen>
   );
 }

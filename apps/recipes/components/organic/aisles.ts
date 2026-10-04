@@ -1,5 +1,6 @@
+import { organic } from "@fm/ui";
+
 import type { TranslationKey } from "../i18n/index.tsx";
-import { organic } from "./tokens.ts";
 
 export interface Aisle {
   id: string;

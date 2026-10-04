@@ -3,9 +3,9 @@ import { useAuth } from "@fm/auth";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, View } from "react-native";
+import { Display, Field, PrimaryButton, Screen } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Display, Field, PrimaryButton, Screen } from "../../components/organic/ui.tsx";
 
 export default function OnboardingScreen() {
   const router = useRouter();
