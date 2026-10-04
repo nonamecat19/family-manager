@@ -25,7 +25,7 @@ library that displaces a row in that table without an ADR.
 ## Layout
 
 ```
-apps/        Expo apps (family-manager, shopping, recipes, notes)
+apps/        Expo apps (finance, recipes, notes) and tui/ — the Go terminal client `fm` (ADR 0017)
 packages/    shared TS: ui, auth, api, theme, config
 services/    Go microservices, app-specific: auth, family, notes, notifications, shopping
              plus telegram — one process hosting one bot per app (ADR 0010)

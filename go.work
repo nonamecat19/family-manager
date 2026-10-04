@@ -1,6 +1,7 @@
 go 1.25.0
 
 use (
+	./apps/tui
 	./libs/go/auth
 	./libs/go/database
 	./libs/go/events
