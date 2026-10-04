@@ -39,6 +39,7 @@ module.exports = {
       "expo-router",
       "expo-secure-store",
       "expo-localization",
+      "expo-notifications",
       [
         "expo-image-picker",
         {

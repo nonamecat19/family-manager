@@ -10,6 +10,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { strings } from "../../components/i18n/index.ts";
 import { offlineCopy, useCaptureQueue } from "../../components/offline/index.ts";
 import { Avatar, Divider, Icon, PrimaryButton, Screen, nocturne } from "../../components/nocturne/index.ts";
+import { NotificationsSection } from "../../components/settings/NotificationsSection.tsx";
 
 const SIGN_OUT_FLUSH_MS = 4_000;
 
@@ -175,6 +176,29 @@ export default function SettingsScreen() {
             <Icon name="caret-left" size={14} color={nocturne.neutral[600]} />
           </View>
         </Pressable>
+
+        <Divider />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={strings.settings.approveDevice}
+          onPress={() => router.push("/(app)/approve-device")}
+          className="flex-row items-center gap-[10px]"
+        >
+          <Text className="flex-1 font-sans text-[15px] text-fg">
+            {strings.settings.approveDevice}
+          </Text>
+          <View style={{ transform: [{ rotate: "180deg" }] }}>
+            <Icon name="caret-left" size={14} color={nocturne.neutral[600]} />
+          </View>
+        </Pressable>
+
+        <Divider />
+
+        <View className="gap-[10px]">
+          <Section label={strings.settings.notifications} />
+          <NotificationsSection />
+        </View>
 
         <Divider />
 

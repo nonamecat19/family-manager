@@ -6,7 +6,7 @@ import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
 import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import { ApiProvider, createQueryClient, isRefreshRejection } from "@fm/api";
+import { ApiProvider, createQueryClient, isRefreshRejection, usePushRegistration } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
 import { AuthService } from "@fm/sdk/auth/v1/auth_pb";
 import { ErrorBoundary, ThemeProvider } from "@fm/ui";
@@ -137,9 +137,15 @@ function ApiGate() {
       getAccessToken={getToken}
       queryClient={queryClient}
     >
+      <PushRegistration />
       <Slot />
     </ApiProvider>
   );
+}
+
+function PushRegistration() {
+  usePushRegistration({ app: "notes" });
+  return null;
 }
 
 function Booting({ label }: { label: string }) {
