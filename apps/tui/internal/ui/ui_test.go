@@ -49,7 +49,11 @@ func (f *fakeNotes) GetNote(_ context.Context, req *connect.Request[notesv1.GetN
 func step(t *testing.T, m tea.Model, msg tea.Msg) (Model, tea.Cmd) {
 	t.Helper()
 	next, cmd := m.Update(msg)
-	return next.(Model), cmd
+	model, ok := next.(Model)
+	if !ok {
+		t.Fatalf("Update returned %T, want Model", next)
+	}
+	return model, cmd
 }
 
 func TestLoggedOutShowsDeviceCode(t *testing.T) {

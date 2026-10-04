@@ -70,13 +70,13 @@ func (s *Store) Save(c Credentials) error {
 		return fmt.Errorf("credentials: create temp file: %w", err)
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName)
+	defer func() { _ = os.Remove(tmpName) }()
 	if err := tmp.Chmod(0o600); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return fmt.Errorf("credentials: chmod temp file: %w", err)
 	}
 	if _, err := tmp.Write(raw); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return fmt.Errorf("credentials: write temp file: %w", err)
 	}
 	if err := tmp.Close(); err != nil {
