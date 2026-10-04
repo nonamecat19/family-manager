@@ -3,7 +3,7 @@ module github.com/nnc/family-manager/libs/go/rpc
 go 1.25.0
 
 require (
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	github.com/prometheus/client_golang v1.24.1
 	google.golang.org/protobuf v1.36.12
 )
