@@ -10,7 +10,8 @@
     "./babel.config.cjs": "./babel.config.cjs",
     "./metro.config.cjs": "./metro.config.cjs",
     "./tailwind.preset.cjs": "./tailwind.preset.cjs",
-    "./nocturne.preset.cjs": "./nocturne.preset.cjs"
+    "./nocturne.preset.cjs": "./nocturne.preset.cjs",
+    "./organic.preset.cjs": "./organic.preset.cjs"
   },
   "scripts": {
     "lint": "echo \"config package: nothing to lint\"",

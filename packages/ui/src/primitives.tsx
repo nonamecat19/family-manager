@@ -1,10 +1,43 @@
 import { ActivityIndicator, Pressable, Text, TextInput, View, type TextInputProps } from "react-native";
 import type { ReactNode } from "react";
+import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
 import type { Theme } from "@fm/theme";
 
+import type { Tint } from "./tokens.ts";
 import { useTheme } from "./theme.tsx";
 
+export function Kicker({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const t = useTheme();
+  return (
+    <Text
+      className={`text-[12px] uppercase tracking-[1.2px] text-neutral-600 ${className}`}
+      style={{ fontFamily: t.fonts?.bold }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+export function Display({
+  children,
+  size = 28,
+  className = "",
+}: {
+  children: ReactNode;
+  size?: number;
+  className?: string;
+}) {
+  const t = useTheme();
+  return (
+    <Text
+      className={`text-fg ${className}`}
+      style={{ fontFamily: t.fonts?.display, fontSize: size, lineHeight: size * 1.12 }}
+    >
+      {children}
+    </Text>
+  );
+}
 
 export function Card({ children }: { children: ReactNode }) {
   const t = useTheme();
@@ -68,23 +101,40 @@ export function Row({ children }: { children: ReactNode }) {
   );
 }
 
-export function Avatar({ name, index = 0 }: { name: string; index?: number }) {
+export interface AvatarProps {
+  name?: string;
+  index?: number;
+  initial?: string;
+  tint?: Tint;
+  size?: number;
+}
+
+export function Avatar({ name, index = 0, initial, tint: explicitTint, size }: AvatarProps) {
   const t = useTheme();
-  const tint = avatarTint(t, name, index);
-  const first = name.trim()[0];
+  const tint = explicitTint ?? avatarTint(t, name ?? "", index);
+  const decorative = initial !== undefined || explicitTint !== undefined;
+  const text = initial ?? (name ? (name.trim()[0]?.toUpperCase() ?? "?") : "?");
+  const box = size ?? (decorative ? 52 : 34);
   return (
     <View
       style={{
-        width: 34,
-        height: 34,
-        borderRadius: 17,
+        width: box,
+        height: box,
+        borderRadius: box / 2,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: tint.bg,
       }}
     >
-      <Text style={{ color: tint.fg, fontSize: 13, fontWeight: "600", fontFamily: t.fonts?.semibold }}>
-        {first ? first.toUpperCase() : "?"}
+      <Text
+        style={{
+          color: tint.fg,
+          fontSize: decorative ? box * 0.35 : 13,
+          fontWeight: decorative ? undefined : "600",
+          fontFamily: decorative ? t.fonts?.display : t.fonts?.semibold,
+        }}
+      >
+        {text}
       </Text>
     </View>
   );
@@ -196,12 +246,15 @@ export function InlineAction({
 export interface FieldProps extends Omit<TextInputProps, "style"> {
   label?: string;
   error?: string | null;
+  className?: string;
 }
 
-export function Field({ label, error, ...input }: FieldProps) {
+export function Field({ label, error, className = "", ...input }: FieldProps) {
   const t = useTheme();
+  const invalid = error != null && error !== "";
+  const multiline = input.multiline === true;
   return (
-    <View style={{ gap: 6 }}>
+    <View className={className} style={{ gap: 6 }}>
       {label ? (
         <Text style={{ color: t.muted, fontSize: 12, fontFamily: t.fonts?.medium, ...labelCase(t, 0.6) }}>
           {label}
@@ -214,7 +267,10 @@ export function Field({ label, error, ...input }: FieldProps) {
           color: t.text,
           fontSize: 15,
           fontFamily: t.fonts?.body,
-          ...inputTreatment(t, error != null && error !== ""),
+          ...inputTreatment(t, invalid),
+          ...(multiline
+            ? { minHeight: 86, borderRadius: t.radius.lg, textAlignVertical: "top" as const }
+            : null),
         }}
       />
       {error ? <Text style={{ color: t.danger, fontSize: 12, fontFamily: t.fonts?.body }}>{error}</Text> : null}
@@ -269,10 +325,20 @@ export function Title({ children }: { children: ReactNode }) {
   return <Text style={{ color: t.text, fontSize: 15, fontWeight: "600", fontFamily: t.fonts?.semibold }}>{children}</Text>;
 }
 
-
-export function Screen({ children }: { children: ReactNode }) {
-  const t = useTheme();
-  return <View style={{ flex: 1, backgroundColor: t.bg }}>{children}</View>;
+export function Screen({
+  children,
+  edges,
+  className = "",
+}: {
+  children: ReactNode;
+  edges?: readonly Edge[];
+  className?: string;
+}) {
+  return (
+    <SafeAreaView className={`flex-1 bg-bg ${className}`} edges={edges}>
+      {children}
+    </SafeAreaView>
+  );
 }
 
 export function Heading({ children }: { children: ReactNode }) {

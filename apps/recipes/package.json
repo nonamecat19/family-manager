@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "build": "expo export --platform all",
-    "lint": "eslint app",
+    "lint": "eslint app components",
     "typecheck": "tsc --noEmit",
     "test": "echo \"no unit tests in the app shell; logic lives in @fm/api\""
   },

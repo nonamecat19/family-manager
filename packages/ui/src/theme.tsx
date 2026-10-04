@@ -20,7 +20,7 @@ export function useTheme(): Theme {
   if (!theme) {
     throw new Error(
       "useTheme: no <ThemeProvider> above this component. Wrap the app's root layout in one, " +
-        'e.g. <ThemeProvider theme="nocturne">.',
+        'e.g. <ThemeProvider theme={appTheme}>.',
     );
   }
   return theme;
