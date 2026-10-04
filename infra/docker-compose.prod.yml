@@ -59,6 +59,7 @@ services:
       FINANCE_HOST: ${FINANCE_HOST}
       RECIPES_HOST: ${RECIPES_HOST}
       NOTES_HOST: ${NOTES_HOST}
+      NOTIFICATIONS_HOST: ${NOTIFICATIONS_HOST}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data
@@ -73,6 +74,8 @@ services:
       recipes:
         condition: service_started
       notes:
+        condition: service_started
+      notifications:
         condition: service_started
     restart: unless-stopped
     mem_limit: 96m
@@ -169,6 +172,38 @@ services:
     mem_limit: 160m
     logging: *bounded-logs
 
+  notifications:
+    image: ghcr.io/nonamecat19/family-manager/notifications:${IMAGE_TAG:-latest}
+    environment:
+      NOTIFICATIONS_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/notifications?sslmode=disable
+      NOTIFICATIONS_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      NOTIFICATIONS_NATS_URL: nats://nats:4222
+      NOTIFICATIONS_FAMILY_ADDR: http://family:9090
+      NOTIFICATIONS_HTTP_PORT: "8080"
+      NOTIFICATIONS_EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      NOTIFICATIONS_LOG_JSON: "true"
+      NOTIFICATIONS_LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOMEMLIMIT: 140MiB
+      GOGC: "50"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      family:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+    mem_limit: 160m
+    logging: *bounded-logs
+
   recipes:
     image: ghcr.io/nonamecat19/family-manager/recipes:${IMAGE_TAG:-latest}
     environment:
@@ -211,6 +246,13 @@ services:
       NOTES_DB_USER: ${POSTGRES_USER}
       NOTES_DB_PASSWORD: ${POSTGRES_PASSWORD}
       NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
+      NOTES_STORAGE_PROVIDER: r2
+      NOTES_STORAGE_ENDPOINT: ${R2_ENDPOINT}
+      NOTES_STORAGE_ACCESS_KEY: ${R2_ACCESS_KEY_ID}
+      NOTES_STORAGE_SECRET_KEY: ${R2_SECRET_ACCESS_KEY}
+      NOTES_STORAGE_USE_SSL: "true"
+      NOTES_STORAGE_BUCKET: ${R2_NOTES_BUCKET:-notes}
+      NOTES_STORAGE_PUBLIC_URL: ${R2_NOTES_PUBLIC_URL}
       # The JVM sizes its heap against the cgroup, but MaxRAMPercentage counts only the heap:
       # metaspace, code cache, thread stacks and direct buffers live outside it. 55% of 448m
       # leaves ~200m of native headroom, which is what keeps this from being OOM-killed as the

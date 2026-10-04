@@ -153,6 +153,7 @@ func publicMux(h *handler.Handler, verifier *fmauth.Verifier, pool database.Ping
 	)
 	mux.Handle(path, svc)
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
+	mux.Handle("GET "+rpc.MetricsPath, rpc.MetricsHandler())
 	return mux
 }
 
