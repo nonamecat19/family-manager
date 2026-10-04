@@ -247,13 +247,9 @@ services:
       NOTES_DB_USER: ${POSTGRES_USER}
       NOTES_DB_PASSWORD: ${POSTGRES_PASSWORD}
       NOTES_JWKS_URL: ${JWKS_URL:-http://auth:8080/.well-known/jwks.json}
-      NOTES_STORAGE_PROVIDER: r2
-      NOTES_STORAGE_ENDPOINT: ${R2_ENDPOINT}
-      NOTES_STORAGE_ACCESS_KEY: ${R2_ACCESS_KEY_ID}
-      NOTES_STORAGE_SECRET_KEY: ${R2_SECRET_ACCESS_KEY}
-      NOTES_STORAGE_USE_SSL: "true"
-      NOTES_STORAGE_BUCKET: ${R2_NOTES_BUCKET:-notes}
-      NOTES_STORAGE_PUBLIC_URL: ${R2_NOTES_PUBLIC_URL}
+      # No NOTES_STORAGE_* on purpose: a public bucket would make an image in a private note
+      # fetchable by anyone with the URL, and un-sharing could not take it back. Reads must be
+      # presigned first (docs/architecture.md); until then the store bean is not created.
       # The JVM sizes its heap against the cgroup, but MaxRAMPercentage counts only the heap:
       # metaspace, code cache, thread stacks and direct buffers live outside it. 55% of 448m
       # leaves ~200m of native headroom, which is what keeps this from being OOM-killed as the
