@@ -33,6 +33,7 @@ const (
 	userCodeAttempts    = 3
 	telegramLoginPrefix = "login_"
 	pendingWarnEvery    = 60
+	crowdedNetwork      = 10
 )
 
 var deviceLoginKinds = map[authv1.DeviceLoginKind]string{
@@ -52,12 +53,17 @@ func (h *Handler) StartDeviceLogin(
 		return nil, invalid("unsupported kind")
 	}
 
-	client := clientIP(req.Header(), req.Peer().Addr, h.trustedProxies)
-	if wait := h.starts.Take(startLimitKey(client)); wait > 0 {
+	client := clientIP(req.Header(), req.Peer().Addr, h.trustsPeer)
+	network := networkKey(client)
+	wait := h.starts.Take(startLimitKey(client))
+	if wait == 0 {
+		wait = h.networks.Take(network)
+	}
+	if wait > 0 {
 		return nil, connect.NewError(connect.CodeResourceExhausted,
 			fmt.Errorf("too many sign-in requests; try again in %s", wait.Round(time.Second)))
 	}
-	if err := h.checkPendingCeiling(ctx); err != nil {
+	if err := h.checkPendingPressure(ctx, network); err != nil {
 		return nil, err
 	}
 
@@ -204,12 +210,24 @@ func (h *Handler) ApproveDeviceLogin(
 		return nil, errInvalidUserCode()
 	}
 
-	row, err := h.q.ApproveLoginGrant(ctx, db.ApproveLoginGrantParams{
-		UserID:          userID,
-		DecidedAt:       pgconv.TimestampFrom(h.now()),
-		ApproverChainID: approverChain,
-		UserCodeHash:    hashToken(code),
+	var row db.LoginGrant
+	err = h.tx.InTx(ctx, func(q db.Querier) error {
+		if err := requireLiveChain(ctx, q, approverChain); err != nil {
+			return err
+		}
+		var err error
+		row, err = q.ApproveLoginGrant(ctx, db.ApproveLoginGrantParams{
+			UserID:          userID,
+			DecidedAt:       pgconv.TimestampFrom(h.now()),
+			ApproverChainID: approverChain,
+			UserCodeHash:    hashToken(code),
+		})
+		return err
 	})
+	var cerr *connect.Error
+	if errors.As(err, &cerr) {
+		return nil, err
+	}
 	if errors.Is(err, pgx.ErrNoRows) {
 		row, err = h.q.GetLoginGrantByUserCode(ctx, hashToken(code))
 		if errors.Is(err, pgx.ErrNoRows) || err == nil && !(row.ApprovedAt.Valid && row.UserID == userID) {
@@ -341,7 +359,7 @@ func (h *Handler) callerChain(ctx context.Context, header http.Header) (pgtype.U
 	return chainID, nil
 }
 
-func (h *Handler) checkPendingCeiling(ctx context.Context) error {
+func (h *Handler) checkPendingPressure(ctx context.Context, network string) error {
 	if h.maxPending <= 0 {
 		return nil
 	}
@@ -349,41 +367,36 @@ func (h *Handler) checkPendingCeiling(ctx context.Context) error {
 	if err != nil {
 		return h.internal(ctx, err, "count pending login grants")
 	}
-	if pending*5 >= h.maxPending*4 {
-		now := h.now()
-		last := h.pendingWarnedAt.Load()
-		if now.Unix()-last >= pendingWarnEvery && h.pendingWarnedAt.CompareAndSwap(last, now.Unix()) {
-			h.log.WarnContext(ctx, "pending login grants near the ceiling",
-				slog.Int64("pending", pending), slog.Int64("ceiling", h.maxPending))
-		}
+	if pending*5 < h.maxPending*4 {
+		return nil
 	}
-	if pending >= h.maxPending {
+	now := h.now()
+	last := h.pendingWarnedAt.Load()
+	if now.Unix()-last >= pendingWarnEvery && h.pendingWarnedAt.CompareAndSwap(last, now.Unix()) {
+		h.log.WarnContext(ctx, "pending login grants near the ceiling",
+			slog.Int64("pending", pending), slog.Int64("ceiling", h.maxPending))
+	}
+	if h.networks.Count(network) > crowdedNetwork {
 		return connect.NewError(connect.CodeResourceExhausted,
-			errors.New("too many sign-ins in progress; try again shortly"))
+			errors.New("too many sign-ins in progress from your network; try again shortly"))
 	}
 	return nil
 }
 
-func clientIP(header http.Header, peer string, trusted []netip.Prefix) netip.Addr {
-	current := parseAddr(peer)
-	if !current.IsValid() || !isTrusted(current, trusted) {
-		return current
+func clientIP(header http.Header, peer string, trustsPeer func(netip.Addr) bool) netip.Addr {
+	addr := parseAddr(peer)
+	if !addr.IsValid() || trustsPeer == nil || !trustsPeer(addr) {
+		return addr
 	}
-	var hops []string
-	for _, v := range header.Values("X-Forwarded-For") {
-		hops = append(hops, strings.Split(v, ",")...)
+	forwarded := header.Values("X-Forwarded-For")
+	if len(forwarded) == 0 {
+		return addr
 	}
-	for i := len(hops) - 1; i >= 0; i-- {
-		hop := parseAddr(strings.TrimSpace(hops[i]))
-		if !hop.IsValid() {
-			return current
-		}
-		current = hop
-		if !isTrusted(hop, trusted) {
-			return hop
-		}
+	hops := strings.Split(forwarded[len(forwarded)-1], ",")
+	if hop := parseAddr(strings.TrimSpace(hops[len(hops)-1])); hop.IsValid() {
+		return hop
 	}
-	return current
+	return addr
 }
 
 func parseAddr(s string) netip.Addr {
@@ -396,23 +409,40 @@ func parseAddr(s string) netip.Addr {
 	return netip.Addr{}
 }
 
-func isTrusted(a netip.Addr, trusted []netip.Prefix) bool {
-	for _, p := range trusted {
-		if p.Contains(a) {
-			return true
-		}
+func TrustPeers(all bool, proxies []netip.Prefix) func(netip.Addr) bool {
+	if all {
+		return func(netip.Addr) bool { return true }
 	}
-	return false
+	if len(proxies) == 0 {
+		return nil
+	}
+	return func(a netip.Addr) bool {
+		for _, p := range proxies {
+			if p.Contains(a) {
+				return true
+			}
+		}
+		return false
+	}
 }
 
 func startLimitKey(a netip.Addr) string {
+	return prefixKey(a, 32, 64)
+}
+
+func networkKey(a netip.Addr) string {
+	return prefixKey(a, 24, 48)
+}
+
+func prefixKey(a netip.Addr, v4Bits, v6Bits int) string {
 	if !a.IsValid() {
 		return "unknown"
 	}
+	bits := v6Bits
 	if a.Is4() {
-		return a.String()
+		bits = v4Bits
 	}
-	return netip.PrefixFrom(a, 64).Masked().String()
+	return netip.PrefixFrom(a, bits).Masked().String()
 }
 
 func errInvalidUserCode() error {

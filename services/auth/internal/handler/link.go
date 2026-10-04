@@ -8,6 +8,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
@@ -40,17 +41,36 @@ func (h *Handler) CreateLinkToken(
 		return nil, invalid("malformed subject")
 	}
 
+	callerChain, err := h.callerChain(ctx, req.Header())
+	if err != nil {
+		return nil, err
+	}
+
 	secret, err := newRefreshToken()
 	if err != nil {
 		return nil, h.internal(ctx, err, "generate link token")
 	}
 
-	if _, err := h.q.CreateLinkToken(ctx, db.CreateLinkTokenParams{
-		UserID:    userID,
-		Provider:  provider,
-		TokenHash: hashToken(secret),
-		ExpiresAt: pgconv.TimestampFrom(h.now().Add(linkTokenTTL)),
-	}); err != nil {
+	err = h.tx.InTx(ctx, func(q db.Querier) error {
+		if err := requireLiveChain(ctx, q, callerChain); err != nil {
+			return err
+		}
+		if err := requireFirstPartyChain(ctx, q, callerChain); err != nil {
+			return err
+		}
+		_, err := q.CreateLinkToken(ctx, db.CreateLinkTokenParams{
+			UserID:    userID,
+			Provider:  provider,
+			TokenHash: hashToken(secret),
+			ExpiresAt: pgconv.TimestampFrom(h.now().Add(linkTokenTTL)),
+		})
+		return err
+	})
+	if err != nil {
+		var cerr *connect.Error
+		if errors.As(err, &cerr) {
+			return nil, err
+		}
 		return nil, h.internal(ctx, err, "store link token")
 	}
 
@@ -153,4 +173,30 @@ func linkProvider(raw string) (string, error) {
 
 func errInvalidLinkToken() error {
 	return connect.NewError(connect.CodeUnauthenticated, errors.New("invalid or expired link token"))
+}
+
+func requireLiveChain(ctx context.Context, q db.Querier, chainID pgtype.UUID) error {
+	revokedAt, err := q.LockChain(ctx, chainID)
+	if errors.Is(err, pgx.ErrNoRows) || err == nil && revokedAt.Valid {
+		return connect.NewError(connect.CodeUnauthenticated, errors.New("this session has been signed out"))
+	}
+	return err
+}
+
+func requireFirstPartyChain(ctx context.Context, q db.Querier, chainID pgtype.UUID) error {
+	root, err := q.GetChainRoot(ctx, chainID)
+	if err != nil {
+		return err
+	}
+	for _, c := range []pgtype.UUID{chainID, root} {
+		linked, err := q.IsIdentityChain(ctx, c)
+		if err != nil {
+			return err
+		}
+		if linked {
+			return connect.NewError(connect.CodePermissionDenied,
+				errors.New("connect accounts from a session you signed in to with your password"))
+		}
+	}
+	return nil
 }

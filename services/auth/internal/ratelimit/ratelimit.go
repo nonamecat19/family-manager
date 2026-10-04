@@ -28,7 +28,7 @@ func New(limit int, period time.Duration, now func() time.Time) *Limiter {
 }
 
 func (l *Limiter) Take(key string) time.Duration {
-	if l == nil || l.limit <= 0 || l.period <= 0 {
+	if l == nil || l.period <= 0 {
 		return 0
 	}
 	l.mu.Lock()
@@ -42,7 +42,7 @@ func (l *Limiter) Take(key string) time.Duration {
 		w = &window{start: now}
 		l.windows[key] = w
 	}
-	if w.count >= l.limit {
+	if l.limit > 0 && w.count >= l.limit {
 		return w.start.Add(l.period).Sub(now)
 	}
 	w.count++
@@ -59,4 +59,18 @@ func (l *Limiter) sweepLocked(now time.Time) {
 			delete(l.windows, k)
 		}
 	}
+}
+
+func (l *Limiter) Count(key string) int {
+	if l == nil || l.period <= 0 {
+		return 0
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	w, ok := l.windows[key]
+	if !ok || !l.now().Before(w.start.Add(l.period)) {
+		return 0
+	}
+	return w.count
 }

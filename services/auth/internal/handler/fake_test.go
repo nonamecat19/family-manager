@@ -544,3 +544,21 @@ func (s *fakeStore) DeleteExpiredLoginGrants(context.Context) (int64, error) {
 	}
 	return n, nil
 }
+
+func (s *fakeStore) GetChainRoot(_ context.Context, chainID pgtype.UUID) (pgtype.UUID, error) {
+	for _, g := range s.grants {
+		if g.ChainID.Valid && g.ChainID == chainID && g.RootChainID.Valid {
+			return g.RootChainID, nil
+		}
+	}
+	return chainID, nil
+}
+
+func (s *fakeStore) IsIdentityChain(_ context.Context, chainID pgtype.UUID) (bool, error) {
+	for _, i := range s.idents {
+		if i.ChainID == chainID {
+			return true, nil
+		}
+	}
+	return false, nil
+}

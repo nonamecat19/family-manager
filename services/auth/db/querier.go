@@ -25,6 +25,7 @@ type Querier interface {
 	DeleteOrphanChains(ctx context.Context) (int64, error)
 	DenyLoginGrant(ctx context.Context, arg DenyLoginGrantParams) (int64, error)
 	EnsureChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
+	GetChainRoot(ctx context.Context, chainID pgtype.UUID) (pgtype.UUID, error)
 	GetIdentity(ctx context.Context, arg GetIdentityParams) (Identity, error)
 	GetLinkToken(ctx context.Context, tokenHash string) (LinkToken, error)
 	GetLoginGrantByDeviceCode(ctx context.Context, deviceCodeHash string) (LoginGrant, error)
@@ -32,6 +33,7 @@ type Querier interface {
 	GetRefreshToken(ctx context.Context, tokenHash string) (RefreshToken, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
+	IsIdentityChain(ctx context.Context, chainID pgtype.UUID) (bool, error)
 	ListIdentitiesForUser(ctx context.Context, userID pgtype.UUID) ([]Identity, error)
 	LockChain(ctx context.Context, id pgtype.UUID) (pgtype.Timestamptz, error)
 	LockIdentityKey(ctx context.Context, key string) error

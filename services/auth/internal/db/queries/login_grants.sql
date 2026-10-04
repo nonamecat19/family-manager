@@ -95,3 +95,9 @@ WHERE g.expires_at < NOW() - interval '1 hour'
     SELECT 1 FROM chains c
     WHERE c.id = g.chain_id AND c.revoked_at IS NULL
   );
+
+-- name: GetChainRoot :one
+SELECT COALESCE(
+  (SELECT g.root_chain_id FROM login_grants g WHERE g.chain_id = sqlc.arg(chain_id)::uuid),
+  sqlc.arg(chain_id)::uuid
+)::uuid AS root_chain_id;

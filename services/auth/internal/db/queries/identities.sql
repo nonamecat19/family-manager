@@ -23,3 +23,6 @@ RETURNING *;
 
 -- name: LockIdentityKey :exec
 SELECT pg_advisory_xact_lock(hashtextextended(sqlc.arg(key)::text, 0));
+
+-- name: IsIdentityChain :one
+SELECT EXISTS (SELECT 1 FROM identities WHERE chain_id = $1);
