@@ -18,6 +18,8 @@ type ProcessedEvent struct {
 	EventID     string
 	Subject     string
 	ProcessedAt pgtype.Timestamptz
+	Status      string
+	ClaimedAt   pgtype.Timestamptz
 }
 
 type PushTicket struct {

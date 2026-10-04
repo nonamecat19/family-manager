@@ -74,10 +74,13 @@ func (f *fixture) addToken(user, familyID, app, device string) string {
 	if familyID != "" {
 		fam = pgconv.MustUUID(familyID)
 	}
-	_ = f.store.UpsertPushToken(context.Background(), db.UpsertPushTokenParams{
+	now := f.now
+	f.now = now.Add(-time.Minute)
+	_, _ = f.store.UpsertPushToken(context.Background(), db.UpsertPushTokenParams{
 		Token: tok, UserID: pgconv.MustUUID(user), FamilyID: fam,
 		Platform: "android", App: app, DeviceID: device,
 	})
+	f.now = now
 	return tok
 }
 
@@ -234,8 +237,8 @@ func TestFamilyServiceOutageIsRetried(t *testing.T) {
 	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err == nil {
 		t.Fatal("an unresolvable audience was acked")
 	}
-	if len(f.store.Processed) != 0 {
-		t.Fatal("a failed event was marked processed")
+	if len(f.store.Events) != 0 {
+		t.Fatal("a failed event kept its claim")
 	}
 
 	f.families.fail = nil
@@ -255,8 +258,69 @@ func TestSendFailureIsRetriedNotAcked(t *testing.T) {
 	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err == nil {
 		t.Fatal("a failed send was acked")
 	}
-	if len(f.store.Processed) != 0 {
-		t.Fatal("a failed send was marked processed")
+	if len(f.store.Events) != 0 {
+		t.Fatal("a failed send kept its claim")
+	}
+
+	f.sender.fail = nil
+	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if len(f.sender.sent()) != 1 {
+		t.Fatalf("sent %d after retry, want 1", len(f.sender.sent()))
+	}
+}
+
+func TestAnEventInFlightElsewhereIsNotSentTwice(t *testing.T) {
+	f := newFixture()
+	f.member(alice, family, "finance")
+	payload, _ := proto.Marshal(exceeded())
+	id := EventID(events.SubjectFinanceBudgetExceeded, payload)
+	_, _ = f.store.ClaimEvent(context.Background(), db.ClaimEventParams{
+		EventID: id, Subject: string(events.SubjectFinanceBudgetExceeded),
+	})
+
+	err := f.n.Handle(context.Background(), events.SubjectFinanceBudgetExceeded, payload)
+	if !errors.Is(err, errInFlight) {
+		t.Fatalf("err = %v, want errInFlight so the bus redelivers later", err)
+	}
+	if len(f.sender.sent()) != 0 {
+		t.Fatal("sent while another delivery held the claim")
+	}
+
+	f.now = f.now.Add(claimTimeout + time.Second)
+	if err := f.n.Handle(context.Background(), events.SubjectFinanceBudgetExceeded, payload); err != nil {
+		t.Fatalf("Handle after the claim went stale: %v", err)
+	}
+	if len(f.sender.sent()) != 1 {
+		t.Fatalf("sent %d after taking over a stale claim, want 1", len(f.sender.sent()))
+	}
+	if !f.store.Processed(id) {
+		t.Error("the event was not marked done")
+	}
+}
+
+func TestAPartlyAcceptedDeliveryIsNotRetried(t *testing.T) {
+	f := newFixture()
+	f.member(alice, family)
+	for i := range 150 {
+		f.addToken(alice, family, "finance", fmt.Sprintf("device-%03d", i))
+	}
+	f.sender.failFromBatch = 2
+
+	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err != nil {
+		t.Fatalf("Handle: %v, want an ack once expo accepted a batch", err)
+	}
+	if n := len(f.sender.sent()); n != expo.MaxBatch {
+		t.Fatalf("sent %d, want the first batch of %d", n, expo.MaxBatch)
+	}
+
+	f.sender.failFromBatch = 0
+	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err != nil {
+		t.Fatalf("redelivery: %v", err)
+	}
+	if n := len(f.sender.sent()); n != expo.MaxBatch {
+		t.Fatalf("redelivery re-sent: %d total, want %d", n, expo.MaxBatch)
 	}
 }
 
@@ -355,6 +419,37 @@ func TestReceiptsDropUnregisteredDevices(t *testing.T) {
 	}
 }
 
+func TestAReceiptDoesNotDeleteATokenRegisteredAgainSinceTheSend(t *testing.T) {
+	f := newFixture()
+	f.member(bob, family, "finance")
+	if err := f.handle(t, events.SubjectFinanceBudgetExceeded, exceeded()); err != nil {
+		t.Fatalf("Handle: %v", err)
+	}
+	var ticket string
+	for id := range f.store.Tickets {
+		ticket = id
+	}
+
+	f.now = f.now.Add(5 * time.Minute)
+	tok := token(bob, "finance", "phone")
+	_, _ = f.store.UpsertPushToken(context.Background(), db.UpsertPushTokenParams{
+		Token: tok, UserID: pgconv.MustUUID(bob), FamilyID: pgconv.MustUUID(family),
+		Platform: "android", App: "finance", DeviceID: "phone",
+	})
+
+	f.now = f.now.Add(20 * time.Minute)
+	f.sender.receipts[ticket] = expo.Receipt{Status: expo.StatusError, Error: expo.DeviceNotRegistered}
+	if err := f.n.CheckReceipts(context.Background()); err != nil {
+		t.Fatalf("CheckReceipts: %v", err)
+	}
+	if _, ok := f.store.Tokens[tok]; !ok {
+		t.Fatal("a token registered after the send was deleted by its stale receipt")
+	}
+	if _, ok := f.store.Tickets[ticket]; ok {
+		t.Error("the checked ticket was kept")
+	}
+}
+
 func TestMemberJoinedTellsTheOthersOncePerDevice(t *testing.T) {
 	f := newFixture()
 	f.member(alice, family, "recipes", "finance", "notes")
@@ -422,45 +517,55 @@ func TestBadPayloadIsAckedAndSkipped(t *testing.T) {
 	if err := f.n.Handle(context.Background(), events.SubjectFinanceBudgetExceeded, []byte{0xff, 0xff}); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
-	if len(f.store.Processed) != 1 {
+	if len(f.store.Events) != 1 {
 		t.Error("a poison message was not recorded as processed")
 	}
 }
 
 func TestPruneDropsOldProcessedEvents(t *testing.T) {
 	f := newFixture()
-	_ = f.store.MarkEventProcessed(context.Background(), db.MarkEventProcessedParams{EventID: "old", Subject: "x.y.z"})
+	done := func(id string) {
+		_, _ = f.store.ClaimEvent(context.Background(), db.ClaimEventParams{EventID: id, Subject: "x.y.z"})
+		_ = f.store.CompleteEvent(context.Background(), id)
+	}
+	done("old")
 	f.now = f.now.Add(61 * 24 * time.Hour)
-	_ = f.store.MarkEventProcessed(context.Background(), db.MarkEventProcessedParams{EventID: "new", Subject: "x.y.z"})
+	done("new")
 
 	if err := f.n.Prune(context.Background()); err != nil {
 		t.Fatalf("Prune: %v", err)
 	}
-	if _, ok := f.store.Processed["old"]; ok {
+	if _, ok := f.store.Events["old"]; ok {
 		t.Error("an event past retention was kept")
 	}
-	if _, ok := f.store.Processed["new"]; !ok {
+	if !f.store.Processed("new") {
 		t.Error("a recent event was pruned")
 	}
 }
 
 type fakeBus struct {
-	durables map[events.Subject]string
-	failOn   events.Subject
-	stopped  int
+	durables  map[events.Subject]string
+	heartbeat map[events.Subject]time.Duration
+	failOn    events.Subject
+	stopped   int
 }
 
-func (b *fakeBus) Subscribe(_ context.Context, subject events.Subject, durable string, _ events.Handler) (func(), error) {
+func (b *fakeBus) SubscribeWith(
+	_ context.Context, subject events.Subject, durable string, _ events.Handler, opts events.SubscribeOptions,
+) (func(), error) {
 	if subject == b.failOn {
 		return nil, errors.New("no stream")
 	}
 	b.durables[subject] = durable
+	if b.heartbeat != nil {
+		b.heartbeat[subject] = opts.Heartbeat
+	}
 	return func() { b.stopped++ }, nil
 }
 
 func TestSubscribeBindsOneDurablePerSubject(t *testing.T) {
 	f := newFixture()
-	bus := &fakeBus{durables: map[events.Subject]string{}}
+	bus := &fakeBus{durables: map[events.Subject]string{}, heartbeat: map[events.Subject]time.Duration{}}
 	stop, err := f.n.Subscribe(context.Background(), bus)
 	if err != nil {
 		t.Fatalf("Subscribe: %v", err)
@@ -470,6 +575,11 @@ func TestSubscribeBindsOneDurablePerSubject(t *testing.T) {
 	}
 	if got := bus.durables[events.SubjectFinanceBudgetExceeded]; got != "notifications-finance-budget-exceeded" {
 		t.Errorf("durable = %q", got)
+	}
+	for subject, every := range bus.heartbeat {
+		if every <= 0 || every >= handleTimeout {
+			t.Errorf("%s heartbeat = %v, want a positive interval under the handler timeout", subject, every)
+		}
 	}
 	stop()
 	if bus.stopped != len(Subjects) {

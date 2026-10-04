@@ -274,3 +274,72 @@ test("end does not refresh first — the revoked token is the one the device hel
   assert.equal(refreshes, 0, "sign-out must not trigger a rotation");
   assert.deepEqual(revoked, ["r"]);
 });
+
+test("before-end hooks run while the session is still valid, before the revoke", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  const order: string[] = [];
+  mgr.onBeforeEnd(async () => {
+    assert.equal(mgr.status(), "authenticated");
+    assert.equal(mgr.current()?.accessToken, "a");
+    order.push("hook");
+  });
+  await mgr.end(async () => {
+    order.push("revoke");
+  });
+
+  assert.deepEqual(order, ["hook", "revoke"]);
+  assert.equal(mgr.status(), "anonymous");
+});
+
+test("a failing before-end hook never blocks sign-out", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  mgr.onBeforeEnd(() => {
+    throw new Error("sync failure");
+  });
+  mgr.onBeforeEnd(async () => {
+    throw new Error("network down");
+  });
+  await mgr.end();
+
+  assert.equal(mgr.status(), "anonymous");
+  assert.equal(store.value, null);
+});
+
+test("a hung before-end hook is abandoned after the timeout", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  mgr.onBeforeEnd(() => new Promise<void>(() => {}));
+  const started = Date.now();
+  await mgr.end(undefined, 20);
+
+  assert.ok(Date.now() - started < 1_000, "sign-out waited on a hook that never settles");
+  assert.equal(mgr.status(), "anonymous");
+});
+
+test("an unsubscribed hook does not run, and nothing runs for an anonymous session", async () => {
+  const store = memoryStore(fresh);
+  const mgr = new SessionManager(store, async () => fresh, () => NOW);
+  await mgr.load();
+
+  let calls = 0;
+  const off = mgr.onBeforeEnd(() => {
+    calls++;
+  });
+  off();
+  await mgr.end();
+  assert.equal(calls, 0);
+
+  mgr.onBeforeEnd(() => {
+    calls++;
+  });
+  await mgr.end();
+  assert.equal(calls, 0, "no session, nothing to tear down");
+});

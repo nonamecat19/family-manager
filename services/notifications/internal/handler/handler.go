@@ -82,15 +82,20 @@ func (h *Handler) RegisterPushToken(
 		}
 	}
 
-	if err := h.q.UpsertPushToken(ctx, db.UpsertPushTokenParams{
+	rows, err := h.q.UpsertPushToken(ctx, db.UpsertPushTokenParams{
 		Token:    token,
 		UserID:   userID,
 		FamilyID: familyID,
 		Platform: platform,
 		App:      app,
 		DeviceID: deviceID,
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, rpc.Internal(ctx, h.log, err, "upsert push token")
+	}
+	if rows == 0 {
+		return nil, connect.NewError(connect.CodePermissionDenied,
+			errors.New("this push token is registered to another account on a different device"))
 	}
 	return connect.NewResponse(&notificationsv1.RegisterPushTokenResponse{}), nil
 }

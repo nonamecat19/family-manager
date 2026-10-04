@@ -9,7 +9,13 @@ import {
 } from "react";
 
 import { decodeAccessClaims, type AccessClaims } from "./claims.ts";
-import { SessionManager, type SessionStatus, type TokenStore, type Tokens } from "./session.ts";
+import {
+  SessionManager,
+  type BeforeEndHook,
+  type SessionStatus,
+  type TokenStore,
+  type Tokens,
+} from "./session.ts";
 
 export interface AuthContextValue {
   status: SessionStatus;
@@ -18,6 +24,7 @@ export interface AuthContextValue {
   signOut(): Promise<void>;
   claims: AccessClaims | null;
   refreshNow(): Promise<void>;
+  registerBeforeSignOut(hook: BeforeEndHook): () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -83,9 +90,14 @@ export function AuthProvider({
     sync();
   }, [manager, sync]);
 
+  const registerBeforeSignOut = useCallback(
+    (hook: BeforeEndHook) => manager.onBeforeEnd(hook),
+    [manager],
+  );
+
   const value = useMemo<AuthContextValue>(
-    () => ({ status, claims, getAccessToken, signIn, signOut, refreshNow }),
-    [status, claims, getAccessToken, signIn, signOut, refreshNow],
+    () => ({ status, claims, getAccessToken, signIn, signOut, refreshNow, registerBeforeSignOut }),
+    [status, claims, getAccessToken, signIn, signOut, refreshNow, registerBeforeSignOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

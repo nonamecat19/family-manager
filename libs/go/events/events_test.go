@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -53,8 +54,9 @@ type fakeMsg struct {
 	delivered uint64
 	noMeta    bool
 
-	acked     bool
-	nakDelays []time.Duration
+	acked      bool
+	nakDelays  []time.Duration
+	inProgress atomic.Int32
 }
 
 func (m *fakeMsg) Subject() string { return m.subject }
@@ -67,6 +69,8 @@ func (m *fakeMsg) Headers() nats.Header {
 	return m.headers
 }
 func (m *fakeMsg) Ack() error { m.acked = true; return nil }
+
+func (m *fakeMsg) InProgress() error { m.inProgress.Add(1); return nil }
 
 func (m *fakeMsg) NakWithDelay(d time.Duration) error {
 	m.nakDelays = append(m.nakDelays, d)
@@ -173,5 +177,37 @@ func TestDispatchWithoutARequestID(t *testing.T) {
 
 	if seen != "" {
 		t.Fatalf("request id = %q, want empty", seen)
+	}
+}
+
+func TestDispatchWithoutHeartbeatNeverExtendsTheAckWait(t *testing.T) {
+	m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: 1}
+	dispatch(context.Background(), func(context.Context, Subject, []byte) error {
+		time.Sleep(20 * time.Millisecond)
+		return nil
+	}, m)
+
+	if got := m.inProgress.Load(); got != 0 {
+		t.Fatalf("in-progress signals = %d, want 0 by default", got)
+	}
+}
+
+func TestDispatchHeartbeatKeepsALongHandlerInProgress(t *testing.T) {
+	m := &fakeMsg{subject: string(SubjectFamilyMemberJoined), delivered: 1}
+	dispatchWith(context.Background(), func(context.Context, Subject, []byte) error {
+		time.Sleep(60 * time.Millisecond)
+		return nil
+	}, m, SubscribeOptions{Heartbeat: 10 * time.Millisecond})
+
+	if got := m.inProgress.Load(); got < 2 {
+		t.Fatalf("in-progress signals = %d, want several while the handler ran", got)
+	}
+	if !m.acked {
+		t.Fatal("a handled message was not acked")
+	}
+	after := m.inProgress.Load()
+	time.Sleep(30 * time.Millisecond)
+	if m.inProgress.Load() != after {
+		t.Fatal("heartbeat kept running after the handler returned")
 	}
 }

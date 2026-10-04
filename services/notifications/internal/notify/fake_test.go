@@ -10,13 +10,14 @@ import (
 )
 
 type fakeSender struct {
-	mu       sync.Mutex
-	batches  [][]expo.Message
-	dead     map[string]bool
-	fail     error
-	receipts map[string]expo.Receipt
-	asked    [][]string
-	seq      int
+	mu            sync.Mutex
+	batches       [][]expo.Message
+	dead          map[string]bool
+	fail          error
+	failFromBatch int
+	receipts      map[string]expo.Receipt
+	asked         [][]string
+	seq           int
 }
 
 func newFakeSender() *fakeSender {
@@ -28,6 +29,9 @@ func (s *fakeSender) Send(_ context.Context, msgs []expo.Message) ([]expo.Ticket
 	defer s.mu.Unlock()
 	if s.fail != nil {
 		return nil, s.fail
+	}
+	if s.failFromBatch > 0 && len(s.batches)+1 >= s.failFromBatch {
+		return nil, errors.New("expo 503")
 	}
 	if len(msgs) > expo.MaxBatch {
 		return nil, errors.New("batch over the expo limit")

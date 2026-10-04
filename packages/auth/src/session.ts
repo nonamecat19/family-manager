@@ -14,6 +14,10 @@ export type SessionStatus = "loading" | "authenticated" | "anonymous";
 
 export const REFRESH_MARGIN_MS = 60_000;
 
+export const BEFORE_END_TIMEOUT_MS = 3_000;
+
+export type BeforeEndHook = () => Promise<void> | void;
+
 export function isExpired(tokens: Tokens, now: number): boolean {
   return now >= tokens.expiresAt;
 }
@@ -41,6 +45,7 @@ export class SessionManager {
   private tokens: Tokens | null = null;
   private inFlight: Promise<Tokens | null> | null = null;
   private loaded = false;
+  private readonly beforeEnd = new Set<BeforeEndHook>();
 
   private readonly store: TokenStore;
   private readonly refreshFn: (refreshToken: string) => Promise<Tokens>;
@@ -89,8 +94,21 @@ export class SessionManager {
     await this.store.clear();
   }
 
-  async end(revoke?: (refreshToken: string) => Promise<void>): Promise<void> {
+  onBeforeEnd(hook: BeforeEndHook): () => void {
+    this.beforeEnd.add(hook);
+    return () => {
+      this.beforeEnd.delete(hook);
+    };
+  }
+
+  async end(
+    revoke?: (refreshToken: string) => Promise<void>,
+    hookTimeoutMs: number = BEFORE_END_TIMEOUT_MS,
+  ): Promise<void> {
     const tokens = this.tokens;
+    if (tokens) {
+      await this.runBeforeEnd(hookTimeoutMs);
+    }
     if (revoke && tokens) {
       try {
         await revoke(tokens.refreshToken);
@@ -99,6 +117,18 @@ export class SessionManager {
       }
     }
     await this.clear();
+  }
+
+  private async runBeforeEnd(timeoutMs: number): Promise<void> {
+    const hooks = [...this.beforeEnd];
+    if (hooks.length === 0) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, timeoutMs);
+    });
+    const settled = Promise.allSettled(hooks.map(async (hook) => hook()));
+    await Promise.race([settled, deadline]);
+    clearTimeout(timer);
   }
 
   async ensureFresh(): Promise<Tokens | null> {

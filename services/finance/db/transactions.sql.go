@@ -619,6 +619,47 @@ func (q *Queries) SumDailyTotals(ctx context.Context, arg SumDailyTotalsParams) 
 	return items, nil
 }
 
+const sumSharedBudgetSpend = `-- name: SumSharedBudgetSpend :one
+SELECT COALESCE(SUM(t.amount_minor), 0)::bigint AS total_minor
+FROM transactions t
+JOIN accounts a ON a.id = t.account_id
+JOIN categories c ON c.id = t.category_id
+WHERE t.family_id = $1
+  AND a.visibility = 'shared'
+  AND t.occurred_on >= $2::date
+  AND t.occurred_on <= $3::date
+  AND t.type = 'expense'
+  AND t.currency_code = $4::text
+  AND ($5::uuid IS NULL OR c.group_id = $5)
+  AND ($6::uuid IS NULL OR t.category_id = $6)
+  AND ($7::uuid IS NULL OR t.member_id = $7)
+`
+
+type SumSharedBudgetSpendParams struct {
+	FamilyID     pgtype.UUID
+	FromDate     pgtype.Date
+	ToDate       pgtype.Date
+	CurrencyCode string
+	GroupID      pgtype.UUID
+	CategoryID   pgtype.UUID
+	MemberID     pgtype.UUID
+}
+
+func (q *Queries) SumSharedBudgetSpend(ctx context.Context, arg SumSharedBudgetSpendParams) (int64, error) {
+	row := q.db.QueryRow(ctx, sumSharedBudgetSpend,
+		arg.FamilyID,
+		arg.FromDate,
+		arg.ToDate,
+		arg.CurrencyCode,
+		arg.GroupID,
+		arg.CategoryID,
+		arg.MemberID,
+	)
+	var total_minor int64
+	err := row.Scan(&total_minor)
+	return total_minor, err
+}
+
 const sumVisibleTransactions = `-- name: SumVisibleTransactions :one
 SELECT COALESCE(SUM(CASE WHEN $2::text IS NULL AND t.type = 'income'
                          THEN -t.amount_minor ELSE t.amount_minor END), 0)::bigint AS total_minor,

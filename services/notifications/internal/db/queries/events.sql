@@ -1,10 +1,23 @@
--- name: IsEventProcessed :one
-SELECT EXISTS (SELECT 1 FROM processed_events WHERE event_id = $1);
+-- name: ClaimEvent :execrows
+INSERT INTO processed_events (event_id, subject, status, claimed_at)
+VALUES (@event_id, @subject, 'claimed', NOW())
+ON CONFLICT (event_id) DO UPDATE
+SET claimed_at = NOW()
+WHERE processed_events.status = 'claimed'
+  AND processed_events.claimed_at < @stale_before;
 
--- name: MarkEventProcessed :exec
-INSERT INTO processed_events (event_id, subject)
-VALUES ($1, $2)
-ON CONFLICT DO NOTHING;
+-- name: EventStatus :one
+SELECT status FROM processed_events
+WHERE event_id = $1;
+
+-- name: CompleteEvent :exec
+UPDATE processed_events
+SET status = 'done', processed_at = NOW()
+WHERE event_id = $1;
+
+-- name: ReleaseEvent :exec
+DELETE FROM processed_events
+WHERE event_id = $1 AND status = 'claimed';
 
 -- name: PruneProcessedEvents :execrows
 DELETE FROM processed_events
