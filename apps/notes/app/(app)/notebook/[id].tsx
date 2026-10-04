@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { View } from "react-native";
 
 import { strings } from "../../../components/i18n/index.ts";
-import { EmptyState, Screen } from "../../../components/nocturne/index.ts";
+import { EmptyState, Screen } from "@fm/ui";
 import { CaptureSheet } from "../../../components/offline/index.ts";
 import {
   CaptureFab,
@@ -38,7 +38,6 @@ export default function NotebookScreen() {
         <EmptyState
           title={strings.list.pickANote}
           body={strings.list.pickANoteBody}
-          icon="folder-simple"
           action={{ label: strings.list.newNote, onPress: () => shell.newNote() }}
         />
       </View>

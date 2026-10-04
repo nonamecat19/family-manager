@@ -2,7 +2,7 @@ import { BlockType, type Block } from "@fm/sdk/notes/v1/notes_pb";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 
-import { Divider, Icon, nocturne, type IconName } from "../nocturne/index.ts";
+import { Divider, Icon, organic, type IconName } from "@fm/ui";
 import { strings } from "../i18n/index.ts";
 import {
   NO_BLOCK,
@@ -108,10 +108,10 @@ export function BlockEditor({
         onChangeText={onChangeTitle}
         editable={editable}
         placeholder={strings.note.titlePlaceholder}
-        placeholderTextColor={nocturne.neutral[600]}
+        placeholderTextColor={organic.neutral[600]}
         multiline
         accessibilityLabel={strings.note.titlePlaceholder}
-        className={`font-semi text-fg ${size === "roomy" ? "text-[33px] leading-[40px]" : "text-[26px] leading-[32px]"}`}
+        className={`font-cap text-fg ${size === "roomy" ? "text-[33px] leading-[40px]" : "text-[26px] leading-[32px]"}`}
         style={{ letterSpacing: -0.6 }}
         onFocus={() => onFocusedChange(NO_BLOCK)}
       />
@@ -216,10 +216,10 @@ function BlockRow({
         <View
           accessible
           accessibilityLabel={strings.note.imageBlock}
-          className="h-[92px] flex-row items-center justify-center gap-[8px] rounded-md border border-dashed border-neutral-800"
+          className="h-[92px] flex-row items-center justify-center gap-[8px] rounded-xl border border-dashed border-neutral-300"
         >
-          <Icon name="image" size={16} color={nocturne.neutral[600]} />
-          <Text className="font-sans text-[12px] text-neutral-500">{strings.note.imageBlock}</Text>
+          <Icon name="image" size={16} color={organic.neutral[600]} />
+          <Text className="font-fig text-[12px] text-neutral-700">{strings.note.imageBlock}</Text>
         </View>
       </View>,
     );
@@ -243,7 +243,7 @@ function BlockRow({
         if (caret.current.start === 0 && caret.current.end === 0) onBackspaceAtStart();
       }}
       placeholder={block.text === "" ? strings.note.placeholder : undefined}
-      placeholderTextColor={nocturne.neutral[700]}
+      placeholderTextColor={organic.neutral[600]}
       accessibilityLabel={strings.note.placeholder}
       className={`flex-1 ${textClassFor(block.type)} ${
         block.type === BlockType.TODO && block.checked ? "line-through opacity-50" : ""
@@ -262,14 +262,14 @@ function BlockRow({
           disabled={!editable}
           onPress={onToggle}
           hitSlop={8}
-          className="mt-[6px] h-[17px] w-[17px] flex-none items-center justify-center rounded-sm border"
+          className="mt-[6px] h-[17px] w-[17px] flex-none items-center justify-center rounded-md border"
           style={{
-            borderColor: block.checked ? nocturne.accent.DEFAULT : nocturne.neutral[700],
-            backgroundColor: block.checked ? nocturne.accent.DEFAULT : "transparent",
+            borderColor: block.checked ? organic.accent.DEFAULT : organic.neutral[600],
+            backgroundColor: block.checked ? organic.accent.DEFAULT : "transparent",
             borderWidth: 1.5,
           }}
         >
-          {block.checked ? <Icon name="check" size={11} color={nocturne.bg} /> : null}
+          {block.checked ? <Icon name="check" size={11} color={organic.bg} /> : null}
         </Pressable>
         {text}
       </View>,
@@ -279,7 +279,7 @@ function BlockRow({
   if (block.type === BlockType.BULLET) {
     return wrap(
       <View className="flex-row items-start gap-[10px] py-[2px]">
-        <View className="mt-[11px] h-[5px] w-[5px] flex-none rounded-full bg-neutral-500" />
+        <View className="mt-[11px] h-[5px] w-[5px] flex-none rounded-full bg-neutral-600" />
         {text}
       </View>,
     );
@@ -288,7 +288,7 @@ function BlockRow({
   if (block.type === BlockType.NUMBERED) {
     return wrap(
       <View className="flex-row items-start gap-[10px] py-[2px]">
-        <Text className="mt-[4px] w-[16px] flex-none text-right font-med text-[14px] text-neutral-500">
+        <Text className="mt-[4px] w-[16px] flex-none text-right font-fig-med text-[14px] text-neutral-700">
           {ordinal}.
         </Text>
         {text}
@@ -300,7 +300,7 @@ function BlockRow({
     return wrap(
       <View
         className="my-[6px] flex-row pl-[14px]"
-        style={{ borderLeftWidth: 2, borderLeftColor: nocturne.accent.DEFAULT }}
+        style={{ borderLeftWidth: 2, borderLeftColor: organic.accent.DEFAULT }}
       >
         {text}
       </View>,
@@ -308,7 +308,7 @@ function BlockRow({
   }
 
   if (block.type === BlockType.CODE) {
-    return wrap(<View className="my-[6px] rounded-md bg-surface px-[12px] py-[9px]">{text}</View>);
+    return wrap(<View className="my-[6px] rounded-xl bg-surface px-[12px] py-[9px]">{text}</View>);
   }
 
   return wrap(<View className="flex-row py-[2px]">{text}</View>);
@@ -351,21 +351,21 @@ function GutterButton({
       hitSlop={6}
       className={`p-[1px] ${onPress ? "" : "opacity-30"}`}
     >
-      <Icon name={icon} size={13} color={nocturne.neutral[600]} />
+      <Icon name={icon} size={13} color={organic.neutral[600]} />
     </Pressable>
   );
 }
 
-const PARAGRAPH_CLASS = "font-sans text-[15.5px] leading-[27px] text-fg";
+const PARAGRAPH_CLASS = "font-fig text-[15.5px] leading-[27px] text-fg";
 
 const TEXT_CLASS: Partial<Record<BlockType, string>> = {
   [BlockType.PARAGRAPH]: PARAGRAPH_CLASS,
-  [BlockType.HEADING]: "font-semi text-fg",
-  [BlockType.TODO]: "font-sans text-[15.5px] leading-[24px] text-fg",
-  [BlockType.BULLET]: "font-sans text-[15.5px] leading-[26px] text-fg",
-  [BlockType.NUMBERED]: "font-sans text-[15.5px] leading-[26px] text-fg",
-  [BlockType.QUOTE]: "font-sans text-[15px] leading-[25px] text-neutral-300",
-  [BlockType.CODE]: "font-sans text-[13.5px] leading-[21px] text-accent-200",
+  [BlockType.HEADING]: "font-fig-semi text-fg",
+  [BlockType.TODO]: "font-fig text-[15.5px] leading-[24px] text-fg",
+  [BlockType.BULLET]: "font-fig text-[15.5px] leading-[26px] text-fg",
+  [BlockType.NUMBERED]: "font-fig text-[15.5px] leading-[26px] text-fg",
+  [BlockType.QUOTE]: "font-fig text-[15px] leading-[25px] text-neutral-900",
+  [BlockType.CODE]: "font-fig text-[13.5px] leading-[21px] text-accent-800",
 };
 
 function textClassFor(type: BlockType): string {

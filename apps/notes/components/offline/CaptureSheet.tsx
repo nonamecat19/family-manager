@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, Tex
 import { makeBlock } from "../editor/index.ts";
 import { strings } from "../i18n/index.ts";
 import { offlineCopy } from "./copy.ts";
-import { Chip, Icon, IconButton, PrimaryButton, nocturne } from "../nocturne/index.ts";
+import { Chip, Icon, IconButton, PrimaryButton, organic } from "@fm/ui";
 import { useCaptureQueue } from "./queue.ts";
 
 
@@ -71,25 +71,25 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           className="gap-[14px] bg-surface px-[18px] pb-[22px] pt-[10px]"
           style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
         >
-          <View className="h-[4px] w-[36px] self-center rounded-sm bg-neutral-800" />
+          <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
 
           <View className="flex-row items-center gap-[8px]">
-            <Text className="font-med text-[15px] text-fg">{strings.capture.title}</Text>
+            <Text className="font-fig-med text-[15px] text-fg">{strings.capture.title}</Text>
             <View
-              className="flex-row items-center gap-[5px] rounded-lg px-[8px] py-[3px]"
-              style={{ backgroundColor: queue.online ? nocturne.accent[900] : nocturne.accent[800] }}
+              className="flex-row items-center gap-[5px] rounded-2xl px-[8px] py-[3px]"
+              style={{ backgroundColor: queue.online ? organic.accent[100] : organic.accent[200] }}
             >
               <Icon
                 name={queue.online ? "cloud-check" : "cloud-slash"}
                 size={12}
-                color={nocturne.accent[200]}
+                color={organic.accent[800]}
               />
-              <Text className="font-sans text-[11px] text-accent-200">
+              <Text className="font-fig text-[11px] text-accent-800">
                 {queue.online ? strings.capture.online : strings.capture.offline}
               </Text>
             </View>
             <View className="ml-auto">
-              <IconButton icon="x" label={strings.common.close} onPress={onClose} size={17} color={nocturne.neutral[500]} />
+              <IconButton icon="x" label={strings.common.close} onPress={onClose} size={17} color={organic.neutral[700]} />
             </View>
           </View>
 
@@ -98,31 +98,29 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
               value={title}
               onChangeText={setTitle}
               placeholder={strings.capture.titlePlaceholder}
-              placeholderTextColor={nocturne.neutral[600]}
+              placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.capture.titlePlaceholder}
-              className="font-med text-[19px] text-fg"
+              className="font-fig-med text-[19px] text-fg"
             />
             <TextInput
               value={body}
               onChangeText={setBody}
               placeholder={strings.capture.bodyPlaceholder}
-              placeholderTextColor={nocturne.neutral[600]}
+              placeholderTextColor={organic.neutral[600]}
               accessibilityLabel={strings.capture.bodyPlaceholder}
               multiline
-              className="min-h-[64px] font-sans text-[15.5px] leading-[25px] text-fg"
+              className="min-h-[64px] font-fig text-[15.5px] leading-[25px] text-fg"
             />
           </View>
 
           <View className="flex-row gap-[7px]">
             <Chip
               label={strings.capture.kindNote}
-              icon="file-text"
               active={!asTask}
               onPress={() => setAsTask(false)}
             />
             <Chip
               label={strings.capture.kindTask}
-              icon="check-square"
               active={asTask}
               onPress={() => setAsTask(true)}
             />
@@ -133,7 +131,6 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
               <View className="flex-row gap-[7px]">
                 <Chip
                   label={strings.capture.noNotebook}
-                  tone="neutral"
                   active={notebookId === ""}
                   onPress={() => setNotebookId("")}
                 />
@@ -141,7 +138,6 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
                   <Chip
                     key={n.id}
                     label={n.name}
-                    icon="folder-simple"
                     tone="accent2"
                     active={notebookId === n.id}
                     onPress={() => setNotebookId(n.id)}
@@ -152,13 +148,13 @@ export function CaptureSheet({ visible, onClose, notebooks, defaultNotebookId = 
           ) : null}
 
           {failed ? (
-            <Text className="font-sans text-[12px] text-accent2-300">
+            <Text className="font-fig text-[12px] text-accent2-800">
               {offlineCopy.captureNotSaved}
             </Text>
           ) : null}
 
           <View className="flex-row items-center gap-[10px]">
-            <Text className="font-sans text-[12px] text-neutral-500">
+            <Text className="font-fig text-[12px] text-neutral-700">
               {queue.queued.length > 0
                 ? strings.capture.queued(queue.queued.length)
                 : notebook
@@ -184,4 +180,4 @@ function firstLine(text: string): string {
   return line.length > 60 ? `${line.slice(0, 57)}…` : line || strings.common.untitled;
 }
 
-const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;
+const SCRIM = { backgroundColor: organic.bg, opacity: 0.62 } as const;

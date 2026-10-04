@@ -22,26 +22,26 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-  type ColorValue,
 } from "react-native";
 
 import { bucket, relative, stamp, strings } from "../../components/i18n/index.ts";
 import {
   Avatar,
-  AvatarStack,
+  BootSplash,
   Chip,
   Divider,
   EmptyState,
+  GateMessage,
   Icon,
   IconButton,
-  Kbd,
-  Pane,
   PrimaryButton,
-  Rail,
   Screen,
-  nocturne,
+  organic,
+  tabIcon,
+  useTabScreenOptions,
   type IconName,
-} from "../../components/nocturne/index.ts";
+} from "@fm/ui";
+import { AvatarStack, Kbd, Pane, Rail } from "../../components/kit/index.ts";
 import { Palette, useDesktopShortcuts } from "../../components/palette.tsx";
 import { useMemberDirectory } from "../../components/share.tsx";
 import { makeBlock } from "../../components/editor/index.ts";
@@ -152,7 +152,7 @@ function Gate() {
   const segments = useSegments();
   const isOnboarding = segments[segments.length - 1] === "onboarding";
 
-  if (family.isPending) return <Booting label={strings.gate.settingUp} />;
+  if (family.isPending) return <BootSplash title={strings.app.name} label={strings.gate.settingUp} />;
 
   if (family.isError) {
     const code = (family.error as { code?: Code }).code;
@@ -160,32 +160,25 @@ function Gate() {
       if (isOnboarding) return <Slot />;
       return (
         <Screen>
-          <View className="flex-1 justify-center gap-[18px] px-[22px]">
-            <Text className="font-semi text-[28px] text-fg">{strings.gate.noFamilyTitle}</Text>
-            <Text className="font-sans text-[15px] leading-[23px] text-neutral-400">
-              {strings.gate.noFamilyBody}
-            </Text>
-            <PrimaryButton
-              title={strings.gate.createFamily}
-              onPress={() => router.push("/(app)/onboarding")}
-            />
-          </View>
+          <GateMessage
+            title={strings.gate.noFamilyTitle}
+            body={strings.gate.noFamilyBody}
+            actionTitle={strings.gate.createFamily}
+            onAction={() => router.push("/(app)/onboarding")}
+          />
         </Screen>
       );
     }
     const shown = toDisplayError(family.error, strings.common.loadFailed);
     return (
       <Screen>
-        <View className="flex-1 justify-center gap-[18px] px-[22px]">
-          <Text className="font-semi text-[28px] text-fg">{strings.gate.errorTitle}</Text>
-          <Text className="font-sans text-[15px] leading-[23px] text-neutral-400">{shown.message}</Text>
-          {shown.reference ? (
-            <Text className="font-sans text-[13px] text-neutral-600">
-              {strings.common.errorReference(shown.reference)}
-            </Text>
-          ) : null}
-          <PrimaryButton title={strings.common.tryAgain} onPress={() => void family.refetch()} />
-        </View>
+        <GateMessage
+          title={strings.gate.errorTitle}
+          body={shown.message}
+          reference={shown.reference ? strings.common.errorReference(shown.reference) : undefined}
+          actionTitle={strings.common.tryAgain}
+          onAction={() => void family.refetch()}
+        />
       </Screen>
     );
   }
@@ -318,20 +311,20 @@ export function RailSidebar() {
       style={{ width: PANE.rail }}
     >
       <View className="flex-row items-center gap-[9px] px-[4px]">
-        <View className="h-[22px] w-[22px] items-center justify-center rounded-md border border-accent">
-          <Text className="font-semi text-[11px] text-accent">C</Text>
+        <View className="h-[22px] w-[22px] items-center justify-center rounded-xl border border-accent">
+          <Text className="font-fig-semi text-[11px] text-accent-700">C</Text>
         </View>
-        <Text className="font-med text-[15px] text-fg">{strings.app.name}</Text>
+        <Text className="font-fig-med text-[15px] text-fg">{strings.app.name}</Text>
       </View>
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={strings.rail.search}
         onPress={shell.openPalette}
-        className="h-[32px] flex-row items-center gap-[8px] rounded-md border border-neutral-800 bg-surface px-[10px]"
+        className="h-[32px] flex-row items-center gap-[8px] rounded-xl border border-neutral-300 bg-surface px-[10px]"
       >
-        <Icon name="magnifying-glass" size={14} color={nocturne.neutral[500]} />
-        <Text className="font-sans text-[13px] text-neutral-500">{strings.rail.search}</Text>
+        <Icon name="magnifying-glass" size={14} color={organic.neutral[700]} />
+        <Text className="font-fig text-[13px] text-neutral-700">{strings.rail.search}</Text>
         <View className="ml-auto">
           <Kbd>⌘K</Kbd>
         </View>
@@ -341,10 +334,10 @@ export function RailSidebar() {
         accessibilityRole="button"
         accessibilityLabel={strings.rail.newNote}
         onPress={() => shell.newNote()}
-        className="h-[34px] flex-row items-center justify-center gap-[7px] rounded-md border border-accent"
+        className="h-[34px] flex-row items-center justify-center gap-[7px] rounded-xl border border-accent"
       >
-        <Icon name="plus" size={14} color={nocturne.accent.DEFAULT} />
-        <Text className="font-med text-[13px] text-accent">{strings.rail.newNote}</Text>
+        <Icon name="plus" size={14} color={organic.accent.DEFAULT} />
+        <Text className="font-fig-med text-[13px] text-accent-700">{strings.rail.newNote}</Text>
         <Kbd>⌘N</Kbd>
       </Pressable>
 
@@ -389,10 +382,12 @@ export function RailSidebar() {
         />
       </View>
 
-      <Divider className="my-[2px]" />
+      <View className="my-[2px]">
+        <Divider />
+      </View>
 
       <View className="flex-row items-center px-[10px]">
-        <Text className="font-semi text-[10px] uppercase text-neutral-500" style={{ letterSpacing: 1 }}>
+        <Text className="font-fig-semi text-[10px] uppercase text-neutral-700" style={{ letterSpacing: 1 }}>
           {strings.rail.notebooks}
         </Text>
         <View className="ml-auto">
@@ -406,7 +401,7 @@ export function RailSidebar() {
             <View key={node.notebook.id}>
               <RailRow
                 icon="folder-simple"
-                iconColor={nocturne.accent[400]}
+                iconColor={organic.accent[600]}
                 label={node.notebook.name}
                 count={node.notebook.noteCount}
                 active={shell.view === "notebook" && shell.notebookId === node.notebook.id}
@@ -446,7 +441,7 @@ export function RailSidebar() {
       />
 
       {failed ? (
-        <Text className="px-[10px] font-sans text-[11px] text-neutral-500">
+        <Text className="px-[10px] font-fig text-[11px] text-neutral-700">
           {strings.rail.notebookFailed}
         </Text>
       ) : null}
@@ -544,7 +539,7 @@ export function RailSidebar() {
 
       <View className="mt-auto flex-row items-center gap-[8px] px-[10px] pt-[8px]">
         <AvatarStack names={members.map((m) => m.displayName || m.email)} size={22} max={3} />
-        <Text className="font-sans text-[11px] text-neutral-500">
+        <Text className="font-fig text-[11px] text-neutral-700">
           {strings.rail.familyCount(members.length)}
         </Text>
         <View className="ml-auto">
@@ -552,7 +547,7 @@ export function RailSidebar() {
             icon="gear-six"
             label={strings.rail.settings}
             size={15}
-            color={nocturne.neutral[500]}
+            color={organic.neutral[700]}
             onPress={() => router.push("/(app)/settings")}
           />
         </View>
@@ -587,14 +582,14 @@ function RailRow({
       accessibilityState={{ selected: active }}
       onPress={onPress}
       onLongPress={onMenu}
-      className={`h-[30px] flex-row items-center gap-[9px] rounded-md ${nested ? "pl-[22px] pr-[10px]" : "px-[10px]"}`}
-      style={active ? { backgroundColor: nocturne.accent[900] } : undefined}
+      className={`h-[30px] flex-row items-center gap-[9px] rounded-xl ${nested ? "pl-[22px] pr-[10px]" : "px-[10px]"}`}
+      style={active ? { backgroundColor: organic.accent[100] } : undefined}
     >
       {icon ? (
         <Icon
           name={icon}
           size={15}
-          color={active ? nocturne.accent[300] : (iconColor ?? nocturne.neutral[500])}
+          color={active ? organic.accent[700] : (iconColor ?? organic.neutral[700])}
           weight={active ? "fill" : "regular"}
         />
       ) : nested ? (
@@ -602,12 +597,12 @@ function RailRow({
       ) : null}
       <Text
         numberOfLines={1}
-        className={`shrink font-sans text-[13px] ${active ? "text-accent-300" : "text-neutral-300"}`}
+        className={`shrink font-fig text-[13px] ${active ? "text-accent-800" : "text-neutral-700"}`}
       >
         {label}
       </Text>
       {typeof count === "number" && count > 0 ? (
-        <Text className="ml-auto font-sans text-[11px] text-neutral-600">{count}</Text>
+        <Text className="ml-auto font-fig text-[11px] text-neutral-600">{count}</Text>
       ) : null}
       {onMenu ? (
         <View className={typeof count === "number" && count > 0 ? "" : "ml-auto"}>
@@ -635,15 +630,15 @@ function MiniButton({
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={10}
-      className="h-[20px] w-[20px] items-center justify-center rounded-sm"
+      className="h-[20px] w-[20px] items-center justify-center rounded-md"
     >
-      <Icon name={icon} size={size} color={nocturne.neutral[600]} />
+      <Icon name={icon} size={size} color={organic.neutral[600]} />
     </Pressable>
   );
 }
 
 
-const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;
+const SCRIM = { backgroundColor: organic.text, opacity: 0.35 } as const;
 
 export interface SheetAction {
   key: string;
@@ -677,8 +672,8 @@ export function ActionSheet({
         style={SCRIM}
       />
       <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-[6px] rounded-lg bg-surface px-[10px] py-[12px]">
-          <Text className="px-[8px] pb-[2px] font-sans text-[12px] leading-[18px] text-neutral-500">
+        <View className="w-full max-w-[320px] gap-[6px] rounded-2xl bg-surface px-[10px] py-[12px] shadow-card">
+          <Text className="px-[8px] pb-[2px] font-fig text-[12px] leading-[18px] text-neutral-700">
             {title}
           </Text>
           {children}
@@ -692,25 +687,25 @@ export function ActionSheet({
                 onClose();
                 action.onPress();
               }}
-              className="h-[36px] flex-row items-center gap-[10px] rounded-md px-[8px]"
+              className="h-[36px] flex-row items-center gap-[10px] rounded-xl px-[8px]"
             >
               {action.icon ? (
                 <Icon
                   name={action.icon}
                   size={15}
-                  color={action.tone === "danger" ? nocturne.neutral[400] : nocturne.accent[400]}
+                  color={action.tone === "danger" ? organic.danger : organic.accent[600]}
                 />
               ) : null}
               <Text
-                className={`font-sans text-[13.5px] ${
-                  action.tone === "danger" ? "text-neutral-200" : "text-fg"
+                className={`font-fig text-[13.5px] ${
+                  action.tone === "danger" ? "text-error" : "text-fg"
                 }`}
               >
                 {action.label}
               </Text>
               {action.selected ? (
                 <View className="ml-auto">
-                  <Icon name="check" size={13} color={nocturne.accent.DEFAULT} />
+                  <Icon name="check" size={13} color={organic.accent.DEFAULT} />
                 </View>
               ) : null}
             </Pressable>
@@ -719,9 +714,9 @@ export function ActionSheet({
             accessibilityRole="button"
             accessibilityLabel={strings.common.cancel}
             onPress={onClose}
-            className="h-[34px] items-center justify-center rounded-md"
+            className="h-[34px] items-center justify-center rounded-xl"
           >
-            <Text className="font-sans text-[13px] text-neutral-500">{strings.common.cancel}</Text>
+            <Text className="font-fig text-[13px] text-neutral-700">{strings.common.cancel}</Text>
           </Pressable>
         </View>
       </View>
@@ -758,28 +753,28 @@ function NotebookDialog({
         style={SCRIM}
       />
       <View className="flex-1 items-center justify-center px-[24px]" pointerEvents="box-none">
-        <View className="w-full max-w-[320px] gap-[12px] rounded-lg bg-surface p-[16px]">
-          <Text className="font-med text-[15px] text-fg">{title}</Text>
+        <View className="w-full max-w-[320px] gap-[12px] rounded-2xl bg-surface p-[16px] shadow-card">
+          <Text className="font-fig-med text-[15px] text-fg">{title}</Text>
           <TextInput
             value={name}
             onChangeText={setName}
             autoFocus
             placeholder={strings.rail.notebookNamePlaceholder}
-            placeholderTextColor={nocturne.neutral[600]}
+            placeholderTextColor={organic.neutral[600]}
             accessibilityLabel={strings.rail.notebookName}
             onSubmitEditing={() => {
               if (name.trim() !== "") onSubmit(name.trim());
             }}
-            className="rounded-md border border-neutral-800 px-[12px] py-[9px] font-sans text-[14px] text-fg"
+            className="rounded-xl border border-neutral-300 px-[12px] py-[9px] font-fig text-[14px] text-fg"
           />
           <View className="flex-row items-center gap-[8px]">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={strings.common.cancel}
               onPress={onClose}
-              className="rounded-md border border-neutral-800 px-[14px] py-[9px]"
+              className="rounded-xl border border-neutral-300 px-[14px] py-[9px]"
             >
-              <Text className="font-med text-[13px] text-neutral-300">{strings.common.cancel}</Text>
+              <Text className="font-fig-med text-[13px] text-neutral-900">{strings.common.cancel}</Text>
             </Pressable>
             <View className="ml-auto">
               <PrimaryButton
@@ -822,12 +817,12 @@ function NoteListPane() {
   return (
     <Pane
       tone="list"
-      className="flex-none border-x border-neutral-900"
+      className="flex-none border-x border-neutral-300"
       style={{ width: PANE.list }}
     >
       <View className="flex-row items-center gap-[8px] px-[16px] pb-[12px] pt-[16px]">
-        <Text className="font-med text-[17px] text-fg">{title}</Text>
-        <Text className="font-sans text-[11px] text-neutral-600">
+        <Text className="font-fig-med text-[17px] text-fg">{title}</Text>
+        <Text className="font-fig text-[11px] text-neutral-600">
           {strings.list.noteCount(rows.length)}
         </Text>
         <View className="ml-auto flex-row items-center gap-[2px]">
@@ -838,14 +833,14 @@ function NoteListPane() {
             icon={shell.density === "dense" ? "list-bullets" : "rows"}
             label={strings.list.density}
             size={15}
-            color={nocturne.neutral[500]}
+            color={organic.neutral[700]}
             onPress={() => shell.setDensity(shell.density === "dense" ? "cards" : "dense")}
           />
           <IconButton
             icon="funnel-simple"
             label={strings.list.filter}
             size={15}
-            color={nocturne.neutral[500]}
+            color={organic.neutral[700]}
             onPress={shell.openPalette}
           />
         </View>
@@ -873,7 +868,7 @@ function SortButton() {
         icon="sort-ascending"
         label={strings.list.sort}
         size={15}
-        color={nocturne.neutral[500]}
+        color={organic.neutral[700]}
         onPress={() => setOpen(true)}
       />
       <SortSheet visible={open} onClose={() => setOpen(false)} />
@@ -947,7 +942,7 @@ export function NoteListBody({
   if (loading) {
     return (
       <View className="items-center py-[40px]">
-        <ActivityIndicator color={nocturne.accent.DEFAULT} />
+        <ActivityIndicator color={organic.accent.DEFAULT} />
       </View>
     );
   }
@@ -957,7 +952,6 @@ export function NoteListBody({
       <EmptyState
         title={emptyTitle}
         body={emptyBody}
-        icon="notebook"
         action={onNewNote ? { label: strings.list.newNote, onPress: onNewNote } : undefined}
       />
     );
@@ -968,14 +962,14 @@ export function NoteListBody({
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {queued.map((item) => (
-        <View key={item.clientId} className="border-b border-neutral-900 px-[16px] py-[13px]">
+        <View key={item.clientId} className="border-b border-neutral-300 px-[16px] py-[13px]">
           <View className="flex-row items-center gap-[7px]">
-            <Text className="font-med text-[14px] text-fg" numberOfLines={1}>
+            <Text className="font-fig-med text-[14px] text-fg" numberOfLines={1}>
               {item.title || strings.common.untitled}
             </Text>
             <View className="ml-auto h-[7px] w-[7px] rounded-full bg-neutral-600" />
           </View>
-          <Text className="pt-[4px] font-sans text-[11px] text-neutral-600">
+          <Text className="pt-[4px] font-fig text-[11px] text-neutral-600">
             {strings.list.notSynced}
           </Text>
         </View>
@@ -984,7 +978,7 @@ export function NoteListBody({
       {groups.map((group) => (
         <View key={group.label}>
           {density === "dense" ? (
-            <Text className="px-[16px] pb-[4px] pt-[14px] font-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
+            <Text className="px-[16px] pb-[4px] pt-[14px] font-fig-semi text-[10px] uppercase text-neutral-600" style={{ letterSpacing: 1 }}>
               {group.label}
             </Text>
           ) : null}
@@ -1029,48 +1023,48 @@ function CardRow({
       accessibilityLabel={note.title || strings.common.untitled}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className="gap-[5px] border-b border-neutral-900 px-[16px] py-[13px]"
+      className="gap-[5px] border-b border-neutral-300 px-[16px] py-[13px]"
       style={
         selected
           ? {
-              backgroundColor: nocturne.accent[900],
+              backgroundColor: organic.accent[100],
               borderLeftWidth: 2,
-              borderLeftColor: nocturne.accent.DEFAULT,
+              borderLeftColor: organic.accent.DEFAULT,
             }
           : undefined
       }
     >
       <View className="flex-row items-center gap-[7px]">
-        <Text numberOfLines={1} className="shrink font-med text-[14px] text-fg">
+        <Text numberOfLines={1} className="shrink font-fig-med text-[14px] text-fg">
           {note.title || strings.common.untitled}
         </Text>
         {note.starred ? (
-          <Icon name="star" size={12} color={nocturne.accent.DEFAULT} weight="fill" />
+          <Icon name="star" size={12} color={organic.accent.DEFAULT} weight="fill" />
         ) : null}
         {note.shared ? (
           <View className="ml-auto">
-            <Icon name="users" size={12} color={nocturne.accent[400]} />
+            <Icon name="users" size={12} color={organic.accent[600]} />
           </View>
         ) : null}
       </View>
 
       {note.preview !== "" ? (
-        <Text numberOfLines={2} className="font-sans text-[12px] leading-[18px] text-neutral-500">
+        <Text numberOfLines={2} className="font-fig text-[12px] leading-[18px] text-neutral-700">
           {note.preview}
         </Text>
       ) : null}
 
       <View className="flex-row items-center gap-[7px]">
         {editorName !== "" ? <Avatar name={editorName} size={16} /> : null}
-        <Text className="font-sans text-[11px] text-neutral-600">
+        <Text className="font-fig text-[11px] text-neutral-600">
           {editorName !== ""
             ? strings.note.editedBy(firstName(editorName), relative(note.updatedAt))
             : relative(note.updatedAt)}
         </Text>
         {note.taskTotal > 0 ? (
           <View className="ml-auto flex-row items-center gap-[4px]">
-            <Icon name="check-square" size={12} color={nocturne.neutral[600]} />
-            <Text className="font-sans text-[11px] text-neutral-600">
+            <Icon name="check-square" size={12} color={organic.neutral[600]} />
+            <Text className="font-fig text-[11px] text-neutral-600">
               {note.taskDone}/{note.taskTotal}
             </Text>
           </View>
@@ -1088,13 +1082,13 @@ function DenseRow({ note, selected, onPress }: { note: Note; selected: boolean; 
       accessibilityState={{ selected }}
       onPress={onPress}
       className="h-[30px] flex-row items-center gap-[8px] px-[16px]"
-      style={selected ? { backgroundColor: nocturne.accent[900] } : undefined}
+      style={selected ? { backgroundColor: organic.accent[100] } : undefined}
     >
-      <Text numberOfLines={1} className="shrink font-sans text-[13px] text-fg">
+      <Text numberOfLines={1} className="shrink font-fig text-[13px] text-fg">
         {note.title || strings.common.untitled}
       </Text>
-      {note.starred ? <Icon name="star" size={11} color={nocturne.accent.DEFAULT} weight="fill" /> : null}
-      <Text className="ml-auto font-sans text-[11px] text-neutral-600">{stamp(note.updatedAt)}</Text>
+      {note.starred ? <Icon name="star" size={11} color={organic.accent.DEFAULT} weight="fill" /> : null}
+      <Text className="ml-auto font-fig text-[11px] text-neutral-600">{stamp(note.updatedAt)}</Text>
     </Pressable>
   );
 }
@@ -1121,24 +1115,9 @@ export function firstName(name: string): string {
 
 
 function MobileTabs() {
+  const tabScreenOptions = useTabScreenOptions();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: nocturne.accent.DEFAULT,
-        tabBarInactiveTintColor: nocturne.neutral[600],
-        tabBarStyle: {
-          backgroundColor: nocturne.rail,
-          borderTopColor: nocturne.neutral[900],
-          borderTopWidth: 1,
-          height: 76,
-          paddingTop: 8,
-          paddingBottom: 20,
-          elevation: 0,
-        },
-        tabBarLabelStyle: { fontFamily: "Inter_500Medium", fontSize: 11 },
-      }}
-    >
+    <Tabs screenOptions={tabScreenOptions}>
       <Tabs.Screen name="index" options={{ title: strings.tabs.notes, tabBarIcon: tabIcon("notebook") }} />
       <Tabs.Screen
         name="search"
@@ -1165,12 +1144,6 @@ function MobileTabs() {
   );
 }
 
-function tabIcon(name: IconName) {
-  return function TabIcon({ color }: { color: ColorValue }) {
-    return <Icon name={name} size={22} color={color as string} />;
-  };
-}
-
 export function MobileListHeader({
   title,
   count,
@@ -1187,24 +1160,28 @@ export function MobileListHeader({
     SORT_OPTIONS.find((option) => option.sort === shell.sort)?.label ?? strings.list.sortUpdated;
   return (
     <View className="flex-row items-end gap-[8px] px-[20px] pb-[10px] pt-[6px]">
-      <Text className="font-med text-[26px] text-fg" style={{ letterSpacing: -0.5 }}>
+      <Text
+        numberOfLines={1}
+        className="flex-1 font-cap text-[26px] text-fg"
+        style={{ letterSpacing: -0.5 }}
+      >
         {title}
       </Text>
-      <Text className="pb-[4px] font-sans text-[12px] text-neutral-600">{count}</Text>
+      <Text className="pb-[4px] font-fig text-[12px] text-neutral-600">{count}</Text>
       <View className="ml-auto flex-row items-center gap-[6px]">
-        <Chip label={sortLabel} icon="sort-ascending" onPress={() => setSorting(true)} active tone="neutral" />
+        <Chip label={sortLabel} onPress={() => setSorting(true)} active tone="accent2" />
         <Chip
           label={shell.density === "dense" ? strings.list.dense : strings.list.cards}
           onPress={() => shell.setDensity(shell.density === "dense" ? "cards" : "dense")}
           active
-          tone="neutral"
+          tone="accent2"
         />
         {archiveLink ? (
           <IconButton
             icon="archive"
             label={strings.rail.archive}
             size={17}
-            color={nocturne.neutral[500]}
+            color={organic.neutral[700]}
             onPress={() => router.push("/(app)/archive")}
           />
         ) : null}
@@ -1221,20 +1198,9 @@ export function CaptureFab() {
       accessibilityRole="button"
       accessibilityLabel={strings.capture.open}
       onPress={shell.openCapture}
-      className="absolute bottom-[22px] right-[20px] h-[54px] w-[54px] items-center justify-center rounded-full border border-accent bg-accent-900"
+      className="absolute bottom-[22px] right-[20px] h-[54px] w-[54px] items-center justify-center rounded-full bg-accent shadow-fab"
     >
-      <Icon name="plus" size={22} color={nocturne.accent[300]} />
+      <Icon name="plus" size={22} color={organic.accentFg} />
     </Pressable>
-  );
-}
-
-function Booting({ label }: { label: string }) {
-  return (
-    <Screen>
-      <View className="flex-1 items-center justify-center gap-[10px]">
-        <ActivityIndicator color={nocturne.accent.DEFAULT} />
-        <Text className="font-sans text-[13px] text-neutral-500">{label}</Text>
-      </View>
-    </Screen>
   );
 }

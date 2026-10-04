@@ -5,7 +5,7 @@ import { useCallback, useMemo } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 import { strings } from "./i18n/index.ts";
-import { Avatar, Divider, Icon, IconButton, nocturne } from "./nocturne/index.ts";
+import { Avatar, Divider, Icon, IconButton, organic } from "@fm/ui";
 
 
 export function useMemberDirectory() {
@@ -69,18 +69,18 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
         className="max-h-[70%] gap-[14px] bg-surface px-[18px] pb-[24px] pt-[10px]"
         style={{ borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
       >
-        <View className="h-[4px] w-[36px] self-center rounded-sm bg-neutral-800" />
+        <View className="h-[4px] w-[36px] self-center rounded-md bg-neutral-400" />
 
         <View className="flex-row items-center">
-          <Text className="font-med text-[16px] text-fg">
+          <Text className="font-fig-med text-[16px] text-fg">
             {notebookId ? strings.share.titleNotebook : strings.share.title}
           </Text>
           <View className="ml-auto">
-            <IconButton icon="x" label={strings.common.close} onPress={onClose} size={17} color={nocturne.neutral[500]} />
+            <IconButton icon="x" label={strings.common.close} onPress={onClose} size={17} color={organic.neutral[700]} />
           </View>
         </View>
 
-        <Text className="font-sans text-[12.5px] leading-[19px] text-neutral-500">
+        <Text className="font-fig text-[12.5px] leading-[19px] text-neutral-700">
           {strings.share.body}
         </Text>
 
@@ -100,7 +100,7 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
             </View>
 
             {members.length === 0 ? (
-              <Text className="py-[8px] font-sans text-[12.5px] text-neutral-500">
+              <Text className="py-[8px] font-fig text-[12.5px] text-neutral-700">
                 {strings.share.noMembers}
               </Text>
             ) : null}
@@ -110,10 +110,10 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
                 return (
                   <View key={member.userId} className="flex-row items-center gap-[9px] py-[9px]">
                     <Avatar name={member.displayName || member.email} size={24} />
-                    <Text className="font-sans text-[13.5px] text-fg">
+                    <Text className="font-fig text-[13.5px] text-fg">
                       {member.displayName || member.email}
                     </Text>
-                    <Text className="ml-auto font-sans text-[11.5px] text-neutral-500">
+                    <Text className="ml-auto font-fig text-[11.5px] text-neutral-700">
                       {strings.note.owner}
                     </Text>
                   </View>
@@ -137,9 +137,9 @@ export function ShareSheet({ visible, onClose, noteId, notebookId, ownerUserId }
           </View>
         </ScrollView>
 
-        <Text className="font-sans text-[11.5px] text-neutral-600">{strings.share.inviteHint}</Text>
+        <Text className="font-fig text-[11.5px] text-neutral-600">{strings.share.inviteHint}</Text>
         {shares.data && shares.data.length > 0 ? null : (
-          <Text className="font-sans text-[11.5px] text-neutral-600">{strings.share.notShared}</Text>
+          <Text className="font-fig text-[11.5px] text-neutral-600">{strings.share.notShared}</Text>
         )}
       </View>
     </Modal>
@@ -168,11 +168,11 @@ function ShareRow({
       {avatarName ? (
         <Avatar name={avatarName} size={24} />
       ) : (
-        <View className="h-[24px] w-[24px] items-center justify-center rounded-full bg-accent-800">
-          <Icon name={icon ?? "users-three"} size={13} color={nocturne.accent[200]} />
+        <View className="h-[24px] w-[24px] items-center justify-center rounded-full bg-accent-200">
+          <Icon name={icon ?? "users-three"} size={13} color={organic.accent[800]} />
         </View>
       )}
-      <Text className="shrink font-sans text-[13.5px] text-fg" numberOfLines={1}>
+      <Text className="shrink font-fig text-[13.5px] text-fg" numberOfLines={1}>
         {label}
       </Text>
 
@@ -195,7 +195,7 @@ function ShareRow({
             label={strings.share.removeShare}
             onPress={onRemove}
             size={14}
-            color={nocturne.neutral[500]}
+            color={organic.neutral[700]}
             disabled={disabled}
           />
         ) : null}
@@ -222,15 +222,15 @@ function PermissionToggle({
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`rounded-md border px-[9px] py-[4px] ${
-        selected ? "border-accent bg-accent-900" : "border-neutral-800"
+      className={`rounded-xl border px-[9px] py-[4px] ${
+        selected ? "border-accent bg-accent-100" : "border-neutral-300"
       }`}
     >
-      <Text className={`font-med text-[12px] ${selected ? "text-accent-300" : "text-neutral-500"}`}>
+      <Text className={`font-fig-med text-[12px] ${selected ? "text-accent-800" : "text-neutral-700"}`}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-const SCRIM = { backgroundColor: nocturne.bg, opacity: 0.62 } as const;
+const SCRIM = { backgroundColor: organic.bg, opacity: 0.62 } as const;
