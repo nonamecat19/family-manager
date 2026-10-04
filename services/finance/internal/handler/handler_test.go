@@ -1729,3 +1729,33 @@ func TestBudgetExceededNotPublishedForAPrivateTransaction(t *testing.T) {
 		t.Error("budget.exceeded published for a transaction on a private account")
 	}
 }
+
+func TestUpdateTransactionAnnouncesAnOverspendOnce(t *testing.T) {
+	h, store, rec := newTestHandler(t)
+	group, category := seedGroupAndCategory(store, "Їжа", "Продукти")
+	account := seedAccount(store, "Mono", "card", visibilityShared, "", 0)
+	store.budgets["b"] = db.Budget{
+		ID:       pgconv.MustUUID("00000000-0000-4000-8000-0000000000b1"),
+		FamilyID: pgconv.MustUUID(testFamily), TargetKind: targetGroup, GroupID: group.ID,
+		LimitMinor: 100_00, CurrencyCode: "UAH", Period: budgetPeriodMonth,
+		StartOn: day("2026-08-01"), NotifyOnExceed: true,
+	}
+	tx := seedTransaction(store, account, category, sergiy, 50_00, "2026-08-15")
+
+	if _, err := h.UpdateTransaction(ctxOf(sergiy), connect.NewRequest(&financev1.UpdateTransactionRequest{
+		TransactionId: id(tx.ID),
+		Amount:        &financev1.Money{AmountMinor: 150_00, CurrencyCode: "UAH"},
+	})); err != nil {
+		t.Fatalf("UpdateTransaction: %v", err)
+	}
+
+	exceeded := 0
+	for _, s := range rec.subjects {
+		if s == "finance.budget.exceeded" {
+			exceeded++
+		}
+	}
+	if exceeded != 1 {
+		t.Errorf("budget.exceeded published %d times for one edit, want 1", exceeded)
+	}
+}

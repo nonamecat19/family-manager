@@ -365,17 +365,29 @@ func (h *Handler) onPrivateAccount(ctx context.Context, c caller, accountID pgty
 func (h *Handler) announceBudgetChanges(
 	ctx context.Context, c caller, before, after budgetImpact, triggeringTxID string, private bool,
 ) {
+	h.announceBudgetTransitions(ctx, c, before, after, triggeringTxID, private, map[string]bool{})
+}
+
+func (h *Handler) announceBudgetTransitions(
+	ctx context.Context, c caller, before, after budgetImpact, triggeringTxID string, private bool,
+	announced map[string]bool,
+) {
 	was := make(map[string]bool, len(before.shared))
 	for _, s := range before.shared {
 		was[s.GetBudget().GetId()] = s.GetExceeded()
 	}
 	for _, s := range after.shared {
 		id := s.GetBudget().GetId()
+		key := id + "|" + s.GetWindow().GetFrom() + "|" + s.GetWindow().GetTo()
+		if announced[key] {
+			continue
+		}
 		switch {
 		case s.GetExceeded() && !was[id]:
 			if private || !s.GetBudget().GetNotifyOnExceed() {
 				continue
 			}
+			announced[key] = true
 			h.publish(ctx, subjectBudgetExceeded, &financev1.BudgetExceededEvent{
 				FamilyId:                c.family,
 				BudgetId:                id,
@@ -391,6 +403,7 @@ func (h *Handler) announceBudgetChanges(
 				OccurredAt:              h.timestamp(),
 			})
 		case !s.GetExceeded() && was[id]:
+			announced[key] = true
 			h.publish(ctx, subjectBudgetRecovered, &financev1.BudgetRecoveredEvent{
 				FamilyId: c.family, BudgetId: id,
 				Window: s.GetWindow(), OccurredAt: h.timestamp(),

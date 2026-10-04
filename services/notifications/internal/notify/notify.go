@@ -144,7 +144,7 @@ type claim struct {
 func (n *Notifier) claim(ctx context.Context, subject events.Subject, id string) (*claim, error) {
 	rows, err := n.q.ClaimEvent(ctx, db.ClaimEventParams{
 		EventID: id, Subject: string(subject),
-		StaleBefore: pgconv.TimestampFrom(n.now().Add(-claimTimeout)),
+		StaleAfterSeconds: claimTimeout.Seconds(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("claim event: %w", err)
@@ -368,7 +368,10 @@ func (n *Notifier) deliver(ctx context.Context, nt *notice, c *claim) error {
 		for i, t := range chunk {
 			msgs[i] = expo.Message{To: t.Token, Title: nt.title, Body: nt.body, Data: data, Sound: "default"}
 		}
-		sentAt := n.now()
+		sentAt, err := n.q.CurrentTime(ctx)
+		if err != nil {
+			return errors.Join(fmt.Errorf("current time: %w", err), n.dropDead(ctx, dead))
+		}
 		tickets, err := n.sender.Send(ctx, msgs)
 		if err != nil {
 			return errors.Join(fmt.Errorf("send push: %w", err), n.dropDead(ctx, dead))
@@ -403,9 +406,9 @@ type deadTokens struct {
 	sentAt []pgtype.Timestamptz
 }
 
-func (d *deadTokens) add(token string, sentAt time.Time) {
+func (d *deadTokens) add(token string, sentAt pgtype.Timestamptz) {
 	d.tokens = append(d.tokens, token)
-	d.sentAt = append(d.sentAt, pgconv.TimestampFrom(sentAt))
+	d.sentAt = append(d.sentAt, sentAt)
 }
 
 func (n *Notifier) dropDead(ctx context.Context, dead deadTokens) error {
@@ -592,7 +595,7 @@ func (n *Notifier) CheckReceipts(ctx context.Context) error {
 			continue
 		}
 		if r.Error == expo.DeviceNotRegistered {
-			dead.add(t.Token, t.CreatedAt.Time)
+			dead.add(t.Token, t.CreatedAt)
 			continue
 		}
 		n.log.WarnContext(ctx, "push receipt error",

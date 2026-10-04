@@ -1,3 +1,6 @@
+-- name: CurrentTime :one
+SELECT NOW()::timestamptz;
+
 -- name: InsertPushTicket :exec
 INSERT INTO push_tickets (id, token)
 VALUES ($1, $2)

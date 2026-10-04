@@ -23,13 +23,15 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
   owned by the caller. Registering a token another user holds moves it only when the request
   carries the same non-empty `device_id` the token was stored with (the same install changed
   account); anything else is `PermissionDenied`, so knowing a token is not enough to take it.
-  Clients send a random per-install id, minted once and kept in secure storage
-  (`getInstallId` in `@fm/auth`). Only Expo tokens (`ExponentPushToken[…]`, `ExpoPushToken[…]`)
-  are accepted.
+  Clients send a random per-install id: 16 bytes from `expo-crypto`'s `getRandomBytes`, minted
+  once and kept in secure storage (`getInstallId` in `@fm/auth`). Without a secure random source
+  the client sends an empty id rather than a weak one, which only ever fails closed. Only Expo
+  tokens (`ExponentPushToken[…]`, `ExpoPushToken[…]`) are accepted.
 - **Sign-out.** The client unregisters its token from a before-sign-out hook in `@fm/auth`
   (`registerBeforeSignOut`), which runs while the access token is still valid and before the
-  refresh token is revoked. Sign-out waits for it at most 3 seconds and never fails because of
-  it.
+  refresh token is revoked. The hook first waits for any registration still in flight (token
+  lookup, install id, `RegisterPushToken`) and blocks new ones, then unregisters what was
+  registered. Sign-out waits for it at most 3 seconds and never fails because of it.
 - **Preferences are a mute list, not a matrix.** Each entry is a domain (`finance`) or a topic
   key (`finance.budget.exceeded`); the default is everything on. `SetPreferences` replaces the
   list. The catalogue is served by `GetPreferences` so an app renders toggles without hardcoding
@@ -91,6 +93,22 @@ A Go service, `services/notifications`, owning `notifications.v1` and its own da
 - At-most-once once Expo accepted a batch: if the first batch is accepted and the second
   fails, the second is not retried (the alternative re-sends the first). Families fit in one
   batch, so in practice this is all-or-nothing.
+- **Legacy tokens.** Tokens registered before the install id existed are stored with
+  `device_id = ''`. Such a token can never move to another user: the owner's next registration
+  stamps the install id onto it, and until then a different account on the same phone gets
+  `PermissionDenied` and receives nothing on that token. It clears itself once the original
+  owner opens the updated app, signs out (which unregisters it), or Expo reports it dead.
+- **Rollout order.** Migration `000002_event_claims` adds `status` and `claimed_at` to
+  `processed_events`; the service applies its migrations at startup, so the new binary brings
+  its own schema. Existing rows default to `done`, so already-processed events stay
+  processed. Deploy notifications before (or with) the client release: an old client sends no
+  `device_id` and keeps working for its own account. Rolling back the binary needs the down
+  migration, which first deletes in-flight `claimed` rows (they would otherwise read as
+  processed to the old code) and then drops the columns.
+- **Clocks.** Claim staleness and the "registered again since the send" check compare database
+  timestamps only (`NOW()` in SQL, the ticket's `created_at`, a `NOW()` read before each send),
+  so clock skew between the service and Postgres cannot shorten a claim or delete a fresh
+  token.
 - **Known limitation: a session revoked server-side cannot unregister its token.** The
   before-sign-out hook covers a user signing out on the device. A session revoked from
   elsewhere (another device, an admin, refresh-token reuse detection) leaves the device's

@@ -14,6 +14,7 @@ type Querier interface {
 	ClaimEvent(ctx context.Context, arg ClaimEventParams) (int64, error)
 	ClearUserFamily(ctx context.Context, arg ClearUserFamilyParams) error
 	CompleteEvent(ctx context.Context, eventID string) error
+	CurrentTime(ctx context.Context) (pgtype.Timestamptz, error)
 	DeleteDeadPushTokens(ctx context.Context, arg DeleteDeadPushTokensParams) (int64, error)
 	DeleteMutes(ctx context.Context, userID pgtype.UUID) error
 	DeletePushTickets(ctx context.Context, ids []string) error

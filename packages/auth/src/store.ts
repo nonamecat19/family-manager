@@ -1,3 +1,4 @@
+import { getRandomBytes } from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 
 import { readOrCreateInstallId } from "./installId.ts";
@@ -38,7 +39,7 @@ export const secureTokenStore: TokenStore = {
 let installId: Promise<string> | null = null;
 
 export function getInstallId(): Promise<string> {
-  installId ??= readOrCreateInstallId(SecureStore).catch((error: unknown) => {
+  installId ??= readOrCreateInstallId(SecureStore, getRandomBytes).catch((error: unknown) => {
     installId = null;
     throw error;
   });

@@ -17,17 +17,17 @@ VALUES ($1, $2, 'claimed', NOW())
 ON CONFLICT (event_id) DO UPDATE
 SET claimed_at = NOW()
 WHERE processed_events.status = 'claimed'
-  AND processed_events.claimed_at < $3
+  AND processed_events.claimed_at < NOW() - make_interval(secs => $3::float8)
 `
 
 type ClaimEventParams struct {
-	EventID     string
-	Subject     string
-	StaleBefore pgtype.Timestamptz
+	EventID           string
+	Subject           string
+	StaleAfterSeconds float64
 }
 
 func (q *Queries) ClaimEvent(ctx context.Context, arg ClaimEventParams) (int64, error) {
-	result, err := q.db.Exec(ctx, claimEvent, arg.EventID, arg.Subject, arg.StaleBefore)
+	result, err := q.db.Exec(ctx, claimEvent, arg.EventID, arg.Subject, arg.StaleAfterSeconds)
 	if err != nil {
 		return 0, err
 	}

@@ -211,7 +211,8 @@ func (f *Fake) ClaimEvent(_ context.Context, arg db.ClaimEventParams) (int64, er
 		return 0, err
 	}
 	e, ok := f.Events[arg.EventID]
-	if ok && (e.Status != "claimed" || !e.ClaimedAt.Before(arg.StaleBefore.Time)) {
+	staleBefore := f.Now().Add(-time.Duration(arg.StaleAfterSeconds * float64(time.Second)))
+	if ok && (e.Status != "claimed" || !e.ClaimedAt.Before(staleBefore)) {
 		return 0, nil
 	}
 	if !ok {
@@ -220,6 +221,12 @@ func (f *Fake) ClaimEvent(_ context.Context, arg db.ClaimEventParams) (int64, er
 	e.Status, e.ClaimedAt = "claimed", f.Now()
 	f.Events[arg.EventID] = e
 	return 1, nil
+}
+
+func (f *Fake) CurrentTime(context.Context) (pgtype.Timestamptz, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return pgtype.Timestamptz{Time: f.Now(), Valid: true}, nil
 }
 
 func (f *Fake) EventStatus(_ context.Context, eventID string) (string, error) {
