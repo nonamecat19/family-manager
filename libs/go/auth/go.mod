@@ -3,7 +3,7 @@ module github.com/nnc/family-manager/libs/go/auth
 go 1.25.0
 
 require (
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 )
 
