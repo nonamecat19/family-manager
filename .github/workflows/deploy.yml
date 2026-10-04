@@ -1,7 +1,9 @@
 name: deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [verify]
+    types: [completed]
     branches: [master]
   workflow_dispatch:
     inputs:
@@ -20,7 +22,11 @@ env:
 
 jobs:
   build:
-    if: github.event_name == 'push' || inputs.image_tag == ''
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -29,6 +35,8 @@ jobs:
         service: [auth, family, finance, notes, notifications, recipes, telegram]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: docker/setup-buildx-action@v4
 
@@ -38,14 +46,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Reusing ${{ inputs.image_tag }} as built
+        if: inputs.image_tag != ''
+        run: echo "deploying the pre-built image ${{ inputs.image_tag }}"
+
       - uses: docker/build-push-action@v7
+        if: inputs.image_tag == ''
         with:
           context: .
           file: services/${{ matrix.service }}/Dockerfile
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.event.workflow_run.head_sha || github.sha }}
             ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha,scope=${{ matrix.service }}
@@ -53,7 +66,6 @@ jobs:
 
   deploy:
     needs: build
-    if: always() && needs.build.result != 'failure' && needs.build.result != 'cancelled'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -68,7 +80,7 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+          IMAGE_TAG: ${{ inputs.image_tag || github.event.workflow_run.head_sha || github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
