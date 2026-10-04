@@ -10,6 +10,7 @@ export const organic = {
   accent: organicTheme.accent,
   accent2: organicTheme.accent2,
   danger: organicTheme.danger,
+  dangerFg: organicTheme.dangerFg,
 } as const;
 
 const CATEGORY_TINTS = [

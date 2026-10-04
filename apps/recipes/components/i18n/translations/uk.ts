@@ -70,6 +70,17 @@ export const uk: { [K in keyof typeof en]: (typeof en)[K] extends string ? strin
   "preferences.telegramWaiting": "Чекаємо на Telegram. Натисніть «Start» у боті.",
   "preferences.telegramDisconnect": "Відключити",
   "preferences.telegramFailed": "Не вдалося підключити Telegram. Спробуйте ще раз.",
+  "preferences.connectedAccounts": "Підключені акаунти",
+
+  "connectedAccounts.title": "Підключені акаунти",
+  "connectedAccounts.emptyTitle": "Нічого не підключено",
+  "connectedAccounts.emptyBody": "Підключіть Telegram у Налаштуваннях, щоб побачити його тут.",
+  "connectedAccounts.loadFailed": "Не вдалося завантажити підключені акаунти.",
+  "connectedAccounts.providerTelegram": "Telegram",
+  "connectedAccounts.linked": "Підключено {date}",
+  "connectedAccounts.unlink": "Відключити",
+  "connectedAccounts.unlinkConfirm": "Відключити цей акаунт?",
+  "connectedAccounts.unlinkFailed": "Не вдалося відключити. Спробуйте ще раз.",
 
   "home.title": "Сімейна\nкулінарна книга",
   "home.yourProfile": "Ваш профіль",

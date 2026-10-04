@@ -371,7 +371,18 @@ export const en = {
   "settings.telegramWaiting": "Waiting for Telegram. Press Start in the bot.",
   "settings.telegramDisconnect": "Disconnect",
   "settings.telegramFailed": "Telegram linking did not respond. Try again.",
+  "settings.connectedAccounts": "Connected accounts",
   "settings.version": "Version {version} · family sync",
   "settings.language": "Language",
   "settings.signOut": "Sign out",
+
+  "connectedAccounts.title": "Connected accounts",
+  "connectedAccounts.emptyTitle": "Nothing connected",
+  "connectedAccounts.emptyBody": "Link Telegram from Settings to see it here.",
+  "connectedAccounts.loadFailed": "Connected accounts did not load.",
+  "connectedAccounts.providerTelegram": "Telegram",
+  "connectedAccounts.linked": "Linked {date}",
+  "connectedAccounts.unlink": "Disconnect",
+  "connectedAccounts.unlinkConfirm": "Disconnect this account?",
+  "connectedAccounts.unlinkFailed": "Could not disconnect. Try again.",
 } as const;

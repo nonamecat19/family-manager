@@ -260,5 +260,19 @@ export const strings = {
     telegramWaiting: "Waiting for Telegram. Press Start in the bot.",
     telegramDisconnect: "Disconnect",
     telegramFailed: "Telegram linking did not respond. Try again.",
+    connectedAccounts: "Connected accounts",
+  },
+
+  connectedAccounts: {
+    title: "Connected accounts",
+    back: "Back",
+    emptyTitle: "Nothing connected",
+    emptyBody: "Link Telegram from Settings to see it here.",
+    loadFailed: "Connected accounts did not load.",
+    providerTelegram: "Telegram",
+    linked: (date: string) => `Linked ${date}`,
+    unlink: "Disconnect",
+    unlinkConfirm: "Disconnect this account?",
+    unlinkFailed: "Could not disconnect. Try again.",
   },
 } as const;
