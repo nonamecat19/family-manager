@@ -1,16 +1,16 @@
 import type { Account, GroupNode, Member } from "@fm/api";
+import { Avatar, Icon, Kicker } from "@fm/ui";
 import { View } from "react-native";
 
 import {
   dayHeading,
   IconCircle,
-  Kicker,
-  MemberAvatar,
+  organic,
   Row,
-  Sheet,
+  ScrollSheet,
   tintFor,
   type Translate,
-} from "@/components/nocturne";
+} from "@/components/kit";
 
 export interface MemberSheetProps {
   visible: boolean;
@@ -23,17 +23,22 @@ export interface MemberSheetProps {
 
 export function MemberSheet({ visible, onClose, title, members, selectedId, onSelect }: MemberSheetProps) {
   return (
-    <Sheet visible={visible} onClose={onClose} title={title} scroll>
+    <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {members.map((member, index) => (
         <Row
           key={member.userId}
           title={member.displayName}
-          leading={<MemberAvatar name={member.displayName} index={index} selected={member.userId === selectedId} />}
+          leading={<Avatar name={member.displayName} index={index} size={34} />}
+          trailing={
+            member.userId === selectedId ? (
+              <Icon name="check" size={18} color={organic.accent.DEFAULT} />
+            ) : undefined
+          }
           onPress={() => onSelect(member.userId)}
           divider={index < members.length - 1}
         />
       ))}
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -61,10 +66,10 @@ export function AccountSheet({
   onSelect,
 }: AccountSheetProps) {
   return (
-    <Sheet visible={visible} onClose={onClose} title={title} scroll>
+    <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {shared.length > 0 ? (
-        <View className="pb-n2">
-          <Kicker className="mb-n2">{sharedLabel}</Kicker>
+        <View className="pb-[5.6px]">
+          <Kicker className="mb-[5.6px]">{sharedLabel}</Kicker>
           {shared.map((account, index) => (
             <Row
               key={account.id}
@@ -78,8 +83,8 @@ export function AccountSheet({
         </View>
       ) : null}
       {privateOwn.length > 0 ? (
-        <View className="pt-n3">
-          <Kicker className="mb-n2">{privateLabel}</Kicker>
+        <View className="pt-[8.4px]">
+          <Kicker className="mb-[5.6px]">{privateLabel}</Kicker>
           {privateOwn.map((account, index) => (
             <Row
               key={account.id}
@@ -92,7 +97,7 @@ export function AccountSheet({
           ))}
         </View>
       ) : null}
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -114,10 +119,10 @@ export function CategorySheet({
   onSelect,
 }: CategorySheetProps) {
   return (
-    <Sheet visible={visible} onClose={onClose} title={title} scroll>
+    <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {groups.map((node) => (
-        <View key={node.group?.id ?? ""} className="pb-n3">
-          <Kicker className="mb-n2">{node.group?.name ?? ""}</Kicker>
+        <View key={node.group?.id ?? ""} className="pb-[8.4px]">
+          <Kicker className="mb-[5.6px]">{node.group?.name ?? ""}</Kicker>
           {node.categories.map((category, index) => (
             <Row
               key={category.id}
@@ -136,7 +141,7 @@ export function CategorySheet({
           ))}
         </View>
       ))}
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -152,7 +157,7 @@ export interface DateSheetProps {
 
 export function DateSheet({ visible, onClose, title, days, selected, onSelect, t }: DateSheetProps) {
   return (
-    <Sheet visible={visible} onClose={onClose} title={title} scroll>
+    <ScrollSheet visible={visible} onClose={onClose} title={title} scroll>
       {days.map((iso, index) => (
         <Row
           key={iso}
@@ -162,6 +167,6 @@ export function DateSheet({ visible, onClose, title, days, selected, onSelect, t
           divider={index < days.length - 1}
         />
       ))}
-    </Sheet>
+    </ScrollSheet>
   );
 }

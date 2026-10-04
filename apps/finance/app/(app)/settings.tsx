@@ -1,10 +1,11 @@
 import {
-  fromWire,
   toDisplayError,
   useAccounts,
   useFamily,
   useFinanceMembers,
   useFinanceSettings,
+  useNotificationPreferences,
+  useSetNotificationPreferences,
   useTelegramLink,
   useTemplates,
   useUpdateFinanceSettings,
@@ -13,37 +14,23 @@ import {
 import { useAuth } from "@fm/auth";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
-import { useRouter, type Href } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Drawer,
-  EmptyState,
-  Screen,
-  ScreenHeader,
-  useDrawerItems,
-  type DrawerItem,
-} from "@/components/nocturne";
-import { SettingsRow } from "@/components/screens/settings/SettingsRow.tsx";
 import { clockTime, currentMember } from "@/components/screens/settings/currentMember.ts";
-import {
-  AdvancedSheet,
-  AppearanceSheet,
-  DataSheet,
-  PinSheet,
-  PrivacySheet,
-  TelegramSheet,
-} from "@/components/screens/settings/sheets.tsx";
-import { NotificationsSheet } from "@/components/screens/settings/NotificationsSheet.tsx";
+import { AdvancedSheet, DataSheet, PinSheet, PrivacySheet } from "@/components/screens/settings/sheets.tsx";
+import { Avatar, DangerLink, Display, GateMessage, initialOf, LanguageSection, LinkSection, NotificationsSection, PillButton, Screen, ScreenHeader, ScrollBody, StatTile, TelegramSection, SettingsLinkRow } from "@fm/ui";
 
-type SheetName = "privacy" | "pin" | "appearance" | "data" | "advanced" | "telegram" | "notifications";
+import type { Locale } from "@/components/i18n";
+
+type SheetName = "privacy" | "pin" | "data" | "advanced";
 
 const telegramBot = (Constants.expoConfig?.extra as { telegramBot?: string } | undefined)?.telegramBot;
 
 export default function SettingsScreen() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const router = useRouter();
   const { signOut } = useAuth();
 
@@ -55,76 +42,19 @@ export default function SettingsScreen() {
   const family = useFamily();
   const updateSettings = useUpdateFinanceSettings();
   const telegram = useTelegramLink({ bot: telegramBot, open: Linking.openURL });
+  const prefs = useNotificationPreferences();
+  const setPrefs = useSetNotificationPreferences();
 
-  const drawerItems = useDrawerItems();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [sheet, setSheet] = useState<SheetName | null>(null);
 
   const queries = [members, templates, widgets, accounts, settings, family];
   const pending = queries.some((query) => query.isPending);
   const failed = queries.find((query) => query.isError);
 
-  const memberList = members.data ?? [];
-  const privateOwn = accounts.data?.privateOwn ?? [];
-  const me = currentMember(memberList, templates.data, privateOwn);
-  const currencyCode = settings.data?.baseCurrencyCode ?? "UAH";
-  const version = t("settings.version", { version: Constants.expoConfig?.version ?? "" });
-
-  const openRoute = (href: string) => {
-    setDrawerOpen(false);
-    router.push(href as Href);
-  };
-
-  const onSelectDrawerItem = (item: DrawerItem) => {
-    setDrawerOpen(false);
-    if (!item.href || item.id === "settings") return;
-    router.push(item.href as Href);
-  };
-
-  const header = (
-    <ScreenHeader
-      title={t("settings.title")}
-      gradient
-      leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
-    />
-  );
-
-  const overlay = (
-    <Drawer
-      visible={drawerOpen}
-      onClose={() => setDrawerOpen(false)}
-      account={{ name: me?.displayName ?? "", email: me?.email ?? "" }}
-      household={{
-        name: family.data?.family?.name ?? "",
-        balance: accounts.data ? fromWire(accounts.data.sharedBalance, currencyCode) : undefined,
-      }}
-      scopes={[
-        { id: "family", label: t("common.family") },
-        ...memberList.map((member) => ({ id: member.userId, label: member.displayName })),
-      ]}
-      onSelectScope={(id) => {
-        setDrawerOpen(false);
-        if (id === "family") {
-          router.push("/(app)");
-          return;
-        }
-        router.push({ pathname: "/(app)/members/spending", params: { memberId: id } });
-      }}
-      items={drawerItems}
-      activeId="settings"
-      onSelect={onSelectDrawerItem}
-      footer={t("nav.syncedAt", { time: clockTime(accounts.dataUpdatedAt) })}
-    />
-  );
-
   if (pending) {
     return (
       <Screen>
-        {header}
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-        </View>
-        {overlay}
+        <GateMessage title={t("settings.title")} body={t("common.loadingEllipsis")} />
       </Screen>
     );
   }
@@ -133,115 +63,173 @@ export default function SettingsScreen() {
     const shown = toDisplayError(failed.error, t("common.loadFailed"));
     return (
       <Screen>
-        {header}
-        <View className="flex-1 justify-center">
-          <EmptyState
-            icon="gear"
-            title={t("gate.errorTitle")}
-            body={shown.message}
-            action={{
-              label: t("common.tryAgain"),
-              onPress: () => queries.forEach((query) => void query.refetch()),
-            }}
-          />
-          {shown.reference ? (
-            <Text className="px-n6 text-center text-[12px] text-neutral-600">
-              {t("common.errorReference", { ref: shown.reference })}
-            </Text>
-          ) : null}
-        </View>
-        {overlay}
+        <GateMessage
+          title={t("gate.errorTitle")}
+          body={shown.message}
+          reference={shown.reference ? t("common.errorReference", { ref: shown.reference }) : undefined}
+          actionTitle={t("common.tryAgain")}
+          onAction={() => queries.forEach((query) => void query.refetch())}
+        />
       </Screen>
     );
   }
 
+  const memberList = members.data ?? [];
+  const privateOwn = accounts.data?.privateOwn ?? [];
+  const me = currentMember(memberList, templates.data, privateOwn);
+  const currencyCode = settings.data?.baseCurrencyCode ?? "UAH";
+  const version = t("settings.version", { version: Constants.expoConfig?.version ?? "" });
+  const familyName = family.data?.family?.name ?? "";
   const templateCount = templates.data?.length ?? 0;
   const widgetCount = widgets.data?.length ?? 0;
+  const accountCount =
+    (accounts.data?.shared.length ?? 0) + (accounts.data?.privateOwn.length ?? 0);
+
+  const languageOptions: { value: Locale; label: string }[] = [
+    { value: "uk", label: t("settings.ukrainian") },
+    { value: "en", label: t("settings.english") },
+  ];
 
   return (
     <Screen>
-      {header}
+      <ScrollBody>
+        <ScreenHeader title={t("settings.title")} />
 
-      <ScrollView className="flex-1" contentContainerClassName="gap-n3 px-n4 pb-n5 pt-n5">
-        <SettingsRow
-          icon="users-three"
-          tone="accent"
-          label={t("settings.family")}
-          meta={t("settings.familyMeta", {
-            members: t("common.memberCount", { count: memberList.length }),
-          })}
-          onPress={() => openRoute("/(app)/household")}
-        />
-        <SettingsRow
-          icon="lightning"
-          tone="accent"
-          label={t("settings.templates")}
-          meta={t("settings.templatesMeta", {
-            count: templateCount,
-            name: me?.displayName ?? "",
-          })}
-          onPress={() => openRoute("/(app)/templates")}
-        />
-        <SettingsRow
-          icon="squares-four"
-          tone="accent"
-          label={t("settings.widgets")}
-          meta={t("common.activeCount", { count: widgetCount })}
-          onPress={() => openRoute("/(app)/widgets")}
-        />
-        <SettingsRow
-          icon="eye-slash"
-          tone="accent"
-          label={t("settings.privacy")}
-          meta={t("common.hiddenAccountCount", { count: privateOwn.length })}
-          onPress={() => setSheet("privacy")}
-        />
+        <View className="flex-row items-center gap-[16px]">
+          <Avatar initial={initialOf(me?.displayName || familyName)} size={64} />
+          <View className="flex-1">
+            <Display size={19}>{me?.displayName || familyName}</Display>
+            <Text className="mt-[2px] text-[13px] font-fig-bold text-neutral-600">
+              {familyName}
+            </Text>
+          </View>
+        </View>
 
-        {}
-        <View className="h-[8px]" />
+        <View className="flex-row gap-[10px]">
+          <StatTile value={String(templateCount)} label={t("settings.statTemplates")} />
+          <StatTile value={String(widgetCount)} label={t("settings.statWidgets")} />
+          <StatTile value={String(accountCount)} label={t("settings.statAccounts")} />
+        </View>
 
-        <SettingsRow icon="lock-key" label={t("settings.pin")} onPress={() => setSheet("pin")} />
-        <SettingsRow
-          icon="palette"
-          label={t("settings.appearance")}
-          onPress={() => setSheet("appearance")}
-        />
-        <SettingsRow icon="database" label={t("settings.data")} onPress={() => setSheet("data")} />
-        <SettingsRow
-          icon="device-mobile"
-          label={t("settings.connectedAccounts")}
-          onPress={() => openRoute("/(app)/connected-accounts")}
-        />
-        <SettingsRow
-          icon="device-mobile"
-          label={t("settings.approveDevice")}
-          onPress={() => openRoute("/(app)/approve-device")}
-        />
-        {telegram.available ? (
-          <SettingsRow
-            icon="device-mobile"
-            label={t("settings.telegram")}
-            meta={
-              telegram.identity
-                ? t("settings.telegramConnected")
-                : t("settings.telegramNotConnected")
-            }
-            onPress={() => setSheet("telegram")}
+        <View className="gap-[10px]">
+          <SettingsLinkRow
+            icon="users-three"
+            iconTone="accent"
+            label={t("settings.family")}
+            meta={t("settings.familyMeta", {
+              members: t("common.memberCount", { count: memberList.length }),
+            })}
+            onPress={() => router.push("/(app)/household")}
           />
-        ) : null}
-        <SettingsRow
-          icon="bell"
-          label={t("settings.notifications")}
-          onPress={() => setSheet("notifications")}
+          <SettingsLinkRow
+            icon="lightning"
+            iconTone="accent"
+            label={t("settings.templates")}
+            meta={t("settings.templatesMeta", {
+              count: templateCount,
+              name: me?.displayName ?? "",
+            })}
+            onPress={() => router.push("/(app)/templates")}
+          />
+          <SettingsLinkRow
+            icon="squares-four"
+            iconTone="accent"
+            label={t("settings.widgets")}
+            meta={t("common.activeCount", { count: widgetCount })}
+            onPress={() => router.push("/(app)/widgets")}
+          />
+          <SettingsLinkRow
+            icon="chart-bar"
+            iconTone="accent"
+            label={t("nav.charts")}
+            onPress={() => router.push("/(app)/charts")}
+          />
+          <SettingsLinkRow
+            icon="squares-four"
+            iconTone="accent"
+            label={t("nav.categories")}
+            onPress={() => router.push("/(app)/categories")}
+          />
+          <SettingsLinkRow
+            icon="arrows-clockwise"
+            iconTone="accent"
+            label={t("nav.recurring")}
+            onPress={() => router.push("/(app)/recurring")}
+          />
+          <SettingsLinkRow
+            icon="bell"
+            iconTone="accent"
+            label={t("nav.reminders")}
+            onPress={() => router.push("/(app)/reminders")}
+          />
+        </View>
+
+        <View className="flex-row gap-[10px]">
+          <View className="flex-1">
+            <PillButton title={t("settings.privacy")} onPress={() => setSheet("privacy")} />
+          </View>
+          <View className="flex-1">
+            <PillButton title={t("settings.pin")} onPress={() => setSheet("pin")} />
+          </View>
+        </View>
+
+        <LanguageSection
+          title={t("settings.language")}
+          hint={t("settings.languageHint")}
+          options={languageOptions}
+          value={locale}
+          onChange={setLocale}
         />
-        <SettingsRow
+
+        <TelegramSection
+          strings={{
+            title: t("settings.telegram"),
+            hint: t("settings.telegramHint"),
+            waiting: t("settings.telegramWaiting"),
+            connected: t("settings.telegramConnected"),
+            notConnected: t("settings.telegramNotConnected"),
+            connect: t("settings.telegramConnect"),
+            disconnect: t("settings.telegramDisconnect"),
+          }}
+          telegram={telegram}
+        />
+
+        <NotificationsSection
+          title={t("settings.notifications")}
+          failedText={t("settings.notificationsFailed")}
+          isError={prefs.isError}
+          topics={prefs.data?.topics ?? []}
+          muted={prefs.data?.muted ?? []}
+          onChange={(next) => setPrefs.mutate(next)}
+        />
+
+        <LinkSection
+          title={t("settings.connectedAccounts")}
+          label={t("settings.connectedAccounts")}
+          onPress={() => router.push("/(app)/connected-accounts")}
+        />
+
+        <LinkSection
+          title={t("settings.approveDevice")}
+          label={t("settings.approveDevice")}
+          onPress={() => router.push("/(app)/approve-device")}
+        />
+
+        <SettingsLinkRow
+          icon="database"
+          label={t("settings.data")}
+          onPress={() => setSheet("data")}
+        />
+        <SettingsLinkRow
           icon="sliders-horizontal"
           label={t("settings.advanced")}
           onPress={() => setSheet("advanced")}
         />
-      </ScrollView>
 
-      <Text className="px-n5 pb-n4 text-[10.5px] text-neutral-700">{version}</Text>
+        <Text className="text-center text-[10.5px] text-neutral-600">{version}</Text>
+
+        <DangerLink title={t("settings.signOut")} onPress={() => void signOut()} />
+      </ScrollBody>
 
       <PrivacySheet
         visible={sheet === "privacy"}
@@ -255,30 +243,13 @@ export default function SettingsScreen() {
         enabled={settings.data?.pinLockEnabled ?? false}
         onChange={(next) => updateSettings.mutate({ pinLockEnabled: next })}
       />
-      <AppearanceSheet visible={sheet === "appearance"} onClose={() => setSheet(null)} />
       <DataSheet
         visible={sheet === "data"}
         onClose={() => setSheet(null)}
         settings={settings.data ?? null}
         syncedAt={t("nav.syncedAt", { time: clockTime(settings.dataUpdatedAt) })}
       />
-      <TelegramSheet
-        visible={sheet === "telegram"}
-        onClose={() => setSheet(null)}
-        link={telegram}
-      />
-      <NotificationsSheet visible={sheet === "notifications"} onClose={() => setSheet(null)} />
-      <AdvancedSheet
-        visible={sheet === "advanced"}
-        onClose={() => setSheet(null)}
-        version={version}
-        onSignOut={() => {
-          setSheet(null);
-          void signOut();
-        }}
-      />
-
-      {overlay}
+      <AdvancedSheet visible={sheet === "advanced"} onClose={() => setSheet(null)} version={version} />
     </Screen>
   );
 }

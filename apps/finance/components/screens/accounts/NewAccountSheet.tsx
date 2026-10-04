@@ -1,9 +1,10 @@
 import { AccountKind, AccountVisibility, money, toDisplayError, useCreateAccount } from "@fm/api";
+import { Button, Field, SettingsToggleRow } from "@fm/ui";
 import { useState } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import { Button, Field, Sheet, ToggleRow } from "@/components/nocturne";
+import { ScrollSheet } from "@/components/kit";
 
 export interface NewAccountSheetProps {
   visible: boolean;
@@ -47,8 +48,8 @@ export function NewAccountSheet({ visible, onClose, currencyCode }: NewAccountSh
   };
 
   return (
-    <Sheet visible={visible} onClose={close} title={t("accounts.addAccount")}>
-      <View className="gap-n4 pb-n4">
+    <ScrollSheet visible={visible} onClose={close} title={t("accounts.addAccount")}>
+      <View className="gap-[11.2px] pb-[11.2px]">
         <Field
           label={t("accounts.addAccount")}
           value={name}
@@ -57,24 +58,25 @@ export function NewAccountSheet({ visible, onClose, currencyCode }: NewAccountSh
           error={error ?? undefined}
         />
 
-        <ToggleRow
+        <SettingsToggleRow
           label={t("accounts.visibleToAll")}
-          subtitle={shared ? undefined : t("accounts.excluded")}
           value={shared}
           onValueChange={setShared}
           divider={false}
         />
+        {shared ? null : (
+          <Text className="font-fig text-[11.5px] text-neutral-600">{t("accounts.excluded")}</Text>
+        )}
 
-        <View className="flex-row gap-n3">
-          <Button title={t("common.cancel")} variant="ghost" onPress={close} className="flex-1" />
+        <View className="flex-row gap-[8.4px]">
+          <Button title={t("common.cancel")} tone="quiet" onPress={close} />
           <Button
             title={t("common.save")}
             disabled={name.trim() === "" || create.isPending}
             onPress={() => void submit()}
-            className="flex-1"
           />
         </View>
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }

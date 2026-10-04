@@ -1,12 +1,11 @@
 import type { Money } from "@fm/api";
+import { Avatar, Icon, SegTabs } from "@fm/ui";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "../i18n/index.tsx";
 import { monthTitle } from "./format.ts";
-import { Icon } from "./icons.tsx";
-import { nocturne } from "./tokens.ts";
-import { MemberAvatar, MoneyText } from "./ui.tsx";
-
+import { organic } from "./tokens.ts";
+import { MoneyText } from "./ui.tsx";
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -20,38 +19,25 @@ export interface SegmentedTabsProps<T extends string> {
   className?: string;
 }
 
+/**
+ * Finance passes `{ value, label }` pairs (labels come straight from i18n), so the shared
+ * `SegTabs` — which takes `options` + a `labels` record — is adapted here rather than rewritten
+ * at every call site. The chrome underneath is the shared one.
+ */
 export function SegmentedTabs<T extends string>({
   options,
   value,
   onChange,
   className = "",
 }: SegmentedTabsProps<T>) {
+  const labels = {} as Record<T, string>;
+  for (const option of options) labels[option.value] = option.label;
   return (
-    <View className={`flex-row rounded-md p-[3px] ${className}`} style={{ backgroundColor: "rgba(233,233,237,.06)" }}>
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            accessibilityRole="tab"
-            accessibilityLabel={option.label}
-            accessibilityState={{ selected: active }}
-            onPress={() => onChange(option.value)}
-            className={`flex-1 items-center rounded-sm py-n3 ${active ? "bg-accent-800" : ""}`}
-          >
-            <Text
-              className={`text-[10.5px] font-semibold ${active ? "text-accent-200" : "text-neutral-500"}`}
-              style={{ letterSpacing: 0.9 }}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+    <View className={className}>
+      <SegTabs options={options.map((option) => option.value)} value={value} onChange={onChange} labels={labels} />
     </View>
   );
 }
-
 
 export type PeriodTab = "day" | "week" | "month" | "year" | "custom";
 
@@ -84,22 +70,18 @@ export function PeriodTabs({ value, onChange, options = PERIOD_TABS, className =
             accessibilityLabel={LABELS[option]}
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option)}
-            className="items-center px-[2px] py-n2"
+            className="items-center px-[2px] py-[5.6px]"
           >
-            <Text className={`text-[12.5px] ${active ? "font-medium text-fg" : "text-neutral-500"}`}>
+            <Text className={`text-[12.5px] ${active ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}>
               {LABELS[option]}
             </Text>
-            <View
-              className="mt-n2 h-[2px] w-[18px] rounded-full"
-              style={{ backgroundColor: active ? nocturne.accent.DEFAULT : "transparent" }}
-            />
+            <View className={`mt-[5.6px] h-[2px] w-[18px] rounded-full ${active ? "bg-accent" : "bg-transparent"}`} />
           </Pressable>
         );
       })}
     </View>
   );
 }
-
 
 export interface PeriodStepperProps {
   label: string;
@@ -124,9 +106,9 @@ export function PeriodStepper({
     <View className={`items-center ${className}`}>
       <View className="w-full flex-row items-center justify-between">
         <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPrev} hitSlop={10}>
-          <Icon name="caret-left" size={18} color={nocturne.neutral[500]} />
+          <Icon name="caret-left" size={18} color={organic.neutral[600]} />
         </Pressable>
-        <Text className="text-[13px] font-medium text-fg">{label}</Text>
+        <Text className="font-fig-med text-[13px] text-fg">{label}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={label}
@@ -135,11 +117,11 @@ export function PeriodStepper({
           hitSlop={10}
           style={nextDisabled ? { opacity: 0.3 } : undefined}
         >
-          <Icon name="caret-right" size={18} color={nocturne.neutral[500]} />
+          <Icon name="caret-right" size={18} color={organic.neutral[600]} />
         </Pressable>
       </View>
-      {total ? <MoneyText value={total} size={30} weight="medium" className="mt-n3" /> : null}
-      {subtitle ? <Text className="mt-[2px] text-[11.5px] text-neutral-500">{subtitle}</Text> : null}
+      {total ? <MoneyText value={total} size={30} weight="medium" className="mt-[8.4px]" /> : null}
+      {subtitle ? <Text className="mt-[2px] font-fig text-[11.5px] text-neutral-600">{subtitle}</Text> : null}
     </View>
   );
 }
@@ -169,7 +151,6 @@ export function MonthStepper({ year, month, onChange, ...rest }: MonthStepperPro
     />
   );
 }
-
 
 export type Scope =
   | { kind: "family" }
@@ -220,18 +201,18 @@ export function ScopeSwitcher({
         accessibilityLabel={label}
         onPress={onExpand}
         disabled={!onExpand}
-        className="flex-row items-center gap-n2"
+        className="flex-row items-center gap-[5.6px]"
       >
-        <Text className="text-[13px] text-neutral-400">{label}</Text>
-        {onExpand ? <Icon name="caret-down" size={14} color={nocturne.neutral[500]} /> : null}
+        <Text className="font-fig text-[13px] text-neutral-600">{label}</Text>
+        {onExpand ? <Icon name="caret-down" size={14} color={organic.neutral[600]} /> : null}
       </Pressable>
-      {balance ? <MoneyText value={balance} size={34} weight="medium" className="mt-n2" /> : null}
+      {balance ? <MoneyText value={balance} size={34} weight="medium" className="mt-[5.6px]" /> : null}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: nocturne.space.n2 }}
-        className="mt-n4"
+        contentContainerStyle={{ gap: 5.6 }}
+        className="mt-[11.2px]"
       >
         <ScopePill
           label={t("home.scopeAll", { count: members.length })}
@@ -277,16 +258,16 @@ function ScopePill({
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`flex-none flex-row items-center gap-n2 rounded-full py-[5px] pl-[5px] pr-n4 ${
-        selected ? "bg-accent-800" : "bg-surface"
+      className={`flex-none flex-row items-center gap-[5.6px] rounded-full py-[5px] pl-[5px] pr-[11.2px] ${
+        selected ? "bg-accent" : "bg-surface shadow-card"
       }`}
     >
       {avatar ? (
-        <MemberAvatar name={avatar.name} index={avatar.index} size={22} />
+        <Avatar name={avatar.name} index={avatar.index} size={22} />
       ) : (
         <View className="w-[3px]" />
       )}
-      <Text className={`text-[12px] font-medium ${selected ? "text-accent-100" : "text-neutral-400"}`}>
+      <Text className={`font-fig-med text-[12px] ${selected ? "text-white" : "text-neutral-600"}`}>
         {label}
       </Text>
     </Pressable>

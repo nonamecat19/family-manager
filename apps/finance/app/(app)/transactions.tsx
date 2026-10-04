@@ -23,28 +23,11 @@ import { useMemo, useState } from "react";
 import { Alert, FlatList, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  dayHeading,
-  Fab,
-  Field,
-  formatMoney,
-  IconButton,
-  Chip,
-  Kicker,
-  MoneyText,
-  nocturne,
-  PERIOD_TABS,
-  PeriodTabs,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  EmptyState,
-  type PeriodTab,
-} from "@/components/nocturne";
+import { AmountChip, dayHeading, Fab, formatMoney, MoneyText, PERIOD_TABS, PeriodTabs, SegmentedTabs, type PeriodTab } from "@/components/kit";
 import { FilterSheet } from "@/components/screens/transactions/FilterSheet.tsx";
 import { periodLabel } from "@/components/screens/transactions/periodLabel.ts";
 import { TransactionRow } from "@/components/screens/transactions/TransactionRow.tsx";
+import { Button, Field, IconButton, Kicker, organic, Screen, ScreenHeader, EmptyState } from "@fm/ui";
 
 type Kind = "expense" | "income";
 
@@ -199,29 +182,30 @@ export default function TransactionsScreen() {
 
   return (
     <Screen edges={["top"]}>
-      <ScreenHeader
-        gradient
-        className="overflow-hidden rounded-b-[24px]"
-        title={t("transactions.title")}
-        subtitle={t("common.family")}
-        leading={{ icon: "arrow-left", label: t("common.back"), onPress: () => router.back() }}
-        trailing={[
-          {
-            icon: "magnifying-glass",
-            label: t("transactions.search"),
-            onPress: () => setSearchOpen((open) => !open),
-            badge: query.trim() !== "",
-          },
-          {
-            icon: "funnel",
-            label: t("transactions.filter"),
-            onPress: () => setFilterOpen(true),
-            badge: memberIds.length + accountIds.length > 0,
-          },
-        ]}
-      >
+      <View className="gap-[16px] px-[22px] pt-[8px]">
+        <ScreenHeader
+          title={t("transactions.title")}
+          kicker={t("common.family")}
+          onBack={focused ? () => router.back() : undefined}
+          backLabel={t("common.back")}
+          actions={
+            <>
+              <IconButton
+                icon="magnifying-glass"
+                label={t("transactions.search")}
+                onPress={() => setSearchOpen((open) => !open)}
+                badge={query.trim() !== ""}
+              />
+              <IconButton
+                icon="funnel"
+                label={t("transactions.filter")}
+                onPress={() => setFilterOpen(true)}
+                badge={memberIds.length + accountIds.length > 0}
+              />
+            </>
+          }
+        />
         <SegmentedTabs<Kind>
-          className="mt-n4"
           value={kind}
           onChange={setKind}
           options={[
@@ -229,10 +213,10 @@ export default function TransactionsScreen() {
             { value: "income", label: t("common.income") },
           ]}
         />
-      </ScreenHeader>
+      </View>
 
       {searchOpen ? (
-        <View className="px-n5 pt-n3">
+        <View className="px-[22px] pt-[8px]">
           <Field
             label={t("transactions.search")}
             value={query}
@@ -244,8 +228,8 @@ export default function TransactionsScreen() {
       ) : null}
 
       {!focused ? null : (
-        <View className="flex-row px-n5 pt-n3">
-          <Chip
+        <View className="flex-row px-[22px] pt-[8px]">
+          <AmountChip
             label={focusLabel}
             icon="x"
             variant="outline"
@@ -254,10 +238,10 @@ export default function TransactionsScreen() {
         </View>
       )}
 
-      <View className="flex-1 px-n4 pt-n4">
+      <View className="flex-1 px-[11.2px] pt-[11.2px]">
         <PeriodTabs value={tab} onChange={changeTab} />
 
-        <View className="mt-n3 flex-row items-center justify-between">
+        <View className="mt-[8.4px] flex-row items-center justify-between">
           <View className="flex-row items-center">
             {steppable ? (
               <IconButton
@@ -276,7 +260,7 @@ export default function TransactionsScreen() {
                   if (!atToday) step(1);
                 }}
                 size={16}
-                color={atToday ? nocturne.neutral[800] : nocturne.text}
+                color={atToday ? organic.neutral[800] : organic.text}
               />
             ) : null}
           </View>
@@ -296,8 +280,8 @@ export default function TransactionsScreen() {
             if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
           }}
           renderDay={(day, last) => (
-            <View className="mb-n4">
-              <Kicker className="mb-n3 ml-n2">
+            <View className="mb-[11.2px]">
+              <Kicker className="mb-[8.4px] ml-[5.6px]">
                 {t("transactions.dayHeading", {
                   date: day.weekdayLabel || dayHeading(t, day.date),
                   amount: formatMoney(fromWire(day.dayTotal, currency)),
@@ -380,7 +364,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   if (pending) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+        <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
       </View>
     );
   }
@@ -388,8 +372,8 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   if (error) {
     const shown = toDisplayError(error, t("common.loadFailed"));
     return (
-      <View className="flex-1 justify-center gap-n3 px-n4">
-        <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
+      <View className="flex-1 justify-center gap-[8.4px] px-[11.2px]">
+        <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
         {shown.reference ? (
           <Text className="text-[12px] text-neutral-600">
             {t("common.errorReference", { ref: shown.reference })}
@@ -404,7 +388,6 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
     return (
       <View className="flex-1 justify-center">
         <EmptyState
-          icon="receipt"
           title={t("transactions.emptyTitle")}
           body={t("transactions.emptyBody")}
         />
@@ -415,7 +398,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
   return (
     <FlatList
       data={days}
-      className="mt-n4"
+      className="mt-[11.2px]"
       keyExtractor={(day) => day.date}
       renderItem={({ item, index }) => renderDay(item, index === days.length - 1)}
       showsVerticalScrollIndicator={false}
@@ -423,7 +406,7 @@ function Feed({ days, pending, empty, error, onRetry, fetchingMore, onEndReached
       onEndReachedThreshold={0.4}
       ListFooterComponent={
         fetchingMore ? (
-          <Text className="pb-n5 text-center text-[13px] text-neutral-500">
+          <Text className="pb-[16.8px] text-center text-[13px] text-neutral-600">
             {t("common.loadingEllipsis")}
           </Text>
         ) : null

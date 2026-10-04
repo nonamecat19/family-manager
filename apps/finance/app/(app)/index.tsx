@@ -21,35 +21,9 @@ import { useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Card,
-  Chip,
-  dayHeading,
-  DonutChart,
-  Drawer,
-  EmptyState,
-  Fab,
-  formatMoney,
-  iconOr,
-  Kicker,
-  monthTitle,
-  nocturne,
-  PeriodTabs,
-  PeriodStepper,
-  Screen,
-  ScreenHeader,
-  ScopeSwitcher,
-  SegmentedTabs,
-  seriesColor,
-  shortDate,
-  useDrawerItems,
-  type DonutSegment,
-  type PeriodTab,
-  type Scope,
-  type Translate,
-} from "@/components/nocturne";
+import { AmountChip, Card, dayHeading, DonutChart, type DonutSegment, Fab, formatMoney, monthTitle, PeriodStepper, type PeriodTab, PeriodTabs, type Scope, ScopeSwitcher, SegmentedTabs, seriesColor, shortDate, type Translate } from "@/components/kit";
 import { HomeGroupCard } from "@/components/screens/home/groupCard.tsx";
+import { Button, EmptyState, IconButton, iconOr, Kicker, organic, Screen, ScreenHeader } from "@fm/ui";
 
 export default function HomeScreen() {
   const { t } = useI18n();
@@ -59,7 +33,6 @@ export default function HomeScreen() {
   const [tab, setTab] = useState<PeriodTab>("month");
   const [period, setPeriod] = useState<PeriodInput>(() => currentPeriod("month"));
   const [kind, setKind] = useState<"expense" | "income">("expense");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const apiScope: ScopeInput =
     scope.kind === "family"
@@ -75,7 +48,6 @@ export default function HomeScreen() {
   });
   const family = useFamily();
   const logTemplate = useLogTemplate();
-  const drawerItems = useDrawerItems();
 
   const today = toISODate(new Date());
   const window = periodWindow(period);
@@ -130,22 +102,22 @@ export default function HomeScreen() {
     });
 
   const header = (
-    <ScreenHeader
-      title={t("home.title")}
-      gradient
-      leading={{ icon: "list", label: t("nav.menu"), onPress: () => setMenuOpen(true) }}
-      trailing={{
-        icon: "receipt",
-        label: t("transactions.title"),
-        onPress: () => router.push("/(app)/transactions"),
-      }}
-    >
+    <View className="gap-[16px] px-[22px] pt-[8px]">
+      <ScreenHeader
+        title={t("home.title")}
+        actions={
+          <IconButton
+            icon="receipt"
+            label={t("transactions.title")}
+            onPress={() => router.push("/(app)/transactions")}
+          />
+        }
+      />
       <ScopeSwitcher
         scope={scope}
         members={members}
         onChange={setScope}
         balance={fromWire(data?.headlineBalance, currency)}
-        className="mt-n3"
       />
       <SegmentedTabs
         options={[
@@ -154,9 +126,8 @@ export default function HomeScreen() {
         ]}
         value={kind}
         onChange={setKind}
-        className="mt-n4"
       />
-    </ScreenHeader>
+    </View>
   );
 
   if (summary.isPending) {
@@ -164,7 +135,7 @@ export default function HomeScreen() {
       <Screen>
         {header}
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={nocturne.accent.DEFAULT} />
+          <ActivityIndicator color={organic.accent.DEFAULT} />
         </View>
       </Screen>
     );
@@ -175,8 +146,8 @@ export default function HomeScreen() {
     return (
       <Screen>
         {header}
-        <View className="flex-1 justify-center gap-n4 px-n6">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-500">{shown.message}</Text>
+        <View className="flex-1 justify-center gap-[11.2px] px-[22.4px]">
+          <Text className="text-[13.5px] leading-[21px] text-neutral-600">{shown.message}</Text>
           {shown.reference ? (
             <Text className="text-[12px] text-neutral-600">
               {t("common.errorReference", { ref: shown.reference })}
@@ -198,7 +169,7 @@ export default function HomeScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: nocturne.space.n4, paddingBottom: 96, gap: nocturne.space.n3 }}
+        contentContainerStyle={{ padding: 11.2, paddingBottom: 96, gap: 8.4 }}
         showsVerticalScrollIndicator={false}
       >
         <Card>
@@ -208,9 +179,9 @@ export default function HomeScreen() {
             onPrev={() => step(-1)}
             onNext={() => step(1)}
             nextDisabled={period.granularity === "custom" || window.to >= today}
-            className="mt-n4"
+            className="mt-[11.2px]"
           />
-          <View className="mt-n4 items-center">
+          <View className="mt-[11.2px] items-center">
             <DonutChart
               segments={segments}
               size={178}
@@ -228,16 +199,16 @@ export default function HomeScreen() {
 
         {templates.length > 0 ? (
           <View>
-            <Kicker className="mb-n3 ml-n1">
+            <Kicker className="mb-[8.4px] ml-[2.8px]">
               {t("home.quickTemplates", { name: templateOwner })}
             </Kicker>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: nocturne.space.n2 }}
+              contentContainerStyle={{ gap: 5.6 }}
             >
               {templates.map((template) => (
-                <Chip
+                <AmountChip
                   key={template.id}
                   label={template.label}
                   icon={iconOr(template.icon)}
@@ -252,13 +223,12 @@ export default function HomeScreen() {
 
         {groups.length === 0 ? (
           <EmptyState
-            icon="chart-donut"
             title={t("home.emptyTitle")}
             body={t("home.emptyBody")}
             action={{ label: t("home.addTransaction"), onPress: () => router.push("/(app)/add") }}
           />
         ) : (
-          <View className="gap-n2">
+          <View className="gap-[5.6px]">
             {groups.map((group) => {
               const status = group.budget;
               const limit = status?.budget?.limit ? fromWire(status.budget.limit, currency) : null;
@@ -304,31 +274,6 @@ export default function HomeScreen() {
       </ScrollView>
 
       <Fab label={t("home.addTransaction")} onPress={() => router.push("/(app)/add")} />
-
-      <Drawer
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: family.data?.family?.name ?? "" }}
-        household={{
-          name: family.data?.family?.name ?? "",
-          balance: fromWire(data?.headlineBalance, currency),
-        }}
-        scopes={[
-          { id: "family", label: t("home.scopeFamily") },
-          ...members.map((member) => ({ id: member.id, label: member.name })),
-        ]}
-        activeScopeId={scope.kind === "family" ? "family" : scope.id}
-        onSelectScope={(id) => {
-          setScope(id === "family" ? { kind: "family" } : { kind: "member", id });
-          setMenuOpen(false);
-        }}
-        items={drawerItems}
-        activeId="home"
-        onSelect={(item) => {
-          setMenuOpen(false);
-          if (item.href && item.id !== "home") router.push(item.href);
-        }}
-      />
     </Screen>
   );
 }

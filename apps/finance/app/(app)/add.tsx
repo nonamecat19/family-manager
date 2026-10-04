@@ -26,19 +26,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  BottomIndicator,
-  Button,
-  CategoryIconGrid,
-  formatMoney,
-  iconOr,
-  Kicker,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  zeroLike,
-  type CategoryGridItem,
-} from "@/components/nocturne";
+import { CategoryIconGrid, formatMoney, SegmentedTabs, zeroLike, type CategoryGridItem } from "@/components/kit";
 
 import { AmountRow } from "@/components/screens/add-transaction/AmountRow";
 import { DateStrip } from "@/components/screens/add-transaction/DateStrip";
@@ -50,6 +38,7 @@ import {
   DateSheet,
   MemberSheet,
 } from "@/components/screens/add-transaction/pickers";
+import { Button, iconOr, Kicker, Screen, ScreenHeader } from "@fm/ui";
 
 type Kind = "expense" | "income";
 
@@ -269,13 +258,15 @@ export default function AddTransactionScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        title={editingId === "" ? t("add.title") : t("add.editTitle")}
-        gradient
-        leading={{ icon: "arrow-left", label: t("common.back"), onPress: () => router.back() }}
-      >
+      <View className="gap-[16px] px-[22px] pt-[8px]">
+        <ScreenHeader
+          title={editingId === "" ? t("add.title") : t("add.editTitle")}
+          onBack={
+            editingId === "" && seedTemplateId === "" ? undefined : () => router.back()
+          }
+          backLabel={t("common.back")}
+        />
         <SegmentedTabs<Kind>
-          className="mt-n3"
           value={kind}
           onChange={(next) => {
             setPickedKind(next);
@@ -288,11 +279,11 @@ export default function AddTransactionScreen() {
             { value: "income", label: t("common.income") },
           ]}
         />
-      </ScreenHeader>
+      </View>
 
       {failed ? (
-        <View className="flex-1 justify-center gap-n3 px-n5">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-500">
+        <View className="flex-1 justify-center gap-[8.4px] px-[16.8px]">
+          <Text className="text-[13.5px] leading-[21px] text-neutral-600">
             {toDisplayError(failed.error, t("common.loadFailed")).message}
           </Text>
           <Button
@@ -309,13 +300,13 @@ export default function AddTransactionScreen() {
         </View>
       ) : pending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : (
         <>
           <ScrollView
-            className="flex-1 px-n5"
-            contentContainerClassName="pb-n5 pt-n4 gap-n5"
+            className="flex-1 px-[16.8px]"
+            contentContainerClassName="pb-[16.8px] pt-[11.2px] gap-[16.8px]"
             keyboardShouldPersistTaps="handled"
           >
             <AmountRow
@@ -341,7 +332,7 @@ export default function AddTransactionScreen() {
               fallbackCurrency={currencyCode}
             />
 
-            <View className="flex-row gap-n3">
+            <View className="flex-row gap-[8.4px]">
               <PickerField
                 label={t("add.who")}
                 value={member?.displayName ?? t("common.none")}
@@ -357,7 +348,7 @@ export default function AddTransactionScreen() {
             </View>
 
             <View>
-              <View className="mb-n2 flex-row items-baseline justify-between">
+              <View className="mb-[5.6px] flex-row items-baseline justify-between">
                 <Kicker>{t("add.category")}</Kicker>
                 <Pressable
                   accessibilityRole="button"
@@ -365,7 +356,7 @@ export default function AddTransactionScreen() {
                   onPress={() => setSheet("category")}
                   hitSlop={6}
                 >
-                  <Text className="text-[11px] text-accent-400">
+                  <Text className="text-[11px] text-accent-700">
                     {group?.group?.name ? `${group.group.name} ▸` : t("add.more")}
                   </Text>
                 </Pressable>
@@ -392,8 +383,8 @@ export default function AddTransactionScreen() {
             />
 
             {error ? (
-              <View className="gap-n1">
-                <Text className="text-[12.5px] text-overspend">{error}</Text>
+              <View className="gap-[2.8px]">
+                <Text className="text-[12.5px] text-error">{error}</Text>
                 {errorRef ? (
                   <Text className="text-[11px] text-neutral-600">
                     {t("common.errorReference", { ref: errorRef })}
@@ -403,7 +394,7 @@ export default function AddTransactionScreen() {
             ) : null}
           </ScrollView>
 
-          <View className="px-n5 pb-n2 pt-n3">
+          <View className="px-[16.8px] pb-[5.6px] pt-[8.4px]">
             <Button
               title={t("add.submit", {
                 amount: formatMoney(amount ?? zeroLike(undefined, currencyCode)),
@@ -465,8 +456,6 @@ export default function AddTransactionScreen() {
         }}
         t={t}
       />
-
-      <BottomIndicator />
     </Screen>
   );
 }

@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 
-import { budgetState, nocturne, seriesColor } from "./tokens.ts";
+import { budgetState, organic, seriesColor } from "./tokens.ts";
 
 
 
@@ -45,7 +45,7 @@ export function DonutChart({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={nocturne.neutral[900]}
+          stroke={organic.neutral[200]}
           strokeWidth={thickness}
           fill="none"
         />
@@ -77,8 +77,8 @@ export function DonutChart({
         </G>
       </Svg>
       <View className="absolute items-center" pointerEvents="none">
-        {centerValue ? <Text className="text-[24px] font-medium text-fg">{centerValue}</Text> : null}
-        {centerLabel ? <Text className="mt-[2px] text-[11.5px] text-neutral-500">{centerLabel}</Text> : null}
+        {centerValue ? <Text className="font-fig-med text-[24px] text-fg">{centerValue}</Text> : null}
+        {centerLabel ? <Text className="mt-[2px] font-fig text-[11.5px] text-neutral-600">{centerLabel}</Text> : null}
       </View>
     </View>
   );
@@ -132,7 +132,7 @@ export function StackedBarSeries({
               onTouchEnd={onPressPoint ? () => onPressPoint(index) : undefined}
             >
               <View
-                className="w-[62%] justify-end overflow-hidden rounded-sm"
+                className="w-[62%] justify-end overflow-hidden rounded-xl"
                 style={{ height: (totals[index] ?? 0) === 0 ? 2 : (height * (totals[index] ?? 0)) / peak }}
               >
                 {series.map((s, si) => {
@@ -155,19 +155,19 @@ export function StackedBarSeries({
           );
         })}
       </View>
-      <View className="mt-n3 flex-row justify-between">
+      <View className="mt-[8.4px] flex-row justify-between">
         {points.map((point, index) => (
           <Text
             key={`${point.label}-label-${index}`}
             className={`flex-1 text-center text-[10.5px] ${
-              activeIndex === index ? "text-fg" : "text-neutral-600"
+              activeIndex === index ? "font-fig-bold text-fg" : "font-fig text-neutral-600"
             }`}
           >
             {point.label}
           </Text>
         ))}
       </View>
-      {legend ? <ChartLegend series={series} className="mt-n4" /> : null}
+      {legend ? <ChartLegend series={series} className="mt-[11.2px]" /> : null}
     </View>
   );
 }
@@ -180,14 +180,14 @@ export function ChartLegend({
   className?: string;
 }) {
   return (
-    <View className={`flex-row flex-wrap gap-n4 ${className}`}>
+    <View className={`flex-row flex-wrap gap-[11.2px] ${className}`}>
       {series.map((s, index) => (
-        <View key={s.id} className="flex-row items-center gap-n2">
+        <View key={s.id} className="flex-row items-center gap-[5.6px]">
           <View
             className="h-[8px] w-[8px] rounded-full"
             style={{ backgroundColor: s.color ?? seriesColor(index) }}
           />
-          <Text className="text-[11.5px] text-neutral-400">{s.label}</Text>
+          <Text className="font-fig text-[11.5px] text-neutral-600">{s.label}</Text>
         </View>
       ))}
     </View>
@@ -214,7 +214,7 @@ export function SplitBar({ parts, height = 10, rounded = true, className = "" }:
   return (
     <View
       className={`w-full flex-row overflow-hidden ${className}`}
-      style={{ height, borderRadius: rounded ? height / 2 : 0, backgroundColor: nocturne.neutral[900] }}
+      style={{ height, borderRadius: rounded ? height / 2 : 0, backgroundColor: organic.neutral[200] }}
     >
       {total > 0
         ? parts.map((part, index) => (
@@ -261,10 +261,10 @@ export function BudgetBar({
   return (
     <View className={className}>
       {label || shown ? (
-        <View className="mb-n2 flex-row items-baseline justify-between">
-          {label ? <Text className="text-[12.5px] text-neutral-300">{label}</Text> : <View />}
+        <View className="mb-[5.6px] flex-row items-baseline justify-between">
+          {label ? <Text className="font-fig text-[12.5px] text-neutral-600">{label}</Text> : <View />}
           {shown ? (
-            <Text className={`text-[12px] font-medium ${over ? "text-overspend" : "text-neutral-400"}`}>
+            <Text className={`font-fig-med text-[12px] ${over ? "text-error" : "text-neutral-600"}`}>
               {shown}
             </Text>
           ) : null}
@@ -272,14 +272,14 @@ export function BudgetBar({
       ) : null}
       <View
         className="w-full overflow-hidden"
-        style={{ height, borderRadius: height / 2, backgroundColor: nocturne.neutral[900] }}
+        style={{ height, borderRadius: height / 2, backgroundColor: organic.neutral[200] }}
       >
         <View
           style={{
             width: `${fraction * 100}%`,
             height: "100%",
             borderRadius: height / 2,
-            backgroundColor: over ? nocturne.overspend : (color ?? nocturne.accent.DEFAULT),
+            backgroundColor: over ? organic.danger : (color ?? organic.accent.DEFAULT),
           }}
         />
       </View>

@@ -12,20 +12,8 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Badge,
-  Button,
-  Card,
-  Field,
-  Icon,
-  Kicker,
-  MemberAvatar,
-  Row,
-  Screen,
-  Sheet,
-  nocturne,
-} from "@/components/nocturne";
-
+import { Card, Row } from "@/components/kit";
+import { Badge, Button, Field, Icon, Kicker, Avatar, Screen, Sheet, organic } from "@fm/ui";
 
 const BASE_CURRENCY = "UAH";
 const FALLBACK_TIMEZONE = "Europe/Kyiv";
@@ -111,15 +99,15 @@ export default function OnboardingScreen() {
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: nocturne.space.n6, paddingTop: 40, paddingBottom: nocturne.space.n5 }}
+          contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 22.4, paddingTop: 40, paddingBottom: 16.8 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="mb-n6 h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
-            <Icon name="users-three" size={22} color={nocturne.accent[400]} />
+          <View className="mb-[22.4px] h-[44px] w-[44px] items-center justify-center rounded-md border border-accent">
+            <Icon name="users-three" size={22} color={organic.accent[600]} />
           </View>
 
-          <Text className="text-[27px] font-medium leading-[31px] text-fg">{t("onboarding.title")}</Text>
-          <Text className="mb-n6 mt-n3 text-[13.5px] leading-[21px] text-neutral-500">
+          <Text className="text-[27px] font-fig-med leading-[31px] text-fg">{t("onboarding.title")}</Text>
+          <Text className="mb-[22.4px] mt-[8.4px] text-[13.5px] leading-[21px] text-neutral-600">
             {t("onboarding.body")}
           </Text>
 
@@ -135,14 +123,14 @@ export default function OnboardingScreen() {
             error={nameError ?? undefined}
           />
 
-          <Kicker className="mb-n3 mt-n6">{t("onboarding.members")}</Kicker>
-          <View className="gap-n3">
+          <Kicker className="mb-[8.4px] mt-[22.4px]">{t("onboarding.members")}</Kicker>
+          <View className="gap-[8.4px]">
             {members.map((member, index) => (
               <Card key={member.userId} padded={false}>
                 <Row
                   title={member.displayName}
                   subtitle={member.email}
-                  leading={<MemberAvatar name={member.displayName} index={index} size={32} />}
+                  leading={<Avatar name={member.displayName} index={index} size={32} />}
                   trailing={
                     existing && member.userId === existing.ownerUserId ? (
                       <Badge label={t("onboarding.owner")} tone="accent" />
@@ -158,8 +146,8 @@ export default function OnboardingScreen() {
                 <Row
                   title={email}
                   subtitle={t("onboarding.pending")}
-                  leading={<MemberAvatar name={email} index={members.length + index} size={32} />}
-                  trailing={<Icon name="clock" size={15} color={nocturne.neutral[600]} />}
+                  leading={<Avatar name={email} index={members.length + index} size={32} />}
+                  trailing={<Icon name="clock" size={15} color={organic.neutral[600]} />}
                   divider={false}
                 />
               </Card>
@@ -171,19 +159,17 @@ export default function OnboardingScreen() {
           <View className="flex-1" />
 
           {error ? (
-            <Text className="mb-n3 text-[12.5px] leading-[19px] text-overspend">{error}</Text>
+            <Text className="mb-[8.4px] text-[12.5px] leading-[19px] text-error">{error}</Text>
           ) : null}
           {errorRef ? (
-            <Text className="mb-n3 text-[12px] text-neutral-600">
+            <Text className="mb-[8.4px] text-[12px] text-neutral-600">
               {t("common.errorReference", { ref: errorRef })}
             </Text>
           ) : null}
 
           <Button
             title={busy ? t("common.loadingEllipsis") : t("onboarding.next")}
-            icon="arrow-right"
-            variant="ghost"
-            className="mt-n5 border-accent"
+            tone="quiet"
             disabled={busy}
             onPress={() => void submit()}
           />
@@ -209,12 +195,11 @@ export default function OnboardingScreen() {
           autoComplete="email"
           error={inviteError ?? undefined}
         />
-        <Button
+        <View className="mt-[16.8px]"><Button
           title={t("common.add")}
-          className="mt-n5"
           disabled={inviteEmail.trim() === "" || inviteMember.isPending}
           onPress={() => void addInvite()}
-        />
+        /></View>
       </Sheet>
     </Screen>
   );
@@ -228,25 +213,25 @@ function InviteAction({ label, onPress, disabled }: { label: string; onPress: ()
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      className="mt-n4 flex-row items-center justify-center gap-n2 rounded-md border border-dashed border-neutral-700 px-n5 py-n4"
+      className="mt-[11.2px] flex-row items-center justify-center gap-[5.6px] rounded-md border border-dashed border-neutral-400 px-[16.8px] py-[11.2px]"
       style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
     >
-      <Icon name="user-plus" size={17} color={nocturne.neutral[400]} />
-      <Text className="text-[13px] font-medium text-neutral-400">{label}</Text>
+      <Icon name="user-plus" size={17} color={organic.neutral[600]} />
+      <Text className="text-[13px] font-fig-med text-neutral-600">{label}</Text>
     </Pressable>
   );
 }
 
 function StepDots({ count, active }: { count: number; active: number }) {
   return (
-    <View className="mt-n4 flex-row justify-center gap-[5px]" pointerEvents="none">
+    <View className="mt-[11.2px] flex-row justify-center gap-[5px]" pointerEvents="none">
       {Array.from({ length: count }, (_, index) => (
         <View
           key={index}
           className="h-[3px] rounded-sm"
           style={{
             width: index === active ? 18 : 6,
-            backgroundColor: index === active ? nocturne.accent.DEFAULT : nocturne.neutral[800],
+            backgroundColor: index === active ? organic.accent.DEFAULT : organic.neutral[800],
           }}
         />
       ))}

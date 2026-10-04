@@ -8,7 +8,6 @@ import {
   useAccounts,
   useCategoryTree,
   useCreateTemplate,
-  useFamily,
   useDeleteTemplate,
   useFinanceSettings,
   useTemplates,
@@ -18,47 +17,28 @@ import {
 } from "@fm/api";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  Fab,
-  Field,
-  formatMoney,
-  IconCircle,
-  iconOr,
-  ListSection,
-  MoneyText,
-  Row,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  Sheet,
-  useDrawerItems,
-} from "@/components/nocturne";
+import { Fab, formatMoney, IconCircle, ListSection, MoneyText, Row, ScrollSheet, SegmentedTabs } from "@/components/kit";
 import { AmountRow } from "@/components/screens/add-transaction/AmountRow";
 import {
   AccountSheet,
   CategorySheet,
 } from "@/components/screens/add-transaction/pickers";
+import { Button, EmptyState, Field, iconOr, Screen, ScreenHeader, ScrollBody } from "@fm/ui";
 
 type Kind = "expense" | "income";
 
 export default function TemplatesScreen() {
   const { t } = useI18n();
   const router = useRouter();
-  const drawerItems = useDrawerItems();
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<QuickTemplate | null>(null);
   const [creating, setCreating] = useState(false);
 
   const templates = useTemplates();
   const settings = useFinanceSettings();
-  const family = useFamily();
 
   const currency = settings.data?.baseCurrencyCode || "UAH";
   const list = templates.data ?? [];
@@ -77,63 +57,58 @@ export default function TemplatesScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        gradient
-        title={t("templates.title")}
-        subtitle={t("templates.subtitle")}
-        leading={{ icon: "list", label: t("nav.menu"), onPress: () => setDrawerOpen(true) }}
-      />
+      <ScrollBody>
+        <ScreenHeader
+          title={t("templates.title")}
+          onBack={() => router.back()}
+          backLabel={t("common.back")}
+        />
 
-      {templates.isPending ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-[13px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
-        </View>
-      ) : templates.isError ? (
-        <View className="flex-1 justify-center gap-n3 px-n5">
-          <Text className="text-[13.5px] leading-[21px] text-neutral-500">
-            {toDisplayError(templates.error, t("common.loadFailed")).message}
-          </Text>
-          <Button title={t("common.tryAgain")} onPress={() => void templates.refetch()} />
-        </View>
-      ) : list.length === 0 ? (
-        <View className="flex-1 justify-center">
+        {templates.isPending ? (
+          <View className="items-center py-[28px]">
+            <Text className="text-[13px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
+          </View>
+        ) : templates.isError ? (
+          <View className="gap-[12px] py-[18px]">
+            <Text className="text-[13.5px] leading-[21px] text-neutral-600">
+              {toDisplayError(templates.error, t("common.loadFailed")).message}
+            </Text>
+            <Button title={t("common.tryAgain")} onPress={() => void templates.refetch()} />
+          </View>
+        ) : list.length === 0 ? (
           <EmptyState
-            icon="lightning"
             title={t("templates.emptyTitle")}
             body={t("templates.emptyBody")}
             action={{ label: t("templates.new"), onPress: () => setCreating(true) }}
           />
-        </View>
-      ) : (
-        <ScrollView className="flex-1 px-n4" contentContainerClassName="pb-[96px] pt-n4">
-          <ListSection title={t("templates.yours")}>
-            {list.map((template, index) => (
-              <Row
-                key={template.id}
-                title={template.label}
-                subtitle={t("templates.used", { count: template.usageCount })}
-                leading={<IconCircle icon={iconOr(template.icon, "lightning")} />}
-                trailing={
-                  <MoneyText value={fromWire(template.amount, currency)} size={14} weight="medium" />
-                }
-                onPress={() => setEditing(template)}
-                onLongPress={() => confirmRemove(template)}
-                chevron
-                divider={index < list.length - 1}
-              />
-            ))}
-          </ListSection>
+        ) : (
+          <>
+            <ListSection title={t("templates.yours")}>
+              {list.map((template, index) => (
+                <Row
+                  key={template.id}
+                  title={template.label}
+                  subtitle={t("templates.used", { count: template.usageCount })}
+                  leading={<IconCircle icon={iconOr(template.icon, "lightning")} />}
+                  trailing={
+                    <MoneyText value={fromWire(template.amount, currency)} size={14} weight="medium" />
+                  }
+                  onPress={() => setEditing(template)}
+                  onLongPress={() => confirmRemove(template)}
+                  chevron
+                  divider={index < list.length - 1}
+                />
+              ))}
+            </ListSection>
 
-          <View className="mt-n4">
             <Button
               title={t("templates.logFromAdd")}
-              variant="ghost"
-              icon="plus"
+              tone="quiet"
               onPress={() => router.push("/(app)/add")}
             />
-          </View>
-        </ScrollView>
-      )}
+          </>
+        )}
+      </ScrollBody>
 
       <Fab label={t("templates.new")} onPress={() => setCreating(true)} />
 
@@ -144,19 +119,6 @@ export default function TemplatesScreen() {
         onClose={() => {
           setCreating(false);
           setEditing(null);
-        }}
-      />
-
-      <Drawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: "" }}
-        household={{ name: family.data?.family?.name ?? "" }}
-        items={drawerItems}
-        activeId="templates"
-        onSelect={(item) => {
-          setDrawerOpen(false);
-          if (item.href && item.id !== "templates") router.push(item.href);
         }}
       />
     </Screen>
@@ -256,13 +218,13 @@ function TemplateSheet({
 
   return (
     <>
-      <Sheet
+      <ScrollSheet
         visible={visible}
         onClose={onClose}
         title={template ? t("templates.editTitle") : t("templates.new")}
         scroll
       >
-        <View className="gap-n4">
+        <View className="gap-[11.2px]">
           <Field label={t("templates.label")} value={label} onChangeText={setLabel} />
 
           <SegmentedTabs<Kind>
@@ -287,29 +249,27 @@ function TemplateSheet({
 
           <Button
             title={account ? account.name : t("add.account")}
-            variant="ghost"
-            icon="credit-card"
+            tone="quiet"
             onPress={() => setPicker("account")}
           />
           <Button
             title={category ? category.name : t("add.category")}
-            variant="ghost"
-            icon="squares-four"
+            tone="quiet"
             onPress={() => setPicker("category")}
           />
 
-          {error ? <Text className="text-[12.5px] text-overspend">{error}</Text> : null}
+          {error ? <Text className="text-[12.5px] text-error">{error}</Text> : null}
 
           <Button
             title={t("common.save")}
             onPress={() => void save()}
             disabled={create.isPending || update.isPending}
           />
-          <Text className="text-center text-[11px] text-neutral-500">
+          <Text className="text-center text-[11px] text-neutral-600">
             {t("templates.amountNote", { amount: amount ? formatMoney(amount) : "" })}
           </Text>
         </View>
-      </Sheet>
+      </ScrollSheet>
 
       <AccountSheet
         visible={picker === "account"}

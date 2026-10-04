@@ -1,7 +1,8 @@
 import { fromWire, type QuickTemplate } from "@fm/api";
 import { Text, View } from "react-native";
 
-import { Chip, iconOr, Kicker } from "@/components/nocturne";
+import { AmountChip } from "@/components/kit";
+import { iconOr, Kicker } from "@fm/ui";
 
 export interface TemplateStripProps {
   templates: readonly QuickTemplate[];
@@ -28,10 +29,10 @@ export function TemplateStrip({
 }: TemplateStripProps) {
   return (
     <View>
-      <Kicker className="mb-n2">{title}</Kicker>
-      <View className="flex-row flex-wrap gap-n2">
+      <Kicker className="mb-[5.6px]">{title}</Kicker>
+      <View className="flex-row flex-wrap gap-[5.6px]">
         {templates.map((template) => (
-          <Chip
+          <AmountChip
             key={template.id}
             label={template.label}
             amount={fromWire(template.amount, fallbackCurrency)}
@@ -41,9 +42,9 @@ export function TemplateStrip({
             onLongPress={() => onPrefill(template)}
           />
         ))}
-        <Chip label={newLabel} icon="plus" variant="outline" onPress={onNew} />
+        <AmountChip label={newLabel} icon="plus" variant="outline" onPress={onNew} />
       </View>
-      <Text className="mt-n3 text-[10.5px] leading-[16px] text-neutral-600">{hint}</Text>
+      <Text className="mt-[8.4px] text-[10.5px] leading-[16px] text-neutral-600">{hint}</Text>
     </View>
   );
 }

@@ -1,6 +1,5 @@
 import { Pressable, Text } from "react-native";
-
-import { Icon, nocturne, type IconName } from "@/components/nocturne";
+import { Icon, organic, IconName } from "@fm/ui";
 
 export interface DashedActionProps {
   label: string;
@@ -15,11 +14,11 @@ export function DashedAction({ label, onPress, icon = "folder-plus", className =
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className={`flex-row items-center justify-center gap-n2 rounded-lg border border-dashed py-n4 ${className}`}
-      style={({ pressed }) => ({ borderColor: nocturne.neutral[700], opacity: pressed ? 0.8 : 1 })}
+      className={`flex-row items-center justify-center gap-[5.6px] rounded-lg border border-dashed py-[11.2px] ${className}`}
+      style={({ pressed }) => ({ borderColor: organic.neutral[700], opacity: pressed ? 0.8 : 1 })}
     >
-      <Icon name={icon} size={17} color={nocturne.neutral[500]} />
-      <Text className="text-[13px] font-medium text-neutral-500">{label}</Text>
+      <Icon name={icon} size={17} color={organic.neutral[600]} />
+      <Text className="text-[13px] font-fig-med text-neutral-600">{label}</Text>
     </Pressable>
   );
 }

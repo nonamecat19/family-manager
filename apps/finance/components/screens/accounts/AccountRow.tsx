@@ -2,8 +2,8 @@ import { fromWire, type Account, type HiddenPrivateSummary } from "@fm/api";
 import { View } from "react-native";
 
 import { useI18n } from "@/components/i18n";
-import { IconCircle, MoneyText, Row, iconOr, nocturne, tintFor, type IconName } from "@/components/nocturne";
-
+import { IconCircle, MoneyText, Row, tintFor } from "@/components/kit";
+import { iconOr, organic, IconName } from "@fm/ui";
 
 const KIND_ICON: Record<number, IconName> = {
   0: "wallet",
@@ -15,8 +15,8 @@ const KIND_ICON: Record<number, IconName> = {
   6: "receipt",
 };
 
-const PRIVATE_TINT = { bg: nocturne.neutral[800], fg: nocturne.neutral[400] } as const;
-const HIDDEN_TINT = { bg: nocturne.neutral[900], fg: nocturne.neutral[600] } as const;
+const PRIVATE_TINT = { bg: organic.neutral[800], fg: organic.neutral[400] } as const;
+const HIDDEN_TINT = { bg: organic.neutral[900], fg: organic.neutral[600] } as const;
 
 export interface AccountRowProps {
   account: Account;
@@ -33,9 +33,9 @@ export function AccountRow({ account, tone = "shared", onPress }: AccountRowProp
     <View
       className="overflow-hidden rounded-lg"
       style={{
-        backgroundColor: isPrivate ? nocturne.bg : nocturne.surface,
+        backgroundColor: isPrivate ? organic.bg : organic.surface,
         borderWidth: 1,
-        borderColor: isPrivate ? nocturne.neutral[900] : nocturne.neutral[800],
+        borderColor: isPrivate ? organic.neutral[900] : organic.neutral[800],
       }}
     >
       <Row
@@ -68,9 +68,9 @@ export function HiddenPrivateRow({ summary }: { summary: HiddenPrivateSummary })
     <View
       className="overflow-hidden rounded-lg"
       style={{
-        backgroundColor: nocturne.bg,
+        backgroundColor: organic.bg,
         borderWidth: 1,
-        borderColor: nocturne.neutral[900],
+        borderColor: organic.neutral[900],
         opacity: 0.75,
       }}
     >

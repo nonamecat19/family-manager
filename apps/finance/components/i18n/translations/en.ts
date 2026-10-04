@@ -106,7 +106,6 @@ export const en = {
   "common.weekdayShort.7": "Sun",
   "common.dayHeading": "{day} {month}, {weekday}",
 
-  "nav.menu": "Menu",
   "nav.home": "Home",
   "nav.accounts": "Accounts",
   "nav.charts": "Charts",
@@ -385,7 +384,19 @@ export const en = {
   "settings.notificationsFailed": "Notification settings did not load.",
   "settings.version": "Version {version} · family sync",
   "settings.language": "Language",
+  "settings.languageHint": "Changes what the app shows you, not what your family sees.",
+  "settings.english": "English",
+  "settings.ukrainian": "Ukrainian",
   "settings.signOut": "Sign out",
+  "settings.statTemplates": "Templates",
+  "settings.statWidgets": "Widgets",
+  "settings.statAccounts": "Accounts",
+
+  "tabs.home": "Home",
+  "tabs.transactions": "Transactions",
+  "tabs.add": "Add",
+  "tabs.accounts": "Accounts",
+  "tabs.you": "You",
 
   "connectedAccounts.title": "Connected accounts",
   "connectedAccounts.emptyTitle": "Nothing connected",

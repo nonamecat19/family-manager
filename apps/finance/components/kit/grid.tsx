@@ -1,7 +1,7 @@
+import { Icon } from "@fm/ui";
 import { Pressable, Text, View } from "react-native";
 
-import { Icon } from "./icons.tsx";
-import { nocturne, tintFor } from "./tokens.ts";
+import { organic, tintFor } from "./tokens.ts";
 import { IconCircle } from "./ui.tsx";
 
 export interface CategoryGridItem {
@@ -33,7 +33,7 @@ export function CategoryIconGrid({
     <View className={`flex-row flex-wrap ${className}`}>
       {items.map((item, index) => {
         const selected = item.id === selectedId;
-        const tint = item.color ? { bg: item.color, fg: nocturne.bg } : tintFor(index);
+        const tint = item.color ? { bg: item.color, fg: organic.text } : tintFor(index);
         return (
           <Pressable
             key={item.id}
@@ -41,22 +41,21 @@ export function CategoryIconGrid({
             accessibilityLabel={item.label}
             accessibilityState={{ selected }}
             onPress={() => onSelect(item)}
-            className="items-center py-n3"
+            className="items-center py-[8.4px]"
             style={{ width }}
           >
             <View
-              className="rounded-full"
               style={{
                 padding: 2,
-                borderWidth: selected ? 1.5 : 0,
-                borderColor: nocturne.accent[200],
                 borderRadius: 999,
+                borderWidth: selected ? 1.5 : 0,
+                borderColor: organic.accent.DEFAULT,
               }}
             >
               <IconCircle icon={item.icon} tint={tint} size={42} />
             </View>
             <Text
-              className={`mt-n2 text-center text-[10.5px] ${selected ? "text-fg" : "text-neutral-400"}`}
+              className={`mt-[5.6px] text-center text-[10.5px] ${selected ? "font-fig-bold text-fg" : "font-fig text-neutral-600"}`}
               numberOfLines={1}
             >
               {item.label}
@@ -69,16 +68,13 @@ export function CategoryIconGrid({
           accessibilityRole="button"
           accessibilityLabel={more.label}
           onPress={more.onPress}
-          className="items-center py-n3"
+          className="items-center py-[8.4px]"
           style={{ width }}
         >
-          <View
-            className="h-[46px] w-[46px] items-center justify-center rounded-full border border-dashed"
-            style={{ borderColor: nocturne.neutral[700] }}
-          >
-            <Icon name="dots-three" size={20} color={nocturne.neutral[500]} />
+          <View className="h-[46px] w-[46px] items-center justify-center rounded-full border border-dashed border-neutral-400">
+            <Icon name="dots-three" size={20} color={organic.neutral[600]} />
           </View>
-          <Text className="mt-n2 text-center text-[10.5px] text-neutral-400">{more.label}</Text>
+          <Text className="mt-[5.6px] text-center font-fig text-[10.5px] text-neutral-600">{more.label}</Text>
         </Pressable>
       ) : null}
     </View>

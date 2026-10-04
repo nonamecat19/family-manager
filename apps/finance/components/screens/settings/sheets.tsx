@@ -1,23 +1,9 @@
-import {
-  fromWire,
-  toDisplayError,
-  type Account,
-  type HouseholdFinanceSettings,
-  type TelegramLink,
-} from "@fm/api";
+import { fromWire, type Account, type HouseholdFinanceSettings } from "@fm/api";
 import { Text, View } from "react-native";
 
-import { LOCALES, useI18n, type Locale, type TranslationKey } from "@/components/i18n";
-import {
-  Button,
-  Kicker,
-  MoneyText,
-  Row,
-  SegmentedTabs,
-  Sheet,
-  ToggleRow,
-} from "@/components/nocturne";
-
+import { useI18n, type TranslationKey } from "@/components/i18n";
+import { MoneyText, Row, ScrollSheet } from "@/components/kit";
+import { SettingsToggleRow } from "@fm/ui";
 
 export function PrivacySheet({
   visible,
@@ -32,9 +18,9 @@ export function PrivacySheet({
 }) {
   const { t } = useI18n();
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.privacy")} scroll>
+    <ScrollSheet visible={visible} onClose={onClose} title={t("settings.privacy")} scroll>
       {privateOwn.length === 0 ? (
-        <Text className="py-n5 text-[13px] text-neutral-500">{t("common.none")}</Text>
+        <Text className="py-[16.8px] text-[13px] text-neutral-600">{t("common.none")}</Text>
       ) : (
         <View className="overflow-hidden rounded-lg bg-bg">
           {privateOwn.map((account, index) => (
@@ -47,7 +33,7 @@ export function PrivacySheet({
           ))}
         </View>
       )}
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -64,27 +50,11 @@ export function PinSheet({
 }) {
   const { t } = useI18n();
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.pin")}>
+    <ScrollSheet visible={visible} onClose={onClose} title={t("settings.pin")}>
       <View className="overflow-hidden rounded-lg bg-bg">
-        <ToggleRow label={t("settings.pin")} value={enabled} onValueChange={onChange} divider={false} />
+        <SettingsToggleRow label={t("settings.pin")} value={enabled} onValueChange={onChange} divider={false} />
       </View>
-    </Sheet>
-  );
-}
-
-export function AppearanceSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { t, locale, setLocale } = useI18n();
-  return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.appearance")}>
-      <View className="gap-n3 pb-n4">
-        <Kicker>{t("settings.language")}</Kicker>
-        <SegmentedTabs<Locale>
-          options={LOCALES.map((value) => ({ value, label: value.toUpperCase() }))}
-          value={locale}
-          onChange={setLocale}
-        />
-      </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -107,12 +77,12 @@ export function DataSheet({
     ? [settings.baseCurrencyCode, settings.timezone, weekday].filter((fact) => fact !== "").join(" · ")
     : "";
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.data")}>
-      <View className="gap-n3 pb-n4">
-        <Text className="text-[13px] text-neutral-300">{facts}</Text>
+    <ScrollSheet visible={visible} onClose={onClose} title={t("settings.data")}>
+      <View className="gap-[8.4px] pb-[11.2px]">
+        <Text className="text-[13px] text-neutral-600">{facts}</Text>
         <Text className="text-[11.5px] text-neutral-600">{syncedAt}</Text>
       </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }
 
@@ -120,61 +90,17 @@ export function AdvancedSheet({
   visible,
   onClose,
   version,
-  onSignOut,
 }: {
   visible: boolean;
   onClose: () => void;
   version: string;
-  onSignOut: () => void;
 }) {
   const { t } = useI18n();
   return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.advanced")}>
-      <View className="gap-n4 pb-n4">
+    <ScrollSheet visible={visible} onClose={onClose} title={t("settings.advanced")}>
+      <View className="gap-[11.2px] pb-[11.2px]">
         <Text className="text-[11.5px] text-neutral-600">{version}</Text>
-        <Button title={t("settings.signOut")} variant="ghost" onPress={onSignOut} />
       </View>
-    </Sheet>
-  );
-}
-
-export function TelegramSheet({
-  visible,
-  onClose,
-  link,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  link: TelegramLink;
-}) {
-  const { t } = useI18n();
-  const error = link.error ? toDisplayError(link.error, t("settings.telegramFailed")).message : null;
-  return (
-    <Sheet visible={visible} onClose={onClose} title={t("settings.telegram")}>
-      <View className="gap-n4 pb-n4">
-        <Text className="text-[13px] text-neutral-300">
-          {link.identity ? t("settings.telegramConnected") : t("settings.telegramNotConnected")}
-        </Text>
-        <Text className="text-[11.5px] text-neutral-600">
-          {link.awaiting ? t("settings.telegramWaiting") : t("settings.telegramHint")}
-        </Text>
-        {error ? <Text className="text-[11.5px] text-overspend">{error}</Text> : null}
-        {link.identity ? (
-          <Button
-            title={t("settings.telegramDisconnect")}
-            variant="ghost"
-            disabled={link.unlinking}
-            onPress={() => void link.unlink().catch(() => undefined)}
-          />
-        ) : (
-          <Button
-            title={t("settings.telegramConnect")}
-            icon="device-mobile"
-            disabled={link.connecting || link.loading}
-            onPress={() => void link.connect().catch(() => undefined)}
-          />
-        )}
-      </View>
-    </Sheet>
+    </ScrollSheet>
   );
 }

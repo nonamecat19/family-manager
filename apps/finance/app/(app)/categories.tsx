@@ -5,7 +5,6 @@ import {
   useCategoryTree,
   useCreateCategory,
   useCreateCategoryGroup,
-  useFamily,
   type GroupNode,
 } from "@fm/api";
 import { useState } from "react";
@@ -13,21 +12,11 @@ import { ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useI18n } from "@/components/i18n";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  formatMoney,
-  Screen,
-  ScreenHeader,
-  SegmentedTabs,
-  useDrawerItems,
-  type CategoryGridItem,
-  type SegmentedOption,
-} from "@/components/nocturne";
+import { formatMoney, SegmentedTabs, type CategoryGridItem, type SegmentedOption } from "@/components/kit";
 import { DashedAction } from "@/components/screens/categories/DashedAction.tsx";
 import { GroupCard } from "@/components/screens/categories/GroupCard.tsx";
 import { NameSheet } from "@/components/screens/categories/NameSheet.tsx";
+import { EmptyState, IconButton, Screen, ScreenHeader, GateMessage } from "@fm/ui";
 
 type Kind = "expense" | "income";
 
@@ -46,9 +35,6 @@ export default function CategoriesScreen() {
   const [openIds, setOpenIds] = useState<readonly string[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const drawerItems = useDrawerItems();
-  const family = useFamily();
 
   const tree = useCategoryTree({ kind: WIRE_KIND[kind] });
   const createGroup = useCreateCategoryGroup();
@@ -94,16 +80,19 @@ export default function CategoriesScreen() {
   };
 
   const header = (
-    <ScreenHeader
-      title={t("categories.title")}
-      gradient
-      leading={{ icon: "list", label: t("nav.menu"), onPress: () => setMenuOpen(true) }}
-      trailing={{
-        icon: allOpen ? "caret-up" : "caret-down",
-        label: allOpen ? t("common.none") : t("common.all"),
-        onPress: () => setOpenIds(allOpen ? [] : ids),
-      }}
-    >
+    <View className="gap-[16px] px-[22px] pt-[8px]">
+      <ScreenHeader
+        title={t("categories.title")}
+        onBack={() => router.back()}
+        backLabel={t("common.back")}
+        actions={
+          <IconButton
+            icon={allOpen ? "caret-up" : "caret-down"}
+            label={allOpen ? t("common.none") : t("common.all")}
+            onPress={() => setOpenIds(allOpen ? [] : ids)}
+          />
+        }
+      />
       <SegmentedTabs
         options={options}
         value={kind}
@@ -111,9 +100,8 @@ export default function CategoriesScreen() {
           setKind(next);
           setOpenIds(null);
         }}
-        className="mt-n4"
       />
-    </ScreenHeader>
+    </View>
   );
 
   return (
@@ -122,7 +110,7 @@ export default function CategoriesScreen() {
 
       {tree.isPending ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-[15px] text-neutral-500">{t("common.loadingEllipsis")}</Text>
+          <Text className="text-[15px] text-neutral-600">{t("common.loadingEllipsis")}</Text>
         </View>
       ) : tree.isError ? (
         <ErrorPane
@@ -135,7 +123,6 @@ export default function CategoriesScreen() {
       ) : groups.length === 0 ? (
         <View className="flex-1 justify-center">
           <EmptyState
-            icon="squares-four"
             title={t("categories.emptyTitle")}
             body={t("categories.emptyBody")}
             action={{ label: t("categories.newGroup"), onPress: () => setDraft({ kind: "group" }) }}
@@ -144,7 +131,7 @@ export default function CategoriesScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-n3 px-n4 pb-n6 pt-n3"
+          contentContainerClassName="gap-[8.4px] px-[11.2px] pb-[22.4px] pt-[8.4px]"
           showsVerticalScrollIndicator={false}
         >
           {groups.map((node, index) => {
@@ -194,19 +181,6 @@ export default function CategoriesScreen() {
         }}
         onSubmit={submitDraft}
       />
-
-      <Drawer
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        account={{ name: family.data?.family?.name ?? "", email: "" }}
-        household={{ name: family.data?.family?.name ?? "" }}
-        items={drawerItems}
-        activeId="categories"
-        onSelect={(item) => {
-          setMenuOpen(false);
-          if (item.href && item.id !== "categories") router.push(item.href);
-        }}
-      />
     </Screen>
   );
 }
@@ -225,10 +199,11 @@ function ErrorPane({
   onRetry: () => void;
 }) {
   return (
-    <View className="flex-1 justify-center gap-n4 px-n6">
-      <Text className="text-[13.5px] leading-[21px] text-neutral-500">{message}</Text>
-      {reference ? <Text className="text-[12px] text-neutral-600">{referenceLabel(reference)}</Text> : null}
-      <Button title={retryLabel} onPress={onRetry} />
-    </View>
+    <GateMessage
+      body={message}
+      reference={reference ? referenceLabel(reference) : undefined}
+      actionTitle={retryLabel}
+      onAction={onRetry}
+    />
   );
 }
