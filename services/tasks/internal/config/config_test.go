@@ -10,6 +10,7 @@ func base(t *testing.T) {
 	t.Setenv("TASKS_DATABASE_URL", "postgres://x")
 	t.Setenv("TASKS_JWKS_URL", "http://auth/.well-known/jwks.json")
 	t.Setenv("TASKS_FAMILY_ADDR", "http://family:9090/")
+	t.Setenv("TASKS_FAMILY_PUBLIC_ADDR", "http://family:8080/")
 }
 
 func TestLoadDefaults(t *testing.T) {
@@ -27,7 +28,7 @@ func TestLoadDefaults(t *testing.T) {
 }
 
 func TestLoadRequiresDatabaseJWKSAndFamily(t *testing.T) {
-	for _, missing := range []string{"TASKS_DATABASE_URL", "TASKS_JWKS_URL", "TASKS_FAMILY_ADDR"} {
+	for _, missing := range []string{"TASKS_DATABASE_URL", "TASKS_JWKS_URL", "TASKS_FAMILY_ADDR", "TASKS_FAMILY_PUBLIC_ADDR"} {
 		t.Run(missing, func(t *testing.T) {
 			base(t)
 			t.Setenv(missing, "")

@@ -198,14 +198,16 @@
         "services/tasks/internal/db/queries/members.sql",
         "services/tasks/db/",
         "services/tasks/internal/db/embed_test.go",
-        "services/tasks/go.mod"
+        "services/tasks/go.mod",
+        "services/tasks/internal/config/config.go",
+        "services/tasks/internal/config/config_test.go"
       ],
       "depends_on": [
         "u08"
       ],
       "gate": "auto",
       "status": "todo",
-      "attempts": 1,
+      "attempts": 2,
       "commit": null,
       "blocked_reason": null,
       "id": "u09",
@@ -250,9 +252,9 @@
         "u10"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 1,
-      "commit": null,
+      "commit": "1942d23",
       "blocked_reason": null,
       "id": "u11",
       "title": "Domain: reminder schedule (deadline lead, birthday N days before, 08:00 digest, snooze)",
@@ -285,7 +287,7 @@
       "title": "Task handlers + Connect layer with family scoping and assignee restriction",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Tests: family A cannot read/change family B tasks; assignees must be members of caller's family. Titles/notes bounded in runes. Errors via rpc.Internal."
+      "notes": "Tests: family A cannot read/change family B tasks; assignees must be members of caller's family. Titles/notes bounded in runes. Errors via rpc.Internal. Rules (coordinator, from reviews): Handlers fail closed on fmauth.FromContext error (the internal :9090 listener has no auth interceptor). UpdateTask: due_on \"\" clears date AND time; due_time without a date -> InvalidArgument; formats YYYY-MM-DD / HH:MM in the family timezone (schedule.ParseDeadline). due_at is always set when due_on is set (date-only = end of local day, schedule.Deadline.At). AssigneeList presence: absent = unchanged, present-empty = clear all, else replace. Assignees must be members: refresh via family.Client.ListMembers(caller bearer, family) over the PUBLIC listener and upsert known_members + DeleteKnownMembersExcept in one InTx (the query refuses an empty keep list). ReopenTask clears completed_by_user_id (CHECK enforces). ListTasks keeps SQL order (due_at NULLS LAST, urgent>high>medium>low); DONE filter sorts by completed_at desc in Go. Reminders are created at WRITE time: Create/Update -> per assignee UpsertReminder(kind task_due, occurrence = due_at RFC3339, remind_at = schedule.TaskRemindAt) + DeletePendingRemindersForItemExcept(keep assignees, occurrence); Complete/Delete -> DeletePendingRemindersForItem(task_due); Reopen -> re-create. Typed constants: task_reminders.kind 'task_due'|'birthday'; calendar_links.kind 'task'|'birthday'. Every authenticated RPC (shared caller helper) calls TouchKnownMember(caller family, caller user, claims email) so known_members is filled even for families that never assign a task."
     },
     {
       "nodes": [
@@ -308,7 +310,7 @@
       "title": "Birthday handlers + Connect layer",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Family scoping tests for birthdays; age/next occurrence from u10."
+      "notes": "Family scoping tests for birthdays; age/next occurrence from u10. Rules (coordinator, from reviews): Validate with schedule.ValidateBirthday (rejects 29 Feb with a non-leap year and future dates). Age shown only when year != 0 (Occurrence.HasAge), never infer from turning_age == 0. DeleteBirthday deletes pending task_reminders (kind birthday) for it. Create/UpdateBirthday also run the ListMembers refresh of known_members (upsert + DeleteKnownMembersExcept in one InTx)."
     },
     {
       "nodes": [
@@ -331,7 +333,7 @@
       "title": "Family settings (timezone) handlers + Connect layer",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Validate IANA zone; first write wins as initialisation from device."
+      "notes": "Validate IANA zone; first write wins as initialisation from device. Rules (coordinator, from reviews): GetFamilySettings(device_timezone) initialises the family timezone on first read (InitFamilySettings ON CONFLICT DO NOTHING) \u2014 document and test; SetFamilySettings validates the IANA zone."
     },
     {
       "nodes": [
@@ -358,7 +360,7 @@
       "title": "Event publisher + tasks.task.assigned on create/update",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/events/... ./internal/handler/...",
-      "notes": "Request id as NATS header per ADR 0008. Publish only for newly added assignees."
+      "notes": "Request id as NATS header per ADR 0008. Publish only for newly added assignees. Rules (coordinator, from reviews): Call bus.EnsureStream(ctx, \"tasks\") before publishing (also in u24)."
     },
     {
       "nodes": [
@@ -381,7 +383,7 @@
       "title": "Reminder scheduler loop publishing tasks.task.due and tasks.birthday.upcoming",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/scheduler/...",
-      "notes": "Injected clock; dedupe via reminder_deliveries (channel=push)."
+      "notes": "Injected clock; dedupe via reminder_deliveries (channel=push). Rules (coordinator, from reviews): Before publishing any reminder, check the recipient with family.Client.IsMember(family, user) over the INTERNAL client; if false skip it and DeleteKnownMember (known_members can be stale). Birthdays: recipients = known_members of the family (each IsMember-checked); materialise yearly occurrences with schedule.NextOccurrence + BirthdayRemindAt(now) (past times dropped). Dedupe per channel via reminder_deliveries (RecordDelivery 'push'); scan with ListDueReminders(now, 'push'). Birthday recipients come from known_members (filled by u12's TouchKnownMember and the u12/u13 ListMembers refresh). On IsMember ERROR (family down): skip this tick for that recipient \u2014 no RecordDelivery, no DeleteKnownMember."
     },
     {
       "nodes": [
@@ -407,7 +409,7 @@
       "title": "Reminder and digest RPCs for the telegram scheduler (ListMyDueReminders, Ack, Snooze, GetDigest)",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays."
+      "notes": "Per-user, called with the linked user's token. Dedupe channel=telegram. Digest: today's tasks, overdue, upcoming birthdays. Rules (coordinator, from reviews): SnoozeReminder rewrites remind_at (sets snoozed_until, clears acked_at) AND ClearDeliveries for that reminder in the same InTx, so it fires again; works on already-acked reminders. Snooze option via schedule.SnoozeUntil (rejects unknown). reminder_id is the task_reminders uuid (fits a 64-byte Telegram callback with a short prefix). AckReminder records channel 'telegram' delivery. ListMyDueReminders uses ListDueRemindersForUser(channel 'telegram') and IsMember-checks nothing (caller is the user). GetDigest: date = schedule.Today(family tz); due = schedule.DigestDue(now, tz, last sent); MarkDigestSent per user."
     },
     {
       "nodes": [
@@ -478,7 +480,7 @@
       "title": "Google connect / disconnect / list + pick calendar RPCs; FailedPrecondition when OAuth unset",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/... ./internal/grpc/...",
-      "notes": "Per-member connection. With client id/secret empty: service starts, ConnectGoogle returns FailedPrecondition with a clear message (tested)."
+      "notes": "Per-member connection. With client id/secret empty: service starts, ConnectGoogle returns FailedPrecondition with a clear message (tested). Rules (coordinator, from reviews): SetGoogleCalendar stores the real calendarList id (never \"primary\") and deletes the user's old calendar_links when the calendar changes. DisconnectGoogle calls gcal.Revoke then deletes the connection and links. ConnectGoogle maps gcal.ErrInsufficientScope / ErrMissingRefresh to FailedPrecondition with a clear message; ErrClientConfig -> Internal (log, no Google body). Never overwrite the stored email from Refresh output (it returns none). Seal the refresh token with crypto.Box.Seal(token, crypto.Owner(family, user)); never store raw Google error bodies in last_error or logs."
     },
     {
       "nodes": [
@@ -502,7 +504,7 @@
       "title": "Calendar push sync: task/birthday -> Google event create/update/delete",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/calsync/...",
-      "notes": "Completed task keeps its event with a check-mark title prefix (brief default). Birthdays as yearly all-day events. Tests use gcal fake."
+      "notes": "Completed task keeps its event with a check-mark title prefix (brief default). Birthdays as yearly all-day events. Tests use gcal fake. Rules (coordinator, from reviews): We OWN the events (gcal.UpdateEvent is a PUT): user additions such as location are not preserved \u2014 accepted. Never resurrect: if the linked event was cancelled in Google and the pull has not run, run pull for that connection first or skip. Events need a duration: date-only = all-day (end date exclusive, next day); timed = 30 minutes ending at the deadline. Skip pushing into a calendar the family already has a link in (CalendarLinkedInFamily) so shared calendars do not get duplicates. Keep calendar_links until the Google delete succeeds; sweep ListOrphanCalendarLinks. gcal.ErrForbidden = lost writer access: set last_error, ask the user to pick another calendar (not reconnect)."
     },
     {
       "nodes": [
@@ -549,7 +551,7 @@
       "title": "Calendar pull sync: incremental syncToken polling applies Google edits/deletes",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/calsync/...",
-      "notes": "No watch channels (non-goal). Event edited in Google updates title/deadline; deleted event deletes task/birthday."
+      "notes": "No watch channels (non-goal). Event edited in Google updates title/deadline; deleted event deletes task/birthday. Rules (coordinator, from reviews): Pull semantics: a cancelled event (Google returns only id+status) deletes the linked task/birthday \u2014 map through GetCalendarLinkByEvent, never through extendedProperties. Edits pull title/notes/date back. Clamp/skip titles (1-200 trimmed) and notes (<= 4000) from Google so the sync token always advances; 410 -> full resync."
     },
     {
       "nodes": [
@@ -557,7 +559,9 @@
       ],
       "files": [
         "services/tasks/cmd/server/main.go",
-        "services/tasks/internal/config/config.go"
+        "services/tasks/internal/config/config.go",
+        "services/tasks/internal/members/removed.go",
+        "services/tasks/internal/members/removed_test.go"
       ],
       "depends_on": [
         "u09",
@@ -577,7 +581,7 @@
       "title": "Wire tasks main: pool + migrations, family client, publisher, reminder scheduler, calendar pull loop",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go vet ./... && GOWORK=off go test -race ./...",
-      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04)."
+      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04). Rules (coordinator, from reviews): Wire TASKS_FAMILY_ADDR (family :9090, internal RPCs) AND TASKS_FAMILY_PUBLIC_ADDR (family :8080, token-forwarded ListMembers) \u2014 both required at startup. bus.EnsureStream(ctx, \"tasks\") before the publisher and scheduler; /healthz -> database.HealthHandler(pool, 0); subscribe family.member.removed -> DeleteKnownMember. The family.member.removed subscriber (internal/members/removed.go + test) deletes the known_members row, the user's pending task_reminders and their task_assignees rows in that family."
     },
     {
       "nodes": [
@@ -627,7 +631,7 @@
       "title": "Local runtime wiring: tasks in compose, tasks DB init, telegram TASKS addr/token, tgemu fake token",
       "kind": "infra",
       "acceptance": "just tg-up && curl -fsS http://localhost:8088/healthz",
-      "notes": "STOP: compose + infra/** + .env*. tasks on host port 8088; TASKS_GOOGLE_* passed through empty by default; TELEGRAM_TASKS_ADDR=http://tasks:8080; tgemu TELEGRAM_TASKS_TOKEN='1005:tasks', TOKEN_FILE '', short TELEGRAM_TASKS_TICK for e2e. An existing pgdata volume does not re-run init: createdb tasks by hand. Proves migrations apply to the local DB."
+      "notes": "STOP: compose + infra/** + .env*. tasks on host port 8088; TASKS_GOOGLE_* passed through empty by default; TELEGRAM_TASKS_ADDR=http://tasks:8080; tgemu TELEGRAM_TASKS_TOKEN='1005:tasks', TOKEN_FILE '', short TELEGRAM_TASKS_TICK for e2e. An existing pgdata volume does not re-run init: createdb tasks by hand. Proves migrations apply to the local DB. Rules (coordinator, from reviews): Compose: TASKS_FAMILY_ADDR=http://family:9090, TASKS_FAMILY_PUBLIC_ADDR=http://family:8080; telegram TELEGRAM_TASKS_ADDR=http://tasks:8080 (public listener, user bearer). Caddy must not expose tasks:9090."
     },
     {
       "nodes": [
@@ -693,7 +697,7 @@
       "title": "tasks bot: /add, /today, /mine, /done",
       "kind": "service",
       "acceptance": "cd services/telegram && go test -race ./internal/bots/tasks/...",
-      "notes": "Mirror bots/finance. Talks to tasks only through sdk/go tasksv1connect."
+      "notes": "Mirror bots/finance. Talks to tasks only through sdk/go tasksv1connect. Rules (coordinator, from reviews): /add parser accepts today/tomorrow AND \u0441\u044c\u043e\u0433\u043e\u0434\u043d\u0456/\u0437\u0430\u0432\u0442\u0440\u0430 plus YYYY-MM-DD and HH:MM; user titles and names always pass through bot.Esc before an i18n %s."
     },
     {
       "nodes": [
@@ -736,7 +740,7 @@
       "title": "telegram reminder + 08:00 digest scheduler for linked users",
       "kind": "service",
       "acceptance": "cd services/telegram && go test -race ./internal/scheduler/...",
-      "notes": "Ticks every TELEGRAM_TASKS_TICK; per linked user calls ListMyDueReminders / GetDigest, sends with t4 keyboard, then AckReminder. Injected clock in tests."
+      "notes": "Ticks every TELEGRAM_TASKS_TICK; per linked user calls ListMyDueReminders / GetDigest, sends with t4 keyboard, then AckReminder. Injected clock in tests. Rules (coordinator, from reviews): Per linked user: ListMyDueReminders -> send with the t4 keyboard -> AckReminder; GetDigest when due -> send -> MarkDigestSent. Membership is enforced server-side (the user's own token)."
     },
     {
       "nodes": [
@@ -822,7 +826,8 @@
       "id": "n2",
       "title": "notifications: accept APP_TASKS push tokens",
       "kind": "service",
-      "acceptance": "cd services/notifications && go test -race ./internal/handler/..."
+      "acceptance": "cd services/notifications && go test -race ./internal/handler/...",
+      "notes": " Rules (coordinator, from reviews): Mapping APP_TASKS -> 'tasks' needs an additive notifications migration widening CHECK (app IN ('notes','finance','recipes'))."
     },
     {
       "nodes": [
@@ -919,7 +924,8 @@
       "id": "a2",
       "title": "@fm/api: task hooks + deadline-then-priority sort and mine/all/done filters",
       "kind": "package",
-      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": " Rules (coordinator, from reviews): Sort on due_at. Clearing all assignees must send an EMPTY AssigneeList (presence matters) \u2014 test it."
     },
     {
       "nodes": [
@@ -940,7 +946,8 @@
       "id": "a3",
       "title": "@fm/api: birthday hooks + age display helpers",
       "kind": "package",
-      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api"
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/api",
+      "notes": " Rules (coordinator, from reviews): Age display tests year == 0, never turning_age == 0."
     },
     {
       "nodes": [
@@ -1124,7 +1131,8 @@
       "id": "p6",
       "title": "apps/tasks birthdays list (with age) and editor",
       "kind": "app",
-      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks"
+      "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
+      "notes": " Rules (coordinator, from reviews): Age display tests year == 0, never turning_age == 0."
     },
     {
       "nodes": [
@@ -1147,7 +1155,7 @@
       "title": "apps/tasks settings: language, notifications, Google Calendar connect/disconnect/pick, connected accounts",
       "kind": "app",
       "acceptance": "pnpm turbo run lint typecheck test --filter=@fm/app-tasks",
-      "notes": "expo-auth-session code + PKCE -> ConnectGoogle; FailedPrecondition shown as 'Google Calendar not configured'."
+      "notes": "expo-auth-session code + PKCE -> ConnectGoogle; FailedPrecondition shown as 'Google Calendar not configured'. Rules (coordinator, from reviews): Google connect: authorize with access_type=offline&prompt=consent, scopes 'openid email https://www.googleapis.com/auth/calendar', PKCE S256; the client type is the human's decision (ESCALATIONS E4)."
     },
     {
       "nodes": [
@@ -1291,5 +1299,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T20:03:39.827Z"
+  "updated_at": "2026-10-05T20:05:30.759Z"
 }

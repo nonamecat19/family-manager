@@ -20,7 +20,8 @@ type Config struct {
 	Issuer   string
 	Audience string
 
-	FamilyAddr string
+	FamilyAddr       string
+	FamilyPublicAddr string
 
 	DefaultTimezone string
 
@@ -98,6 +99,7 @@ func Load() (*Config, error) {
 		Issuer:             v.GetString("ISSUER"),
 		Audience:           v.GetString("AUDIENCE"),
 		FamilyAddr:         strings.TrimSuffix(v.GetString("FAMILY_ADDR"), "/"),
+		FamilyPublicAddr:   strings.TrimSuffix(v.GetString("FAMILY_PUBLIC_ADDR"), "/"),
 		DefaultTimezone:    v.GetString("DEFAULT_TIMEZONE"),
 		GoogleClientID:     strings.TrimSpace(v.GetString("GOOGLE_CLIENT_ID")),
 		GoogleClientSecret: strings.TrimSpace(v.GetString("GOOGLE_CLIENT_SECRET")),
@@ -116,7 +118,10 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("config: TASKS_JWKS_URL is required")
 	}
 	if cfg.FamilyAddr == "" {
-		return nil, fmt.Errorf("config: TASKS_FAMILY_ADDR is required")
+		return nil, fmt.Errorf("config: TASKS_FAMILY_ADDR (family's internal listener, :9090) is required")
+	}
+	if cfg.FamilyPublicAddr == "" {
+		return nil, fmt.Errorf("config: TASKS_FAMILY_PUBLIC_ADDR (family's public listener, :8080) is required")
 	}
 	if _, err := time.LoadLocation(cfg.DefaultTimezone); err != nil {
 		return nil, fmt.Errorf("config: TASKS_DEFAULT_TIMEZONE %q: %w", cfg.DefaultTimezone, err)

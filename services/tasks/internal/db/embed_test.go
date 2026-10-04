@@ -21,13 +21,20 @@ func TestMigrationsLoad(t *testing.T) {
 var createTable = regexp.MustCompile(`(?s)CREATE TABLE IF NOT EXISTS (\w+) \((.*?)\n\);`)
 
 func TestEveryTableIsScopedByFamily(t *testing.T) {
-	body, err := Migrations.ReadFile(MigrationsDir + "/000001_init.up.sql")
+	var tables [][]string
+	entries, err := Migrations.ReadDir(MigrationsDir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tables := createTable.FindAllStringSubmatch(string(body), -1)
-	if len(tables) < 9 {
-		t.Fatalf("expected the nine tables, found %d", len(tables))
+	for _, e := range entries {
+		body, err := Migrations.ReadFile(MigrationsDir + "/" + e.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		tables = append(tables, createTable.FindAllStringSubmatch(string(body), -1)...)
+	}
+	if len(tables) < 10 {
+		t.Fatalf("expected at least ten tables, found %d", len(tables))
 	}
 	for _, m := range tables {
 		if !strings.Contains(m[2], "family_id ") {

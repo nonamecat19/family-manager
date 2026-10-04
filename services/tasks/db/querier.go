@@ -23,6 +23,8 @@ type Querier interface {
 	DeleteCalendarLink(ctx context.Context, arg DeleteCalendarLinkParams) error
 	DeleteCalendarLinksForUser(ctx context.Context, arg DeleteCalendarLinksForUserParams) error
 	DeleteGoogleConnection(ctx context.Context, arg DeleteGoogleConnectionParams) (int64, error)
+	DeleteKnownMember(ctx context.Context, arg DeleteKnownMemberParams) error
+	DeleteKnownMembersExcept(ctx context.Context, arg DeleteKnownMembersExceptParams) error
 	DeletePendingRemindersForItem(ctx context.Context, arg DeletePendingRemindersForItemParams) error
 	DeletePendingRemindersForItemExcept(ctx context.Context, arg DeletePendingRemindersForItemExceptParams) error
 	DeleteTask(ctx context.Context, arg DeleteTaskParams) (int64, error)
@@ -44,6 +46,7 @@ type Querier interface {
 	ListDueReminders(ctx context.Context, arg ListDueRemindersParams) ([]TaskReminder, error)
 	ListDueRemindersForUser(ctx context.Context, arg ListDueRemindersForUserParams) ([]TaskReminder, error)
 	ListFamilyGoogleConnections(ctx context.Context, familyID pgtype.UUID) ([]GoogleConnection, error)
+	ListKnownMembers(ctx context.Context, familyID pgtype.UUID) ([]KnownMember, error)
 	ListOrphanCalendarLinks(ctx context.Context, arg ListOrphanCalendarLinksParams) ([]CalendarLink, error)
 	ListSyncableGoogleConnections(ctx context.Context) ([]GoogleConnection, error)
 	ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, error)
@@ -55,10 +58,12 @@ type Querier interface {
 	SetGoogleError(ctx context.Context, arg SetGoogleErrorParams) error
 	SetGoogleSyncState(ctx context.Context, arg SetGoogleSyncStateParams) error
 	SnoozeReminder(ctx context.Context, arg SnoozeReminderParams) (TaskReminder, error)
+	TouchKnownMember(ctx context.Context, arg TouchKnownMemberParams) error
 	UpdateBirthday(ctx context.Context, arg UpdateBirthdayParams) (Birthday, error)
 	UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error)
 	UpsertCalendarLink(ctx context.Context, arg UpsertCalendarLinkParams) error
 	UpsertGoogleConnection(ctx context.Context, arg UpsertGoogleConnectionParams) (GoogleConnection, error)
+	UpsertKnownMember(ctx context.Context, arg UpsertKnownMemberParams) error
 	UpsertReminder(ctx context.Context, arg UpsertReminderParams) error
 }
 

@@ -61,6 +61,14 @@ type GoogleConnection struct {
 	UpdatedAt    pgtype.Timestamptz
 }
 
+type KnownMember struct {
+	FamilyID    pgtype.UUID
+	UserID      pgtype.UUID
+	DisplayName string
+	Email       string
+	SeenAt      pgtype.Timestamptz
+}
+
 type ReminderDelivery struct {
 	ReminderID  pgtype.UUID
 	FamilyID    pgtype.UUID
