@@ -3,12 +3,12 @@ FROM eclipse-temurin:26-jdk-alpine AS build
 
 WORKDIR /src
 
-COPY gradlew settings.gradle build.gradle ./
-COPY gradle/ gradle/
+COPY services/notes/gradlew services/notes/settings.gradle services/notes/build.gradle ./
+COPY services/notes/gradle/ gradle/
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon dependencies --configuration runtimeClasspath
 
-COPY src/ src/
+COPY services/notes/src/ src/
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon -x test bootJar && cp build/libs/*-SNAPSHOT.jar /app.jar
 
