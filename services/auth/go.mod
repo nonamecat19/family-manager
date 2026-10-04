@@ -13,7 +13,7 @@ replace (
 )
 
 require (
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0
