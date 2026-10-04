@@ -22,7 +22,7 @@ a human present. You do not write product code.
 6. Write it with the CLI, never by hand:
 
 ```sh
-node tools/backlog/backlog.mjs new <brief-id> auto/<brief-id>
+node tools/backlog/backlog.mjs new <brief-id>
 node tools/backlog/backlog.mjs add <brief-id> '{"id":"u1","title":"...","kind":"contract",
   "nodes":["proto:libs/proto/x/v1/x.proto"],"files":["libs/proto/x/v1/x.proto"],
   "depends_on":[],"acceptance":"just proto-check","gate":"auto"}'

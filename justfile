@@ -100,7 +100,7 @@ graph-check:
 gate-check:
     node tools/autonomy/gate-check.mjs
 
-gate-check-branch range="master..HEAD":
+gate-check-range range="origin/master..HEAD":
     node tools/autonomy/gate-check.mjs --range {{range}}
 
 backlog *args:
