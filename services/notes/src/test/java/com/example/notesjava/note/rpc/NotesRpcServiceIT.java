@@ -421,6 +421,93 @@ class NotesRpcServiceIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void concurrentSharesOfTheSameTargetConvergeOnOneGrant() throws Exception {
+        String noteId = createNote("raced note");
+        String notebookId = createNotebook("Raced notebook");
+        int callers = 8;
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(callers);
+        try {
+            java.util.concurrent.CyclicBarrier start = new java.util.concurrent.CyclicBarrier(callers);
+            java.util.List<java.util.concurrent.Future<Share>> noteShares = new java.util.ArrayList<>();
+            java.util.List<java.util.concurrent.Future<Share>> notebookShares = new java.util.ArrayList<>();
+            for (int i = 0; i < callers; i++) {
+                SharePermission permission = i % 2 == 0
+                        ? SharePermission.SHARE_PERMISSION_VIEW
+                        : SharePermission.SHARE_PERMISSION_EDIT;
+                noteShares.add(pool.submit(() -> {
+                    start.await();
+                    return shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, permission);
+                }));
+            }
+            for (int i = 0; i < callers; i++) {
+                notebookShares.add(pool.submit(() -> {
+                    start.await();
+                    return shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_FAMILY, "",
+                            SharePermission.SHARE_PERMISSION_VIEW);
+                }));
+            }
+
+            java.util.Set<String> noteShareIds = new java.util.HashSet<>();
+            for (var share : noteShares) {
+                noteShareIds.add(share.get(30, java.util.concurrent.TimeUnit.SECONDS).getId());
+            }
+            java.util.Set<String> notebookShareIds = new java.util.HashSet<>();
+            for (var share : notebookShares) {
+                notebookShareIds.add(share.get(30, java.util.concurrent.TimeUnit.SECONDS).getId());
+            }
+
+            assertThat(noteShareIds).hasSize(1);
+            assertThat(notebookShareIds).hasSize(1);
+            assertThat(sharesOf(ListSharesRequest.newBuilder().setNoteId(noteId).build()))
+                    .extracting(Share::getId).containsExactlyElementsOf(noteShareIds);
+            assertThat(sharesOf(ListSharesRequest.newBuilder().setNotebookId(notebookId).build()))
+                    .extracting(Share::getId).containsExactlyElementsOf(notebookShareIds);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    void resharingReturnsTheNewPermissionInTheSameCall() {
+        String noteId = createNote("reshare echo");
+        shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_VIEW);
+
+        Share again = shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER,
+                SharePermission.SHARE_PERMISSION_EDIT);
+
+        assertThat(again.getPermission()).isEqualTo(SharePermission.SHARE_PERMISSION_EDIT);
+    }
+
+    @Test
+    void searchNamesTheNotebookOnlyWhenTheViewerCanSeeIt() {
+        String notebookId = createNotebook("Secret santa plans");
+        String noteId = createNoteIn(notebookId, "quokka gift ideas");
+        shareNote(noteId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_VIEW);
+
+        var ownersSearch = (SearchResponse) rpc.procedure("Search").invoke(
+                SearchRequest.newBuilder().setQuery("quokka").build());
+        assertThat(ownersSearch.getHitsList()).filteredOn(hit -> hit.getNoteId().equals(noteId))
+                .singleElement()
+                .satisfies(hit -> assertThat(hit.getContext()).isEqualTo("Secret santa plans"));
+
+        actAs(OTHER);
+        var membersSearch = (SearchResponse) rpc.procedure("Search").invoke(
+                SearchRequest.newBuilder().setQuery("quokka").build());
+        assertThat(membersSearch.getHitsList()).filteredOn(hit -> hit.getNoteId().equals(noteId))
+                .singleElement()
+                .satisfies(hit -> assertThat(hit.getContext()).isEmpty());
+
+        actAs(USER);
+        shareNotebook(notebookId, ShareSubject.SHARE_SUBJECT_MEMBER, OTHER, SharePermission.SHARE_PERMISSION_VIEW);
+        actAs(OTHER);
+        var afterNotebookShare = (SearchResponse) rpc.procedure("Search").invoke(
+                SearchRequest.newBuilder().setQuery("quokka").build());
+        assertThat(afterNotebookShare.getHitsList()).filteredOn(hit -> hit.getNoteId().equals(noteId))
+                .singleElement()
+                .satisfies(hit -> assertThat(hit.getContext()).isEqualTo("Secret santa plans"));
+    }
+
+    @Test
     void aFamilyShareReachesEveryMemberButNoOtherFamily() {
         String noteId = createNote("holiday plans");
         shareNote(noteId, ShareSubject.SHARE_SUBJECT_FAMILY, "", SharePermission.SHARE_PERMISSION_VIEW);

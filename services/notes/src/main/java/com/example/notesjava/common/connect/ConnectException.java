@@ -25,6 +25,10 @@ public class ConnectException extends RuntimeException {
         return new ConnectException(ConnectCode.PERMISSION_DENIED, message);
     }
 
+    public static ConnectException resourceExhausted(String message) {
+        return new ConnectException(ConnectCode.RESOURCE_EXHAUSTED, message);
+    }
+
     public static ConnectException unavailable(String message) {
         return new ConnectException(ConnectCode.UNAVAILABLE, message);
     }

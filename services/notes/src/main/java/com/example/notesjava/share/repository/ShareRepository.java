@@ -19,8 +19,4 @@ public interface ShareRepository extends JpaRepository<Share, Long> {
     List<Share> findByFamilyIdAndNotebookIdIn(UUID familyId, Collection<Long> notebookIds);
 
     Optional<Share> findByIdAndFamilyId(Long id, UUID familyId);
-
-    Optional<Share> findByNoteIdAndSubjectAndMemberUserId(Long noteId, short subject, UUID memberUserId);
-
-    Optional<Share> findByNotebookIdAndSubjectAndMemberUserId(Long notebookId, short subject, UUID memberUserId);
 }

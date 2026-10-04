@@ -145,6 +145,31 @@ class ConnectControllerTest {
                 .andExpect(jsonPath("$.message").value("internal error"));
     }
 
+    @Test
+    void aBodyOverTheCapIsResourceExhaustedBeforeItReachesAProcedure() throws Exception {
+        notes.answer(request -> {
+            throw new IllegalStateException("an oversized body must never be parsed");
+        });
+
+        mockMvc.perform(post(LIST_NOTEBOOKS).with(CALLER)
+                        .contentType("application/proto")
+                        .content(new byte[ConnectController.MAX_BODY_BYTES + 1]))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("resource_exhausted"));
+    }
+
+    @Test
+    void aBodyAtTheCapIsStillParsed() throws Exception {
+        byte[] body = new byte[ConnectController.MAX_BODY_BYTES];
+        java.util.Arrays.fill(body, (byte) ' ');
+        body[0] = '{';
+        body[body.length - 1] = '}';
+
+        mockMvc.perform(post(LIST_NOTEBOOKS).with(CALLER)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+    }
+
     static class FakeNotesService extends ConnectService {
 
         private volatile java.util.function.Function<ListNotebooksRequest, ListNotebooksResponse> handler;
