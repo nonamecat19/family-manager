@@ -5,9 +5,10 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
-	"net"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ const (
 	userCodeLength      = 8
 	userCodeAttempts    = 3
 	telegramLoginPrefix = "login_"
+	pendingWarnEvery    = 60
 )
 
 var deviceLoginKinds = map[authv1.DeviceLoginKind]string{
@@ -50,19 +52,13 @@ func (h *Handler) StartDeviceLogin(
 		return nil, invalid("unsupported kind")
 	}
 
-	if wait := h.starts.Take(clientIP(req.Header(), req.Peer().Addr)); wait > 0 {
+	client := clientIP(req.Header(), req.Peer().Addr, h.trustedProxies)
+	if wait := h.starts.Take(startLimitKey(client)); wait > 0 {
 		return nil, connect.NewError(connect.CodeResourceExhausted,
 			fmt.Errorf("too many sign-in requests; try again in %s", wait.Round(time.Second)))
 	}
-	if h.maxPending > 0 {
-		pending, err := h.q.CountPendingLoginGrants(ctx)
-		if err != nil {
-			return nil, h.internal(ctx, err, "count pending login grants")
-		}
-		if pending >= h.maxPending {
-			return nil, connect.NewError(connect.CodeResourceExhausted,
-				errors.New("too many sign-ins in progress; try again shortly"))
-		}
+	if err := h.checkPendingCeiling(ctx); err != nil {
+		return nil, err
 	}
 
 	deviceCode, err := newRefreshToken()
@@ -345,18 +341,78 @@ func (h *Handler) callerChain(ctx context.Context, header http.Header) (pgtype.U
 	return chainID, nil
 }
 
-func clientIP(header http.Header, peer string) string {
-	forwarded := header.Values("X-Forwarded-For")
-	if len(forwarded) > 0 {
-		hops := strings.Split(forwarded[len(forwarded)-1], ",")
-		if ip := net.ParseIP(strings.TrimSpace(hops[len(hops)-1])); ip != nil {
-			return ip.String()
+func (h *Handler) checkPendingCeiling(ctx context.Context) error {
+	if h.maxPending <= 0 {
+		return nil
+	}
+	pending, err := h.q.CountPendingLoginGrants(ctx)
+	if err != nil {
+		return h.internal(ctx, err, "count pending login grants")
+	}
+	if pending*5 >= h.maxPending*4 {
+		now := h.now()
+		last := h.pendingWarnedAt.Load()
+		if now.Unix()-last >= pendingWarnEvery && h.pendingWarnedAt.CompareAndSwap(last, now.Unix()) {
+			h.log.WarnContext(ctx, "pending login grants near the ceiling",
+				slog.Int64("pending", pending), slog.Int64("ceiling", h.maxPending))
 		}
 	}
-	if host, _, err := net.SplitHostPort(peer); err == nil {
-		return host
+	if pending >= h.maxPending {
+		return connect.NewError(connect.CodeResourceExhausted,
+			errors.New("too many sign-ins in progress; try again shortly"))
 	}
-	return peer
+	return nil
+}
+
+func clientIP(header http.Header, peer string, trusted []netip.Prefix) netip.Addr {
+	current := parseAddr(peer)
+	if !current.IsValid() || !isTrusted(current, trusted) {
+		return current
+	}
+	var hops []string
+	for _, v := range header.Values("X-Forwarded-For") {
+		hops = append(hops, strings.Split(v, ",")...)
+	}
+	for i := len(hops) - 1; i >= 0; i-- {
+		hop := parseAddr(strings.TrimSpace(hops[i]))
+		if !hop.IsValid() {
+			return current
+		}
+		current = hop
+		if !isTrusted(hop, trusted) {
+			return hop
+		}
+	}
+	return current
+}
+
+func parseAddr(s string) netip.Addr {
+	if ap, err := netip.ParseAddrPort(s); err == nil {
+		return ap.Addr().Unmap()
+	}
+	if a, err := netip.ParseAddr(s); err == nil {
+		return a.Unmap()
+	}
+	return netip.Addr{}
+}
+
+func isTrusted(a netip.Addr, trusted []netip.Prefix) bool {
+	for _, p := range trusted {
+		if p.Contains(a) {
+			return true
+		}
+	}
+	return false
+}
+
+func startLimitKey(a netip.Addr) string {
+	if !a.IsValid() {
+		return "unknown"
+	}
+	if a.Is4() {
+		return a.String()
+	}
+	return netip.PrefixFrom(a, 64).Masked().String()
 }
 
 func errInvalidUserCode() error {

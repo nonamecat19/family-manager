@@ -40,15 +40,22 @@ secrets, a kind (`device`, `telegram`), a ten-minute expiry, and a decision (`ap
   throttle is its own instance, separate from `Login`'s per-email throttle: they share no
   keyspace, so a `Login` attempt with the email `device-login:<uuid>` cannot lock a user out of
   approving, and wrong codes cannot lock an email out of `Login`.
-- **`StartDeviceLogin` is limited twice.** Per client address, a fixed window
+- **`StartDeviceLogin` is limited twice.** Per client, a fixed window
   (`AUTH_DEVICE_LOGIN_PER_IP`, default 10 per `AUTH_DEVICE_LOGIN_WINDOW`, default 10 minutes)
-  answers `ResourceExhausted` past the limit. The address is the right-most `X-Forwarded-For`
-  entry — the hop Caddy appends (and, with no `trusted_proxies` configured, the only one it
-  forwards) — falling back to the TCP peer. `auth` publishes no port, so only Caddy can set the
-  header. Globally, when `AUTH_DEVICE_LOGIN_MAX_ACTIVE` (default 5000) grants are pending —
-  neither consumed nor denied, and unexpired — further starts answer `ResourceExhausted` before
-  any row is written, which bounds the table no matter how many addresses an attacker holds.
-  The limiter is in memory and per process, like the login throttle.
+  answers `ResourceExhausted` past the limit. The client is keyed by its full IPv4 address, or
+  by its IPv6 /64 — one subscriber usually holds a whole /64, so per-address keys would let one
+  host rotate through 2⁶⁴ of them. The client address is the TCP peer unless the peer is in
+  `AUTH_TRUSTED_PROXIES` (default `10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8,
+  ::1, fc00::/7` — Caddy reaches `auth` over the compose network); only then is
+  `X-Forwarded-For` read, right to left, skipping trusted hops, and the first untrusted entry
+  is the client. A client-supplied `X-Forwarded-For` therefore never names the client: Caddy
+  appends the real peer after it. Behind that, a global ceiling on pending grants (neither
+  consumed nor denied, unexpired), `AUTH_DEVICE_LOGIN_MAX_ACTIVE`, default 100000, refuses with
+  `ResourceExhausted` before writing a row. It is a backstop that bounds the table, not the
+  primary limit — a low ceiling would let a few hundred addresses lock everyone out of device
+  login — so the service logs a warning (at most once a minute) from 80% of it, and refuses
+  only at the ceiling. The per-client limiter is in memory and per process, like the login
+  throttle.
 
 **Telegram approves as the linked user, never as the service.** The app starts a `telegram`
 grant and opens `t.me/<bot>?start=login_<code>`. Any bot's `/start login_<code>` resolves the
@@ -68,21 +75,33 @@ answered "out of date" and reaches nothing.
 
 **A session approved from a session dies with it.** Access tokens carry the refresh chain they
 were minted on as a `sid` claim. `ApproveDeviceLogin` verifies the bearer token itself
-(`token.Signer.ChainOf`) and stores that chain on the grant as `approver_chain_id`; a token with
-no `sid` is refused as `Unauthenticated` (only tokens minted before this change, which expire
-within one access TTL). `PollDeviceLogin` picks the new session's chain id before consuming and
-writes it as `chain_id` in the same conditional `UPDATE` that consumes the grant, which also
-requires the approver's chain to exist and be unrevoked, taking `FOR SHARE` on that `chains`
-row. `Unlink` — and a relink that replaces an identity's chain — tombstones the identity's chain
-and then every chain reachable from it through `approver_chain_id → chain_id` (a recursive
-query, so a device approved by a device that Telegram approved goes too). The row lock orders
-the two: either the consume commits first and the unlink's lineage query sees its `chain_id`
-(the chain is tombstoned before the session is minted, so minting fails), or the tombstone
-commits first and the consume matches nothing and reads `EXPIRED`. The Telegram path needs no
-special marker: the telegram service always calls with the access token of the identity's own
-chain (ADR 0013), so "approved through Telegram" is exactly "`approver_chain_id` is the
-identity's `chain_id`". The sweeper keeps a consumed grant past its hour of grace while the
-chain it minted still exists, because that row is the only record of the lineage.
+(`token.Signer.ChainOf`) and stores that chain on the grant as `approver_chain_id`, and the
+lineage's root as `root_chain_id`: the `root_chain_id` of the grant that minted the approver's
+chain, or the approver's chain itself when no grant minted it (a password login or a linked
+identity). Roots are denormalised, so every grant descended from a chain carries that chain
+directly, however many approvals deep. A token with no `sid` is refused as `Unauthenticated`
+(only tokens minted before this change, which expire within one access TTL); the telegram
+service answers that by dropping its cached access token, refreshing, and retrying once.
+
+`PollDeviceLogin` picks the new session's chain id before consuming and writes it as `chain_id`
+in the same conditional `UPDATE` that consumes the grant. That `UPDATE` also requires the
+root's and the approver's `chains` rows to exist unrevoked, taking `FOR SHARE` on both.
+`Unlink` — and a relink that replaces an identity's chain — first tombstones the identity's
+chain (a row lock on the root), then in one statement tombstones every `chain_id` whose grant
+has `root_chain_id` equal to it, then revokes those chains' refresh tokens. The root's row lock
+orders unlink against every consume in its lineage: either the consume holds `FOR SHARE` first,
+the unlink's tombstone waits for it to commit, and the following statement sees the new
+`chain_id` (tombstoned before or while the session is minted, so the mint or its next refresh
+fails); or the tombstone comes first, the consume waits, re-reads the revoked root, matches
+nothing and reads `EXPIRED`. Both interleavings were run against Postgres 17. The Telegram path
+needs no special marker: the telegram service always calls with the access token of the
+identity's own chain (ADR 0013), so "approved through Telegram" is exactly "`root_chain_id` is
+the identity's `chain_id`".
+
+The sweeper keeps a consumed grant past its hour of grace while the chain it minted is live
+(its `chains` row exists unrevoked). That row is what the next approval from that chain reads
+its root from; because roots are denormalised, sweeping a grant whose chain is gone loses
+nothing for the grants below it.
 
 **The bot asks before it approves.** The deep link shows a confirmation with the code and two
 buttons; only the "sign me in" button calls `ApproveDeviceLogin`. A one-tap deep link that
@@ -107,16 +126,16 @@ the device-code phishing pattern. The prompt says to approve only a sign-in star
 
 - `libs/proto/auth/v1` grew four RPCs, two enums and eight messages. Additive; `buf breaking`
   stays green.
-- Migration `services/auth` 000006 adds `login_grants`, including `approver_chain_id` and
-  `chain_id`. The hourly sweeper deletes grants an hour past their expiry unless the chain the
-  grant minted still exists.
+- Migration `services/auth` 000006 adds `login_grants`, including `approver_chain_id`,
+  `root_chain_id` and `chain_id`. The hourly sweeper deletes grants an hour past their expiry
+  unless the chain the grant minted is still live.
 - Access tokens grow a `sid` claim (the refresh chain id). Verifiers in other services ignore it.
 - `StartDeviceLogin` and `PollDeviceLogin` join the public procedure list in
   `services/auth/cmd/server/main.go` and in `packages/api`'s client.
-- `StartDeviceLogin` is unauthenticated and writes a row; it is bounded by the per-address
-  window and the global pending cap above. Both counters live in one process; running more than
-  one `auth` replica multiplies the per-address limit by the replica count (the global cap is in
-  Postgres and holds).
+- `StartDeviceLogin` is unauthenticated and writes a row; it is bounded by the per-client
+  limit and the global pending ceiling above. The per-client limiter lives in one process, so
+  running more than one `auth` replica multiplies it by the replica count; the ceiling is
+  counted in Postgres and holds.
 - `packages/api` exports `useStartDeviceLogin`, `usePollDeviceLogin`, `useApproveDeviceLogin`,
   `useDenyDeviceLogin` and `useTelegramLogin`; the login screens and an "approve a device" screen
   in the apps consume them.

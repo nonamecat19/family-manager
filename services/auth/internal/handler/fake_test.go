@@ -24,7 +24,8 @@ type fakeStore struct {
 	chains map[string]pgtype.Timestamptz
 	grants map[string]db.LoginGrant
 
-	failOn map[string]error
+	failOn      map[string]error
+	onTombstone func()
 }
 
 func newFakeStore() *fakeStore {
@@ -362,6 +363,10 @@ func (s *fakeStore) TombstoneChain(_ context.Context, id pgtype.UUID) error {
 	if !s.chains[key].Valid {
 		s.chains[key] = pgtype.Timestamptz{Time: time.Now(), Valid: true}
 	}
+	if hook := s.onTombstone; hook != nil {
+		s.onTombstone = nil
+		hook()
+	}
 	return nil
 }
 
@@ -444,6 +449,12 @@ func (s *fakeStore) ApproveLoginGrant(_ context.Context, arg db.ApproveLoginGran
 		return db.LoginGrant{}, pgx.ErrNoRows
 	}
 	g.UserID, g.ApprovedAt, g.ApproverChainID = arg.UserID, arg.DecidedAt, arg.ApproverChainID
+	g.RootChainID = arg.ApproverChainID
+	for _, parent := range s.grants {
+		if parent.ChainID.Valid && parent.ChainID == arg.ApproverChainID && parent.RootChainID.Valid {
+			g.RootChainID = parent.RootChainID
+		}
+	}
 	s.grants[key] = g
 	return g, nil
 }
@@ -466,9 +477,11 @@ func (s *fakeStore) ConsumeLoginGrant(_ context.Context, arg db.ConsumeLoginGran
 		return 0, nil
 	}
 	if g.ApproverChainID.Valid {
-		revokedAt, exists := s.chains[pgconv.UUIDString(g.ApproverChainID)]
-		if !exists || revokedAt.Valid {
-			return 0, nil
+		for _, held := range []pgtype.UUID{g.RootChainID, g.ApproverChainID} {
+			revokedAt, exists := s.chains[pgconv.UUIDString(held)]
+			if !exists || revokedAt.Valid {
+				return 0, nil
+			}
 		}
 	}
 	g.ConsumedAt = pgtype.Timestamptz{Time: time.Now(), Valid: true}
@@ -487,27 +500,47 @@ func (s *fakeStore) CountPendingLoginGrants(context.Context) (int64, error) {
 	return n, nil
 }
 
-func (s *fakeStore) ListChainsApprovedFrom(_ context.Context, root pgtype.UUID) ([]pgtype.UUID, error) {
-	seen := map[string]bool{}
-	frontier := []pgtype.UUID{root}
+func (s *fakeStore) rootedAt(root pgtype.UUID) []pgtype.UUID {
 	var out []pgtype.UUID
-	for len(frontier) > 0 {
-		parent := pgconv.UUIDString(frontier[0])
-		frontier = frontier[1:]
-		for _, g := range s.grants {
-			if !g.ChainID.Valid || pgconv.UUIDString(g.ApproverChainID) != parent {
-				continue
-			}
-			child := pgconv.UUIDString(g.ChainID)
-			if seen[child] {
-				continue
-			}
-			seen[child] = true
+	for _, g := range s.grants {
+		if g.ChainID.Valid && g.RootChainID.Valid && g.RootChainID == root {
 			out = append(out, g.ChainID)
-			frontier = append(frontier, g.ChainID)
 		}
 	}
-	return out, nil
+	return out
 }
 
-func (s *fakeStore) DeleteExpiredLoginGrants(context.Context) (int64, error) { return 0, nil }
+func (s *fakeStore) TombstoneChainsRootedAt(ctx context.Context, root pgtype.UUID) error {
+	for _, chainID := range s.rootedAt(root) {
+		if err := s.TombstoneChain(ctx, chainID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *fakeStore) RevokeChainsRootedAt(ctx context.Context, root pgtype.UUID) (int64, error) {
+	var n int64
+	for _, chainID := range s.rootedAt(root) {
+		revoked, err := s.RevokeChain(ctx, chainID)
+		if err != nil {
+			return 0, err
+		}
+		n += revoked
+	}
+	return n, nil
+}
+
+func (s *fakeStore) DeleteExpiredLoginGrants(context.Context) (int64, error) {
+	var n int64
+	for key, g := range s.grants {
+		if revokedAt, live := s.chains[pgconv.UUIDString(g.ChainID)]; g.ChainID.Valid && live && !revokedAt.Valid {
+			continue
+		}
+		if g.ExpiresAt.Time.Before(time.Now().Add(-time.Hour)) {
+			delete(s.grants, key)
+			n++
+		}
+	}
+	return n, nil
+}

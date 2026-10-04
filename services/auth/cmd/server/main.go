@@ -123,6 +123,8 @@ func run() error {
 		Starts:     ratelimit.New(cfg.DeviceLoginPerIP, cfg.DeviceLoginWindow, nil),
 		MaxPending: cfg.DeviceLoginMaxActive,
 		RefreshTTL: cfg.RefreshTTL,
+
+		TrustedProxies: cfg.TrustedProxies,
 	})
 
 	go sweepExpiredTokens(ctx, db.New(pool), log, sweepInterval)

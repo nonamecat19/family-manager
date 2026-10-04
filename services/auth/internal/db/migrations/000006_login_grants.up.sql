@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS login_grants (
     user_code_hash    TEXT NOT NULL UNIQUE,
     user_id           UUID REFERENCES users (id) ON DELETE CASCADE,
     approver_chain_id UUID,
+    root_chain_id     UUID,
     chain_id          UUID,
     approved_at       TIMESTAMPTZ,
     denied_at         TIMESTAMPTZ,
@@ -15,7 +16,9 @@ CREATE TABLE IF NOT EXISTS login_grants (
 );
 
 CREATE INDEX IF NOT EXISTS idx_login_grants_expiry ON login_grants (expires_at);
-CREATE INDEX IF NOT EXISTS idx_login_grants_approver_chain ON login_grants (approver_chain_id)
-    WHERE approver_chain_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_login_grants_root_chain ON login_grants (root_chain_id)
+    WHERE root_chain_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_login_grants_chain ON login_grants (chain_id)
+    WHERE chain_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_login_grants_pending ON login_grants (expires_at)
     WHERE consumed_at IS NULL AND denied_at IS NULL;

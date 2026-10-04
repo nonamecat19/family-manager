@@ -3,8 +3,10 @@ package handler
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	authv1 "github.com/nnc/family-manager/sdk/go/auth/v1"
@@ -276,5 +278,58 @@ func TestRelinkRevokesSessionsThePreviousLinkApproved(t *testing.T) {
 
 	if connect.CodeOf(f.refresh(phone.GetRefreshToken())) != connect.CodeUnauthenticated {
 		t.Fatal("a session the replaced link approved survived relink")
+	}
+}
+
+func TestUnlinkWinsAgainstAConsumeOfAGrantItsDescendantApproved(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	tg, err := f.redeem(t, f.linkToken(t, ada), "4242")
+	if err != nil {
+		t.Fatalf("redeem: %v", err)
+	}
+	phone := f.signInApprovedBy(t, tg.GetAccessToken(), ada)
+	start := f.startLogin(t, authv1.DeviceLoginKind_DEVICE_LOGIN_KIND_DEVICE)
+	if err := f.approveAs(phone.GetAccessToken(), ada, start.GetUserCode()); err != nil {
+		t.Fatalf("approve from the phone: %v", err)
+	}
+
+	var racing *authv1.PollDeviceLoginResponse
+	f.store.onTombstone = func() { racing = f.poll(t, start.GetDeviceCode()) }
+	f.unlinkTelegram(t, ada, "4242")
+
+	if racing == nil {
+		t.Fatal("the racing poll never ran")
+	}
+	if racing.GetStatus() != authv1.DeviceLoginStatus_DEVICE_LOGIN_STATUS_EXPIRED || racing.GetAccessToken() != "" {
+		t.Fatalf("poll racing unlink = %v with a token %t, want expired and empty",
+			racing.GetStatus(), racing.GetAccessToken() != "")
+	}
+}
+
+func TestPurgingAMiddleGrantKeepsTheLineage(t *testing.T) {
+	f := newFixture(t)
+	ada := f.register(t, "ada@example.test", "correct horse")
+	tg, err := f.redeem(t, f.linkToken(t, ada), "4242")
+	if err != nil {
+		t.Fatalf("redeem: %v", err)
+	}
+	phone := f.signInApprovedBy(t, tg.GetAccessToken(), ada)
+	phoneChain := f.signer.last().ChainID
+	tablet := f.signInApprovedBy(t, phone.GetAccessToken(), ada)
+
+	for key, g := range f.store.grants {
+		g.ExpiresAt = pgtype.Timestamptz{Time: time.Now().Add(-2 * time.Hour), Valid: true}
+		f.store.grants[key] = g
+	}
+	delete(f.store.chains, phoneChain)
+	if n, err := f.store.DeleteExpiredLoginGrants(context.Background()); err != nil || n != 1 {
+		t.Fatalf("purged %d grants (%v), want only the one whose chain is gone", n, err)
+	}
+
+	f.unlinkTelegram(t, ada, "4242")
+
+	if connect.CodeOf(f.refresh(tablet.GetRefreshToken())) != connect.CodeUnauthenticated {
+		t.Fatal("a grandchild session survived unlink after the middle grant was purged")
 	}
 }

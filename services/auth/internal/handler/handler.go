@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"connectrpc.com/connect"
@@ -56,6 +58,9 @@ type Handler struct {
 	maxPending int64
 	refreshTTL time.Duration
 	now        func() time.Time
+
+	trustedProxies  []netip.Prefix
+	pendingWarnedAt atomic.Int64
 }
 
 type Options struct {
@@ -72,6 +77,8 @@ type Options struct {
 	MaxPending int64
 	RefreshTTL time.Duration
 	Now        func() time.Time
+
+	TrustedProxies []netip.Prefix
 }
 
 func New(opts Options) *Handler {
@@ -89,6 +96,8 @@ func New(opts Options) *Handler {
 		maxPending: opts.MaxPending,
 		refreshTTL: opts.RefreshTTL,
 		now:        opts.Now,
+
+		trustedProxies: opts.TrustedProxies,
 	}
 	if h.log == nil {
 		h.log = slog.Default()
