@@ -37,6 +37,7 @@ linters:
     staticcheck:
       checks:
         - all
+        - -ST1000
 
 formatters:
   enable:
