@@ -38,10 +38,13 @@ func Observe(log *slog.Logger) connect.UnaryInterceptorFunc {
 			resp, err := next(ctx, req)
 			elapsed := time.Since(started)
 
+			procedure, code := req.Spec().Procedure, codeOf(err)
+			record(procedure, code, elapsed)
+
 			attrs := []any{
-				slog.String("procedure", req.Spec().Procedure),
+				slog.String("procedure", procedure),
 				slog.Duration("elapsed", elapsed),
-				slog.String("code", codeOf(err)),
+				slog.String("code", code),
 			}
 			if err != nil {
 				log.WarnContext(ctx, "rpc failed", attrs...)

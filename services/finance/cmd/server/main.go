@@ -165,6 +165,7 @@ func internalMux(h *handler.Handler, pool database.Pinger, log *slog.Logger) *ht
 		connect.WithInterceptors(rpc.Recover(log), rpc.Observe(log)),
 	)
 	mux.Handle(path, svc)
+	mux.Handle("GET "+rpc.MetricsPath, rpc.MetricsHandler())
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
 	return mux
 }

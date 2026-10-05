@@ -110,6 +110,7 @@ func run() error {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", database.HealthHandler(pool, 0))
+	mux.Handle("GET "+rpc.MetricsPath, rpc.MetricsHandler())
 
 	var hooks *runtime.Webhook
 	switch cfg.Mode {

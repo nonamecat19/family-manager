@@ -20,6 +20,7 @@ decision gets a new ADR that supersedes the old one, and the old one's status ch
 | [0011](0011-user-settings.md) | Per-user settings owned by `services/family`, locale on the token | accepted |
 | [0012](0012-notes-connect-java.md) | `services/notes` serves `notes.v1` over Connect from Spring | accepted |
 | [0013](0013-linked-identities.md) | Linked identities live in `services/auth`; one Telegram link covers every bot | accepted |
+| [0015](0015-prometheus-metrics.md) | Prometheus metrics from `rpc.Observe`, scraped off the internal listener | accepted |
 
 Write a new ADR when a change would displace a row in [../stack.md](../stack.md), add a
 container to `docker-compose.yml`, or alter a boundary rule in

@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 5s
+
+scrape_configs:
+  - job_name: auth
+    static_configs:
+      - targets: ["auth:8080"]
+
+  - job_name: family
+    static_configs:
+      - targets: ["family:9090"]
+
+  - job_name: finance
+    static_configs:
+      - targets: ["finance:9090"]
+
+  - job_name: recipes
+    static_configs:
+      - targets: ["recipes:9090"]
+
+  - job_name: telegram
+    static_configs:
+      - targets: ["telegram:8080"]
+
+  - job_name: notes
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["notes:8080"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
