@@ -3,11 +3,9 @@ import type { Identity } from "@fm/sdk/auth/v1/auth_pb";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Icon, organic, Screen, ScreenHeader, Sheet } from "@fm/ui";
 
 import { useI18n, type TranslationKey } from "../../components/i18n/index.tsx";
-import { Icon } from "../../components/organic/icons.tsx";
-import { organic } from "../../components/organic/tokens.ts";
-import { Display, RoundButton, Screen, Sheet } from "../../components/organic/ui.tsx";
 
 function providerLabel(provider: string, t: (key: TranslationKey) => string): string {
   if (provider === TELEGRAM_PROVIDER) return t("connectedAccounts.providerTelegram");
@@ -38,10 +36,7 @@ export default function ConnectedAccountsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerClassName="gap-[18px] px-[22px] pb-[28px] pt-[8px]"
       >
-        <View className="flex-row items-center gap-[12px]">
-          <RoundButton icon="back" label={t("common.back")} onPress={() => router.back()} />
-          <Display size={28}>{t("connectedAccounts.title")}</Display>
-        </View>
+        <ScreenHeader title={t("connectedAccounts.title")} onBack={() => router.back()} backLabel={t("common.back")} />
 
         {unlinkError ? (
           <Text className="font-fig-semi text-[12px]" style={{ color: organic.danger }}>

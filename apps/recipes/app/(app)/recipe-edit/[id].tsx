@@ -3,22 +3,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Icon, organic, Chip, DashedButton, Display, Field, Kicker, PrimaryButton, RoundButton, Screen, StarPicker } from "@fm/ui";
 
 import { useI18n } from "../../../components/i18n/index.tsx";
 import { formatMacro } from "../../../components/organic/format.ts";
-import { Icon } from "../../../components/organic/icons.tsx";
-import { organic } from "../../../components/organic/tokens.ts";
-import {
-  Chip,
-  DashedButton,
-  Display,
-  Field,
-  Kicker,
-  PrimaryButton,
-  RoundButton,
-  Screen,
-  StarPicker,
-} from "../../../components/organic/ui.tsx";
 
 interface IngredientRow {
   name: string;

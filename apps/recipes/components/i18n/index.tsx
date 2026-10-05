@@ -2,8 +2,8 @@ import { useUpdateUserSettings, useUserSettings } from "@fm/api";
 import { useAuth } from "@fm/auth";
 import { createI18n } from "@fm/i18n";
 import { useCallback, type ReactNode } from "react";
+import { organic, UiLabelsProvider, type UiTranslate } from "@fm/ui";
 
-import { organic } from "../organic/tokens.ts";
 import { en } from "./translations/en.ts";
 import { uk } from "./translations/uk.ts";
 
@@ -29,6 +29,15 @@ const { I18nProvider: BaseI18nProvider, useI18n, bootT, deviceLocale } = i18n;
 
 export { useI18n, bootT, deviceLocale };
 
+function UiLabelsBridge({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
+  const translate = useCallback<UiTranslate>(
+    (key, vars) => t(key as TranslationKey, vars),
+    [t],
+  );
+  return <UiLabelsProvider translate={translate}>{children}</UiLabelsProvider>;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   const authenticated = status === "authenticated";
@@ -48,7 +57,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   return (
     <BaseI18nProvider remoteLocale={remoteLocale} onLocaleChange={onLocaleChange}>
-      {children}
+      <UiLabelsBridge>{children}</UiLabelsBridge>
     </BaseI18nProvider>
   );
 }

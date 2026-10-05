@@ -2,14 +2,12 @@ import { useMealPlan, useSumIngredients, useTotalIngredients } from "@fm/api";
 import type { IngredientTotal } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { CheckIcon, organic, DashedButton, Display, Screen } from "@fm/ui";
 
 import { useBasket } from "../../components/basket.tsx";
 import { useI18n } from "../../components/i18n/index.tsx";
 import { groupByAisle } from "../../components/organic/aisles.ts";
-import { CheckIcon } from "../../components/organic/icons.tsx";
 import { weekRange } from "../../components/organic/week.ts";
-import { organic } from "../../components/organic/tokens.ts";
-import { DashedButton, Display, Screen } from "../../components/organic/ui.tsx";
 
 export default function ShoppingListScreen() {
   const router = useRouter();

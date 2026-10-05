@@ -2,8 +2,7 @@ import "../global.css";
 
 import { ApiProvider, isRefreshRejection, usePushRegistration } from "@fm/api";
 import { AuthProvider, secureTokenStore, tokensFromResponse, useAuth, type Tokens } from "@fm/auth";
-import { ErrorBoundary, Loading, ThemeProvider } from "@fm/ui";
-import { organicTheme, type Theme } from "@fm/theme";
+import { appTheme, ErrorBoundary, Loading, ThemeProvider } from "@fm/ui";
 import { Alegreya_800ExtraBold } from "@expo-google-fonts/alegreya/800ExtraBold";
 import { NunitoSans_400Regular } from "@expo-google-fonts/nunito-sans/400Regular";
 import { NunitoSans_500Medium } from "@expo-google-fonts/nunito-sans/500Medium";
@@ -45,16 +44,6 @@ async function revoke(refreshToken: string): Promise<void> {
   await refreshClient.logout({ refreshToken });
 }
 
-const theme: Theme = {
-  ...organicTheme,
-  fonts: {
-    body: "NunitoSans_400Regular",
-    medium: "NunitoSans_500Medium",
-    semibold: "NunitoSans_600SemiBold",
-    display: "Alegreya_800ExtraBold",
-  },
-};
-
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Alegreya_800ExtraBold,
@@ -67,7 +56,7 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={appTheme}>
         <Loading label={bootT("kitchen.warmingOven")} />
       </ThemeProvider>
     );
@@ -78,7 +67,7 @@ export default function RootLayout() {
       message={bootT("kitchen.somethingBurned")}
       onError={(error) => console.error("[recipes] unhandled render error", error)}
     >
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={appTheme}>
         <AuthProvider
           store={secureTokenStore}
           refresh={refresh}

@@ -2,11 +2,9 @@ import { useRecipe } from "@fm/api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Icon, organic, Screen } from "@fm/ui";
 
 import { useI18n } from "../../../components/i18n/index.tsx";
-import { Icon } from "../../../components/organic/icons.tsx";
-import { organic } from "../../../components/organic/tokens.ts";
-import { Screen } from "../../../components/organic/ui.tsx";
 
 export default function CookScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,8 +25,7 @@ export default function CookScreen() {
               accessibilityRole="button"
               accessibilityLabel={t("cook.leaveCookMode")}
               onPress={() => router.back()}
-              className="h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/[0.14]"
             >
               <Icon name="close" size={20} color={organic.accent[100]} />
             </Pressable>
@@ -42,10 +39,9 @@ export default function CookScreen() {
             {steps.map((s, i) => (
               <View
                 key={i}
-                className="h-[4px] flex-1 rounded-full"
-                style={{
-                  backgroundColor: i <= index ? organic.accent.DEFAULT : "rgba(255,255,255,0.22)",
-                }}
+                className={`h-[4px] flex-1 rounded-full ${
+                  i <= index ? "bg-accent" : "bg-white/[0.22]"
+                }`}
               />
             ))}
           </View>
@@ -68,10 +64,9 @@ export default function CookScreen() {
               accessibilityLabel={t("cook.previousStep")}
               disabled={index === 0}
               onPress={() => setIndex((i) => Math.max(0, i - 1))}
-              className={`h-[56px] w-[56px] flex-none items-center justify-center rounded-full border-2 ${
+              className={`h-[56px] w-[56px] flex-none items-center justify-center rounded-full border-2 border-white/30 ${
                 index === 0 ? "opacity-40" : ""
               }`}
-              style={{ borderColor: "rgba(255,255,255,0.3)" }}
             >
               <Icon name="back" size={22} color={organic.accent[100]} />
             </Pressable>
@@ -131,8 +126,9 @@ function StepTimer({ seconds }: { seconds: number }) {
           setRunning((r) => !r);
         }
       }}
-      className="flex-row items-center gap-[10px] self-start rounded-full px-[20px] py-[12px]"
-      style={{ backgroundColor: done ? organic.accent.DEFAULT : "rgba(255,255,255,0.1)" }}
+      className={`flex-row items-center gap-[10px] self-start rounded-full px-[20px] py-[12px] ${
+        done ? "bg-accent" : "bg-white/10"
+      }`}
     >
       <Icon name="plan" size={18} color={organic.accent[100]} width={2.4} />
       <Text className="font-fig-x text-[16px] text-accent-100">

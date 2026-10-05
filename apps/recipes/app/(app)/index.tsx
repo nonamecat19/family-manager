@@ -2,12 +2,10 @@ import { useMealPlan, useRecipeCategories, useRecipes, useTotalIngredients } fro
 import type { Category, Recipe } from "@fm/sdk/recipes/v1/recipes_pb";
 import { useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Icon, SearchIcon, initialOf, organic, tintFor, Avatar, Display, Kicker, RatingMark, Screen } from "@fm/ui";
 
 import { useI18n } from "../../components/i18n/index.tsx";
-import { Icon, SearchIcon } from "../../components/organic/icons.tsx";
 import { formatDuration } from "../../components/organic/format.ts";
-import { initialOf, organic, tintFor } from "../../components/organic/tokens.ts";
-import { Avatar, Display, Kicker, RatingMark, Screen } from "../../components/organic/ui.tsx";
 import { weekRange } from "../../components/organic/week.ts";
 
 export default function HomeScreen() {
@@ -156,10 +154,7 @@ function CategoryCard({
       className="min-h-[100px] flex-1 basis-[45%] justify-between gap-[24px] rounded-2xl px-[16px] pb-[17px] pt-[15px]"
       style={{ backgroundColor: tint.bg }}
     >
-      <View
-        className="h-[32px] w-[32px] items-center justify-center rounded-full"
-        style={{ backgroundColor: "rgba(255,255,255,0.6)" }}
-      >
+      <View className="h-[32px] w-[32px] items-center justify-center rounded-full bg-white/60">
         <Text className="font-cap text-[14px]" style={{ color: tint.fg }}>
           {initialOf(category.name)}
         </Text>
@@ -193,15 +188,12 @@ function TopRatedCard({
       accessibilityRole="button"
       accessibilityLabel={recipe.title}
       onPress={onPress}
-      className="w-[158px] flex-none rounded-2xl bg-neutral-100 p-[14px]"
-      style={{ boxShadow: "0 1px 2px rgba(46,43,37,0.14)" }}
+      className="w-[158px] flex-none rounded-2xl bg-neutral-100 p-[14px] shadow-card"
     >
       <View
         className="h-[104px] items-center justify-center overflow-hidden rounded-xl"
         style={{ backgroundColor: tint.bg }}
       >
-        {
-}
         {recipe.imageUrl !== "" ? (
           <Image source={{ uri: recipe.imageUrl }} className="h-[92px] w-[92px]" resizeMode="contain" />
         ) : (
