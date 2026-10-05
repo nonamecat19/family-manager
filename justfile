@@ -110,6 +110,31 @@ backlog *args:
 verify: check-go check-ts graph
 
 
+tg-up:
+    docker compose -f docker-compose.yml -f docker-compose.services.yml -f docker-compose.tgemu.yml up -d --build
+
+tg-down:
+    docker compose -f docker-compose.yml -f docker-compose.services.yml -f docker-compose.tgemu.yml down
+
+test-telegram-emu:
+    cd services/telegram && go test -race -count=1 ./internal/tgemu/
+
+test-telegram:
+    cd services/telegram && go test -tags e2e -count=1 -v ./e2e/
+
+test-android app flow="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="$PATH:$HOME/.maestro/bin"
+    adb=${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb
+    for port in 8081 8082 8083 8084 8085 8086 8087; do "$adb" reverse tcp:$port tcp:$port >/dev/null; done
+    if [ -z "{{flow}}" ]; then
+      maestro test ".maestro/flows/{{app}}/"
+    else
+      maestro test ".maestro/flows/{{app}}/{{flow}}.yaml"
+    fi
+
+
 test-mobile flow="":
     @just test-mobile-run {{flow}}
 

@@ -1,0 +1,32 @@
+name: fm-e2e
+
+services:
+  tgemu:
+    build:
+      context: .
+      dockerfile: services/telegram/Dockerfile.tgemu
+    ports:
+      - "${TGEMU_PORT:-8090}:8081"
+    healthcheck:
+      test: ["CMD", "/tgemu", "-healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  telegram:
+    environment:
+      TELEGRAM_API_BASE: http://tgemu:8081
+      TELEGRAM_MODE: polling
+      TELEGRAM_POLL_TIMEOUT: 5s
+      TELEGRAM_FINANCE_TOKEN: "1001:finance"
+      TELEGRAM_RECIPES_TOKEN: "1002:recipes"
+      TELEGRAM_NOTES_TOKEN: "1003:notes"
+      TELEGRAM_FAMILY_TOKEN: "1004:family"
+      TELEGRAM_FINANCE_TOKEN_FILE: ""
+      TELEGRAM_RECIPES_TOKEN_FILE: ""
+      TELEGRAM_NOTES_TOKEN_FILE: ""
+      TELEGRAM_FAMILY_TOKEN_FILE: ""
+    depends_on:
+      tgemu:
+        condition: service_healthy
