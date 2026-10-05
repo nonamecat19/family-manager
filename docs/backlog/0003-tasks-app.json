@@ -175,9 +175,9 @@
         "u07"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "f5138ae",
       "blocked_reason": null,
       "id": "u08",
       "title": "tasks sqlc queries + generated db package",
@@ -193,21 +193,26 @@
       "files": [
         "services/tasks/internal/store/tx.go",
         "services/tasks/internal/family/client.go",
-        "services/tasks/internal/family/client_test.go"
+        "services/tasks/internal/family/client_test.go",
+        "services/tasks/internal/db/migrations/000002_known_members.up.sql",
+        "services/tasks/internal/db/queries/members.sql",
+        "services/tasks/db/",
+        "services/tasks/internal/db/embed_test.go",
+        "services/tasks/go.mod"
       ],
       "depends_on": [
         "u08"
       ],
       "gate": "auto",
       "status": "todo",
-      "attempts": 0,
+      "attempts": 1,
       "commit": null,
       "blocked_reason": null,
       "id": "u09",
       "title": "tasks store InTx + family gRPC client (membership, ListMembers)",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/store/... ./internal/family/...",
-      "notes": "Read-only use of family.v1 via sdk/go; pattern from services/notifications/internal/family."
+      "notes": "Read-only use of family.v1 via sdk/go; pattern from services/notifications/internal/family. Coordinator: family ListMembers needs the caller token, so schedulers read a known_members cache (additive migration 000002; table:family_members already belongs to the family service)."
     },
     {
       "nodes": [
@@ -223,9 +228,9 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "todo",
-      "attempts": 0,
-      "commit": null,
+      "status": "done",
+      "attempts": 1,
+      "commit": "64d167e",
       "blocked_reason": null,
       "id": "u10",
       "title": "Domain: deadline timezone handling, birthday next occurrence and age (29 Feb)",
@@ -245,8 +250,8 @@
         "u10"
       ],
       "gate": "auto",
-      "status": "todo",
-      "attempts": 0,
+      "status": "doing",
+      "attempts": 1,
       "commit": null,
       "blocked_reason": null,
       "id": "u11",
@@ -655,9 +660,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "31a23b1",
       "blocked_reason": null,
       "id": "t2",
       "title": "telegram i18n strings for the tasks bot (en, uk)",
@@ -1286,5 +1291,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:57:27.279Z"
+  "updated_at": "2026-10-05T20:03:39.827Z"
 }
