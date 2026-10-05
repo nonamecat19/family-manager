@@ -330,7 +330,7 @@
       "title": "Family settings (timezone) handlers + Connect layer",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Validate IANA zone; first write wins as initialisation from device. Rules (coordinator, from reviews): GetFamilySettings(device_timezone) initialises the family timezone on first read (InitFamilySettings ON CONFLICT DO NOTHING) — document and test; SetFamilySettings validates the IANA zone."
+      "notes": "Validate IANA zone; first write wins as initialisation from device. Rules (coordinator, from reviews): GetFamilySettings(device_timezone) initialises the family timezone on first read (InitFamilySettings ON CONFLICT DO NOTHING) — document and test; SetFamilySettings validates the IANA zone. From u12b verify: task/birthday writes return FailedPrecondition until family_settings exists; GetFamilySettings(device_timezone) must initialise it and apps call it on startup (p3)."
     },
     {
       "nodes": [
@@ -358,7 +358,7 @@
       "title": "Event publisher + tasks.task.assigned on create/update",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/events/... ./internal/handler/...",
-      "notes": "Request id as NATS header per ADR 0008. Publish only for newly added assignees. Rules (coordinator, from reviews): Call bus.EnsureStream(ctx, \"tasks\") before publishing (also in u24)."
+      "notes": "Request id as NATS header per ADR 0008. Publish only for newly added assignees. Rules (coordinator, from reviews): Call bus.EnsureStream(ctx, \"tasks\") before publishing (also in u24). From u12b verify: fake_test.go GetTaskForUpdate uses context.Background() (contextcheck lint); fix when touching handler tests. Fake DeleteKnownMembersExcept should return early on an empty keep list like the SQL."
     },
     {
       "nodes": [
@@ -381,7 +381,7 @@
       "title": "Reminder scheduler loop publishing tasks.task.due and tasks.birthday.upcoming",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go test -race ./internal/scheduler/...",
-      "notes": "Injected clock; dedupe via reminder_deliveries (channel=push). Rules (coordinator, from reviews): Before publishing any reminder, check the recipient with family.Client.IsMember(family, user) over the INTERNAL client; if false skip it and DeleteKnownMember (known_members can be stale). Birthdays: recipients = known_members of the family (each IsMember-checked); materialise yearly occurrences with schedule.NextOccurrence + BirthdayRemindAt(now) (past times dropped). Dedupe per channel via reminder_deliveries (RecordDelivery 'push'); scan with ListDueReminders(now, 'push'). Birthday recipients come from known_members (filled by u12's TouchKnownMember and the u12/u13 ListMembers refresh). On IsMember ERROR (family down): skip this tick for that recipient — no RecordDelivery, no DeleteKnownMember."
+      "notes": "Injected clock; dedupe via reminder_deliveries (channel=push). Rules (coordinator, from reviews): Before publishing any reminder, check the recipient with family.Client.IsMember(family, user) over the INTERNAL client; if false skip it and DeleteKnownMember (known_members can be stale). Birthdays: recipients = known_members of the family (each IsMember-checked); materialise yearly occurrences with schedule.NextOccurrence + BirthdayRemindAt(now) (past times dropped). Dedupe per channel via reminder_deliveries (RecordDelivery 'push'); scan with ListDueReminders(now, 'push'). Birthday recipients come from known_members (filled by u12's TouchKnownMember and the u12/u13 ListMembers refresh). On IsMember ERROR (family down): skip this tick for that recipient — no RecordDelivery, no DeleteKnownMember. From u12b verify: task_assignees can still hold users who left the family until u24's member-removed subscriber runs; IsMember-check every task_due recipient too (not only birthdays) and skip+DeleteKnownMember when false."
     },
     {
       "nodes": [
@@ -585,7 +585,7 @@
       "title": "Wire tasks main: pool + migrations, family client, publisher, reminder scheduler, calendar pull loop",
       "kind": "service",
       "acceptance": "cd services/tasks && GOWORK=off go vet ./... && GOWORK=off go test -race ./...",
-      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04). Rules (coordinator, from reviews): Wire TASKS_FAMILY_ADDR (family :9090, internal RPCs) AND TASKS_FAMILY_PUBLIC_ADDR (family :8080, token-forwarded ListMembers) — both required at startup. bus.EnsureStream(ctx, \"tasks\") before the publisher and scheduler; /healthz -> database.HealthHandler(pool, 0); subscribe family.member.removed -> DeleteKnownMember. The family.member.removed subscriber (internal/members/removed.go + test) deletes the known_members row, the user's pending task_reminders and their task_assignees rows in that family. E9: run exactly one tasks replica (calsync per-item lock is in-process); compose/prod must not scale tasks."
+      "notes": "/healthz like finance; HTTP :8080 Connect, :9090 gRPC. Call bus.EnsureStream(ctx, \"tasks\") before starting the publisher and scheduler (verifier u04). Rules (coordinator, from reviews): Wire TASKS_FAMILY_ADDR (family :9090, internal RPCs) AND TASKS_FAMILY_PUBLIC_ADDR (family :8080, token-forwarded ListMembers) — both required at startup. bus.EnsureStream(ctx, \"tasks\") before the publisher and scheduler; /healthz -> database.HealthHandler(pool, 0); subscribe family.member.removed -> DeleteKnownMember. The family.member.removed subscriber (internal/members/removed.go + test) deletes the known_members row, the user's pending task_reminders and their task_assignees rows in that family. E9: run exactly one tasks replica (calsync per-item lock is in-process); compose/prod must not scale tasks. From u12b verify: the family.member.removed subscriber is what removes leavers' task_assignees and pending reminders; wire FamilyPublic into the handler (fetchMembers is a no-op without it)."
     },
     {
       "nodes": [
@@ -1340,9 +1340,9 @@
         "u13"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "5da930f",
       "blocked_reason": null,
       "id": "u12b",
       "title": "Rework task handlers to meet u12 notes (due_at, membership check, ListMembers refresh, no publish in tx, touch keeps display name)",
@@ -1374,5 +1374,5 @@
       "notes": "From u25 verify: 3 errcheck on res.Body.Close (gcal/http.go), 3 forcetypeassert (gcal/http_test.go). Handler gofmt/contextcheck issues belong to u12b (it owns those files). Separately: golangci-lint 2.12.2 staticcheck panics on go1.27 repo-wide (pre-existing; see E12)."
     }
   ],
-  "updated_at": "2026-10-06T08:21:18.128Z"
+  "updated_at": "2026-10-06T08:27:15.674Z"
 }
