@@ -44,6 +44,8 @@ export interface Theme {
     body?: string;
     medium?: string;
     semibold?: string;
+    bold?: string;
+    heavy?: string;
     display?: string;
   };
 }

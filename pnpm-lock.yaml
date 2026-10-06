@@ -72,6 +72,12 @@ importers:
       '@connectrpc/connect-web':
         specifier: ^2.0.0
         version: 2.1.2(@bufbuild/protobuf@2.14.0)(@connectrpc/connect@2.1.2(@bufbuild/protobuf@2.14.0))
+      '@expo-google-fonts/alegreya':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/nunito-sans':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@expo/metro-runtime':
         specifier: ~57.0.14
         version: 57.0.14(@expo/log-box@57.0.4)(expo@57.0.18)(react-dom@19.2.8(react@19.2.8))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
@@ -108,6 +114,9 @@ importers:
       expo-crypto:
         specifier: ~57.0.3
         version: 57.0.3(expo@57.0.18)
+      expo-font:
+        specifier: ~57.0.1
+        version: 57.0.2(expo@57.0.18)(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       expo-linking:
         specifier: ~57.0.7
         version: 57.0.8(expo@57.0.18)(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
@@ -175,7 +184,10 @@ importers:
       '@connectrpc/connect-web':
         specifier: ^2.0.0
         version: 2.1.2(@bufbuild/protobuf@2.14.0)(@connectrpc/connect@2.1.2(@bufbuild/protobuf@2.14.0))
-      '@expo-google-fonts/inter':
+      '@expo-google-fonts/alegreya':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/nunito-sans':
         specifier: ^0.4.2
         version: 0.4.2
       '@expo/metro-runtime':
@@ -190,6 +202,9 @@ importers:
       '@fm/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@fm/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@fm/sdk':
         specifier: workspace:*
         version: link:../../sdk/typescript
@@ -537,6 +552,9 @@ importers:
       react-native:
         specifier: 0.86.3
         version: 0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8)
+      react-native-safe-area-context:
+        specifier: ~5.7.0
+        version: 5.7.0(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       react-native-svg:
         specifier: 15.15.4
         version: 15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.86.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
@@ -1000,9 +1018,6 @@ packages:
 
   '@expo-google-fonts/alegreya@0.4.2':
     resolution: {integrity: sha512-fE6ckTCI9YMEdTu1TUvbV3RKDZZ14A+rhEik0dn7gXhfoYaaQnFO/ogSgFGl/aIC0PK4OIbqvmM1cfE7ejNw9g==}
-
-  '@expo-google-fonts/inter@0.4.2':
-    resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
 
   '@expo-google-fonts/material-symbols@0.4.45':
     resolution: {integrity: sha512-D5gd/uFa7KfMJX9S11hvej4GpQnBl27oKiUgyIq3cLTPtyDOWBwRgmeePIdV6+PGcedlDkaCND2BnRgAkxzNaA==}
@@ -4456,8 +4471,6 @@ snapshots:
       levn: 0.4.1
 
   '@expo-google-fonts/alegreya@0.4.2': {}
-
-  '@expo-google-fonts/inter@0.4.2': {}
 
   '@expo-google-fonts/material-symbols@0.4.45': {}
 
