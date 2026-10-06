@@ -15,13 +15,13 @@ import (
 )
 
 type fakeStore struct {
-	settings      map[string]db.FamilySetting
-	members       map[string]db.KnownMember
-	tasks         map[string]db.Task
-	assignees     map[string]db.TaskAssignee
-	reminders     map[string]db.TaskReminder
-	deliveries    map[string]db.ReminderDelivery
-	digestSends   map[string]db.DigestSend
+	settings    map[string]db.FamilySetting
+	members     map[string]db.KnownMember
+	tasks       map[string]db.Task
+	assignees   map[string]db.TaskAssignee
+	reminders   map[string]db.TaskReminder
+	deliveries  map[string]db.ReminderDelivery
+	digestSends map[string]db.DigestSend
 
 	failOn map[string]error
 	seq    int
@@ -49,8 +49,6 @@ func (s *fakeStore) newUUID() pgtype.UUID {
 
 func (s *fakeStore) InTx(_ context.Context, fn func(q db.Querier) error) error { return fn(s) }
 
-func id(u pgtype.UUID) string { return pgconv.UUIDString(u) }
-
 func same(a, b pgtype.UUID) bool { return a.Valid && b.Valid && id(a) == id(b) }
 
 func now() pgtype.Timestamptz { return pgtype.Timestamptz{Valid: true} }
@@ -72,10 +70,10 @@ func (s *fakeStore) InitFamilySettings(_ context.Context, arg db.InitFamilySetti
 		return nil
 	}
 	s.settings[id(arg.FamilyID)] = db.FamilySetting{
-		FamilyID:  arg.FamilyID,
-		Timezone:  arg.Timezone,
+		FamilyID:   arg.FamilyID,
+		Timezone:   arg.Timezone,
 		DigestTime: "08:00",
-		CreatedAt: now(), UpdatedAt: now(),
+		CreatedAt:  now(), UpdatedAt: now(),
 	}
 	return nil
 }
@@ -116,11 +114,19 @@ func (s *fakeStore) UpsertKnownMember(_ context.Context, arg db.UpsertKnownMembe
 }
 
 func (s *fakeStore) TouchKnownMember(_ context.Context, arg db.TouchKnownMemberParams) error {
-	key := id(arg.FamilyID) + "|" + id(arg.UserID)
-	if m, ok := s.members[key]; ok {
-		m.SeenAt = now()
-		s.members[key] = m
+	if err := s.fail("TouchKnownMember"); err != nil {
+		return err
 	}
+	key := id(arg.FamilyID) + "|" + id(arg.UserID)
+	m, ok := s.members[key]
+	if !ok {
+		m = db.KnownMember{FamilyID: arg.FamilyID, UserID: arg.UserID}
+	}
+	if arg.Email != "" {
+		m.Email = arg.Email
+	}
+	m.SeenAt = now()
+	s.members[key] = m
 	return nil
 }
 
@@ -145,8 +151,8 @@ func (s *fakeStore) DeleteKnownMembersExcept(_ context.Context, arg db.DeleteKno
 	for _, u := range arg.Keep {
 		keep[id(arg.FamilyID)+"|"+id(u)] = true
 	}
-	for k := range s.members {
-		if !keep[k] {
+	for k, m := range s.members {
+		if same(m.FamilyID, arg.FamilyID) && !keep[k] {
 			delete(s.members, k)
 		}
 	}
@@ -508,9 +514,9 @@ func (s *fakeStore) ClearDeliveries(_ context.Context, arg db.ClearDeliveriesPar
 
 func (s *fakeStore) RecordDelivery(_ context.Context, arg db.RecordDeliveryParams) error {
 	s.deliveries[id(arg.ReminderID)+"|"+arg.Channel] = db.ReminderDelivery{
-		ReminderID: arg.ReminderID,
-		FamilyID:   arg.FamilyID,
-		Channel:    arg.Channel,
+		ReminderID:  arg.ReminderID,
+		FamilyID:    arg.FamilyID,
+		Channel:     arg.Channel,
 		DeliveredAt: now(),
 	}
 	return nil
@@ -534,28 +540,68 @@ func (s *fakeStore) MarkDigestSent(_ context.Context, arg db.MarkDigestSentParam
 }
 
 // --- Stub methods for Querier interface ---
-func (s *fakeStore) CalendarLinkedInFamily(_ context.Context, arg db.CalendarLinkedInFamilyParams) (bool, error) { return false, nil }
-func (s *fakeStore) CreateBirthday(_ context.Context, arg db.CreateBirthdayParams) (db.Birthday, error) { return db.Birthday{}, nil }
-func (s *fakeStore) DeleteBirthday(_ context.Context, arg db.DeleteBirthdayParams) (int64, error) { return 0, nil }
-func (s *fakeStore) DeleteCalendarLink(_ context.Context, arg db.DeleteCalendarLinkParams) error { return nil }
-func (s *fakeStore) DeleteCalendarLinksForUser(_ context.Context, arg db.DeleteCalendarLinksForUserParams) error { return nil }
-func (s *fakeStore) DeleteGoogleConnection(_ context.Context, arg db.DeleteGoogleConnectionParams) (int64, error) { return 0, nil }
-func (s *fakeStore) GetBirthday(_ context.Context, arg db.GetBirthdayParams) (db.Birthday, error) { return db.Birthday{}, pgx.ErrNoRows }
-func (s *fakeStore) GetCalendarLink(_ context.Context, arg db.GetCalendarLinkParams) (db.CalendarLink, error) { return db.CalendarLink{}, pgx.ErrNoRows }
-func (s *fakeStore) GetCalendarLinkByEvent(_ context.Context, arg db.GetCalendarLinkByEventParams) (db.CalendarLink, error) { return db.CalendarLink{}, pgx.ErrNoRows }
-func (s *fakeStore) GetGoogleConnection(_ context.Context, arg db.GetGoogleConnectionParams) (db.GoogleConnection, error) { return db.GoogleConnection{}, pgx.ErrNoRows }
+func (s *fakeStore) CalendarLinkedInFamily(_ context.Context, arg db.CalendarLinkedInFamilyParams) (bool, error) {
+	return false, nil
+}
+func (s *fakeStore) CreateBirthday(_ context.Context, arg db.CreateBirthdayParams) (db.Birthday, error) {
+	return db.Birthday{}, nil
+}
+func (s *fakeStore) DeleteBirthday(_ context.Context, arg db.DeleteBirthdayParams) (int64, error) {
+	return 0, nil
+}
+func (s *fakeStore) DeleteCalendarLink(_ context.Context, arg db.DeleteCalendarLinkParams) error {
+	return nil
+}
+func (s *fakeStore) DeleteCalendarLinksForUser(_ context.Context, arg db.DeleteCalendarLinksForUserParams) error {
+	return nil
+}
+func (s *fakeStore) DeleteGoogleConnection(_ context.Context, arg db.DeleteGoogleConnectionParams) (int64, error) {
+	return 0, nil
+}
+func (s *fakeStore) GetBirthday(_ context.Context, arg db.GetBirthdayParams) (db.Birthday, error) {
+	return db.Birthday{}, pgx.ErrNoRows
+}
+func (s *fakeStore) GetCalendarLink(_ context.Context, arg db.GetCalendarLinkParams) (db.CalendarLink, error) {
+	return db.CalendarLink{}, pgx.ErrNoRows
+}
+func (s *fakeStore) GetCalendarLinkByEvent(_ context.Context, arg db.GetCalendarLinkByEventParams) (db.CalendarLink, error) {
+	return db.CalendarLink{}, pgx.ErrNoRows
+}
+func (s *fakeStore) GetGoogleConnection(_ context.Context, arg db.GetGoogleConnectionParams) (db.GoogleConnection, error) {
+	return db.GoogleConnection{}, pgx.ErrNoRows
+}
 func (s *fakeStore) ListAllBirthdays(_ context.Context) ([]db.Birthday, error) { return nil, nil }
-func (s *fakeStore) ListBirthdays(_ context.Context, familyID pgtype.UUID) ([]db.Birthday, error) { return nil, nil }
-func (s *fakeStore) ListCalendarLinksForItem(_ context.Context, arg db.ListCalendarLinksForItemParams) ([]db.CalendarLink, error) { return nil, nil }
-func (s *fakeStore) ListFamilyGoogleConnections(_ context.Context, familyID pgtype.UUID) ([]db.GoogleConnection, error) { return nil, nil }
-func (s *fakeStore) ListOrphanCalendarLinks(_ context.Context, arg db.ListOrphanCalendarLinksParams) ([]db.CalendarLink, error) { return nil, nil }
-func (s *fakeStore) ListSyncableGoogleConnections(_ context.Context) ([]db.GoogleConnection, error) { return nil, nil }
-func (s *fakeStore) SetGoogleCalendar(_ context.Context, arg db.SetGoogleCalendarParams) (db.GoogleConnection, error) { return db.GoogleConnection{}, nil }
+func (s *fakeStore) ListBirthdays(_ context.Context, familyID pgtype.UUID) ([]db.Birthday, error) {
+	return nil, nil
+}
+func (s *fakeStore) ListCalendarLinksForItem(_ context.Context, arg db.ListCalendarLinksForItemParams) ([]db.CalendarLink, error) {
+	return nil, nil
+}
+func (s *fakeStore) ListFamilyGoogleConnections(_ context.Context, familyID pgtype.UUID) ([]db.GoogleConnection, error) {
+	return nil, nil
+}
+func (s *fakeStore) ListOrphanCalendarLinks(_ context.Context, arg db.ListOrphanCalendarLinksParams) ([]db.CalendarLink, error) {
+	return nil, nil
+}
+func (s *fakeStore) ListSyncableGoogleConnections(_ context.Context) ([]db.GoogleConnection, error) {
+	return nil, nil
+}
+func (s *fakeStore) SetGoogleCalendar(_ context.Context, arg db.SetGoogleCalendarParams) (db.GoogleConnection, error) {
+	return db.GoogleConnection{}, nil
+}
 func (s *fakeStore) SetGoogleError(_ context.Context, arg db.SetGoogleErrorParams) error { return nil }
-func (s *fakeStore) SetGoogleSyncState(_ context.Context, arg db.SetGoogleSyncStateParams) error { return nil }
-func (s *fakeStore) UpsertCalendarLink(_ context.Context, arg db.UpsertCalendarLinkParams) error { return nil }
-func (s *fakeStore) UpsertGoogleConnection(_ context.Context, arg db.UpsertGoogleConnectionParams) (db.GoogleConnection, error) { return db.GoogleConnection{}, nil }
-func (s *fakeStore) UpdateBirthday(_ context.Context, arg db.UpdateBirthdayParams) (db.Birthday, error) { return db.Birthday{}, nil }
+func (s *fakeStore) SetGoogleSyncState(_ context.Context, arg db.SetGoogleSyncStateParams) error {
+	return nil
+}
+func (s *fakeStore) UpsertCalendarLink(_ context.Context, arg db.UpsertCalendarLinkParams) error {
+	return nil
+}
+func (s *fakeStore) UpsertGoogleConnection(_ context.Context, arg db.UpsertGoogleConnectionParams) (db.GoogleConnection, error) {
+	return db.GoogleConnection{}, nil
+}
+func (s *fakeStore) UpdateBirthday(_ context.Context, arg db.UpdateBirthdayParams) (db.Birthday, error) {
+	return db.Birthday{}, nil
+}
 
 type recorder struct {
 	subjects []string

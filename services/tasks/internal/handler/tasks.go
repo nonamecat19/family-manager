@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
+	"sort"
 	"time"
 
 	"connectrpc.com/connect"
@@ -12,11 +14,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
-	"github.com/nnc/family-manager/libs/go/events"
 	tasksv1 "github.com/nnc/family-manager/sdk/go/tasks/v1"
 	"github.com/nnc/family-manager/services/tasks/db"
+	"github.com/nnc/family-manager/services/tasks/internal/family"
 	"github.com/nnc/family-manager/services/tasks/internal/schedule"
 )
+
+const kindTaskDue = "task_due"
 
 func (h *Handler) ListTasks(
 	ctx context.Context, req *connect.Request[tasksv1.ListTasksRequest],
@@ -52,16 +56,21 @@ func (h *Handler) ListTasks(
 	if err != nil {
 		return nil, h.internal(ctx, err, "list tasks")
 	}
-
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
+	if filter == tasksv1.TaskFilter_TASK_FILTER_DONE {
+		sort.SliceStable(rows, func(i, j int) bool {
+			return rows[i].CompletedAt.Time.After(rows[j].CompletedAt.Time)
+		})
 	}
 
+	assignees, err := assigneesOf(ctx, h.q, c, taskIDs(rows))
+	if err != nil {
+		return nil, h.internal(ctx, err, "list assignees")
+	}
+
+	now, loc := h.now(), h.familyLoc(ctx, c)
 	tasks := make([]*tasksv1.Task, 0, len(rows))
 	for _, t := range rows {
-		tasks = append(tasks, h.toProtoTask(ctx, t, now, loc))
+		tasks = append(tasks, toProtoTask(t, assignees[id(t.ID)], now, loc))
 	}
 	return connect.NewResponse(&tasksv1.ListTasksResponse{Tasks: tasks}), nil
 }
@@ -89,14 +98,15 @@ func (h *Handler) GetTask(
 	if err != nil {
 		return nil, h.internal(ctx, err, "get task")
 	}
-
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
+	assignees, err := assigneesOf(ctx, h.q, c, []pgtype.UUID{taskID})
+	if err != nil {
+		return nil, h.internal(ctx, err, "list assignees")
 	}
 
-	return connect.NewResponse(&tasksv1.GetTaskResponse{Task: h.toProtoTask(ctx, task, now, loc)}), nil
+	now, loc := h.now(), h.familyLoc(ctx, c)
+	return connect.NewResponse(&tasksv1.GetTaskResponse{
+		Task: toProtoTask(task, assignees[id(taskID)], now, loc),
+	}), nil
 }
 
 func (h *Handler) CreateTask(
@@ -117,34 +127,38 @@ func (h *Handler) CreateTask(
 	if err := checkText("notes", msg.GetNotes(), maxNotesRunes); err != nil {
 		return nil, err
 	}
-
 	priority := protoPriority(msg.GetPriority())
 	if priority == "" {
 		priority = "medium"
 	}
-
 	dl, err := schedule.ParseDeadline(msg.GetDueOn(), msg.GetDueTime())
 	if err != nil {
 		return nil, invalid("%v", err)
 	}
-
-	var dueOn pgtype.Date
-	var dueTime pgtype.Time
-	var dueAt pgtype.Timestamptz
-	if !dl.IsZero() {
-		dueOn = pgtype.Date{Time: parseDate(dl.On), Valid: true}
-		if dl.HasTime() {
-			dueTime = pgTime(parseTime(dl.Time))
-		}
+	assignees, err := uuidList("assignee_user_ids", msg.GetAssigneeUserIds())
+	if err != nil {
+		return nil, err
 	}
+	if len(assignees) == 0 {
+		assignees = []pgtype.UUID{c.userID}
+	}
+
+	hh, err := h.household(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	now, loc := h.now(), hh.loc
+	dueOn, dueTime, dueAt := deadlineColumns(dl, loc)
+	members := h.fetchMembers(ctx, c, req.Header())
 
 	var task db.Task
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
-	}
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
+		if innerErr := refreshKnownMembers(ctx, q, c, members); innerErr != nil {
+			return h.internal(ctx, innerErr, "refresh known members")
+		}
+		if innerErr := h.requireMembers(ctx, q, c, assignees); innerErr != nil {
+			return innerErr
+		}
 		var innerErr error
 		task, innerErr = q.CreateTask(ctx, db.CreateTaskParams{
 			FamilyID:        c.familyID,
@@ -157,69 +171,27 @@ func (h *Handler) CreateTask(
 			CreatedByUserID: c.userID,
 		})
 		if innerErr != nil {
-			return innerErr
-		}
-
-		assignees, innerErr := uuidList("assignee_user_ids", msg.GetAssigneeUserIds())
-		if innerErr != nil {
-			return innerErr
-		}
-		if len(assignees) == 0 {
-			assignees = []pgtype.UUID{c.userID}
+			return h.internal(ctx, innerErr, "create task")
 		}
 		for _, a := range assignees {
 			if innerErr = q.AddAssignee(ctx, db.AddAssigneeParams{
 				TaskID: task.ID, FamilyID: c.familyID, UserID: a,
 			}); innerErr != nil {
-				return innerErr
+				return h.internal(ctx, innerErr, "add assignee")
 			}
 		}
-
-		if !dueAt.Time.IsZero() {
-			for _, a := range assignees {
-				remindAt := schedule.TaskRemindAt(dl, loc)
-				if !remindAt.IsZero() {
-					occ := dueAt.Time.Format(time.RFC3339)
-					if innerErr = q.UpsertReminder(ctx, db.UpsertReminderParams{
-						FamilyID:   c.familyID,
-						UserID:     a,
-						Kind:       "task_due",
-						ItemID:     task.ID,
-						Occurrence: occ,
-						RemindAt:   pgTimestamptz(remindAt),
-					}); innerErr != nil {
-						return innerErr
-					}
-				}
-			}
+		if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
+			return h.internal(ctx, innerErr, "schedule task reminders")
 		}
-
-		if h.bus != nil {
-			assignedBy := c.user
-			for _, a := range assignees {
-				if a == c.userID {
-					continue
-				}
-				if innerErr = h.bus.Publish(ctx, events.SubjectTasksTaskAssigned, &tasksv1.TaskAssignedEvent{
-					FamilyId:           c.family,
-					TaskId:             pgconv.UUIDString(task.ID),
-					Title:              task.Title,
-					AssigneeUserIds:    []string{pgconv.UUIDString(a)},
-					AssignedByUserId:   assignedBy,
-					OccurredAt:         timestamppb.Now(),
-				}); innerErr != nil {
-					h.log.WarnContext(ctx, "publish task assigned", slog.String("error", innerErr.Error()))
-				}
-			}
-		}
-
 		return nil
 	})
 	if err != nil {
-		return nil, h.internal(ctx, err, "create task")
+		return nil, err
 	}
 
-	return connect.NewResponse(&tasksv1.CreateTaskResponse{Task: h.toProtoTask(ctx, task, now, loc)}), nil
+	return connect.NewResponse(&tasksv1.CreateTaskResponse{
+		Task: toProtoTask(task, uuidStrings(assignees), now, loc),
+	}), nil
 }
 
 func (h *Handler) UpdateTask(
@@ -238,17 +210,44 @@ func (h *Handler) UpdateTask(
 	if err != nil {
 		return nil, err
 	}
+	if msg.Title != nil {
+		if err := checkText("title", msg.GetTitle(), maxTitleRunes); err != nil {
+			return nil, err
+		}
+	}
+	if msg.Notes != nil {
+		if err := checkText("notes", msg.GetNotes(), maxNotesRunes); err != nil {
+			return nil, err
+		}
+	}
+	var newPriority string
+	if msg.Priority != nil {
+		if newPriority = protoPriority(msg.GetPriority()); newPriority == "" {
+			return nil, invalid("priority is required")
+		}
+	}
+	replaceAssignees := msg.Assignees != nil
+	var newAssignees []pgtype.UUID
+	if replaceAssignees {
+		if newAssignees, err = uuidList("assignee_user_ids", msg.GetAssignees().GetUserIds()); err != nil {
+			return nil, err
+		}
+	}
+
+	hh, err := h.household(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+	now, loc := h.now(), hh.loc
+	var members []family.Member
+	if replaceAssignees {
+		members = h.fetchMembers(ctx, c, req.Header())
+	}
 
 	var task db.Task
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
-	}
+	var assignees []pgtype.UUID
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		existing, innerErr := q.GetTaskForUpdate(ctx, db.GetTaskForUpdateParams{
-			ID: taskID, FamilyID: c.familyID,
-		})
+		existing, innerErr := q.GetTaskForUpdate(ctx, db.GetTaskForUpdateParams{ID: taskID, FamilyID: c.familyID})
 		if errors.Is(innerErr, pgx.ErrNoRows) {
 			return notFound("task")
 		}
@@ -258,60 +257,27 @@ func (h *Handler) UpdateTask(
 
 		title := existing.Title
 		if msg.Title != nil {
-			if err := checkText("title", msg.GetTitle(), maxTitleRunes); err != nil {
-				return err
-			}
 			title = msg.GetTitle()
 		}
 		notes := existing.Notes
 		if msg.Notes != nil {
-			if err := checkText("notes", msg.GetNotes(), maxNotesRunes); err != nil {
-				return err
-			}
 			notes = msg.GetNotes()
 		}
 		priority := existing.Priority
 		if msg.Priority != nil {
-			priority = protoPriority(msg.GetPriority())
-			if priority == "" {
-				return invalid("priority is required")
-			}
+			priority = newPriority
 		}
-
-		dl := schedule.Deadline{On: existing.DueOn.Time.Format(schedule.DateLayout)}
-		if existing.DueTime.Valid {
-			dl.Time = timeFromPgTime(existing.DueTime).Format(schedule.TimeLayout)
-		}
-		if msg.DueOn != nil {
-			dl.On = msg.GetDueOn()
-		}
-		if msg.DueTime != nil {
-			dl.Time = msg.GetDueTime()
-		}
-		if dl.On == "" && dl.Time != "" {
-			return invalid("due_time requires due_on")
-		}
-		parsedDL, innerErr := schedule.ParseDeadline(dl.On, dl.Time)
+		dl, innerErr := mergeDeadline(deadlineOf(existing), msg.DueOn, msg.DueTime)
 		if innerErr != nil {
-			return invalid("%v", innerErr)
+			return innerErr
 		}
+		dueOn, dueTime, dueAt := deadlineColumns(dl, loc)
 
-		var dueOn pgtype.Date
-		var dueTime pgtype.Time
-		var dueAt pgtype.Timestamptz
-		if !parsedDL.IsZero() {
-			dueOn = pgtype.Date{Time: parseDate(parsedDL.On), Valid: true}
-			if parsedDL.HasTime() {
-				dueTime = pgTime(parseTime(parsedDL.Time))
+		if replaceAssignees {
+			if innerErr = refreshKnownMembers(ctx, q, c, members); innerErr != nil {
+				return h.internal(ctx, innerErr, "refresh known members")
 			}
-		}
-
-		assigneesChanged := false
-		var newAssignees []pgtype.UUID
-		if msg.Assignees != nil && msg.Assignees.GetUserIds() != nil {
-			assigneesChanged = true
-			newAssignees, innerErr = uuidList("assignee_user_ids", msg.GetAssignees().GetUserIds())
-			if innerErr != nil {
+			if innerErr = h.requireMembers(ctx, q, c, newAssignees); innerErr != nil {
 				return innerErr
 			}
 		}
@@ -327,69 +293,46 @@ func (h *Handler) UpdateTask(
 			DueAt:    dueAt,
 		})
 		if innerErr != nil {
-			return innerErr
+			return h.internal(ctx, innerErr, "update task")
 		}
 
-		if assigneesChanged {
-			if innerErr = q.DeleteAssignees(ctx, db.DeleteAssigneesParams{
-				TaskID: taskID, FamilyID: c.familyID,
-			}); innerErr != nil {
-				return innerErr
+		if replaceAssignees {
+			if innerErr = q.DeleteAssignees(ctx, db.DeleteAssigneesParams{TaskID: taskID, FamilyID: c.familyID}); innerErr != nil {
+				return h.internal(ctx, innerErr, "delete assignees")
 			}
 			for _, a := range newAssignees {
 				if innerErr = q.AddAssignee(ctx, db.AddAssigneeParams{
 					TaskID: taskID, FamilyID: c.familyID, UserID: a,
 				}); innerErr != nil {
-					return innerErr
+					return h.internal(ctx, innerErr, "add assignee")
 				}
 			}
-		}
-
-		occ := dueAt.Time.Format(time.RFC3339)
-		if !dueAt.Time.IsZero() {
-			targetAssignees := newAssignees
-			if !assigneesChanged {
-				rows, innerErr := q.ListAssignees(ctx, db.ListAssigneesParams{
-					FamilyID: c.familyID, TaskIds: []pgtype.UUID{taskID},
-				})
-				if innerErr != nil {
-					return innerErr
-				}
-				targetAssignees = make([]pgtype.UUID, len(rows))
-				for i, r := range rows {
-					targetAssignees[i] = r.UserID
-				}
-			}
-			for _, a := range targetAssignees {
-				remindAt := schedule.TaskRemindAt(parsedDL, loc)
-				if !remindAt.IsZero() {
-					if innerErr = q.UpsertReminder(ctx, db.UpsertReminderParams{
-						FamilyID:   c.familyID,
-						UserID:     a,
-						Kind:       "task_due",
-						ItemID:     taskID,
-						Occurrence: occ,
-						RemindAt:   pgTimestamptz(remindAt),
-					}); innerErr != nil {
-						return innerErr
-					}
-				}
-			}
+			assignees = newAssignees
 		} else {
-			if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-				FamilyID: c.familyID, Kind: "task_due", ItemID: taskID,
-			}); innerErr != nil {
-				return innerErr
+			current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
+			if innerErr != nil {
+				return h.internal(ctx, innerErr, "list assignees")
+			}
+			if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
+				return h.internal(ctx, innerErr, "parse assignees")
 			}
 		}
 
+		if task.Status != "open" {
+			return nil
+		}
+		if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
+			return h.internal(ctx, innerErr, "schedule task reminders")
+		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&tasksv1.UpdateTaskResponse{Task: h.toProtoTask(ctx, task, now, loc)}), nil
+	return connect.NewResponse(&tasksv1.UpdateTaskResponse{
+		Task: toProtoTask(task, uuidStrings(assignees), now, loc),
+	}), nil
 }
 
 func (h *Handler) CompleteTask(
@@ -408,11 +351,13 @@ func (h *Handler) CompleteTask(
 		return nil, err
 	}
 
+	now := h.now()
 	var task db.Task
+	var assignees map[string][]string
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		completedAt := h.now()
-		t, innerErr := q.CompleteTask(ctx, db.CompleteTaskParams{
-			CompletedAt:       pgTimestamptz(completedAt),
+		var innerErr error
+		task, innerErr = q.CompleteTask(ctx, db.CompleteTaskParams{
+			CompletedAt:       pgTimestamptz(now),
 			CompletedByUserID: c.userID,
 			ID:                taskID,
 			FamilyID:          c.familyID,
@@ -423,12 +368,13 @@ func (h *Handler) CompleteTask(
 		if innerErr != nil {
 			return h.internal(ctx, innerErr, "complete task")
 		}
-		task = t
-
 		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: "task_due", ItemID: taskID,
+			FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
 		}); innerErr != nil {
-			return innerErr
+			return h.internal(ctx, innerErr, "delete task reminders")
+		}
+		if assignees, innerErr = assigneesOf(ctx, q, c, []pgtype.UUID{taskID}); innerErr != nil {
+			return h.internal(ctx, innerErr, "list assignees")
 		}
 		return nil
 	})
@@ -436,13 +382,9 @@ func (h *Handler) CompleteTask(
 		return nil, err
 	}
 
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
-	}
-
-	return connect.NewResponse(&tasksv1.CompleteTaskResponse{Task: h.toProtoTask(ctx, task, now, loc)}), nil
+	return connect.NewResponse(&tasksv1.CompleteTaskResponse{
+		Task: toProtoTask(task, assignees[id(taskID)], now, h.familyLoc(ctx, c)),
+	}), nil
 }
 
 func (h *Handler) ReopenTask(
@@ -461,51 +403,32 @@ func (h *Handler) ReopenTask(
 		return nil, err
 	}
 
-	var task db.Task
-	now := h.now()
-	loc, _ := time.LoadLocation("UTC")
-	if hh, err := h.household(ctx, c); err == nil {
-		loc = hh.loc
+	hh, err := h.household(ctx, c)
+	if err != nil {
+		return nil, err
 	}
+	now, loc := h.now(), hh.loc
+
+	var task db.Task
+	var assignees []pgtype.UUID
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		t, innerErr := q.ReopenTask(ctx, db.ReopenTaskParams{
-			ID: taskID, FamilyID: c.familyID,
-		})
+		var innerErr error
+		task, innerErr = q.ReopenTask(ctx, db.ReopenTaskParams{ID: taskID, FamilyID: c.familyID})
 		if errors.Is(innerErr, pgx.ErrNoRows) {
 			return notFound("task")
 		}
 		if innerErr != nil {
 			return h.internal(ctx, innerErr, "reopen task")
 		}
-		task = t
-
-		dl := schedule.Deadline{On: task.DueOn.Time.Format(schedule.DateLayout)}
-		if task.DueTime.Valid {
-			dl.Time = timeFromPgTime(task.DueTime).Format(schedule.TimeLayout)
+		current, innerErr := assigneesOf(ctx, q, c, []pgtype.UUID{taskID})
+		if innerErr != nil {
+			return h.internal(ctx, innerErr, "list assignees")
 		}
-		if !dl.IsZero() {
-			rows, innerErr := q.ListAssignees(ctx, db.ListAssigneesParams{
-				FamilyID: c.familyID, TaskIds: []pgtype.UUID{taskID},
-			})
-			if innerErr != nil {
-				return innerErr
-			}
-			occ := task.DueAt.Time.Format(time.RFC3339)
-			for _, a := range rows {
-				remindAt := schedule.TaskRemindAt(dl, loc)
-				if !remindAt.IsZero() {
-					if innerErr = q.UpsertReminder(ctx, db.UpsertReminderParams{
-						FamilyID:   c.familyID,
-						UserID:     a.UserID,
-						Kind:       "task_due",
-						ItemID:     taskID,
-						Occurrence: occ,
-						RemindAt:   pgTimestamptz(remindAt),
-					}); innerErr != nil {
-						return innerErr
-					}
-				}
-			}
+		if assignees, innerErr = uuidList("assignee_user_ids", current[id(taskID)]); innerErr != nil {
+			return h.internal(ctx, innerErr, "parse assignees")
+		}
+		if innerErr = syncTaskReminders(ctx, q, c, task, assignees, loc); innerErr != nil {
+			return h.internal(ctx, innerErr, "schedule task reminders")
 		}
 		return nil
 	})
@@ -513,7 +436,9 @@ func (h *Handler) ReopenTask(
 		return nil, err
 	}
 
-	return connect.NewResponse(&tasksv1.ReopenTaskResponse{Task: h.toProtoTask(ctx, task, now, loc)}), nil
+	return connect.NewResponse(&tasksv1.ReopenTaskResponse{
+		Task: toProtoTask(task, uuidStrings(assignees), now, loc),
+	}), nil
 }
 
 func (h *Handler) DeleteTask(
@@ -533,20 +458,17 @@ func (h *Handler) DeleteTask(
 	}
 
 	err = h.tx.InTx(ctx, func(q db.Querier) error {
-		rows, innerErr := q.DeleteTask(ctx, db.DeleteTaskParams{
-			ID: taskID, FamilyID: c.familyID,
-		})
+		rows, innerErr := q.DeleteTask(ctx, db.DeleteTaskParams{ID: taskID, FamilyID: c.familyID})
 		if innerErr != nil {
 			return h.internal(ctx, innerErr, "delete task")
 		}
 		if rows == 0 {
 			return notFound("task")
 		}
-
 		if innerErr = q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
-			FamilyID: c.familyID, Kind: "task_due", ItemID: taskID,
+			FamilyID: c.familyID, Kind: kindTaskDue, ItemID: taskID,
 		}); innerErr != nil {
-			return innerErr
+			return h.internal(ctx, innerErr, "delete task reminders")
 		}
 		return nil
 	})
@@ -557,42 +479,174 @@ func (h *Handler) DeleteTask(
 	return connect.NewResponse(&tasksv1.DeleteTaskResponse{}), nil
 }
 
-func (h *Handler) toProtoTask(
-	ctx context.Context, t db.Task, now time.Time, loc *time.Location,
-) *tasksv1.Task {
+func (h *Handler) requireMembers(ctx context.Context, q db.Querier, c caller, users []pgtype.UUID) error {
+	if len(users) == 0 {
+		return nil
+	}
+	known, err := q.ListKnownMembers(ctx, c.familyID)
+	if err != nil {
+		return h.internal(ctx, err, "list known members")
+	}
+	members := make(map[string]bool, len(known))
+	for _, m := range known {
+		members[id(m.UserID)] = true
+	}
+	for _, u := range users {
+		if !members[id(u)] {
+			return invalid("assignee %s is not a member of the family", id(u))
+		}
+	}
+	return nil
+}
+
+func syncTaskReminders(
+	ctx context.Context, q db.Querier, c caller, t db.Task, assignees []pgtype.UUID, loc *time.Location,
+) error {
+	dl := deadlineOf(t)
+	if dl.IsZero() || !t.DueAt.Valid {
+		if err := q.DeletePendingRemindersForItem(ctx, db.DeletePendingRemindersForItemParams{
+			FamilyID: c.familyID, Kind: kindTaskDue, ItemID: t.ID,
+		}); err != nil {
+			return fmt.Errorf("delete task reminders: %w", err)
+		}
+		return nil
+	}
+	occurrence := t.DueAt.Time.UTC().Format(time.RFC3339)
+	remindAt := schedule.TaskRemindAt(dl, loc)
+	for _, a := range assignees {
+		if err := q.UpsertReminder(ctx, db.UpsertReminderParams{
+			FamilyID:   c.familyID,
+			UserID:     a,
+			Kind:       kindTaskDue,
+			ItemID:     t.ID,
+			Occurrence: occurrence,
+			RemindAt:   pgTimestamptz(remindAt),
+		}); err != nil {
+			return fmt.Errorf("upsert task reminder: %w", err)
+		}
+	}
+	if err := q.DeletePendingRemindersForItemExcept(ctx, db.DeletePendingRemindersForItemExceptParams{
+		FamilyID:       c.familyID,
+		Kind:           kindTaskDue,
+		ItemID:         t.ID,
+		KeepUsers:      assignees,
+		KeepOccurrence: occurrence,
+	}); err != nil {
+		return fmt.Errorf("delete stale task reminders: %w", err)
+	}
+	return nil
+}
+
+func assigneesOf(ctx context.Context, q db.Querier, c caller, ids []pgtype.UUID) (map[string][]string, error) {
+	out := make(map[string][]string, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := q.ListAssignees(ctx, db.ListAssigneesParams{FamilyID: c.familyID, TaskIds: ids})
+	if err != nil {
+		return nil, fmt.Errorf("list assignees: %w", err)
+	}
+	for _, r := range rows {
+		out[id(r.TaskID)] = append(out[id(r.TaskID)], id(r.UserID))
+	}
+	return out, nil
+}
+
+func mergeDeadline(current schedule.Deadline, dueOn, dueTime *string) (schedule.Deadline, error) {
+	on, clock := current.On, current.Time
+	if dueOn != nil {
+		on = *dueOn
+		if on == "" {
+			clock = ""
+		}
+	}
+	if dueTime != nil {
+		clock = *dueTime
+	}
+	if on == "" && clock != "" {
+		return schedule.Deadline{}, invalid("due_time needs a due_on date")
+	}
+	dl, err := schedule.ParseDeadline(on, clock)
+	if err != nil {
+		return schedule.Deadline{}, invalid("%v", err)
+	}
+	return dl, nil
+}
+
+func deadlineColumns(dl schedule.Deadline, loc *time.Location) (pgtype.Date, pgtype.Time, pgtype.Timestamptz) {
+	if dl.IsZero() {
+		return pgtype.Date{}, pgtype.Time{}, pgtype.Timestamptz{}
+	}
+	on := pgtype.Date{Time: parseDate(dl.On), Valid: true}
+	var clock pgtype.Time
+	if dl.HasTime() {
+		clock = pgTime(parseTime(dl.Time))
+	}
+	return on, clock, pgTimestamptz(dl.At(loc))
+}
+
+func deadlineOf(t db.Task) schedule.Deadline {
+	if !t.DueOn.Valid {
+		return schedule.Deadline{}
+	}
 	dl := schedule.Deadline{On: t.DueOn.Time.Format(schedule.DateLayout)}
 	if t.DueTime.Valid {
 		dl.Time = timeFromPgTime(t.DueTime).Format(schedule.TimeLayout)
 	}
-	overdue := dl.Overdue(now, loc)
+	return dl
+}
 
-	assignees := []string{}
-	rows, err := h.q.ListAssignees(ctx, db.ListAssigneesParams{
-		FamilyID: t.FamilyID, TaskIds: []pgtype.UUID{t.ID},
-	})
-	if err == nil {
-		for _, r := range rows {
-			assignees = append(assignees, pgconv.UUIDString(r.UserID))
-		}
+func taskIDs(tasks []db.Task) []pgtype.UUID {
+	out := make([]pgtype.UUID, 0, len(tasks))
+	for _, t := range tasks {
+		out = append(out, t.ID)
 	}
+	return out
+}
 
+func uuidStrings(ids []pgtype.UUID) []string {
+	out := make([]string, 0, len(ids))
+	for _, u := range ids {
+		out = append(out, id(u))
+	}
+	return out
+}
+
+func id(u pgtype.UUID) string { return pgconv.UUIDString(u) }
+
+func optionalTimestamp(t pgtype.Timestamptz) *timestamppb.Timestamp {
+	if !t.Valid {
+		return nil
+	}
+	return timestamppb.New(t.Time)
+}
+
+func toProtoTask(t db.Task, assignees []string, now time.Time, loc *time.Location) *tasksv1.Task {
+	if assignees == nil {
+		assignees = []string{}
+	}
+	dl := deadlineOf(t)
+	completedBy := ""
+	if t.CompletedByUserID.Valid {
+		completedBy = id(t.CompletedByUserID)
+	}
 	return &tasksv1.Task{
-		Id:                  pgconv.UUIDString(t.ID),
-		FamilyId:            pgconv.UUIDString(t.FamilyID),
-		Title:               t.Title,
-		Notes:               t.Notes,
-		Priority:            protoPriorityFromString(t.Priority),
-		Status:              protoStatusFromString(t.Status),
-		DueOn:               t.DueOn.Time.Format(schedule.DateLayout),
-		DueTime:             timeFromPgTime(t.DueTime).Format(schedule.TimeLayout),
-		AssigneeUserIds:     assignees,
-		CreatedByUserId:     pgconv.UUIDString(t.CreatedByUserID),
-		CompletedByUserId:   pgconv.UUIDString(t.CompletedByUserID),
-		DueAt:               timestamppb.New(t.DueAt.Time),
-		CompletedAt:         timestamppb.New(t.CompletedAt.Time),
-		CreatedAt:           timestamppb.New(t.CreatedAt.Time),
-		UpdatedAt:           timestamppb.New(t.UpdatedAt.Time),
-		Overdue:             overdue,
+		Id:                id(t.ID),
+		FamilyId:          id(t.FamilyID),
+		Title:             t.Title,
+		Notes:             t.Notes,
+		Priority:          protoPriorityFromString(t.Priority),
+		Status:            protoStatusFromString(t.Status),
+		DueOn:             dl.On,
+		DueTime:           dl.Time,
+		AssigneeUserIds:   assignees,
+		CreatedByUserId:   id(t.CreatedByUserID),
+		CompletedByUserId: completedBy,
+		DueAt:             optionalTimestamp(t.DueAt),
+		CompletedAt:       optionalTimestamp(t.CompletedAt),
+		CreatedAt:         timestamppb.New(t.CreatedAt.Time),
+		UpdatedAt:         timestamppb.New(t.UpdatedAt.Time),
+		Overdue:           t.Status == "open" && dl.Overdue(now, loc),
 	}
 }
 

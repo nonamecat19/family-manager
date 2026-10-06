@@ -11,9 +11,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/database/pgconv"
 	"github.com/nnc/family-manager/libs/go/events"
-	fmauth "github.com/nnc/family-manager/libs/go/auth"
 	"github.com/nnc/family-manager/libs/go/rpc"
 	"github.com/nnc/family-manager/services/tasks/db"
 	"github.com/nnc/family-manager/services/tasks/internal/family"
@@ -29,34 +29,34 @@ type EventBus interface {
 }
 
 type Handler struct {
-	q        db.Querier
-	tx       Tx
-	bus      EventBus
-	log      *slog.Logger
-	now      func() time.Time
-	family   *family.Client
+	q         db.Querier
+	tx        Tx
+	bus       EventBus
+	log       *slog.Logger
+	now       func() time.Time
+	family    *family.Client
 	familyPub *family.Client
 }
 
 type Options struct {
-	Queries     db.Querier
-	Tx          Tx
-	Bus         EventBus
-	Family      *family.Client
+	Queries      db.Querier
+	Tx           Tx
+	Bus          EventBus
+	Family       *family.Client
 	FamilyPublic *family.Client
-	Log         *slog.Logger
-	Now         func() time.Time
+	Log          *slog.Logger
+	Now          func() time.Time
 }
 
 func New(opts Options) *Handler {
 	h := &Handler{
-		q:           opts.Queries,
-		tx:          opts.Tx,
-		bus:         opts.Bus,
-		log:         opts.Log,
-		now:         opts.Now,
-		family:      opts.Family,
-		familyPub:   opts.FamilyPublic,
+		q:         opts.Queries,
+		tx:        opts.Tx,
+		bus:       opts.Bus,
+		log:       opts.Log,
+		now:       opts.Now,
+		family:    opts.Family,
+		familyPub: opts.FamilyPublic,
 	}
 	if h.log == nil {
 		h.log = slog.Default()
@@ -79,7 +79,7 @@ func (w withoutTx) InTx(_ context.Context, fn func(db.Querier) error) error { re
 
 type noopBus struct{}
 
-func (noopBus) EnsureStream(ctx context.Context, domain string) error { return nil }
+func (noopBus) EnsureStream(ctx context.Context, domain string) error              { return nil }
 func (noopBus) Publish(ctx context.Context, subject events.Subject, msg any) error { return nil }
 
 func (h *Handler) internal(ctx context.Context, err error, what string) error {
@@ -127,11 +127,10 @@ func (h *Handler) caller(ctx context.Context) (caller, error) {
 
 func (h *Handler) touchKnownMember(ctx context.Context, c caller) error {
 	return h.tx.InTx(ctx, func(q db.Querier) error {
-		return q.UpsertKnownMember(ctx, db.UpsertKnownMemberParams{
-			FamilyID:   c.familyID,
-			UserID:     c.userID,
-			DisplayName: c.email,
-			Email:      c.email,
+		return q.TouchKnownMember(ctx, db.TouchKnownMemberParams{
+			FamilyID: c.familyID,
+			UserID:   c.userID,
+			Email:    c.email,
 		})
 	})
 }
@@ -168,9 +167,9 @@ func startOfDay(t time.Time) time.Time {
 }
 
 const (
-	maxTitleRunes  = 200
-	maxNotesRunes  = 4000
-	maxBatchIDs    = 500
+	maxTitleRunes = 200
+	maxNotesRunes = 4000
+	maxBatchIDs   = 500
 )
 
 func checkText(field, value string, max int) error {
@@ -182,6 +181,7 @@ func checkText(field, value string, max int) error {
 
 func uuidList(field string, ids []string) ([]pgtype.UUID, error) {
 	out := make([]pgtype.UUID, 0, len(ids))
+	seen := make(map[string]bool, len(ids))
 	for _, raw := range ids {
 		if strings.TrimSpace(raw) == "" {
 			continue
@@ -190,6 +190,10 @@ func uuidList(field string, ids []string) ([]pgtype.UUID, error) {
 		if err != nil {
 			return nil, invalid("%s contains a value that is not a uuid: %v", field, err)
 		}
+		if seen[pgconv.UUIDString(u)] {
+			continue
+		}
+		seen[pgconv.UUIDString(u)] = true
 		out = append(out, u)
 	}
 	return out, nil
