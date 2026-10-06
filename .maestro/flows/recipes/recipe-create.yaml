@@ -1,5 +1,3 @@
-# Create recipe: open the form from the Recipes tab, fill it, save, verify it opens.
-# Requires an authenticated session.
 appId: dev.familymanager.recipes
 name: "Recipes: create recipe"
 tags:
@@ -24,7 +22,6 @@ tags:
 - eraseText
 - inputText: "4"
 
-# First ingredient row
 - tapOn:
     text: "Name"
     index: 1
@@ -34,13 +31,11 @@ tags:
 - tapOn: "Unit"
 - inputText: "g"
 
-# First step
 - tapOn: "Instruction"
 - inputText: "Mix flour with water"
 
 - tapOn: "Save recipe"
 
-# Saving replaces the form with the recipe's own screen
 - extendedWaitUntil:
     visible: "Test Pancakes"
     timeout: 5000

@@ -1,5 +1,3 @@
-# Favorites: heart a recipe, open Favourites from Home, unheart it again.
-# Requires at least one recipe (run after recipe-create).
 appId: dev.familymanager.recipes
 name: "Recipes: favorites flow"
 tags:

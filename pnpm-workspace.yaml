@@ -33,22 +33,13 @@ overrides:
   expo-modules-autolinking: ~57.0.11
   babel-preset-expo: ~57.0.8
   "@expo/metro-runtime": ~57.0.14
-  # expo-modules-core 57 peers on worklets <0.11; @expo/ui otherwise drags 0.11 in.
   react-native-worklets: 0.10.4
   react-native: 0.86.3
-  # Auto-installed peer of @react-native/community-cli-plugin; it lags react-native without this.
   "@react-native/metro-config": 0.86.3
   react-native-screens: ~4.26.0
   react-native-safe-area-context: ~5.7.0
   react-native-svg: 15.15.4
   semver: ^7.6.0
-  # React 19 is what both apps run on. Without this pin, a transitive dependency drags a
-  # different @types/react in and — with shamefully-hoist — it wins at the root, so every class
-  # or forwardRef component from a library (Tabs, react-native-svg, SafeAreaView) fails to
-  # typecheck as a JSX element against the app's own React types.
   "@types/react": ~19.2.18
-  # …and React itself. Two react-native instances would let NativeWind's `className`
-  # augmentation land on only one of them, so @fm/ui fails to typecheck when compiled from an
-  # app. Expo SDK 57 pairs with React Native 0.86.2, which peers on React ^19.2.3.
   react: 19.2.8
   react-dom: 19.2.8

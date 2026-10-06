@@ -1,5 +1,3 @@
-# Plan: basket a recipe, plan it into the week, then check the shopping list totals it.
-# Requires at least one recipe (run after recipe-create).
 appId: dev.familymanager.recipes
 name: "Recipes: plan and shopping list"
 tags:
@@ -9,7 +7,6 @@ tags:
 - launchApp
 - assertVisible: "The family cookbook"
 
-# Add a recipe to the basket from its own screen
 - tapOn: "Recipes"
 - tapOn: "Test Pancakes"
 - tapOn: "Add to plan"
@@ -17,7 +14,6 @@ tags:
 - assertVisible: "Plan"
 - assertVisible: "Test Pancakes"
 
-# The week half of the plan
 - tapOn: "Week"
 - assertVisible: "MON"
 - tapOn:
@@ -30,7 +26,6 @@ tags:
     visible: "Test Pancakes"
     timeout: 5000
 
-# Back to the basket, then on to the shopping list
 - tapOn: "Basket"
 - tapOn: "List"
 - assertVisible: "Shopping list"

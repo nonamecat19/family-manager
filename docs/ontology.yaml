@@ -1,12 +1,7 @@
-# Repo knowledge graph — ontology (stage 3 of the graph-engineering pipeline).
-# Extraction MUST conform to this file. Anything not typed here does not enter the graph.
-# Regenerate the graph with `just graph`; it reads this file's types implicitly via
-# tools/repo-graph/extract.mjs. Change the ontology FIRST, the extractor SECOND.
-
 version: 1
-representation: property-graph          # stage 2: typed nodes + typed edges, JSON on disk
+representation: property-graph
 
-provenance:                             # non-negotiable, every node and edge carries this
+provenance:
   required: [source, extracted_at, commit]
   optional: [line, confidence]
 
@@ -24,7 +19,6 @@ entities:
   infra:          { key: "infra:<name>",     desc: "docker-compose / infra component" }
   external:       { key: "ext:<name>",       desc: "Third-party dependency kept at low resolution" }
 
-# Precise verbs only. domain -> range is enforced by the extractor; violating edges are dropped.
 relations:
   DEPENDS_ON:     { domain: [app, package, service, golib, gomodule], range: [package, golib, gomodule, external] }
   IMPLEMENTS:     { domain: [service], range: [rpc, contract] }
@@ -37,8 +31,6 @@ relations:
   RUNS_ON:        { domain: [service], range: [infra] }
   GENERATES:      { domain: [contract], range: [package, golib] }
 
-# Stage 1 value test — the queries this graph must answer. If a query here cannot be
-# answered from graph.json, the ontology or the extractor is wrong, not the query.
 competency_questions:
   - "If I change rpc X, which apps, packages and services must be rebuilt and retested?"
   - "Which services write to table T?"
@@ -46,7 +38,7 @@ competency_questions:
   - "Which contracts have no implementing service (dead) or two (ambiguous ownership)?"
   - "What is the blast radius of touching libs/go/auth?"
 
-fusion:                                 # stage 8 — how duplicate surface forms merge
+fusion:
   rules:
     - "Go module path and its directory name are the same node (gomod: wins, dir is an alias)."
     - "A package.json name and its workspace dir are the same node (pkg: wins)."
@@ -55,7 +47,7 @@ fusion:                                 # stage 8 — how duplicate surface form
        sdk/go and libs/go modules hold generated or shared code and are never owners."
     - "Case- and separator-insensitive match on service names (auth-service == auth == authService)."
 
-quality_gate:                           # stage 7
+quality_gate:
   precision_target: 0.9
   sample_size: 30
   check: "Open the cited source:line for 30 random edges; the file must literally assert the edge."

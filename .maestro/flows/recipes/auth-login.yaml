@@ -1,5 +1,3 @@
-# Login flow: sign in with an existing account.
-# Requires a running backend and a pre-registered user.
 appId: dev.familymanager.recipes
 name: "Auth: login"
 tags:
@@ -19,7 +17,6 @@ env:
 
 - tapOn: "Sign in"
 
-# After login the app lands on Home (or onboarding if the account has no family yet).
 - extendedWaitUntil:
     visible: "The family cookbook"
     timeout: 10000
