@@ -35,6 +35,8 @@ const (
 
 	Unknown     Key = "error.unknown"
 	Failed      Key = "error.failed"
+	NoFamily    Key = "error.nofamily"
+	NotSetUp    Key = "error.notsetup"
 	Internal    Key = "error.internal"
 	StaleButton Key = "error.stale"
 	OnlyButtons Key = "error.onlybuttons"

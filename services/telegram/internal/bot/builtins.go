@@ -86,6 +86,9 @@ func (b *Bot) welcome(ctx context.Context, c *Context, headline string) error {
 		return c.Reply(ctx, Lines(Bold(headline), "", b.helpText(c.Locale())))
 	}
 	text, keyboard, err := b.home(ctx, c)
+	if key, ok := precondition(err); ok {
+		return c.Reply(ctx, Lines(Bold(headline), "", Esc(c.T(key))))
+	}
 	if err != nil {
 		return err
 	}

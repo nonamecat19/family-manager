@@ -35,6 +35,8 @@ var en = map[Key]string{
 
 	Unknown:     "I do not know that one. Try /help.",
 	Failed:      "That did not work. Tap /menu, or /help for what I understand.",
+	NoFamily:    "You are not in a family yet. Create one in the app, or accept an invitation, then try again.",
+	NotSetUp:    "Your family has not finished setting this up yet. Open the app, complete the setup, then try again.",
 	Internal:    "Something went wrong on my side. Try again in a minute.",
 	StaleButton: "That button is out of date.",
 	OnlyButtons: "I only read commands and buttons.\n\nTap /menu to see what I can do.",

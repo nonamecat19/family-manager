@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/nnc/family-manager/services/telegram/internal/i18n"
@@ -334,10 +335,42 @@ func (b *Bot) attachSession(ctx context.Context, log *slog.Logger, c *Context) b
 }
 
 func (b *Bot) run(ctx context.Context, log *slog.Logger, c *Context, run Handler) {
-	if err := run(ctx, c); err != nil {
+	err := run(ctx, c)
+	if isNoFamily(err) && c.Command != "start" && b.renewSession(ctx, log, c) {
+		err = run(ctx, c)
+	}
+	if err != nil {
 		log.ErrorContext(ctx, "handler failed", slog.String("error", err.Error()))
 		b.say(ctx, log, c, friendly(c.Locale(), err))
 	}
+}
+
+func (b *Bot) renewSession(ctx context.Context, log *slog.Logger, c *Context) bool {
+	if err := b.sessions.ExpireAccess(ctx, c.From.ID); err != nil {
+		log.WarnContext(ctx, "expire access after a no-family error", slog.String("error", err.Error()))
+		return false
+	}
+	s, err := b.sessions.Session(ctx, c.From.ID)
+	if err != nil {
+		log.WarnContext(ctx, "renew session after a no-family error", slog.String("error", err.Error()))
+		return false
+	}
+	c.session = s
+	return true
+}
+
+func isNoFamily(err error) bool {
+	return connect.CodeOf(err) == connect.CodeFailedPrecondition && strings.Contains(err.Error(), "belongs to no family")
+}
+
+func precondition(err error) (i18n.Key, bool) {
+	switch {
+	case isNoFamily(err):
+		return i18n.NoFamily, true
+	case connect.CodeOf(err) == connect.CodeFailedPrecondition && strings.Contains(err.Error(), "not set up yet"):
+		return i18n.NotSetUp, true
+	}
+	return "", false
 }
 
 func (b *Bot) parse(text string) (name, args string) {
@@ -387,6 +420,9 @@ func friendly(locale i18n.Locale, err error) string {
 	var invalid *InputError
 	if errors.As(err, &invalid) {
 		return invalid.Error()
+	}
+	if key, ok := precondition(err); ok {
+		return i18n.T(locale, key)
 	}
 	return i18n.T(locale, i18n.Failed)
 }
