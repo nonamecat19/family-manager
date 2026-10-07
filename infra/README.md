@@ -23,7 +23,9 @@ being a deploy. CI builds; the VPS only pulls.
 | `wizards/r2-setup.sh` | your workstation | walks Cloudflare's dashboard, validates the credentials |
 
 `.github/workflows/deploy.yml` is the other half: it builds the service images, pushes them to
-GHCR, and SSHes in to run `deploy.sh`.
+GHCR, and SSHes in to run `deploy.sh`. It runs when the `verify` workflow completes green on a
+push to `master` — so every merge redeploys prod, but only after verify passed — and can be
+dispatched by hand with an `image_tag` to re-deploy an already-built SHA without rebuilding.
 
 ## Topology
 

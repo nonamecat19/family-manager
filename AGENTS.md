@@ -219,9 +219,11 @@ Cross-package imports use `workspace:*`.
 **Every new module registers itself**: a Go module in `go.work`, a TS package in
 `pnpm-workspace.yaml` globs (automatic under `apps/`, `packages/`). Then `just graph`.
 
-CI (`.github/workflows/verify.yml`) runs the same verify node on every PR as five independent
-jobs: go, lint-go, ts, contracts (`buf lint` + `buf breaking`), graph (`--check`). A structural change
+CI (`.github/workflows/verify.yml`) runs the same verify node on every PR as six independent
+jobs: go, lint-go, ts, contracts (`buf lint` + `buf breaking`), graph (`--check`), desktop. A structural change
 committed without `just graph` fails CI — that is deliberate, it keeps the graph trustworthy.
+When verify completes green on `master`, `.github/workflows/deploy.yml` builds the images and
+redeploys the VPS; a red or cancelled verify skips the deploy.
 
 ## Definition of done
 
