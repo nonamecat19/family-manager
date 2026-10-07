@@ -238,3 +238,41 @@ well, so no unit caused it. `just verify` does not run `lint-go`, so the runs ar
 
 To fix: upgrade golangci-lint to a release built against go1.27, wherever CI and local installs
 pin it. That is a toolchain change outside any unit.
+
+## E13 — 0005/d1: ADR 0018 (capture data at rest) failed verification twice (open, stop-the-line)
+
+The run stopped because two verifiers each found a blocker in d1. Units that were already
+running finish their own verification; no new unit starts. The ADR draft is saved in `git stash`
+as "autopilot 0005/d1: ADR 0018 attempt 2". After review 1, the plan gained the deletion
+tombstone (s2, s3, h2, h4), a purge of unparsed notifications (s3, h5), a phone queue encrypted
+with an Android Keystore key (n1), and a no-logging rule in the service (h2). Those notes are
+committed.
+
+**Decisions needed (recommendations first):**
+1. **Members can't clear learned prefill rules.** `prefill_rules` keep merchant and counterparty
+   names with no expiry, and no rpc removes them. *Recommended:* add an additive contract unit
+   (`ListPrefillRules` / `DeletePrefillRule` / `ClearPrefillRules`), a handler unit and a section
+   in the capture settings screen. Alternative: never learn from transfers (counterparty names)
+   and disclose "kept until the member disables capture".
+2. **No-logging rule on the device.** *Recommended:* add it to n1, n2, a4 and f2, plus a JS test
+   for a4/f2 that no console output contains the fixture text. This is mechanical; say "ok".
+3. **A member leaves or is removed from the family.** Their capture rows stay under the old
+   family id, out of reach, with clear fields kept forever. *Recommended:* add a consumer of
+   `family.member.removed` that deletes all of that member's capture rows. This is the same
+   pattern 0003/u24 uses.
+4. **The purge rules contradict each other.** h5 says pending suggestions are never purged; the
+   ADR says pending text is purged after 365 days. *Recommended:* the ADR rule — 365 days for
+   pending, and 90 days after receipt for unparsed — with tests for both.
+5. **Backups.** The database dumps hold every clear field (merchant and counterparty names,
+   balances, card hints) unencrypted. `CAPTURE_SEAL_KEY` will sit in both `.env` and
+   `infra/secrets`, and both are archived next to the dumps. *Decide:* accept this and disclose
+   it in the ADR, or encrypt backups / keep the key out of the archive (an infra change, a human
+   gate).
+6. **Minor (recommended yes):**
+   - bind the row id and field name into the AES-GCM additional data (s4);
+   - list `allowed_packages`, `parser_id` and the tombstone key as stored in clear and kept
+     indefinitely;
+   - prune tombstones after a year.
+
+Answer each point (or "use recommended"), then `/escalations`. The d1 stash is reapplied and
+the ADR rewritten against the updated plan.

@@ -61,9 +61,9 @@
         "c2"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "9554bdf",
       "blocked_reason": null,
       "id": "s1",
       "title": "Scaffold services/capture module: go.mod with replaces, viper config, server main with Unimplemented handler and /healthz",
@@ -84,7 +84,7 @@
         "s1"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -92,7 +92,7 @@
       "title": "capture migration 000001: captured_notifications, suggestions, capture_settings, prefill rules",
       "kind": "migration",
       "acceptance": "cd services/capture && GOWORK=off go test ./internal/db/...",
-      "notes": "New database, new tables only. No .down.sql (gate-check stops any DROP; the runner skips down files, see E7). Every row keyed by family_id AND user_id (member-private). captured_notifications: UNIQUE (user_id, device_id, notification_key) for idempotency; package_name; raw title/text as bytea ciphertext (nullable so the purge can null it); posted_at, received_at. suggestions: FK to notification ON DELETE CASCADE, status pending/confirmed/dismissed with CHECK, acted_at, finance_transaction_id, parsed fields (amount_minor bigint, currency_code, direction, merchant, card_hint, balance_minor nullable, parser). capture_settings: (user_id) PK, enabled, allowed_packages text[]. prefill_rules: (user_id, kind card_hint|merchant, key) -> account_id / category_id. Index on (user_id, status) and on acted_at for the purge. embed.go mirrors services/tasks/internal/db/embed.go."
+      "notes": "New database, new tables only. No .down.sql (gate-check stops any DROP; the runner skips down files, see E7). Every row keyed by family_id AND user_id (member-private). captured_notifications: UNIQUE (user_id, device_id, notification_key) for idempotency; package_name; raw title/text as bytea ciphertext (nullable so the purge can null it); posted_at, received_at. suggestions: FK to notification ON DELETE CASCADE, status pending/confirmed/dismissed with CHECK, acted_at, finance_transaction_id, parsed fields (amount_minor bigint, currency_code, direction, merchant, card_hint, balance_minor nullable, parser). capture_settings: (user_id) PK, enabled, allowed_packages text[]. prefill_rules: (user_id, kind card_hint|merchant, key) -> account_id / category_id. Index on (user_id, status) and on acted_at for the purge. embed.go mirrors services/tasks/internal/db/embed.go. ADR 0018 (d1 verify): add table deleted_notification_keys(family_id, user_id, device_id, notification_key, deleted_at, PRIMARY KEY (family_id, user_id, device_id, notification_key)). Every member-owned table keys on (family_id, user_id); capture_settings PK (family_id, user_id); uniqueness and prefill keys include family_id."
     },
     {
       "nodes": [
@@ -115,7 +115,7 @@
       "title": "capture sqlc queries + generated db package",
       "kind": "service",
       "acceptance": "cd services/capture && sqlc diff && GOWORK=off go build ./...",
-      "notes": "sqlc.yaml as services/finance (pgx/v5, emit_interface). Queries: notifications.sql, suggestions.sql, settings.sql, prefill.sql, retention.sql. Every read/write filters by user_id (and family_id); none by id alone. Insert notification ON CONFLICT (user_id, device_id, notification_key) DO NOTHING RETURNING. Suggestion transitions are conditional UPDATE ... WHERE status = 'pending'. Purge: null raw columns where suggestion acted_at < cutoff."
+      "notes": "sqlc.yaml as services/finance (pgx/v5, emit_interface). Queries: notifications.sql, suggestions.sql, settings.sql, prefill.sql, retention.sql. Every read/write filters by user_id (and family_id); none by id alone. Insert notification ON CONFLICT (user_id, device_id, notification_key) DO NOTHING RETURNING. Suggestion transitions are conditional UPDATE ... WHERE status = 'pending'. Purge: null raw columns where suggestion acted_at < cutoff. ADR 0018 (d1 verify): queries InsertDeletedKey / IsDeletedKey for the tombstone; DeletePrefillRulesForNotification is NOT needed but ListPrefillRules/DeletePrefillRule are (member can clear learned rules); purge query also nulls title/text of notifications WITHOUT a suggestion once received_at < now - retention, and of notifications whose suggestion is still pending after 365 days."
     },
     {
       "nodes": [
@@ -326,7 +326,7 @@
       "title": "Handler base (caller, member scoping, fake store) + Get/SetCaptureSettings",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Caller from libs/go/auth claims like finance handler.go (family_id + user_id required, else PermissionDenied). fake_test.go implements EVERY db.Querier method so h2-h4 never edit it. Errors via rpc.Internal. Allow-list: at most 64 package ids, each validated as an Android package name, bounded in runes. Test: member B in the same family gets their own (empty) settings, never A's. Contract semantics (c1 verify): SetCaptureSettings replaces the whole settings object; a member who never saved settings gets enabled=false with an empty allow-list."
+      "notes": "Caller from libs/go/auth claims like finance handler.go (family_id + user_id required, else PermissionDenied). fake_test.go implements EVERY db.Querier method so h2-h4 never edit it. Errors via rpc.Internal. Allow-list: at most 64 package ids, each validated as an Android package name, bounded in runes. Test: member B in the same family gets their own (empty) settings, never A's. Contract semantics (c1 verify): SetCaptureSettings replaces the whole settings object; a member who never saved settings gets enabled=false with an empty allow-list. From s1 verify: every handler takes the caller only from fmauth.Require(ctx) (finance handler.go:97 pattern), never from ids in the request."
     },
     {
       "nodes": [
@@ -350,7 +350,7 @@
       "title": "SubmitNotifications: batch, idempotent, sealed, parsed into suggestions",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go. Contract semantics (c1 verify): REJECTED is permanent for NOT_ALLOWED and INVALID, and the device drops those items; for DISABLED the device keeps the item queued until capture is re-enabled. amount_minor is always >= 0 and the sign comes from direction (DEBIT -> finance EXPENSE, CREDIT -> INCOME). occurred_at falls back to posted_at when the bank text has no time."
+      "notes": "Batch cap (e.g. 100 items), title/text bounded in runes. Server-side defence: items whose package is not on the caller's allow-list, or capture disabled, are rejected per item and not stored. Seal title/text with s4 box; insert + suggestion in one InTx. Resubmitting the same (device_id, notification_key) returns the original suggestion id and creates nothing (test). Unparseable text: notification stored, no suggestion. Fill suggested_account_id/category_id from prefill_rules (card_hint first, then merchant). Do not edit fake_test.go. Contract semantics (c1 verify): REJECTED is permanent for NOT_ALLOWED and INVALID, and the device drops those items; for DISABLED the device keeps the item queued until capture is re-enabled. amount_minor is always >= 0 and the sign comes from direction (DEBIT -> finance EXPENSE, CREDIT -> INCOME). occurred_at falls back to posted_at when the bank text has no time. ADR 0018 (d1 verify): before insert, a key present in deleted_notification_keys returns DUPLICATE (test: re-upload after delete -> DUPLICATE, item not back). Never log title, text or parsed fields; errors from parsing are logged by parser id and reason code only (test asserts the log buffer has no fixture text)."
     },
     {
       "nodes": [
@@ -395,7 +395,7 @@
       "title": "ListCapturedNotifications, DeleteCapturedNotification",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/handler/...",
-      "notes": "Opens sealed text for the owner only; purged items list with empty text and a purged flag. Delete removes the notification and its suggestion (cascade), any status. Same-family other member: NotFound on list and delete (test). Do not edit fake_test.go. Contract semantics (c1 verify): StoredNotification.suggestion is filled whenever a suggestion exists (purged items still show the parsed summary). DeleteCapturedNotification keeps a tombstone of (member, device_id, notification_key) so a re-upload returns DUPLICATE and does not bring the item back."
+      "notes": "Opens sealed text for the owner only; purged items list with empty text and a purged flag. Delete removes the notification and its suggestion (cascade), any status. Same-family other member: NotFound on list and delete (test). Do not edit fake_test.go. Contract semantics (c1 verify): StoredNotification.suggestion is filled whenever a suggestion exists (purged items still show the parsed summary). DeleteCapturedNotification keeps a tombstone of (member, device_id, notification_key) so a re-upload returns DUPLICATE and does not bring the item back. ADR 0018 (d1 verify): DeleteCapturedNotification inserts the tombstone in the same InTx as the delete."
     },
     {
       "nodes": [
@@ -417,7 +417,7 @@
       "title": "Retention purge loop: raw text nulled 90 days after confirm/dismiss",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go test -race ./internal/retention/...",
-      "notes": "Injected clock and interval; pending suggestions are never purged; confirmed/dismissed older than CAPTURE_RETENTION have raw title/text set to NULL (parsed fields kept). Tests cover boundary (exactly 90d), pending untouched, idempotent second run."
+      "notes": "Injected clock and interval; pending suggestions are never purged; confirmed/dismissed older than CAPTURE_RETENTION have raw title/text set to NULL (parsed fields kept). Tests cover boundary (exactly 90d), pending untouched, idempotent second run. ADR 0018 (d1 verify): purge also covers suggestion-less notifications by received_at (retention) and pending suggestions older than 365 days; text_purged in the API is derived from NULL ciphertext."
     },
     {
       "nodes": [
@@ -443,7 +443,7 @@
       "title": "Wire capture main: pool + migrations, seal box, handler, retention loop",
       "kind": "service",
       "acceptance": "cd services/capture && GOWORK=off go vet ./... && cd services/capture && GOWORK=off go test -race ./...",
-      "notes": "Run migrations from internal/db embed via libs/go/database at boot (as tasks/finance). Boot fails on a missing or malformed CAPTURE_SEAL_KEY (test). /healthz on both listeners."
+      "notes": "Run migrations from internal/db embed via libs/go/database at boot (as tasks/finance). Boot fails on a missing or malformed CAPTURE_SEAL_KEY (test). /healthz on both listeners. From s1 verify: do NOT mount CaptureService on the internal :9090 mux (no sibling calls capture); keep only /healthz and /metrics there. Drop the 'config loaded' log line or redact SealKey with a type whose LogValue/String hides it. Add a table test that every CaptureService procedure returns 401 without a token on the public listener."
     },
     {
       "nodes": [
@@ -541,15 +541,15 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
-      "attempts": 0,
+      "status": "blocked",
+      "attempts": 2,
       "commit": null,
-      "blocked_reason": null,
+      "blocked_reason": "stop-the-line: 2 verifier blockers (E13). ADR draft stashed.",
       "id": "d1",
       "title": "ADR 0018: capture data at rest (encryption, member privacy, retention), status proposed",
       "kind": "docs",
-      "acceptance": "grep -q '0018-capture-data-at-rest' docs/adr/README.md && grep -qi '^status: proposed' docs/adr/0018-capture-data-at-rest.md",
-      "notes": "Records the brief defaults: AES-GCM with a service key and member-bound AAD, raw text member-private, purge 90 days after confirm/dismiss, pending kept, member delete, key rotation story (version byte), what is NOT encrypted (parsed amount/merchant) and why. Status line format 'Status: proposed'."
+      "acceptance": "grep -q '0018-capture-data-at-rest' docs/adr/README.md && grep -qi '^- status: proposed' docs/adr/0018-capture-data-at-rest.md",
+      "notes": "Records the brief defaults: AES-GCM with a service key and member-bound AAD, raw text member-private, purge 90 days after confirm/dismiss, pending kept, member delete, key rotation story (version byte), what is NOT encrypted (parsed amount/merchant) and why. Status line format 'Status: proposed'. (coordinator) Acceptance pattern changed from '^status:' to '^- status:' to match every existing ADR's '- Status:' line. Attempt 2 (after verify): ADR states only what units build (tombstone, purge incl. unparsed, keystore queue); rotation explicitly NOT built in v1; backups keep key next to dumps and 14 runs of history; clear-field list complete incl. prefill_rules and counterparty names; no-logging rule."
     },
     {
       "nodes": [],
@@ -568,8 +568,8 @@
       "id": "hr",
       "title": "Human review of capture storage and retention before first deploy (accept ADR 0018)",
       "kind": "docs",
-      "acceptance": "grep -qi '^status: accepted' docs/adr/0018-capture-data-at-rest.md",
-      "notes": "Brief 'Known gates': financial personal data at rest. Human reads the ADR and the s2 schema / s4 sealing / h5 purge, then flips Status to accepted or answers with changes."
+      "acceptance": "grep -qi '^- status: accepted' docs/adr/0018-capture-data-at-rest.md",
+      "notes": "Brief 'Known gates': financial personal data at rest. Human reads the ADR and the s2 schema / s4 sealing / h5 purge, then flips Status to accepted or answers with changes. (coordinator) acceptance pattern matches the repo's '- Status:' ADR line."
     },
     {
       "nodes": [
@@ -593,7 +593,7 @@
       "title": "Prod deploy surface: Caddy host capture.<domain>, capture service + DB in prod compose",
       "kind": "infra",
       "acceptance": "docker compose -f infra/docker-compose.prod.yml config -q",
-      "notes": "STOP: infra/**. Brief keeps this a human step. Includes prod postgres init for the capture DB and CAPTURE_SEAL_KEY in infra/secrets. Deploy itself is a human push."
+      "notes": "STOP: infra/**. Brief keeps this a human step. Includes prod postgres init for the capture DB and CAPTURE_SEAL_KEY in infra/secrets. Deploy itself is a human push. From s1 verify: add only capture:8080 to infra/Caddyfile, with a 'capture:9090 deliberately absent' note like the existing ones."
     },
     {
       "nodes": [
@@ -749,7 +749,7 @@
       "title": "Finance native module: Kotlin NotificationListenerService with on-device allow-list filter and persistent queue",
       "kind": "app",
       "acceptance": "cd apps/finance && EXPO_PUBLIC_API_ENV=emulator npx expo prebuild --platform android --no-install --clean && cd android && JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk} ANDROID_HOME=${ANDROID_HOME:-$HOME/Android} ./gradlew assembleDebug",
-      "notes": "Local Expo module (autolinked from apps/finance/modules), NO new npm dependency: a pnpm-lock.yaml change is STOP. Service declared with BIND_NOTIFICATION_LISTENER_SERVICE. onNotificationPosted: drop unless package is in the allow-list stored in SharedPreferences and capture is enabled; else enqueue {key=sbn.key+postTime, package, title, text, posted_at} to a bounded file-backed queue, then start the headless task (n3). apps/finance/android is gitignored, generated by prebuild."
+      "notes": "Local Expo module (autolinked from apps/finance/modules), NO new npm dependency: a pnpm-lock.yaml change is STOP. Service declared with BIND_NOTIFICATION_LISTENER_SERVICE. onNotificationPosted: drop unless package is in the allow-list stored in SharedPreferences and capture is enabled; else enqueue {key=sbn.key+postTime, package, title, text, posted_at} to a bounded file-backed queue, then start the headless task (n3). apps/finance/android is gitignored, generated by prebuild. ADR 0018 (d1 verify): the on-device queue encrypts {title,text} with an AES-GCM key held in Android Keystore (non-exportable); queue is bounded (500 items) and items older than 30 days are dropped."
     },
     {
       "nodes": [
@@ -990,5 +990,5 @@
       "notes": "jq '.dropped' empty; service:capture with IMPLEMENTS -> capture.proto, its rpcs and tables, and app:finance -> capture contract edge present; just impact service:capture small."
     }
   ],
-  "updated_at": "2026-10-06T08:19:59.324Z"
+  "updated_at": "2026-10-06T08:25:31.157Z"
 }
