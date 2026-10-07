@@ -9,11 +9,6 @@ RETURNING *;
 SELECT * FROM recipes
 WHERE id = $1;
 
--- ListRecipes is the one filtered/sorted read behind the browse screen. Every filter is a
--- no-op sentinel when unset (NULL for the text/uuid ones, 0 for the numeric ones) so the app
--- sends one shape of request whether it is browsing a subcategory or searching the whole
--- cookbook. Sorting is a text discriminator rather than string-built SQL: the set of orders
--- is closed (see RecipeSort in the proto), so it belongs in the query, not in Go.
 -- name: ListRecipes :many
 SELECT r.* FROM recipes r
 WHERE r.family_id = $1
@@ -44,9 +39,6 @@ JOIN recipe_favorites f ON f.recipe_id = r.id
 WHERE f.user_id = $1
 ORDER BY f.created_at DESC;
 
--- Nutrition is COALESCEd against the stored value instead of overwritten like every other
--- column: a caller that sends no nutrition means "leave it", not "zero it". An edit screen
--- that does not render the macros would otherwise wipe them on every save.
 -- name: UpdateRecipe :one
 UPDATE recipes
 SET title = $2, description = $3, category_id = $4, subcategory_id = $5,

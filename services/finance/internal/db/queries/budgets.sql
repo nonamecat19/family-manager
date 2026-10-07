@@ -9,9 +9,6 @@ ORDER BY sort_order, created_at;
 SELECT * FROM budgets
 WHERE id = $1 AND family_id = $2;
 
--- ListBudgetsForCategory is what CreateTransaction/UpdateTransaction/DeleteTransaction use to
--- answer affected_budgets: both the category's own budget and its group's, because spend in a
--- category counts toward both.
 -- name: ListBudgetsForCategory :many
 SELECT b.* FROM budgets b
 LEFT JOIN categories c ON c.id = sqlc.narg('category_id')::uuid

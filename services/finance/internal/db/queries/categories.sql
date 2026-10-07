@@ -38,9 +38,6 @@ WHERE id = $1 AND family_id = $2;
 SELECT COUNT(*) FROM categories
 WHERE group_id = $1 AND family_id = $2;
 
--- MoveCategoriesToGroup is the reassignment DeleteCategoryGroup requires: a group holding
--- categories that hold transactions cannot silently vanish, so its categories are re-parented
--- first and the delete is refused if that did not happen.
 -- name: MoveCategoriesToGroup :execrows
 UPDATE categories
 SET group_id = $3, updated_at = NOW()
@@ -83,9 +80,6 @@ RETURNING *;
 DELETE FROM categories
 WHERE id = $1 AND family_id = $2;
 
--- ReorderCategory renumbers one category inside the group the client named. The group is part
--- of the predicate rather than a thing the handler trusts the list to agree with: a batch that
--- mixed in an id from another group would otherwise renumber a grid nobody was looking at.
 -- name: ReorderCategory :execrows
 UPDATE categories
 SET sort_order = $3, updated_at = NOW()

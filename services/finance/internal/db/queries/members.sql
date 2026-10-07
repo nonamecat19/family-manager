@@ -1,6 +1,3 @@
--- The member projection, maintained from family.member.* events. finance never writes it from
--- a client request: a member row appears because services/family said so.
-
 -- name: ListMembers :many
 SELECT * FROM finance_members
 WHERE family_id = $1

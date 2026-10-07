@@ -1,6 +1,3 @@
--- Drop in reverse dependency order. All tables are new in 000001, so a CASCADE-free drop
--- works because the schema is empty before this migration applies.
-
 DROP TABLE IF EXISTS widget_instances;
 DROP TABLE IF EXISTS reminders;
 DROP TABLE IF EXISTS recurring_payments;
