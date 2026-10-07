@@ -1,7 +1,7 @@
 import { Command } from "@langchain/langgraph";
 import { AutopilotState } from "./state.js";
 import { backlogStatus, backlogNext, backlogStart, backlogDone, backlogBlock, backlogFail, parseBacklogStatus, getRunnableUnits, getDoingUnit, isComplete } from "./backlog.js";
-import { runGateCheck, runGateCheckRange } from "./gate-check.js";
+import { runGateCheck } from "./gate-check.js";
 import { runVerify, runGraphCheck } from "./verify.js";
 
 export async function scopeNode(state: typeof AutopilotState.State) {

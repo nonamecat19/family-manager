@@ -63,7 +63,7 @@ export function parseBacklogStatus(output: string): ParsedUnit[] {
   const lines = output.split("\n");
   const units: ParsedUnit[] = [];
   for (const line of lines) {
-    const match = line.match(/^  \[(.)\] (\w+) (.+) \(([^,]+), gate:(\w+)(?: after:([^)]+))?\)(?:  <- (.*))?/);
+    const match = line.match(/^ {2}\[(.)\] (\w+) (.+) \(([^,]+), gate:(\w+)(?: after:([^)]+))?\)(?: {2}<- (.*))?/);
     if (match) {
       const [, mark, id, title, kind, gate, dependsOn, blockedReason] = match;
       units.push({

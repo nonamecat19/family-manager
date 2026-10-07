@@ -16,7 +16,7 @@ export interface GateStop {
 export function runGateCheck(range?: string): GateCheckResult {
   const args = range ? ["--range", range] : [];
   try {
-    const output = execFileSync("node", ["tools/autonomy/gate-check.mjs", ...args], {
+    execFileSync("node", ["tools/autonomy/gate-check.mjs", ...args], {
       cwd: ROOT,
       encoding: "utf8",
       maxBuffer: 32 << 20,
@@ -28,7 +28,7 @@ export function runGateCheck(range?: string): GateCheckResult {
     if (error.status === 3) {
       const stops: GateStop[] = [];
       for (const line of output.split("\n")) {
-        const match = line.match(/^  (.+): (.+)$/);
+        const match = line.match(/^ {2}(.+): (.+)$/);
         if (match) {
           stops.push({ rule: match[1] ?? "", detail: match[2] ?? "" });
         }

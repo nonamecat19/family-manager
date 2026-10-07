@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { backlogBegin } from "./backlog.js";
-import { createAutopilotGraphWithCheckpointer } from "./checkpointer.js";
 
 const program = new Command();
 
@@ -14,7 +13,7 @@ program
   .command("autopilot <briefId>")
   .description("Run autonomous workflow for a brief")
   .option("--resume", "Resume from checkpoint")
-  .action(async (briefId: string, options: { resume?: boolean }) => {
+  .action(async (briefId: string, _options: { resume?: boolean }) => {
     console.log(`[orchestrator] Starting autopilot for ${briefId}`);
 
     const baseSha = backlogBegin(briefId);

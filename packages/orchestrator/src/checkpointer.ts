@@ -1,6 +1,7 @@
 import { SqliteSaver } from "@langchain/langgraph-checkpoint-sqlite";
 import path from "node:path";
 import fs from "node:fs";
+import type { AutopilotState as AutopilotStateDef } from "./state.js";
 
 const ROOT = path.resolve(import.meta.dirname, "../../..");
 const DB_DIR = path.join(ROOT, ".orchestrator");
@@ -24,7 +25,7 @@ export async function createAutopilotGraphWithCheckpointer() {
   const { AutopilotState } = await import("./state.js");
   const { scopeNode, implementNode, acceptanceNode, verifyNode, gateNode, commitNode, handleFailureNode } = await import("./nodes.js");
 
-  async function humanGateNodeWithInterrupt(state: any) {
+  async function humanGateNodeWithInterrupt(state: typeof AutopilotStateDef.State) {
     const unit = state.currentUnit;
     const stops = state.gateResult;
     console.log(`[autopilot] Human gate required for ${unit?.id}`);
@@ -59,7 +60,7 @@ export async function createAutopilotGraphWithCheckpointer() {
     .addEdge("implement", "acceptance")
     .addEdge("acceptance", "verify")
     .addEdge("verify", "gate")
-    .addConditionalEdges("gate", (state: any) => {
+    .addConditionalEdges("gate", (state: typeof AutopilotStateDef.State) => {
       if (state.gateResult && state.gateResult.length > 0) {
         return "humanGate";
       }
