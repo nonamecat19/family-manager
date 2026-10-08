@@ -15,6 +15,7 @@ replace (
 
 require (
 	connectrpc.com/connect v1.21.0
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/nnc/family-manager/libs/go/auth v0.0.0-00010101000000-000000000000
 	github.com/nnc/family-manager/libs/go/database v0.0.0-00010101000000-000000000000
 	github.com/nnc/family-manager/libs/go/logger v0.0.0
@@ -31,7 +32,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect

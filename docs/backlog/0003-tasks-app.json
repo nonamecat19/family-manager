@@ -175,7 +175,7 @@
         "u07"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "doing",
       "attempts": 0,
       "commit": null,
       "blocked_reason": null,
@@ -418,9 +418,9 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 1,
-      "commit": null,
+      "commit": "df6f45a",
       "blocked_reason": null,
       "id": "u18",
       "title": "Google Calendar + OAuth client (stdlib HTTP) with in-memory fake",
@@ -440,9 +440,9 @@
         "u05"
       ],
       "gate": "auto",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "72d57de",
       "blocked_reason": null,
       "id": "u19",
       "title": "Refresh-token sealing at rest (AES-GCM)",
@@ -634,9 +634,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "5784733",
       "blocked_reason": null,
       "id": "t1",
       "title": "telegram config: tasks bot name and TELEGRAM_TASKS_ADDR",
@@ -788,9 +788,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "ef46611",
       "blocked_reason": null,
       "id": "n1",
       "title": "notifications topics catalog: tasks domain topics",
@@ -859,9 +859,9 @@
       ],
       "depends_on": [],
       "gate": "auto",
-      "status": "todo",
+      "status": "done",
       "attempts": 0,
-      "commit": null,
+      "commit": "60aba7d",
       "blocked_reason": null,
       "id": "l1",
       "title": "Human labels for tasks topics in @fm/ui defaults and finance/recipes dictionaries",
@@ -1286,5 +1286,5 @@
       "notes": "Check jq '.dropped' is empty and the three nodes plus their edges appear."
     }
   ],
-  "updated_at": "2026-10-05T19:53:12.903Z"
+  "updated_at": "2026-10-05T19:57:27.279Z"
 }
