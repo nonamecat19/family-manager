@@ -1689,7 +1689,11 @@ func TestBudgetExceededIgnoresPrivateSpending(t *testing.T) {
 	var ev *financev1.BudgetExceededEvent
 	for i, s := range rec.subjects {
 		if s == "finance.budget.exceeded" {
-			ev = rec.messages[i].(*financev1.BudgetExceededEvent)
+			got, ok := rec.messages[i].(*financev1.BudgetExceededEvent)
+			if !ok {
+				t.Fatalf("budget.exceeded published %T, want *financev1.BudgetExceededEvent", rec.messages[i])
+			}
+			ev = got
 		}
 	}
 	if ev == nil {
