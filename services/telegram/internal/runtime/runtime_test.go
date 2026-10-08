@@ -206,7 +206,7 @@ func TestPollAdvancesAndPersistsTheOffset(t *testing.T) {
 		t.Fatalf("Poll: %v", err)
 	}
 
-	if got := bot.recorder.updates(); len(got) != 2 || got[0] != 10 || got[1] != 11 {
+	if got := bot.updates(); len(got) != 2 || got[0] != 10 || got[1] != 11 {
 		t.Fatalf("handled %v, want both updates once", got)
 	}
 

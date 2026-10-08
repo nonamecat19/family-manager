@@ -104,7 +104,7 @@ func (c *Client) call(ctx context.Context, method string, params, out any) error
 	if err != nil {
 		return c.sanitize(fmt.Errorf("telegram: %s: %w", method, err))
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	var env envelope
 	if err := json.NewDecoder(res.Body).Decode(&env); err != nil {
