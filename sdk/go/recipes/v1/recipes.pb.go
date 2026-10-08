@@ -22,20 +22,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// RecipeSort orders ListRecipes server-side. The default (UNSPECIFIED) is newest-first,
-// which is what the list did before sorting existed.
 type RecipeSort int32
 
 const (
 	RecipeSort_RECIPE_SORT_UNSPECIFIED RecipeSort = 0
 	RecipeSort_RECIPE_SORT_NEWEST      RecipeSort = 1
 	RecipeSort_RECIPE_SORT_TITLE       RecipeSort = 2
-	// RATING is descending — a "sort by rating" that puts the worst recipes first is not a
-	// thing anyone wants. Unrated recipes (rating 0) sort last.
-	RecipeSort_RECIPE_SORT_RATING RecipeSort = 3
-	// TIME is ascending on prep_seconds + cook_seconds: "what can I make quickly".
-	RecipeSort_RECIPE_SORT_TIME      RecipeSort = 4
-	RecipeSort_RECIPE_SORT_FAVORITES RecipeSort = 5
+	RecipeSort_RECIPE_SORT_RATING      RecipeSort = 3
+	RecipeSort_RECIPE_SORT_TIME        RecipeSort = 4
+	RecipeSort_RECIPE_SORT_FAVORITES   RecipeSort = 5
 )
 
 // Enum value maps for RecipeSort.
@@ -288,12 +283,10 @@ func (x *Subcategory) GetCreatedAt() *timestamppb.Timestamp {
 }
 
 type Ingredient struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// amount is a decimal string (e.g. "200") — the server sums by name+unit, not by typed
-	// number, so recipe authors can write "2 cloves" without a schema for every unit.
-	Amount        string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	Unit          string `protobuf:"bytes,3,opt,name=unit,proto3" json:"unit,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Amount        string                 `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Unit          string                 `protobuf:"bytes,3,opt,name=unit,proto3" json:"unit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -349,9 +342,6 @@ func (x *Ingredient) GetUnit() string {
 	return ""
 }
 
-// Nutrition is per serving, as printed by the recipe's source. Every field is 0 when the
-// figure was never recorded — there is no "0 kcal" dish, so 0 is unambiguous and saves the
-// app a presence check per field.
 type Nutrition struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kcal          int32                  `protobuf:"varint,1,opt,name=kcal,proto3" json:"kcal,omitempty"`
@@ -421,12 +411,10 @@ func (x *Nutrition) GetCarbsG() float32 {
 }
 
 type Step struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Position    int32                  `protobuf:"varint,1,opt,name=position,proto3" json:"position,omitempty"`
-	Instruction string                 `protobuf:"bytes,2,opt,name=instruction,proto3" json:"instruction,omitempty"`
-	// duration_seconds is 0 for steps with no timer ("chop the onions") and >0 for timed
-	// steps ("bake for 1800 seconds"), which the app renders as a countdown.
-	DurationSeconds int32 `protobuf:"varint,3,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Position        int32                  `protobuf:"varint,1,opt,name=position,proto3" json:"position,omitempty"`
+	Instruction     string                 `protobuf:"bytes,2,opt,name=instruction,proto3" json:"instruction,omitempty"`
+	DurationSeconds int32                  `protobuf:"varint,3,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -490,28 +478,20 @@ type Recipe struct {
 	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	CategoryId    string                 `protobuf:"bytes,5,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
 	SubcategoryId string                 `protobuf:"bytes,6,opt,name=subcategory_id,json=subcategoryId,proto3" json:"subcategory_id,omitempty"`
-	// servings is how many people the recipe feeds — used to scale ingredient totals when a
-	// meal-plan entry overrides the default servings.
-	Servings     int32         `protobuf:"varint,7,opt,name=servings,proto3" json:"servings,omitempty"`
-	PrepSeconds  int32         `protobuf:"varint,8,opt,name=prep_seconds,json=prepSeconds,proto3" json:"prep_seconds,omitempty"`
-	CookSeconds  int32         `protobuf:"varint,9,opt,name=cook_seconds,json=cookSeconds,proto3" json:"cook_seconds,omitempty"`
-	Ingredients  []*Ingredient `protobuf:"bytes,10,rep,name=ingredients,proto3" json:"ingredients,omitempty"`
-	Steps        []*Step       `protobuf:"bytes,11,rep,name=steps,proto3" json:"steps,omitempty"`
-	AuthorUserId string        `protobuf:"bytes,12,opt,name=author_user_id,json=authorUserId,proto3" json:"author_user_id,omitempty"`
-	// favorite_count and comment_count are denormalised counts so list views render without a
-	// second query per row.
+	Servings      int32                  `protobuf:"varint,7,opt,name=servings,proto3" json:"servings,omitempty"`
+	PrepSeconds   int32                  `protobuf:"varint,8,opt,name=prep_seconds,json=prepSeconds,proto3" json:"prep_seconds,omitempty"`
+	CookSeconds   int32                  `protobuf:"varint,9,opt,name=cook_seconds,json=cookSeconds,proto3" json:"cook_seconds,omitempty"`
+	Ingredients   []*Ingredient          `protobuf:"bytes,10,rep,name=ingredients,proto3" json:"ingredients,omitempty"`
+	Steps         []*Step                `protobuf:"bytes,11,rep,name=steps,proto3" json:"steps,omitempty"`
+	AuthorUserId  string                 `protobuf:"bytes,12,opt,name=author_user_id,json=authorUserId,proto3" json:"author_user_id,omitempty"`
 	FavoriteCount int32                  `protobuf:"varint,13,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count,omitempty"`
 	CommentCount  int32                  `protobuf:"varint,14,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// image_url is empty when the recipe has no photo.
-	ImageUrl string `protobuf:"bytes,17,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
-	// notes are the cook's amendments ("double the garlic"), shown only on the detail screen.
-	Notes string `protobuf:"bytes,18,opt,name=notes,proto3" json:"notes,omitempty"`
-	// rating is the family's verdict, 1..5. 0 means nobody has rated it yet.
-	Rating int32 `protobuf:"varint,19,opt,name=rating,proto3" json:"rating,omitempty"`
-	// nutrition is per serving. Always set on read; every field 0 when unrecorded.
-	Nutrition     *Nutrition `protobuf:"bytes,20,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
+	ImageUrl      string                 `protobuf:"bytes,17,opt,name=image_url,json=imageUrl,proto3" json:"image_url,omitempty"`
+	Notes         string                 `protobuf:"bytes,18,opt,name=notes,proto3" json:"notes,omitempty"`
+	Rating        int32                  `protobuf:"varint,19,opt,name=rating,proto3" json:"rating,omitempty"`
+	Nutrition     *Nutrition             `protobuf:"bytes,20,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -763,15 +743,12 @@ func (x *Comment) GetCreatedAt() *timestamppb.Timestamp {
 }
 
 type MealPlanEntry struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	RecipeId string                 `protobuf:"bytes,3,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
-	// date is the calendar day (YYYY-MM-DD), not a timestamp — a meal plan is about days, not
-	// instants, and storing a timestamptz would make timezone handling the app's problem.
-	Date string   `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
-	Slot MealSlot `protobuf:"varint,5,opt,name=slot,proto3,enum=recipes.v1.MealSlot" json:"slot,omitempty"`
-	// servings overrides the recipe's default; 0 means "use the recipe's servings".
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	RecipeId      string                 `protobuf:"bytes,3,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
+	Date          string                 `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
+	Slot          MealSlot               `protobuf:"varint,5,opt,name=slot,proto3,enum=recipes.v1.MealSlot" json:"slot,omitempty"`
 	Servings      int32                  `protobuf:"varint,6,opt,name=servings,proto3" json:"servings,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1222,8 +1199,7 @@ type CreateRecipeRequest struct {
 	Steps         []*Step                `protobuf:"bytes,9,rep,name=steps,proto3" json:"steps,omitempty"`
 	Notes         string                 `protobuf:"bytes,10,opt,name=notes,proto3" json:"notes,omitempty"`
 	Rating        int32                  `protobuf:"varint,11,opt,name=rating,proto3" json:"rating,omitempty"`
-	// Unset leaves every figure at 0.
-	Nutrition     *Nutrition `protobuf:"bytes,12,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
+	Nutrition     *Nutrition             `protobuf:"bytes,12,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1475,26 +1451,17 @@ func (x *GetRecipeResponse) GetRecipe() *Recipe {
 }
 
 type ListRecipesRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId    string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	SubcategoryId string                 `protobuf:"bytes,2,opt,name=subcategory_id,json=subcategoryId,proto3" json:"subcategory_id,omitempty"`
-	// favorite_only filters to the caller's favorites.
-	FavoriteOnly bool `protobuf:"varint,3,opt,name=favorite_only,json=favoriteOnly,proto3" json:"favorite_only,omitempty"`
-	// search matches the title anywhere, case-insensitively. It is independent of
-	// category_id/subcategory_id: searching with no category set searches the whole cookbook,
-	// which is the point of a search box.
-	Search string     `protobuf:"bytes,4,opt,name=search,proto3" json:"search,omitempty"`
-	Sort   RecipeSort `protobuf:"varint,5,opt,name=sort,proto3,enum=recipes.v1.RecipeSort" json:"sort,omitempty"`
-	// min_rating drops recipes rated below it. 0 disables the filter (and would otherwise be
-	// a no-op anyway, since unrated recipes are rating 0).
-	MinRating int32 `protobuf:"varint,6,opt,name=min_rating,json=minRating,proto3" json:"min_rating,omitempty"`
-	// max_total_seconds drops recipes whose prep + cook exceeds it. 0 disables the filter.
-	MaxTotalSeconds int32 `protobuf:"varint,7,opt,name=max_total_seconds,json=maxTotalSeconds,proto3" json:"max_total_seconds,omitempty"`
-	// ingredient matches recipes containing an ingredient whose name contains this text —
-	// "what can I cook with chicken".
-	Ingredient    string `protobuf:"bytes,8,opt,name=ingredient,proto3" json:"ingredient,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CategoryId      string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	SubcategoryId   string                 `protobuf:"bytes,2,opt,name=subcategory_id,json=subcategoryId,proto3" json:"subcategory_id,omitempty"`
+	FavoriteOnly    bool                   `protobuf:"varint,3,opt,name=favorite_only,json=favoriteOnly,proto3" json:"favorite_only,omitempty"`
+	Search          string                 `protobuf:"bytes,4,opt,name=search,proto3" json:"search,omitempty"`
+	Sort            RecipeSort             `protobuf:"varint,5,opt,name=sort,proto3,enum=recipes.v1.RecipeSort" json:"sort,omitempty"`
+	MinRating       int32                  `protobuf:"varint,6,opt,name=min_rating,json=minRating,proto3" json:"min_rating,omitempty"`
+	MaxTotalSeconds int32                  `protobuf:"varint,7,opt,name=max_total_seconds,json=maxTotalSeconds,proto3" json:"max_total_seconds,omitempty"`
+	Ingredient      string                 `protobuf:"bytes,8,opt,name=ingredient,proto3" json:"ingredient,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ListRecipesRequest) Reset() {
@@ -1640,14 +1607,8 @@ type UpdateRecipeRequest struct {
 	Ingredients   []*Ingredient          `protobuf:"bytes,9,rep,name=ingredients,proto3" json:"ingredients,omitempty"`
 	Steps         []*Step                `protobuf:"bytes,10,rep,name=steps,proto3" json:"steps,omitempty"`
 	Notes         string                 `protobuf:"bytes,11,opt,name=notes,proto3" json:"notes,omitempty"`
-	// rating is written by UpdateRecipe too so the edit screen can save everything in one
-	// call; RateRecipe exists for the one-tap star control on the list and detail screens.
-	Rating int32 `protobuf:"varint,12,opt,name=rating,proto3" json:"rating,omitempty"`
-	// Unset (not merely zeroed) leaves the stored nutrition alone. Unlike every other field
-	// here, this one is preserved rather than overwritten when absent: an edit screen that
-	// predates these figures — or simply does not show them — must not silently erase the
-	// macros that came in with the recipe.
-	Nutrition     *Nutrition `protobuf:"bytes,13,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
+	Rating        int32                  `protobuf:"varint,12,opt,name=rating,proto3" json:"rating,omitempty"`
+	Nutrition     *Nutrition             `protobuf:"bytes,13,opt,name=nutrition,proto3" json:"nutrition,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1898,12 +1859,10 @@ func (*DeleteRecipeResponse) Descriptor() ([]byte, []int) {
 }
 
 type UploadRecipeImageRequest struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	RecipeId  string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
-	ImageData []byte                 `protobuf:"bytes,2,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"`
-	// content_type is the MIME type the client captured the image as (e.g. "image/jpeg");
-	// the server rejects anything that isn't image/*.
-	ContentType   string `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RecipeId      string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
+	ImageData     []byte                 `protobuf:"bytes,2,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"`
+	ContentType   string                 `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2468,10 +2427,9 @@ func (x *PlanMealResponse) GetEntry() *MealPlanEntry {
 }
 
 type ListMealPlanRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// from_date and to_date are inclusive, YYYY-MM-DD. Empty from_date means "today".
-	FromDate      string `protobuf:"bytes,1,opt,name=from_date,json=fromDate,proto3" json:"from_date,omitempty"`
-	ToDate        string `protobuf:"bytes,2,opt,name=to_date,json=toDate,proto3" json:"to_date,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FromDate      string                 `protobuf:"bytes,1,opt,name=from_date,json=fromDate,proto3" json:"from_date,omitempty"`
+	ToDate        string                 `protobuf:"bytes,2,opt,name=to_date,json=toDate,proto3" json:"to_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2741,12 +2699,10 @@ func (x *TotalIngredientsResponse) GetTotals() []*IngredientTotal {
 }
 
 type IngredientTotal struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Unit  string                 `protobuf:"bytes,2,opt,name=unit,proto3" json:"unit,omitempty"`
-	// total_amount is a decimal string sum, summed by name+unit across every meal-plan entry
-	// in the range, scaled by each entry's servings relative to its recipe's servings.
-	TotalAmount   string `protobuf:"bytes,3,opt,name=total_amount,json=totalAmount,proto3" json:"total_amount,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Unit          string                 `protobuf:"bytes,2,opt,name=unit,proto3" json:"unit,omitempty"`
+	TotalAmount   string                 `protobuf:"bytes,3,opt,name=total_amount,json=totalAmount,proto3" json:"total_amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2847,11 +2803,9 @@ func (x *SumIngredientsRequest) GetItems() []*RecipeQuantity {
 }
 
 type RecipeQuantity struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	RecipeId string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
-	// servings is how many portions of this recipe the basket wants. 0 means "the recipe's
-	// own servings", i.e. cook it once as written.
-	Servings      int32 `protobuf:"varint,2,opt,name=servings,proto3" json:"servings,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RecipeId      string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
+	Servings      int32                  `protobuf:"varint,2,opt,name=servings,proto3" json:"servings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2945,10 +2899,9 @@ func (x *SumIngredientsResponse) GetTotals() []*IngredientTotal {
 }
 
 type RateRecipeRequest struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	RecipeId string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
-	// rating is 1..5, or 0 to clear it.
-	Rating        int32 `protobuf:"varint,2,opt,name=rating,proto3" json:"rating,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RecipeId      string                 `protobuf:"bytes,1,opt,name=recipe_id,json=recipeId,proto3" json:"recipe_id,omitempty"`
+	Rating        int32                  `protobuf:"varint,2,opt,name=rating,proto3" json:"rating,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3041,7 +2994,6 @@ func (x *RateRecipeResponse) GetRecipe() *Recipe {
 	return nil
 }
 
-// Events published on `recipes.<entity>.<verb>` (libs/go/events).
 type RecipeCreatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`

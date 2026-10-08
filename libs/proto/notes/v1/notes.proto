@@ -2,95 +2,40 @@ syntax = "proto3";
 
 package notes.v1;
 
-// go_package is set by buf managed mode (libs/proto/buf.gen.yaml) to
-// github.com/nnc/family-manager/sdk/go/notes/v1 — do not set it here.
 
 import "google/protobuf/timestamp.proto";
 
-// NotesService owns Commonplace: notebooks, notes made of blocks, sharing, comments and
-// search. Every row is scoped by family_id, which comes from the access token's family_id
-// claim (stamped by services/auth from services/family) — this service never calls the
-// family service to resolve membership; it trusts the claim.
-//
-// The unit of privacy is the note, not the family. A note belongs to the user who created
-// it and is invisible to the rest of the family until it is shared, either directly or by
-// sharing the notebook that holds it. That is the "single user by default" rule, and it is
-// enforced in SQL (the visibility predicate in internal/db/queries/), not in the handler —
-// a query that forgets it returns nothing rather than someone else's notes.
 service NotesService {
-  // --- notebooks ----------------------------------------------------------
   rpc CreateNotebook(CreateNotebookRequest) returns (CreateNotebookResponse);
   rpc ListNotebooks(ListNotebooksRequest) returns (ListNotebooksResponse);
   rpc UpdateNotebook(UpdateNotebookRequest) returns (UpdateNotebookResponse);
-  // DeleteNotebook refuses while the notebook still holds notes, rather than cascading:
-  // a mis-tapped notebook delete must not be able to take a hundred notes with it.
   rpc DeleteNotebook(DeleteNotebookRequest) returns (DeleteNotebookResponse);
 
-  // --- notes --------------------------------------------------------------
   rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse);
   rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
   rpc ListNotes(ListNotesRequest) returns (ListNotesResponse);
-  // UpdateNote writes the whole note — title plus the full block array. Blocks are a
-  // document, not rows: a partial update would need a diff protocol on both sides, and the
-  // documents here are small enough that sending all of them is cheaper than agreeing on
-  // what changed. expected_version makes the write conditional; see the field's comment.
   rpc UpdateNote(UpdateNoteRequest) returns (UpdateNoteResponse);
   rpc MoveNote(MoveNoteRequest) returns (MoveNoteResponse);
   rpc ToggleStar(ToggleStarRequest) returns (ToggleStarResponse);
-  // ArchiveNote sets or clears Note.archived — the rail's Archive row, and the way back out
-  // of it. Archiving is not deleting: the note keeps its blocks, its comments and its shares,
-  // and only leaves the lists that do not ask for it. It is a write on the shared row like
-  // starring, so it needs EDIT and not merely sight of the note.
   rpc ArchiveNote(ArchiveNoteRequest) returns (ArchiveNoteResponse);
   rpc DeleteNote(DeleteNoteRequest) returns (DeleteNoteResponse);
-  // UploadNoteImage stores an image block's bytes and returns its URL. Sent as raw bytes
-  // over Connect/JSON (base64 on the wire) rather than a presigned-URL flow — the same
-  // tradeoff RecipesService.UploadRecipeImage makes, for the same reason: one round trip.
-  //
-  // NOT EXPOSED IN v1. The product ships no image blocks and the service is deployed with no
-  // storage configured, so this procedure answers CodeUnimplemented and no bucket is ever
-  // created. Unimplemented, not FailedPrecondition or Internal: the refusal is permanent for
-  // the whole deployment and there is no precondition a caller could go and satisfy, so it is
-  // an expected answer rather than an incident and the service does not log one.
-  // The reason is libs/go/storage: EnsureBucket sets an anonymous-read policy on every bucket
-  // it makes, so the URL this rpc returns would be fetchable by anyone holding it — including
-  // for a note that was never shared, and still after a share is revoked. A note is private by
-  // default (see the service comment above); an object store that is public by default cannot
-  // hold that note's photo. Wiring image blocks up needs presigned reads in libs/go/storage
-  // first, at which point this procedure works as written.
-  //
-  // It stays in the contract because removing it is a breaking change that buys nothing: an
-  // rpc nobody calls costs a generated method, while deleting one costs every client a
-  // regeneration and `buf breaking` a waiver.
   rpc UploadNoteImage(UploadNoteImageRequest) returns (UploadNoteImageResponse);
 
-  // --- search -------------------------------------------------------------
-  // Search is the ⌘K palette: one query across notes, the tasks inside them, and notebook
-  // names, ranked server-side. The app never filters a full note list client-side — that
-  // stops working at the first notebook nobody has opened yet.
   rpc Search(SearchRequest) returns (SearchResponse);
 
-  // --- sharing ------------------------------------------------------------
   rpc ShareNote(ShareNoteRequest) returns (ShareNoteResponse);
   rpc ShareNotebook(ShareNotebookRequest) returns (ShareNotebookResponse);
   rpc Unshare(UnshareRequest) returns (UnshareResponse);
   rpc ListShares(ListSharesRequest) returns (ListSharesResponse);
-  // ListSharedWithMe is the sidebar's "Shared with me": everything the caller can see that
-  // they do not own.
   rpc ListSharedWithMe(ListSharedWithMeRequest) returns (ListSharedWithMeResponse);
 
-  // --- comments -----------------------------------------------------------
   rpc AddComment(AddCommentRequest) returns (AddCommentResponse);
   rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
   rpc ResolveComment(ResolveCommentRequest) returns (ResolveCommentResponse);
 
-  // --- activity -----------------------------------------------------------
   rpc ListActivity(ListActivityRequest) returns (ListActivityResponse);
 }
 
-// BlockType is the shape of one line of a note. The set is closed on purpose: a note is a
-// short document, not a page builder, and every type here has a keyboard shortcut and a
-// button in the editor's block bar.
 enum BlockType {
   BLOCK_TYPE_UNSPECIFIED = 0;
   BLOCK_TYPE_PARAGRAPH = 1;
@@ -100,34 +45,22 @@ enum BlockType {
   BLOCK_TYPE_NUMBERED = 5;
   BLOCK_TYPE_QUOTE = 6;
   BLOCK_TYPE_CODE = 7;
-  // BLOCK_TYPE_IMAGE is reserved, not offered: v1 has no image blocks. The editor has no
-  // button for it, the service provisions no bucket, and UploadNoteImage answers
-  // Unimplemented — because libs/go/storage makes every bucket it creates anonymously
-  // readable, which cannot hold a private note's photo. See UploadNoteImage above for the whole reason. The value keeps its
-  // number so the day presigned reads exist, old notes and old clients still agree what an 8
-  // means; a client that sends one today gets a block the editor renders as nothing.
   BLOCK_TYPE_IMAGE = 8;
   BLOCK_TYPE_DIVIDER = 9;
 }
 
-// SharePermission is deliberately two values. "Comment-only" is a third state with its own
-// rules in every read and write path, and nobody asked for it.
 enum SharePermission {
   SHARE_PERMISSION_UNSPECIFIED = 0;
   SHARE_PERMISSION_VIEW = 1;
   SHARE_PERMISSION_EDIT = 2;
 }
 
-// ShareSubject picks who a share row grants to: one family member, or the whole family.
-// FAMILY is not "public" — it still means the members of the caller's own family_id.
 enum ShareSubject {
   SHARE_SUBJECT_UNSPECIFIED = 0;
   SHARE_SUBJECT_MEMBER = 1;
   SHARE_SUBJECT_FAMILY = 2;
 }
 
-// NoteSort orders ListNotes server-side. The default (UNSPECIFIED) is recently-updated
-// first, which is what the list showed before sorting existed.
 enum NoteSort {
   NOTE_SORT_UNSPECIFIED = 0;
   NOTE_SORT_UPDATED = 1;
@@ -135,8 +68,6 @@ enum NoteSort {
   NOTE_SORT_TITLE = 3;
 }
 
-// SearchFacet is the palette's filter row. TASKS searches only the TODO blocks inside
-// visible notes; NOTEBOOKS searches notebook names.
 enum SearchFacet {
   SEARCH_FACET_UNSPECIFIED = 0;
   SEARCH_FACET_ALL = 1;
@@ -145,8 +76,6 @@ enum SearchFacet {
   SEARCH_FACET_NOTEBOOKS = 4;
 }
 
-// ActivityKind is what showed up in the note's Activity rail. The app renders its own
-// sentence per kind, so the server does not send prose.
 enum ActivityKind {
   ACTIVITY_KIND_UNSPECIFIED = 0;
   ACTIVITY_KIND_CREATED = 1;
@@ -158,21 +87,12 @@ enum ActivityKind {
 }
 
 message Block {
-  // id is generated by the client and stable across edits, so a comment or a cursor can
-  // point at a block that moved. The server does not mint these: it never rewrites a block
-  // array, it stores the one it is given.
   string id = 1;
   BlockType type = 2;
   string text = 3;
-  // checked applies to TODO only; false everywhere else.
   bool checked = 4;
-  // level is the heading level (1..3) or the indent depth of a list item. 0 elsewhere.
   int32 level = 5;
-  // image_url applies to IMAGE only, and is the URL returned by UploadNoteImage. Unused in
-  // v1, which ships no image blocks — see BlockType.BLOCK_TYPE_IMAGE.
   string image_url = 6;
-  // language applies to CODE only, and is a hint for the app's highlighter. Empty means
-  // "plain" — the server does not validate it against a list it would then have to keep.
   string language = 7;
 }
 
@@ -180,14 +100,9 @@ message Notebook {
   string id = 1;
   string family_id = 2;
   string owner_user_id = 3;
-  // parent_id is empty for a top-level notebook. The tree is one level deep in the design
-  // ("Product / Roadmap") but the column allows more, because forbidding it later is a
-  // migration and allowing it later is a contract change.
   string parent_id = 4;
   string name = 5;
   bool archived = 6;
-  // note_count counts only the notes the CALLER can see, so a shared notebook does not
-  // advertise how many private notes it holds.
   int32 note_count = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
@@ -196,7 +111,6 @@ message Notebook {
 message Share {
   string id = 1;
   ShareSubject subject = 2;
-  // member_user_id is set when subject is MEMBER, empty when it is FAMILY.
   string member_user_id = 3;
   SharePermission permission = 4;
   string granted_by_user_id = 5;
@@ -207,34 +121,20 @@ message Note {
   string id = 1;
   string family_id = 2;
   string owner_user_id = 3;
-  // notebook_id is empty for a note that lives outside any notebook — which is where quick
-  // capture puts one when the user does not pick a notebook.
   string notebook_id = 4;
   string title = 5;
   repeated Block blocks = 6;
   bool starred = 7;
   bool archived = 8;
-  // version increments on every successful UpdateNote. Send it back as expected_version to
-  // make the next write conditional.
   int64 version = 9;
   string last_edited_by_user_id = 10;
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
-  // shares is populated by GetNote and left empty by ListNotes: the list draws one avatar
-  // per note, and loading every share row for a hundred notes to draw it is not worth it.
   repeated Share shares = 13;
-  // shared is the cheap version of the above, and IS set on list rows: true when this note
-  // has any share at all. It is what the list's little "people" glyph reads.
   bool shared = 14;
-  // task_total/task_done count TODO blocks, so the list row can render "6/9" without
-  // shipping the whole block array to draw a summary.
   int32 task_total = 15;
   int32 task_done = 16;
-  // preview is the first ~140 characters of the note's flattened text, for the list row.
   string preview = 17;
-  // can_edit is the caller's own permission on this note, resolved server-side. The app
-  // must not re-derive it from owner_user_id and the share list — that is the same rule
-  // written twice, and the copy in JavaScript is the one that drifts.
   bool can_edit = 18;
 }
 
@@ -252,15 +152,10 @@ message Activity {
   string note_id = 2;
   string actor_user_id = 3;
   ActivityKind kind = 4;
-  // detail is the object of the action — the task text that was checked, the user id of the
-  // person a note was shared with (an id, not a name: the service has no user table, and the
-  // client resolves ids the same way it does for actor_user_id). Empty when the kind needs no
-  // object, which includes a share made to the whole family.
   string detail = 5;
   google.protobuf.Timestamp created_at = 6;
 }
 
-// --- notebooks --------------------------------------------------------------
 
 message CreateNotebookRequest {
   string name = 1;
@@ -292,16 +187,11 @@ message DeleteNotebookRequest {
 }
 message DeleteNotebookResponse {}
 
-// --- notes ------------------------------------------------------------------
 
 message CreateNoteRequest {
   string notebook_id = 1;
   string title = 2;
   repeated Block blocks = 3;
-  // client_id is the id the app minted while offline. When it is set the server treats the
-  // create as idempotent for this user: a second call with the same client_id returns the
-  // note the first one made, instead of a duplicate. That is what makes the mobile capture
-  // queue safe to retry after a timeout it never saw the answer to.
   string client_id = 4;
 }
 message CreateNoteResponse {
@@ -316,20 +206,12 @@ message GetNoteResponse {
 }
 
 message ListNotesRequest {
-  // notebook_id empty means "every notebook"; set it to scope to one.
   string notebook_id = 1;
   bool starred_only = 2;
   bool include_archived = 3;
-  // shared_only lists notes the caller can see but does not own — the same set
-  // ListSharedWithMe returns, available here so the list pane can reuse one query shape.
   bool shared_only = 4;
   NoteSort sort = 5;
   int32 page_size = 6;
-  // archived_only is the Archive rail row: archived notes and nothing else. It implies
-  // include_archived, so the two do not have to be sent together. It exists because the
-  // alternative — asking for include_archived and dropping the live notes in the client — is
-  // wrong the moment page_size is set: the page fills with live notes and the archive renders
-  // short or empty, having "filtered" a page that never contained what it was looking for.
   bool archived_only = 7;
 }
 message ListNotesResponse {
@@ -340,10 +222,6 @@ message UpdateNoteRequest {
   string note_id = 1;
   string title = 2;
   repeated Block blocks = 3;
-  // expected_version is the version the client last read. The write is refused with
-  // ABORTED when it does not match what is stored, which is how two people editing the
-  // same shared note find out instead of one of them silently losing a paragraph. Send 0
-  // to force the write (the app does this only after showing the conflict).
   int64 expected_version = 4;
 }
 message UpdateNoteResponse {
@@ -352,7 +230,6 @@ message UpdateNoteResponse {
 
 message MoveNoteRequest {
   string note_id = 1;
-  // notebook_id empty moves the note out of every notebook.
   string notebook_id = 2;
 }
 message MoveNoteResponse {
@@ -369,8 +246,6 @@ message ToggleStarResponse {
 
 message ArchiveNoteRequest {
   string note_id = 1;
-  // archived is the value to set, not a toggle: the app knows which state the row is in and
-  // sending the target makes a retried request idempotent.
   bool archived = 2;
 }
 message ArchiveNoteResponse {
@@ -391,20 +266,13 @@ message UploadNoteImageResponse {
   string image_url = 1;
 }
 
-// --- search -----------------------------------------------------------------
 
 message SearchHit {
-  // kind tells the app which glyph to draw and where to navigate; it mirrors the facet the
-  // hit would have matched.
   SearchFacet kind = 1;
-  // note_id is set for NOTES and TASKS hits, notebook_id for NOTEBOOKS hits.
   string note_id = 2;
   string notebook_id = 3;
   string title = 4;
-  // context is the breadcrumb line under the title ("Product / Roadmap · Maya · 12 Aug").
   string context = 5;
-  // snippet is the matching text with the query's terms left in place. The app draws the
-  // highlight; the server does not send markup.
   string snippet = 6;
   google.protobuf.Timestamp updated_at = 7;
 }
@@ -416,24 +284,14 @@ message SearchRequest {
 }
 message SearchResponse {
   repeated SearchHit hits = 1;
-  // elapsed_ms is what the palette's footer prints ("Searched 128 notes in 31ms"). Measured
-  // around the query, so it is the server's number rather than a round trip the user's
-  // network dominates.
   int32 elapsed_ms = 2;
   int32 searched_notes = 3;
 }
 
-// --- sharing ----------------------------------------------------------------
 
 message ShareNoteRequest {
   string note_id = 1;
   ShareSubject subject = 2;
-  // member_user_id is required when subject is MEMBER. The server does NOT verify that the
-  // id belongs to the caller's family, and cannot: this service has no member table and never
-  // calls services/family. A share written to an outsider is inert rather than a leak — every
-  // read predicate is ANDed with the note's family_id, and an outsider's token carries a
-  // different one — but it is a row ListShares will render, so the client should offer only
-  // ids it already knows to be family members.
   string member_user_id = 3;
   SharePermission permission = 4;
 }
@@ -452,7 +310,6 @@ message ShareNotebookResponse {
 }
 
 message UnshareRequest {
-  // Exactly one of note_id or notebook_id, matching where the share was granted.
   string note_id = 1;
   string notebook_id = 2;
   string share_id = 3;
@@ -475,7 +332,6 @@ message ListSharedWithMeResponse {
   repeated Notebook notebooks = 2;
 }
 
-// --- comments ---------------------------------------------------------------
 
 message AddCommentRequest {
   string note_id = 1;
@@ -501,7 +357,6 @@ message ResolveCommentResponse {
   Comment comment = 1;
 }
 
-// --- activity ---------------------------------------------------------------
 
 message ListActivityRequest {
   string note_id = 1;

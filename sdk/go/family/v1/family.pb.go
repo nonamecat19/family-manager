@@ -26,9 +26,8 @@ type Role int32
 
 const (
 	Role_ROLE_UNSPECIFIED Role = 0
-	// ROLE_ADMIN may invite, remove members and delete the family.
-	Role_ROLE_ADMIN  Role = 1
-	Role_ROLE_MEMBER Role = 2
+	Role_ROLE_ADMIN       Role = 1
+	Role_ROLE_MEMBER      Role = 2
 )
 
 // Enum value maps for Role.
@@ -204,11 +203,9 @@ func (x *Family) GetUpdatedAt() *timestamppb.Timestamp {
 }
 
 type Member struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	UserId   string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	FamilyId string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	// display_name is denormalised from the account at join time so member lists render
-	// without a fan-out call to services/auth.
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
 	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
 	Role          Role                   `protobuf:"varint,5,opt,name=role,proto3,enum=family.v1.Role" json:"role,omitempty"`
@@ -470,9 +467,8 @@ func (x *CreateFamilyResponse) GetFamily() *Family {
 }
 
 type GetFamilyRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Empty means "the caller's family", read from the access token.
-	FamilyId      string `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -979,11 +975,9 @@ func (x *InviteMemberRequest) GetRole() Role {
 }
 
 type InviteMemberResponse struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Invitation *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	// token is returned once, at creation, and never stored in plaintext. The caller delivers
-	// it out of band (deep link, email).
-	Token         string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1445,12 +1439,10 @@ func (x *GetUserMembershipRequest) GetUserId() string {
 }
 
 type GetUserMembershipResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// in_family is false for a user who has not created or joined one yet — a normal state on
-	// first launch, not an error.
-	InFamily      bool   `protobuf:"varint,1,opt,name=in_family,json=inFamily,proto3" json:"in_family,omitempty"`
-	FamilyId      string `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	Role          Role   `protobuf:"varint,3,opt,name=role,proto3,enum=family.v1.Role" json:"role,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	InFamily      bool                   `protobuf:"varint,1,opt,name=in_family,json=inFamily,proto3" json:"in_family,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Role          Role                   `protobuf:"varint,3,opt,name=role,proto3,enum=family.v1.Role" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1506,7 +1498,6 @@ func (x *GetUserMembershipResponse) GetRole() Role {
 	return Role_ROLE_UNSPECIFIED
 }
 
-// Events published on `family.member.*` (libs/go/events). Consumers decode these payloads.
 type MemberInvitedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`

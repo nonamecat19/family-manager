@@ -94,65 +94,28 @@ const (
 
 // NotesServiceClient is a client for the notes.v1.NotesService service.
 type NotesServiceClient interface {
-	// --- notebooks ----------------------------------------------------------
 	CreateNotebook(context.Context, *connect.Request[v1.CreateNotebookRequest]) (*connect.Response[v1.CreateNotebookResponse], error)
 	ListNotebooks(context.Context, *connect.Request[v1.ListNotebooksRequest]) (*connect.Response[v1.ListNotebooksResponse], error)
 	UpdateNotebook(context.Context, *connect.Request[v1.UpdateNotebookRequest]) (*connect.Response[v1.UpdateNotebookResponse], error)
-	// DeleteNotebook refuses while the notebook still holds notes, rather than cascading:
-	// a mis-tapped notebook delete must not be able to take a hundred notes with it.
 	DeleteNotebook(context.Context, *connect.Request[v1.DeleteNotebookRequest]) (*connect.Response[v1.DeleteNotebookResponse], error)
-	// --- notes --------------------------------------------------------------
 	CreateNote(context.Context, *connect.Request[v1.CreateNoteRequest]) (*connect.Response[v1.CreateNoteResponse], error)
 	GetNote(context.Context, *connect.Request[v1.GetNoteRequest]) (*connect.Response[v1.GetNoteResponse], error)
 	ListNotes(context.Context, *connect.Request[v1.ListNotesRequest]) (*connect.Response[v1.ListNotesResponse], error)
-	// UpdateNote writes the whole note — title plus the full block array. Blocks are a
-	// document, not rows: a partial update would need a diff protocol on both sides, and the
-	// documents here are small enough that sending all of them is cheaper than agreeing on
-	// what changed. expected_version makes the write conditional; see the field's comment.
 	UpdateNote(context.Context, *connect.Request[v1.UpdateNoteRequest]) (*connect.Response[v1.UpdateNoteResponse], error)
 	MoveNote(context.Context, *connect.Request[v1.MoveNoteRequest]) (*connect.Response[v1.MoveNoteResponse], error)
 	ToggleStar(context.Context, *connect.Request[v1.ToggleStarRequest]) (*connect.Response[v1.ToggleStarResponse], error)
-	// ArchiveNote sets or clears Note.archived — the rail's Archive row, and the way back out
-	// of it. Archiving is not deleting: the note keeps its blocks, its comments and its shares,
-	// and only leaves the lists that do not ask for it. It is a write on the shared row like
-	// starring, so it needs EDIT and not merely sight of the note.
 	ArchiveNote(context.Context, *connect.Request[v1.ArchiveNoteRequest]) (*connect.Response[v1.ArchiveNoteResponse], error)
 	DeleteNote(context.Context, *connect.Request[v1.DeleteNoteRequest]) (*connect.Response[v1.DeleteNoteResponse], error)
-	// UploadNoteImage stores an image block's bytes and returns its URL. Sent as raw bytes
-	// over Connect/JSON (base64 on the wire) rather than a presigned-URL flow — the same
-	// tradeoff RecipesService.UploadRecipeImage makes, for the same reason: one round trip.
-	//
-	// NOT EXPOSED IN v1. The product ships no image blocks and the service is deployed with no
-	// storage configured, so this procedure answers with an error and no bucket is ever created.
-	// The reason is libs/go/storage: EnsureBucket sets an anonymous-read policy on every bucket
-	// it makes, so the URL this rpc returns would be fetchable by anyone holding it — including
-	// for a note that was never shared, and still after a share is revoked. A note is private by
-	// default (see the service comment above); an object store that is public by default cannot
-	// hold that note's photo. Wiring image blocks up needs presigned reads in libs/go/storage
-	// first, at which point this procedure works as written.
-	//
-	// It stays in the contract because removing it is a breaking change that buys nothing: an
-	// rpc nobody calls costs a generated method, while deleting one costs every client a
-	// regeneration and `buf breaking` a waiver.
 	UploadNoteImage(context.Context, *connect.Request[v1.UploadNoteImageRequest]) (*connect.Response[v1.UploadNoteImageResponse], error)
-	// --- search -------------------------------------------------------------
-	// Search is the ⌘K palette: one query across notes, the tasks inside them, and notebook
-	// names, ranked server-side. The app never filters a full note list client-side — that
-	// stops working at the first notebook nobody has opened yet.
 	Search(context.Context, *connect.Request[v1.SearchRequest]) (*connect.Response[v1.SearchResponse], error)
-	// --- sharing ------------------------------------------------------------
 	ShareNote(context.Context, *connect.Request[v1.ShareNoteRequest]) (*connect.Response[v1.ShareNoteResponse], error)
 	ShareNotebook(context.Context, *connect.Request[v1.ShareNotebookRequest]) (*connect.Response[v1.ShareNotebookResponse], error)
 	Unshare(context.Context, *connect.Request[v1.UnshareRequest]) (*connect.Response[v1.UnshareResponse], error)
 	ListShares(context.Context, *connect.Request[v1.ListSharesRequest]) (*connect.Response[v1.ListSharesResponse], error)
-	// ListSharedWithMe is the sidebar's "Shared with me": everything the caller can see that
-	// they do not own.
 	ListSharedWithMe(context.Context, *connect.Request[v1.ListSharedWithMeRequest]) (*connect.Response[v1.ListSharedWithMeResponse], error)
-	// --- comments -----------------------------------------------------------
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	ListComments(context.Context, *connect.Request[v1.ListCommentsRequest]) (*connect.Response[v1.ListCommentsResponse], error)
 	ResolveComment(context.Context, *connect.Request[v1.ResolveCommentRequest]) (*connect.Response[v1.ResolveCommentResponse], error)
-	// --- activity -----------------------------------------------------------
 	ListActivity(context.Context, *connect.Request[v1.ListActivityRequest]) (*connect.Response[v1.ListActivityResponse], error)
 }
 
@@ -452,65 +415,28 @@ func (c *notesServiceClient) ListActivity(ctx context.Context, req *connect.Requ
 
 // NotesServiceHandler is an implementation of the notes.v1.NotesService service.
 type NotesServiceHandler interface {
-	// --- notebooks ----------------------------------------------------------
 	CreateNotebook(context.Context, *connect.Request[v1.CreateNotebookRequest]) (*connect.Response[v1.CreateNotebookResponse], error)
 	ListNotebooks(context.Context, *connect.Request[v1.ListNotebooksRequest]) (*connect.Response[v1.ListNotebooksResponse], error)
 	UpdateNotebook(context.Context, *connect.Request[v1.UpdateNotebookRequest]) (*connect.Response[v1.UpdateNotebookResponse], error)
-	// DeleteNotebook refuses while the notebook still holds notes, rather than cascading:
-	// a mis-tapped notebook delete must not be able to take a hundred notes with it.
 	DeleteNotebook(context.Context, *connect.Request[v1.DeleteNotebookRequest]) (*connect.Response[v1.DeleteNotebookResponse], error)
-	// --- notes --------------------------------------------------------------
 	CreateNote(context.Context, *connect.Request[v1.CreateNoteRequest]) (*connect.Response[v1.CreateNoteResponse], error)
 	GetNote(context.Context, *connect.Request[v1.GetNoteRequest]) (*connect.Response[v1.GetNoteResponse], error)
 	ListNotes(context.Context, *connect.Request[v1.ListNotesRequest]) (*connect.Response[v1.ListNotesResponse], error)
-	// UpdateNote writes the whole note — title plus the full block array. Blocks are a
-	// document, not rows: a partial update would need a diff protocol on both sides, and the
-	// documents here are small enough that sending all of them is cheaper than agreeing on
-	// what changed. expected_version makes the write conditional; see the field's comment.
 	UpdateNote(context.Context, *connect.Request[v1.UpdateNoteRequest]) (*connect.Response[v1.UpdateNoteResponse], error)
 	MoveNote(context.Context, *connect.Request[v1.MoveNoteRequest]) (*connect.Response[v1.MoveNoteResponse], error)
 	ToggleStar(context.Context, *connect.Request[v1.ToggleStarRequest]) (*connect.Response[v1.ToggleStarResponse], error)
-	// ArchiveNote sets or clears Note.archived — the rail's Archive row, and the way back out
-	// of it. Archiving is not deleting: the note keeps its blocks, its comments and its shares,
-	// and only leaves the lists that do not ask for it. It is a write on the shared row like
-	// starring, so it needs EDIT and not merely sight of the note.
 	ArchiveNote(context.Context, *connect.Request[v1.ArchiveNoteRequest]) (*connect.Response[v1.ArchiveNoteResponse], error)
 	DeleteNote(context.Context, *connect.Request[v1.DeleteNoteRequest]) (*connect.Response[v1.DeleteNoteResponse], error)
-	// UploadNoteImage stores an image block's bytes and returns its URL. Sent as raw bytes
-	// over Connect/JSON (base64 on the wire) rather than a presigned-URL flow — the same
-	// tradeoff RecipesService.UploadRecipeImage makes, for the same reason: one round trip.
-	//
-	// NOT EXPOSED IN v1. The product ships no image blocks and the service is deployed with no
-	// storage configured, so this procedure answers with an error and no bucket is ever created.
-	// The reason is libs/go/storage: EnsureBucket sets an anonymous-read policy on every bucket
-	// it makes, so the URL this rpc returns would be fetchable by anyone holding it — including
-	// for a note that was never shared, and still after a share is revoked. A note is private by
-	// default (see the service comment above); an object store that is public by default cannot
-	// hold that note's photo. Wiring image blocks up needs presigned reads in libs/go/storage
-	// first, at which point this procedure works as written.
-	//
-	// It stays in the contract because removing it is a breaking change that buys nothing: an
-	// rpc nobody calls costs a generated method, while deleting one costs every client a
-	// regeneration and `buf breaking` a waiver.
 	UploadNoteImage(context.Context, *connect.Request[v1.UploadNoteImageRequest]) (*connect.Response[v1.UploadNoteImageResponse], error)
-	// --- search -------------------------------------------------------------
-	// Search is the ⌘K palette: one query across notes, the tasks inside them, and notebook
-	// names, ranked server-side. The app never filters a full note list client-side — that
-	// stops working at the first notebook nobody has opened yet.
 	Search(context.Context, *connect.Request[v1.SearchRequest]) (*connect.Response[v1.SearchResponse], error)
-	// --- sharing ------------------------------------------------------------
 	ShareNote(context.Context, *connect.Request[v1.ShareNoteRequest]) (*connect.Response[v1.ShareNoteResponse], error)
 	ShareNotebook(context.Context, *connect.Request[v1.ShareNotebookRequest]) (*connect.Response[v1.ShareNotebookResponse], error)
 	Unshare(context.Context, *connect.Request[v1.UnshareRequest]) (*connect.Response[v1.UnshareResponse], error)
 	ListShares(context.Context, *connect.Request[v1.ListSharesRequest]) (*connect.Response[v1.ListSharesResponse], error)
-	// ListSharedWithMe is the sidebar's "Shared with me": everything the caller can see that
-	// they do not own.
 	ListSharedWithMe(context.Context, *connect.Request[v1.ListSharedWithMeRequest]) (*connect.Response[v1.ListSharedWithMeResponse], error)
-	// --- comments -----------------------------------------------------------
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	ListComments(context.Context, *connect.Request[v1.ListCommentsRequest]) (*connect.Response[v1.ListCommentsResponse], error)
 	ResolveComment(context.Context, *connect.Request[v1.ResolveCommentRequest]) (*connect.Response[v1.ResolveCommentResponse], error)
-	// --- activity -----------------------------------------------------------
 	ListActivity(context.Context, *connect.Request[v1.ListActivityRequest]) (*connect.Response[v1.ListActivityResponse], error)
 }
 

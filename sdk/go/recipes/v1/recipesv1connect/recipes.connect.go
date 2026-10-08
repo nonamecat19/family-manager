@@ -96,43 +96,25 @@ const (
 
 // RecipesServiceClient is a client for the recipes.v1.RecipesService service.
 type RecipesServiceClient interface {
-	// --- categories ---------------------------------------------------------
 	CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error)
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	CreateSubcategory(context.Context, *connect.Request[v1.CreateSubcategoryRequest]) (*connect.Response[v1.CreateSubcategoryResponse], error)
 	ListSubcategories(context.Context, *connect.Request[v1.ListSubcategoriesRequest]) (*connect.Response[v1.ListSubcategoriesResponse], error)
-	// --- recipes ------------------------------------------------------------
 	CreateRecipe(context.Context, *connect.Request[v1.CreateRecipeRequest]) (*connect.Response[v1.CreateRecipeResponse], error)
 	GetRecipe(context.Context, *connect.Request[v1.GetRecipeRequest]) (*connect.Response[v1.GetRecipeResponse], error)
 	ListRecipes(context.Context, *connect.Request[v1.ListRecipesRequest]) (*connect.Response[v1.ListRecipesResponse], error)
 	UpdateRecipe(context.Context, *connect.Request[v1.UpdateRecipeRequest]) (*connect.Response[v1.UpdateRecipeResponse], error)
 	DeleteRecipe(context.Context, *connect.Request[v1.DeleteRecipeRequest]) (*connect.Response[v1.DeleteRecipeResponse], error)
-	// UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
-	// on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
-	// server-side) that a second round trip to get an upload URL isn't worth the complexity.
 	UploadRecipeImage(context.Context, *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error)
-	// --- favorites & comments ----------------------------------------------
 	ToggleFavorite(context.Context, *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error)
 	ListFavorites(context.Context, *connect.Request[v1.ListFavoritesRequest]) (*connect.Response[v1.ListFavoritesResponse], error)
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	ListComments(context.Context, *connect.Request[v1.ListCommentsRequest]) (*connect.Response[v1.ListCommentsResponse], error)
-	// --- meal planning ------------------------------------------------------
-	// PlanMeal assigns a recipe to a date+slot for the family. PlanWeek assigns a batch.
-	// TotalIngredients aggregates every ingredient across a date range, summing duplicate
-	// ingredients by name+unit — the server is the source of truth for the shopping list, not
-	// the app's JavaScript.
 	PlanMeal(context.Context, *connect.Request[v1.PlanMealRequest]) (*connect.Response[v1.PlanMealResponse], error)
 	ListMealPlan(context.Context, *connect.Request[v1.ListMealPlanRequest]) (*connect.Response[v1.ListMealPlanResponse], error)
 	RemoveMealPlanEntry(context.Context, *connect.Request[v1.RemoveMealPlanEntryRequest]) (*connect.Response[v1.RemoveMealPlanEntryResponse], error)
 	TotalIngredients(context.Context, *connect.Request[v1.TotalIngredientsRequest]) (*connect.Response[v1.TotalIngredientsResponse], error)
-	// SumIngredients totals an ad-hoc basket of recipes with a multiplier each, without
-	// touching the calendar. "I am cooking these five things this week, what do I buy" is a
-	// different question from "what is on the plan for Tuesday", and answering it should not
-	// require inventing meal-plan rows the user then has to clean up. Stateless: nothing is
-	// persisted, so the app owns the basket.
 	SumIngredients(context.Context, *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error)
-	// --- rating -------------------------------------------------------------
-	// RateRecipe sets the family's verdict on a recipe, 1..5, or 0 to clear it.
 	RateRecipe(context.Context, *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error)
 }
 
@@ -396,43 +378,25 @@ func (c *recipesServiceClient) RateRecipe(ctx context.Context, req *connect.Requ
 
 // RecipesServiceHandler is an implementation of the recipes.v1.RecipesService service.
 type RecipesServiceHandler interface {
-	// --- categories ---------------------------------------------------------
 	CreateCategory(context.Context, *connect.Request[v1.CreateCategoryRequest]) (*connect.Response[v1.CreateCategoryResponse], error)
 	ListCategories(context.Context, *connect.Request[v1.ListCategoriesRequest]) (*connect.Response[v1.ListCategoriesResponse], error)
 	CreateSubcategory(context.Context, *connect.Request[v1.CreateSubcategoryRequest]) (*connect.Response[v1.CreateSubcategoryResponse], error)
 	ListSubcategories(context.Context, *connect.Request[v1.ListSubcategoriesRequest]) (*connect.Response[v1.ListSubcategoriesResponse], error)
-	// --- recipes ------------------------------------------------------------
 	CreateRecipe(context.Context, *connect.Request[v1.CreateRecipeRequest]) (*connect.Response[v1.CreateRecipeResponse], error)
 	GetRecipe(context.Context, *connect.Request[v1.GetRecipeRequest]) (*connect.Response[v1.GetRecipeResponse], error)
 	ListRecipes(context.Context, *connect.Request[v1.ListRecipesRequest]) (*connect.Response[v1.ListRecipesResponse], error)
 	UpdateRecipe(context.Context, *connect.Request[v1.UpdateRecipeRequest]) (*connect.Response[v1.UpdateRecipeResponse], error)
 	DeleteRecipe(context.Context, *connect.Request[v1.DeleteRecipeRequest]) (*connect.Response[v1.DeleteRecipeResponse], error)
-	// UploadRecipeImage replaces a recipe's photo. Sent as raw bytes over Connect/JSON (base64
-	// on the wire) rather than a presigned-URL flow — recipe photos are small enough (capped
-	// server-side) that a second round trip to get an upload URL isn't worth the complexity.
 	UploadRecipeImage(context.Context, *connect.Request[v1.UploadRecipeImageRequest]) (*connect.Response[v1.UploadRecipeImageResponse], error)
-	// --- favorites & comments ----------------------------------------------
 	ToggleFavorite(context.Context, *connect.Request[v1.ToggleFavoriteRequest]) (*connect.Response[v1.ToggleFavoriteResponse], error)
 	ListFavorites(context.Context, *connect.Request[v1.ListFavoritesRequest]) (*connect.Response[v1.ListFavoritesResponse], error)
 	AddComment(context.Context, *connect.Request[v1.AddCommentRequest]) (*connect.Response[v1.AddCommentResponse], error)
 	ListComments(context.Context, *connect.Request[v1.ListCommentsRequest]) (*connect.Response[v1.ListCommentsResponse], error)
-	// --- meal planning ------------------------------------------------------
-	// PlanMeal assigns a recipe to a date+slot for the family. PlanWeek assigns a batch.
-	// TotalIngredients aggregates every ingredient across a date range, summing duplicate
-	// ingredients by name+unit — the server is the source of truth for the shopping list, not
-	// the app's JavaScript.
 	PlanMeal(context.Context, *connect.Request[v1.PlanMealRequest]) (*connect.Response[v1.PlanMealResponse], error)
 	ListMealPlan(context.Context, *connect.Request[v1.ListMealPlanRequest]) (*connect.Response[v1.ListMealPlanResponse], error)
 	RemoveMealPlanEntry(context.Context, *connect.Request[v1.RemoveMealPlanEntryRequest]) (*connect.Response[v1.RemoveMealPlanEntryResponse], error)
 	TotalIngredients(context.Context, *connect.Request[v1.TotalIngredientsRequest]) (*connect.Response[v1.TotalIngredientsResponse], error)
-	// SumIngredients totals an ad-hoc basket of recipes with a multiplier each, without
-	// touching the calendar. "I am cooking these five things this week, what do I buy" is a
-	// different question from "what is on the plan for Tuesday", and answering it should not
-	// require inventing meal-plan rows the user then has to clean up. Stateless: nothing is
-	// persisted, so the app owns the basket.
 	SumIngredients(context.Context, *connect.Request[v1.SumIngredientsRequest]) (*connect.Response[v1.SumIngredientsResponse], error)
-	// --- rating -------------------------------------------------------------
-	// RateRecipe sets the family's verdict on a recipe, 1..5, or 0 to clear it.
 	RateRecipe(context.Context, *connect.Request[v1.RateRecipeRequest]) (*connect.Response[v1.RateRecipeResponse], error)
 }
 

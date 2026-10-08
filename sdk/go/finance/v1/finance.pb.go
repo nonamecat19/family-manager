@@ -22,9 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AccountKind drives the icon, and which accounts feed the shared headline: SAVINGS is
-// reported on its own savings line, DEBT counts toward the headline because money owed is
-// money you do not have.
 type AccountKind int32
 
 const (
@@ -86,8 +83,6 @@ func (AccountKind) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{0}
 }
 
-// AccountVisibility is the privacy boundary. PRIVATE means owned by exactly one member: the
-// balance is excluded from the family headline and never serialised to anyone else.
 type AccountVisibility int32
 
 const (
@@ -143,9 +138,7 @@ const (
 	TransactionType_TRANSACTION_TYPE_UNSPECIFIED TransactionType = 0
 	TransactionType_TRANSACTION_TYPE_EXPENSE     TransactionType = 1
 	TransactionType_TRANSACTION_TYPE_INCOME      TransactionType = 2
-	// TRANSFER moves money between two accounts of the same household and is excluded from
-	// both income and expense totals.
-	TransactionType_TRANSACTION_TYPE_TRANSFER TransactionType = 3
+	TransactionType_TRANSACTION_TYPE_TRANSFER    TransactionType = 3
 )
 
 // Enum value maps for TransactionType.
@@ -191,9 +184,6 @@ func (TransactionType) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{2}
 }
 
-// TransactionKind is the expense/income tab as a filter. UNSPECIFIED means "both", which is
-// the chart screen's ЗАГАЛЬНЕ tab — there is no separate TOTAL member, because "no filter" and
-// "total" are the same request.
 type TransactionKind int32
 
 const (
@@ -243,8 +233,6 @@ func (TransactionKind) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{3}
 }
 
-// ScopeKind is the total switcher: the whole family, one member, or one account. Every
-// aggregate RPC takes it, which is what keeps the screens consistent with each other.
 type ScopeKind int32
 
 const (
@@ -297,8 +285,6 @@ func (ScopeKind) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{4}
 }
 
-// PeriodGranularity is the день/тиждень/місяць/рік/період selector. The server resolves the
-// window edges so the app and a home-screen widget can never disagree about where a month ends.
 type PeriodGranularity int32
 
 const (
@@ -307,8 +293,7 @@ const (
 	PeriodGranularity_PERIOD_GRANULARITY_WEEK        PeriodGranularity = 2
 	PeriodGranularity_PERIOD_GRANULARITY_MONTH       PeriodGranularity = 3
 	PeriodGranularity_PERIOD_GRANULARITY_YEAR        PeriodGranularity = 4
-	// CUSTOM takes the explicit range on Period.range and ignores the anchor.
-	PeriodGranularity_PERIOD_GRANULARITY_CUSTOM PeriodGranularity = 5
+	PeriodGranularity_PERIOD_GRANULARITY_CUSTOM      PeriodGranularity = 5
 )
 
 // Enum value maps for PeriodGranularity.
@@ -410,8 +395,6 @@ func (BudgetPeriod) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{6}
 }
 
-// BudgetTargetKind says which of a budget's two possible attach points is set. Exactly one of
-// group_id / category_id is populated; this enum saves every caller from re-deriving that.
 type BudgetTargetKind int32
 
 const (
@@ -461,8 +444,6 @@ func (BudgetTargetKind) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{7}
 }
 
-// BudgetTargetFilter narrows ListBudgets. UNSPECIFIED is every budget, which is what the
-// household counter needs.
 type BudgetTargetFilter int32
 
 const (
@@ -512,7 +493,6 @@ func (BudgetTargetFilter) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{8}
 }
 
-// SeriesStacking chooses the segments inside each bar of the chart screen's series.
 type SeriesStacking int32
 
 const (
@@ -614,8 +594,6 @@ func (MemberRole) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{10}
 }
 
-// MemberStatus mirrors the family.v1 projection: PENDING is an invited member who has not
-// accepted yet, and who therefore has no transactions.
 type MemberStatus int32
 
 const (
@@ -665,8 +643,6 @@ func (MemberStatus) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{11}
 }
 
-// Weekday anchors the household's budget weeks. The design's week does not necessarily start
-// where the device locale thinks it does, so it is stored, not inferred.
 type Weekday int32
 
 const (
@@ -899,8 +875,6 @@ func (WidgetType) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{15}
 }
 
-// WidgetSize is the Android home-screen cell footprint, named rather than a pair of ints so
-// the gallery badge and the layout code cannot drift apart.
 type WidgetSize int32
 
 const (
@@ -959,7 +933,6 @@ func (WidgetSize) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{16}
 }
 
-// InsightKind lets the app pick an icon and an accent without parsing the sentence.
 type InsightKind int32
 
 const (
@@ -1015,9 +988,6 @@ func (InsightKind) EnumDescriptor() ([]byte, []int) {
 	return file_finance_v1_finance_proto_rawDescGZIP(), []int{17}
 }
 
-// Money is a minor-unit integer plus its ISO 4217 code. Floating point never touches money in
-// this repo: 10.10 is {amount_minor: 1010, currency_code: "EUR"}. packages/api converts the
-// int64 to a plain JS number exactly once, at its wire boundary.
 type Money struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AmountMinor   int64                  `protobuf:"varint,1,opt,name=amount_minor,json=amountMinor,proto3" json:"amount_minor,omitempty"`
@@ -1070,8 +1040,6 @@ func (x *Money) GetCurrencyCode() string {
 	return ""
 }
 
-// DateRange is inclusive on both ends, as calendar dates (YYYY-MM-DD) in the household's
-// timezone — a spending report is a calendar question, not an instant one.
 type DateRange struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	From          string                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
@@ -1124,8 +1092,6 @@ func (x *DateRange) GetTo() string {
 	return ""
 }
 
-// Period is the shared window request. anchor is any date inside the wanted window
-// (YYYY-MM-DD); range is read only when granularity is CUSTOM.
 type Period struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Granularity   PeriodGranularity      `protobuf:"varint,1,opt,name=granularity,proto3,enum=finance.v1.PeriodGranularity" json:"granularity,omitempty"`
@@ -1186,8 +1152,6 @@ func (x *Period) GetRange() *DateRange {
 	return nil
 }
 
-// Scope is the "Родина ▾" switcher. member_id is read only for MEMBER, account_id only for
-// ACCOUNT; an empty Scope means the whole family.
 type Scope struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kind          ScopeKind              `protobuf:"varint,1,opt,name=kind,proto3,enum=finance.v1.ScopeKind" json:"kind,omitempty"`
@@ -1248,24 +1212,18 @@ func (x *Scope) GetAccountId() string {
 	return ""
 }
 
-// HouseholdFinanceSettings is everything finance owns about a household. The name, the
-// members and the invitations belong to family.v1 and are deliberately absent here.
 type HouseholdFinanceSettings struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	FamilyId         string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	BaseCurrencyCode string                 `protobuf:"bytes,2,opt,name=base_currency_code,json=baseCurrencyCode,proto3" json:"base_currency_code,omitempty"`
-	// timezone is an IANA name ("Europe/Kyiv"); it decides where a day, and therefore a day
-	// section and a budget window, ends.
-	Timezone                      string  `protobuf:"bytes,3,opt,name=timezone,proto3" json:"timezone,omitempty"`
-	WeekStartsOn                  Weekday `protobuf:"varint,4,opt,name=week_starts_on,json=weekStartsOn,proto3,enum=finance.v1.Weekday" json:"week_starts_on,omitempty"`
-	OverspendNotificationsEnabled bool    `protobuf:"varint,5,opt,name=overspend_notifications_enabled,json=overspendNotificationsEnabled,proto3" json:"overspend_notifications_enabled,omitempty"`
-	// pin_lock_enabled is synced rather than device-local because the household agrees that
-	// private balances are covered by a lock, and a second device must honour that.
-	PinLockEnabled bool                   `protobuf:"varint,6,opt,name=pin_lock_enabled,json=pinLockEnabled,proto3" json:"pin_lock_enabled,omitempty"`
-	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                         protoimpl.MessageState `protogen:"open.v1"`
+	FamilyId                      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	BaseCurrencyCode              string                 `protobuf:"bytes,2,opt,name=base_currency_code,json=baseCurrencyCode,proto3" json:"base_currency_code,omitempty"`
+	Timezone                      string                 `protobuf:"bytes,3,opt,name=timezone,proto3" json:"timezone,omitempty"`
+	WeekStartsOn                  Weekday                `protobuf:"varint,4,opt,name=week_starts_on,json=weekStartsOn,proto3,enum=finance.v1.Weekday" json:"week_starts_on,omitempty"`
+	OverspendNotificationsEnabled bool                   `protobuf:"varint,5,opt,name=overspend_notifications_enabled,json=overspendNotificationsEnabled,proto3" json:"overspend_notifications_enabled,omitempty"`
+	PinLockEnabled                bool                   `protobuf:"varint,6,opt,name=pin_lock_enabled,json=pinLockEnabled,proto3" json:"pin_lock_enabled,omitempty"`
+	CreatedAt                     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt                     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
 }
 
 func (x *HouseholdFinanceSettings) Reset() {
@@ -1354,18 +1312,12 @@ func (x *HouseholdFinanceSettings) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Member is the read-model projected from family.v1's member events, kept so the pickers,
-// avatars and per-member aggregates render without a synchronous cross-service call.
 type Member struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	UserId      string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	FamilyId    string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	DisplayName string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	// initial is the single grapheme drawn in the avatar chip; the server derives it so every
-	// surface (app, widget) shows the same letter.
-	Initial string `protobuf:"bytes,4,opt,name=initial,proto3" json:"initial,omitempty"`
-	// avatar_color_step indexes the shared accent ramp (0..7) rather than carrying a hex — the
-	// design rejects per-entity random hues.
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FamilyId        string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	DisplayName     string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Initial         string                 `protobuf:"bytes,4,opt,name=initial,proto3" json:"initial,omitempty"`
 	AvatarColorStep int32                  `protobuf:"varint,5,opt,name=avatar_color_step,json=avatarColorStep,proto3" json:"avatar_color_step,omitempty"`
 	Role            MemberRole             `protobuf:"varint,6,opt,name=role,proto3,enum=finance.v1.MemberRole" json:"role,omitempty"`
 	Status          MemberStatus           `protobuf:"varint,7,opt,name=status,proto3,enum=finance.v1.MemberStatus" json:"status,omitempty"`
@@ -1469,24 +1421,18 @@ func (x *Member) GetJoinedAt() *timestamppb.Timestamp {
 }
 
 type Account struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId   string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	Name       string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Kind       AccountKind            `protobuf:"varint,4,opt,name=kind,proto3,enum=finance.v1.AccountKind" json:"kind,omitempty"`
-	Visibility AccountVisibility      `protobuf:"varint,5,opt,name=visibility,proto3,enum=finance.v1.AccountVisibility" json:"visibility,omitempty"`
-	// owner_member_id is required for PRIVATE and empty for SHARED. A private account may only
-	// ever be created for the caller.
-	OwnerMemberId  string `protobuf:"bytes,6,opt,name=owner_member_id,json=ownerMemberId,proto3" json:"owner_member_id,omitempty"`
-	CurrencyCode   string `protobuf:"bytes,7,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
-	OpeningBalance *Money `protobuf:"bytes,8,opt,name=opening_balance,json=openingBalance,proto3" json:"opening_balance,omitempty"`
-	// balance is derived from opening_balance plus every transaction leg; a client never
-	// writes it, and a stored total would drift.
-	Balance   *Money `protobuf:"bytes,9,opt,name=balance,proto3" json:"balance,omitempty"`
-	Icon      string `protobuf:"bytes,10,opt,name=icon,proto3" json:"icon,omitempty"`
-	ColorStep int32  `protobuf:"varint,11,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
-	// excluded_from_family_total is true for private accounts and for anything the household
-	// has deliberately taken out of the headline (a savings pot being held for someone else).
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Id                      string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId                string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Name                    string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Kind                    AccountKind            `protobuf:"varint,4,opt,name=kind,proto3,enum=finance.v1.AccountKind" json:"kind,omitempty"`
+	Visibility              AccountVisibility      `protobuf:"varint,5,opt,name=visibility,proto3,enum=finance.v1.AccountVisibility" json:"visibility,omitempty"`
+	OwnerMemberId           string                 `protobuf:"bytes,6,opt,name=owner_member_id,json=ownerMemberId,proto3" json:"owner_member_id,omitempty"`
+	CurrencyCode            string                 `protobuf:"bytes,7,opt,name=currency_code,json=currencyCode,proto3" json:"currency_code,omitempty"`
+	OpeningBalance          *Money                 `protobuf:"bytes,8,opt,name=opening_balance,json=openingBalance,proto3" json:"opening_balance,omitempty"`
+	Balance                 *Money                 `protobuf:"bytes,9,opt,name=balance,proto3" json:"balance,omitempty"`
+	Icon                    string                 `protobuf:"bytes,10,opt,name=icon,proto3" json:"icon,omitempty"`
+	ColorStep               int32                  `protobuf:"varint,11,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
 	ExcludedFromFamilyTotal bool                   `protobuf:"varint,12,opt,name=excluded_from_family_total,json=excludedFromFamilyTotal,proto3" json:"excluded_from_family_total,omitempty"`
 	Archived                bool                   `protobuf:"varint,13,opt,name=archived,proto3" json:"archived,omitempty"`
 	SortOrder               int32                  `protobuf:"varint,14,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
@@ -1638,8 +1584,6 @@ func (x *Account) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// HiddenPrivateSummary is all another member's private accounts ever become on the wire: a
-// count. The row is inert in the UI and carries no balance to leak.
 type HiddenPrivateSummary struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	MemberId          string                 `protobuf:"bytes,1,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
@@ -1700,16 +1644,13 @@ func (x *HiddenPrivateSummary) GetAccountCount() int32 {
 	return 0
 }
 
-// CategoryGroup is the top level of the two-level taxonomy that replaced the flat icon grid.
 type CategoryGroup struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	Name     string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Kind     TransactionKind        `protobuf:"varint,4,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
-	Icon     string                 `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
-	// color_step indexes the accent ramp (0..7). Not a hex string: the design explicitly
-	// rejects per-category random hues, and a ramp index survives a theme change.
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Kind          TransactionKind        `protobuf:"varint,4,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
+	Icon          string                 `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
 	ColorStep     int32                  `protobuf:"varint,6,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
 	SortOrder     int32                  `protobuf:"varint,7,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
 	Archived      bool                   `protobuf:"varint,8,opt,name=archived,proto3" json:"archived,omitempty"`
@@ -1819,9 +1760,6 @@ func (x *CategoryGroup) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Category always belongs to exactly one group — there are no orphan roots, which is what
-// replaced the old self-referencing parent tree. Colour is inherited from the group; only the
-// icon varies per category.
 type Category struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1938,20 +1876,16 @@ func (x *Category) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Budget attaches to either a group or a category, never both. The window rolls from
-// start_on, so a household that budgets from the 5th is not forced onto calendar months.
 type Budget struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId   string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	TargetKind BudgetTargetKind       `protobuf:"varint,3,opt,name=target_kind,json=targetKind,proto3,enum=finance.v1.BudgetTargetKind" json:"target_kind,omitempty"`
-	GroupId    string                 `protobuf:"bytes,4,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	CategoryId string                 `protobuf:"bytes,5,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	Limit      *Money                 `protobuf:"bytes,6,opt,name=limit,proto3" json:"limit,omitempty"`
-	Period     BudgetPeriod           `protobuf:"varint,7,opt,name=period,proto3,enum=finance.v1.BudgetPeriod" json:"period,omitempty"`
-	StartOn    string                 `protobuf:"bytes,8,opt,name=start_on,json=startOn,proto3" json:"start_on,omitempty"`
-	// member_id narrows a budget to one member; empty means the whole household, which is the
-	// only form the current screens draw.
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId       string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	TargetKind     BudgetTargetKind       `protobuf:"varint,3,opt,name=target_kind,json=targetKind,proto3,enum=finance.v1.BudgetTargetKind" json:"target_kind,omitempty"`
+	GroupId        string                 `protobuf:"bytes,4,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	CategoryId     string                 `protobuf:"bytes,5,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	Limit          *Money                 `protobuf:"bytes,6,opt,name=limit,proto3" json:"limit,omitempty"`
+	Period         BudgetPeriod           `protobuf:"varint,7,opt,name=period,proto3,enum=finance.v1.BudgetPeriod" json:"period,omitempty"`
+	StartOn        string                 `protobuf:"bytes,8,opt,name=start_on,json=startOn,proto3" json:"start_on,omitempty"`
 	MemberId       string                 `protobuf:"bytes,9,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
 	NotifyOnExceed bool                   `protobuf:"varint,10,opt,name=notify_on_exceed,json=notifyOnExceed,proto3" json:"notify_on_exceed,omitempty"`
 	Archived       bool                   `protobuf:"varint,11,opt,name=archived,proto3" json:"archived,omitempty"`
@@ -2090,19 +2024,15 @@ func (x *Budget) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// BudgetStatus is derived, never stored — a persisted total drifts the moment a transaction
-// is edited. share is spent/limit as a ratio, and may exceed 1.0: the design draws 256% by
-// clamping the bar and switching the colour, which it cannot do if the server clamps first.
 type BudgetStatus struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	Budget *Budget                `protobuf:"bytes,1,opt,name=budget,proto3" json:"budget,omitempty"`
-	Window *DateRange             `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
-	Spent  *Money                 `protobuf:"bytes,3,opt,name=spent,proto3" json:"spent,omitempty"`
-	// remaining goes negative once the limit is passed.
-	Remaining     *Money  `protobuf:"bytes,4,opt,name=remaining,proto3" json:"remaining,omitempty"`
-	Share         float64 `protobuf:"fixed64,5,opt,name=share,proto3" json:"share,omitempty"`
-	Exceeded      bool    `protobuf:"varint,6,opt,name=exceeded,proto3" json:"exceeded,omitempty"`
-	DaysRemaining int32   `protobuf:"varint,7,opt,name=days_remaining,json=daysRemaining,proto3" json:"days_remaining,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Budget        *Budget                `protobuf:"bytes,1,opt,name=budget,proto3" json:"budget,omitempty"`
+	Window        *DateRange             `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
+	Spent         *Money                 `protobuf:"bytes,3,opt,name=spent,proto3" json:"spent,omitempty"`
+	Remaining     *Money                 `protobuf:"bytes,4,opt,name=remaining,proto3" json:"remaining,omitempty"`
+	Share         float64                `protobuf:"fixed64,5,opt,name=share,proto3" json:"share,omitempty"`
+	Exceeded      bool                   `protobuf:"varint,6,opt,name=exceeded,proto3" json:"exceeded,omitempty"`
+	DaysRemaining int32                  `protobuf:"varint,7,opt,name=days_remaining,json=daysRemaining,proto3" json:"days_remaining,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2187,37 +2117,27 @@ func (x *BudgetStatus) GetDaysRemaining() int32 {
 }
 
 type Transaction struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	Id        string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId  string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	Type      TransactionType        `protobuf:"varint,3,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
-	AccountId string                 `protobuf:"bytes,4,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	// counter_account_id is set only on a TRANSFER: the account the money landed in.
-	CounterAccountId string `protobuf:"bytes,5,opt,name=counter_account_id,json=counterAccountId,proto3" json:"counter_account_id,omitempty"`
-	CategoryId       string `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	GroupId          string `protobuf:"bytes,7,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	// amount is always positive; the sign is the type's job, so a report never has to guess
-	// whether a negative expense is a refund or a data-entry slip.
-	Amount *Money `protobuf:"bytes,8,opt,name=amount,proto3" json:"amount,omitempty"`
-	// received_amount is set only on a cross-currency transfer: what arrived, in the
-	// destination currency.
-	ReceivedAmount *Money `protobuf:"bytes,9,opt,name=received_amount,json=receivedAmount,proto3" json:"received_amount,omitempty"`
-	Note           string `protobuf:"bytes,10,opt,name=note,proto3" json:"note,omitempty"`
-	// merchant is a free label ("jetbrains"), not a foreign key — a merchant registry is a
-	// different product.
-	Merchant   string `protobuf:"bytes,11,opt,name=merchant,proto3" json:"merchant,omitempty"`
-	OccurredOn string `protobuf:"bytes,12,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
-	// member_id is who spent. It is deliberately distinct from created_by_user_id (who typed
-	// it) and from the account's owner: collapsing the three loses the per-member split.
-	MemberId        string `protobuf:"bytes,13,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
-	CreatedByUserId string `protobuf:"bytes,14,opt,name=created_by_user_id,json=createdByUserId,proto3" json:"created_by_user_id,omitempty"`
-	// template_id is provenance, and drives the "шаблон" badge on the feed row.
-	TemplateId    string                 `protobuf:"bytes,15,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
-	RecurringId   string                 `protobuf:"bytes,16,opt,name=recurring_id,json=recurringId,proto3" json:"recurring_id,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId         string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Type             TransactionType        `protobuf:"varint,3,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
+	AccountId        string                 `protobuf:"bytes,4,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	CounterAccountId string                 `protobuf:"bytes,5,opt,name=counter_account_id,json=counterAccountId,proto3" json:"counter_account_id,omitempty"`
+	CategoryId       string                 `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	GroupId          string                 `protobuf:"bytes,7,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Amount           *Money                 `protobuf:"bytes,8,opt,name=amount,proto3" json:"amount,omitempty"`
+	ReceivedAmount   *Money                 `protobuf:"bytes,9,opt,name=received_amount,json=receivedAmount,proto3" json:"received_amount,omitempty"`
+	Note             string                 `protobuf:"bytes,10,opt,name=note,proto3" json:"note,omitempty"`
+	Merchant         string                 `protobuf:"bytes,11,opt,name=merchant,proto3" json:"merchant,omitempty"`
+	OccurredOn       string                 `protobuf:"bytes,12,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
+	MemberId         string                 `protobuf:"bytes,13,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	CreatedByUserId  string                 `protobuf:"bytes,14,opt,name=created_by_user_id,json=createdByUserId,proto3" json:"created_by_user_id,omitempty"`
+	TemplateId       string                 `protobuf:"bytes,15,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	RecurringId      string                 `protobuf:"bytes,16,opt,name=recurring_id,json=recurringId,proto3" json:"recurring_id,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Transaction) Reset() {
@@ -2376,20 +2296,17 @@ func (x *Transaction) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// QuickTemplate is a per-member quick-log button: tap to write it immediately, long-press to
-// open the add sheet prefilled. Templates are private to their owner.
 type QuickTemplate struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId    string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	OwnerUserId string                 `protobuf:"bytes,3,opt,name=owner_user_id,json=ownerUserId,proto3" json:"owner_user_id,omitempty"`
-	Label       string                 `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
-	Icon        string                 `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
-	Amount      *Money                 `protobuf:"bytes,6,opt,name=amount,proto3" json:"amount,omitempty"`
-	Type        TransactionType        `protobuf:"varint,7,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
-	CategoryId  string                 `protobuf:"bytes,8,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	AccountId   string                 `protobuf:"bytes,9,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	// member_id defaults to the owner, so a template can still log on someone else's behalf.
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	OwnerUserId   string                 `protobuf:"bytes,3,opt,name=owner_user_id,json=ownerUserId,proto3" json:"owner_user_id,omitempty"`
+	Label         string                 `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
+	Icon          string                 `protobuf:"bytes,5,opt,name=icon,proto3" json:"icon,omitempty"`
+	Amount        *Money                 `protobuf:"bytes,6,opt,name=amount,proto3" json:"amount,omitempty"`
+	Type          TransactionType        `protobuf:"varint,7,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,8,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	AccountId     string                 `protobuf:"bytes,9,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	MemberId      string                 `protobuf:"bytes,10,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
 	SortOrder     int32                  `protobuf:"varint,11,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
 	UsageCount    int32                  `protobuf:"varint,12,opt,name=usage_count,json=usageCount,proto3" json:"usage_count,omitempty"`
@@ -2535,17 +2452,12 @@ func (x *QuickTemplate) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Cadence is a deliberately small recurrence model — every N days/weeks/months/years, with an
-// optional day anchor. Full rrule expressiveness is not needed for a rent payment and would
-// have to be reimplemented in the widget.
 type Cadence struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Interval int32                  `protobuf:"varint,1,opt,name=interval,proto3" json:"interval,omitempty"`
-	Unit     RecurrenceUnit         `protobuf:"varint,2,opt,name=unit,proto3,enum=finance.v1.RecurrenceUnit" json:"unit,omitempty"`
-	// day_of_month is 1..31 for MONTH/YEAR cadences; 0 means "same day as next_due_on". A 31
-	// in a 30-day month clamps to the last day.
-	DayOfMonth    int32   `protobuf:"varint,3,opt,name=day_of_month,json=dayOfMonth,proto3" json:"day_of_month,omitempty"`
-	DayOfWeek     Weekday `protobuf:"varint,4,opt,name=day_of_week,json=dayOfWeek,proto3,enum=finance.v1.Weekday" json:"day_of_week,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Interval      int32                  `protobuf:"varint,1,opt,name=interval,proto3" json:"interval,omitempty"`
+	Unit          RecurrenceUnit         `protobuf:"varint,2,opt,name=unit,proto3,enum=finance.v1.RecurrenceUnit" json:"unit,omitempty"`
+	DayOfMonth    int32                  `protobuf:"varint,3,opt,name=day_of_month,json=dayOfMonth,proto3" json:"day_of_month,omitempty"`
+	DayOfWeek     Weekday                `protobuf:"varint,4,opt,name=day_of_week,json=dayOfWeek,proto3,enum=finance.v1.Weekday" json:"day_of_week,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2609,20 +2521,18 @@ func (x *Cadence) GetDayOfWeek() Weekday {
 }
 
 type RecurringPayment struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Id         string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId   string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	Name       string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Amount     *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	Type       TransactionType        `protobuf:"varint,5,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
-	CategoryId string                 `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	AccountId  string                 `protobuf:"bytes,7,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	MemberId   string                 `protobuf:"bytes,8,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
-	Cadence    *Cadence               `protobuf:"bytes,9,opt,name=cadence,proto3" json:"cadence,omitempty"`
-	NextDueOn  string                 `protobuf:"bytes,10,opt,name=next_due_on,json=nextDueOn,proto3" json:"next_due_on,omitempty"`
-	EndOn      string                 `protobuf:"bytes,11,opt,name=end_on,json=endOn,proto3" json:"end_on,omitempty"`
-	// auto_post writes the transaction on the due date instead of asking. Off by default: a
-	// payment that may not have happened must not invent a row.
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId      string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Amount        *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	Type          TransactionType        `protobuf:"varint,5,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,6,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	AccountId     string                 `protobuf:"bytes,7,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,8,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Cadence       *Cadence               `protobuf:"bytes,9,opt,name=cadence,proto3" json:"cadence,omitempty"`
+	NextDueOn     string                 `protobuf:"bytes,10,opt,name=next_due_on,json=nextDueOn,proto3" json:"next_due_on,omitempty"`
+	EndOn         string                 `protobuf:"bytes,11,opt,name=end_on,json=endOn,proto3" json:"end_on,omitempty"`
 	AutoPost      bool                   `protobuf:"varint,12,opt,name=auto_post,json=autoPost,proto3" json:"auto_post,omitempty"`
 	Active        bool                   `protobuf:"varint,13,opt,name=active,proto3" json:"active,omitempty"`
 	LastPostedOn  string                 `protobuf:"bytes,14,opt,name=last_posted_on,json=lastPostedOn,proto3" json:"last_posted_on,omitempty"`
@@ -2842,8 +2752,6 @@ func (x *RecurringPaymentStatus) GetLastPosted() *Transaction {
 	return nil
 }
 
-// Reminder is the subscription, not the push. services/notifications consumes the events
-// below and delivers; finance only records what someone asked to be told about.
 type Reminder struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -2960,18 +2868,14 @@ func (x *Reminder) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// WidgetInstance is one placed home-screen widget. Each binds to a member or to the whole
-// family, so two people can place the same type and see their own numbers.
 type WidgetInstance struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FamilyId string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
-	UserId   string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Type     WidgetType             `protobuf:"varint,4,opt,name=type,proto3,enum=finance.v1.WidgetType" json:"type,omitempty"`
-	Size     WidgetSize             `protobuf:"varint,5,opt,name=size,proto3,enum=finance.v1.WidgetSize" json:"size,omitempty"`
-	Scope    *Scope                 `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
-	// target_ref is the type's subject: a category id, a group id, or empty. Account widgets
-	// use target_account_ids instead.
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	FamilyId         string                 `protobuf:"bytes,2,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
+	UserId           string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Type             WidgetType             `protobuf:"varint,4,opt,name=type,proto3,enum=finance.v1.WidgetType" json:"type,omitempty"`
+	Size             WidgetSize             `protobuf:"varint,5,opt,name=size,proto3,enum=finance.v1.WidgetSize" json:"size,omitempty"`
+	Scope            *Scope                 `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
 	TargetRef        string                 `protobuf:"bytes,7,opt,name=target_ref,json=targetRef,proto3" json:"target_ref,omitempty"`
 	TargetAccountIds []string               `protobuf:"bytes,8,rep,name=target_account_ids,json=targetAccountIds,proto3" json:"target_account_ids,omitempty"`
 	SortOrder        int32                  `protobuf:"varint,9,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
@@ -3089,14 +2993,12 @@ func (x *WidgetInstance) GetUpdatedAt() *timestamppb.Timestamp {
 }
 
 type MemberSpending struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Member           *Member                `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
-	Spent            *Money                 `protobuf:"bytes,2,opt,name=spent,proto3" json:"spent,omitempty"`
-	Share            float64                `protobuf:"fixed64,3,opt,name=share,proto3" json:"share,omitempty"`
-	TransactionCount int32                  `protobuf:"varint,4,opt,name=transaction_count,json=transactionCount,proto3" json:"transaction_count,omitempty"`
-	// private_account_count is the only fact about another member's private accounts that
-	// crosses the wire.
-	PrivateAccountCount int32 `protobuf:"varint,5,opt,name=private_account_count,json=privateAccountCount,proto3" json:"private_account_count,omitempty"`
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Member              *Member                `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	Spent               *Money                 `protobuf:"bytes,2,opt,name=spent,proto3" json:"spent,omitempty"`
+	Share               float64                `protobuf:"fixed64,3,opt,name=share,proto3" json:"share,omitempty"`
+	TransactionCount    int32                  `protobuf:"varint,4,opt,name=transaction_count,json=transactionCount,proto3" json:"transaction_count,omitempty"`
+	PrivateAccountCount int32                  `protobuf:"varint,5,opt,name=private_account_count,json=privateAccountCount,proto3" json:"private_account_count,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -3446,21 +3348,17 @@ func (x *CategorySlice) GetShare() float64 {
 	return 0
 }
 
-// GroupRow is a Home group row: either a budget bar or the "N категорій · share%" caption,
-// which is why budget is optional rather than a zeroed BudgetStatus.
 type GroupRow struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Icon          string                 `protobuf:"bytes,3,opt,name=icon,proto3" json:"icon,omitempty"`
-	ColorStep     int32                  `protobuf:"varint,4,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
-	Amount        *Money                 `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
-	Share         float64                `protobuf:"fixed64,6,opt,name=share,proto3" json:"share,omitempty"`
-	CategoryCount int32                  `protobuf:"varint,7,opt,name=category_count,json=categoryCount,proto3" json:"category_count,omitempty"`
-	Budget        *BudgetStatus          `protobuf:"bytes,8,opt,name=budget,proto3" json:"budget,omitempty"`
-	// contributor_member_ids is who spent in this group this period, which is what the
-	// "· Сергій" caption reports — not an ownership claim on the group.
-	ContributorMemberIds []string `protobuf:"bytes,9,rep,name=contributor_member_ids,json=contributorMemberIds,proto3" json:"contributor_member_ids,omitempty"`
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	GroupId              string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Name                 string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Icon                 string                 `protobuf:"bytes,3,opt,name=icon,proto3" json:"icon,omitempty"`
+	ColorStep            int32                  `protobuf:"varint,4,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
+	Amount               *Money                 `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
+	Share                float64                `protobuf:"fixed64,6,opt,name=share,proto3" json:"share,omitempty"`
+	CategoryCount        int32                  `protobuf:"varint,7,opt,name=category_count,json=categoryCount,proto3" json:"category_count,omitempty"`
+	Budget               *BudgetStatus          `protobuf:"bytes,8,opt,name=budget,proto3" json:"budget,omitempty"`
+	ContributorMemberIds []string               `protobuf:"bytes,9,rep,name=contributor_member_ids,json=contributorMemberIds,proto3" json:"contributor_member_ids,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -3642,9 +3540,6 @@ func (x *GroupMemberSplit) GetMembers() []*MemberAmount {
 	return nil
 }
 
-// Insight is a sentence the server composed, so app, widget and notification say the same
-// thing. current/previous/ratio are carried alongside so the app can render the numbers in
-// its own typography instead of parsing the body.
 type Insight struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -3761,15 +3656,12 @@ func (x *Insight) GetRatio() float64 {
 	return 0
 }
 
-// DaySection groups the transaction feed. The subtotal is computed server-side with the same
-// window as the page, so scrolling can never produce a total that disagrees with the header.
 type DaySection struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Date  string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
-	// weekday_label is localized by the server for the "29 серпня, сб" header.
-	WeekdayLabel  string         `protobuf:"bytes,2,opt,name=weekday_label,json=weekdayLabel,proto3" json:"weekday_label,omitempty"`
-	DayTotal      *Money         `protobuf:"bytes,3,opt,name=day_total,json=dayTotal,proto3" json:"day_total,omitempty"`
-	Transactions  []*Transaction `protobuf:"bytes,4,rep,name=transactions,proto3" json:"transactions,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	WeekdayLabel  string                 `protobuf:"bytes,2,opt,name=weekday_label,json=weekdayLabel,proto3" json:"weekday_label,omitempty"`
+	DayTotal      *Money                 `protobuf:"bytes,3,opt,name=day_total,json=dayTotal,proto3" json:"day_total,omitempty"`
+	Transactions  []*Transaction         `protobuf:"bytes,4,rep,name=transactions,proto3" json:"transactions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3832,7 +3724,6 @@ func (x *DaySection) GetTransactions() []*Transaction {
 	return nil
 }
 
-// GroupNode is one row of the categories screen: a group, its categories, and its budget.
 type GroupNode struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Group         *CategoryGroup         `protobuf:"bytes,1,opt,name=group,proto3" json:"group,omitempty"`
@@ -4585,8 +4476,6 @@ func (x *ListAccountsRequest) GetIncludeArchived() bool {
 	return false
 }
 
-// The response is split by what the caller may see, rather than one list plus a client-side
-// filter: the server decides, so the app can never leak a balance it was accidentally sent.
 type ListAccountsResponse struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Shared        []*Account              `protobuf:"bytes,1,rep,name=shared,proto3" json:"shared,omitempty"`
@@ -4904,11 +4793,9 @@ type UpdateAccountRequest struct {
 	Icon                    *string                `protobuf:"bytes,5,opt,name=icon,proto3,oneof" json:"icon,omitempty"`
 	ColorStep               *int32                 `protobuf:"varint,6,opt,name=color_step,json=colorStep,proto3,oneof" json:"color_step,omitempty"`
 	ExcludedFromFamilyTotal *bool                  `protobuf:"varint,7,opt,name=excluded_from_family_total,json=excludedFromFamilyTotal,proto3,oneof" json:"excluded_from_family_total,omitempty"`
-	// opening_balance is editable because the first balance a user types is usually wrong;
-	// the derived balance moves with it.
-	OpeningBalance *Money `protobuf:"bytes,8,opt,name=opening_balance,json=openingBalance,proto3" json:"opening_balance,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	OpeningBalance          *Money                 `protobuf:"bytes,8,opt,name=opening_balance,json=openingBalance,proto3" json:"opening_balance,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *UpdateAccountRequest) Reset() {
@@ -5298,16 +5185,14 @@ func (*ReorderAccountsResponse) Descriptor() ([]byte, []int) {
 }
 
 type TransferBetweenAccountsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FromAccountId string                 `protobuf:"bytes,1,opt,name=from_account_id,json=fromAccountId,proto3" json:"from_account_id,omitempty"`
-	ToAccountId   string                 `protobuf:"bytes,2,opt,name=to_account_id,json=toAccountId,proto3" json:"to_account_id,omitempty"`
-	Amount        *Money                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	// received_amount is required only when the two accounts hold different currencies; the
-	// rate is the user's, because the server has no rate source it can defend.
-	ReceivedAmount *Money `protobuf:"bytes,4,opt,name=received_amount,json=receivedAmount,proto3" json:"received_amount,omitempty"`
-	OccurredOn     string `protobuf:"bytes,5,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
-	Note           string `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`
-	MemberId       string `protobuf:"bytes,7,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	FromAccountId  string                 `protobuf:"bytes,1,opt,name=from_account_id,json=fromAccountId,proto3" json:"from_account_id,omitempty"`
+	ToAccountId    string                 `protobuf:"bytes,2,opt,name=to_account_id,json=toAccountId,proto3" json:"to_account_id,omitempty"`
+	Amount         *Money                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	ReceivedAmount *Money                 `protobuf:"bytes,4,opt,name=received_amount,json=receivedAmount,proto3" json:"received_amount,omitempty"`
+	OccurredOn     string                 `protobuf:"bytes,5,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
+	Note           string                 `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`
+	MemberId       string                 `protobuf:"bytes,7,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -5439,10 +5324,9 @@ type ListCategoryTreeRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Kind            TransactionKind        `protobuf:"varint,1,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
 	IncludeArchived bool                   `protobuf:"varint,2,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
-	// as_of picks the budget window whose status is attached to each group; empty means today.
-	AsOf          string `protobuf:"bytes,3,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	AsOf            string                 `protobuf:"bytes,3,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ListCategoryTreeRequest) Reset() {
@@ -5773,11 +5657,9 @@ func (x *UpdateCategoryGroupResponse) GetGroup() *CategoryGroup {
 }
 
 type DeleteCategoryGroupRequest struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	GroupId string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	// reassign_to_group_id is required when the group still holds categories: a group holding
-	// categories that hold transactions cannot silently vanish.
-	ReassignToGroupId string `protobuf:"bytes,2,opt,name=reassign_to_group_id,json=reassignToGroupId,proto3" json:"reassign_to_group_id,omitempty"`
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	GroupId           string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	ReassignToGroupId string                 `protobuf:"bytes,2,opt,name=reassign_to_group_id,json=reassignToGroupId,proto3" json:"reassign_to_group_id,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -6271,10 +6153,9 @@ func (x *MoveCategoryResponse) GetCategory() *Category {
 }
 
 type DeleteCategoryRequest struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	CategoryId string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	// reassign_to_category_id is required when the category still has transactions.
-	ReassignToCategoryId string `protobuf:"bytes,2,opt,name=reassign_to_category_id,json=reassignToCategoryId,proto3" json:"reassign_to_category_id,omitempty"`
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	CategoryId           string                 `protobuf:"bytes,1,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	ReassignToCategoryId string                 `protobuf:"bytes,2,opt,name=reassign_to_category_id,json=reassignToCategoryId,proto3" json:"reassign_to_category_id,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -6456,17 +6337,16 @@ func (*ReorderCategoriesResponse) Descriptor() ([]byte, []int) {
 }
 
 type CreateTransactionRequest struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	Type       TransactionType        `protobuf:"varint,1,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
-	AccountId  string                 `protobuf:"bytes,2,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	CategoryId string                 `protobuf:"bytes,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
-	Amount     *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	OccurredOn string                 `protobuf:"bytes,5,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
-	Note       string                 `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`
-	Merchant   string                 `protobuf:"bytes,7,opt,name=merchant,proto3" json:"merchant,omitempty"`
-	// member_id defaults to the caller when empty — the "Хто" picker starts on the caller.
-	MemberId      string `protobuf:"bytes,8,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
-	TemplateId    string `protobuf:"bytes,9,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          TransactionType        `protobuf:"varint,1,opt,name=type,proto3,enum=finance.v1.TransactionType" json:"type,omitempty"`
+	AccountId     string                 `protobuf:"bytes,2,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	CategoryId    string                 `protobuf:"bytes,3,opt,name=category_id,json=categoryId,proto3" json:"category_id,omitempty"`
+	Amount        *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	OccurredOn    string                 `protobuf:"bytes,5,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
+	Note          string                 `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`
+	Merchant      string                 `protobuf:"bytes,7,opt,name=merchant,proto3" json:"merchant,omitempty"`
+	MemberId      string                 `protobuf:"bytes,8,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	TemplateId    string                 `protobuf:"bytes,9,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -6565,11 +6445,9 @@ func (x *CreateTransactionRequest) GetTemplateId() string {
 }
 
 type CreateTransactionResponse struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Transaction *Transaction           `protobuf:"bytes,1,opt,name=transaction,proto3" json:"transaction,omitempty"`
-	// affected_budgets is every budget whose window contains this transaction, so the app can
-	// repaint the bars and raise an overspend toast without a refetch.
-	AffectedBudgets []*BudgetStatus `protobuf:"bytes,2,rep,name=affected_budgets,json=affectedBudgets,proto3" json:"affected_budgets,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Transaction     *Transaction           `protobuf:"bytes,1,opt,name=transaction,proto3" json:"transaction,omitempty"`
+	AffectedBudgets []*BudgetStatus        `protobuf:"bytes,2,rep,name=affected_budgets,json=affectedBudgets,proto3" json:"affected_budgets,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -6911,10 +6789,8 @@ func (x *DeleteTransactionRequest) GetTransactionId() string {
 }
 
 type DeleteTransactionResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// affected_budgets is returned on delete too: removing a transaction can pull a budget back
-	// under its limit, and the app has to repaint that.
-	AffectedBudgets []*BudgetStatus `protobuf:"bytes,1,rep,name=affected_budgets,json=affectedBudgets,proto3" json:"affected_budgets,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	AffectedBudgets []*BudgetStatus        `protobuf:"bytes,1,rep,name=affected_budgets,json=affectedBudgets,proto3" json:"affected_budgets,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -6957,18 +6833,17 @@ func (x *DeleteTransactionResponse) GetAffectedBudgets() []*BudgetStatus {
 }
 
 type ListTransactionsRequest struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	Scope       *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
-	Period      *Period                `protobuf:"bytes,2,opt,name=period,proto3" json:"period,omitempty"`
-	Kind        TransactionKind        `protobuf:"varint,3,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
-	MemberIds   []string               `protobuf:"bytes,4,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"`
-	AccountIds  []string               `protobuf:"bytes,5,rep,name=account_ids,json=accountIds,proto3" json:"account_ids,omitempty"`
-	GroupIds    []string               `protobuf:"bytes,6,rep,name=group_ids,json=groupIds,proto3" json:"group_ids,omitempty"`
-	CategoryIds []string               `protobuf:"bytes,7,rep,name=category_ids,json=categoryIds,proto3" json:"category_ids,omitempty"`
-	// query matches note and merchant, case-insensitively.
-	Query         string `protobuf:"bytes,8,opt,name=query,proto3" json:"query,omitempty"`
-	Cursor        string `protobuf:"bytes,9,opt,name=cursor,proto3" json:"cursor,omitempty"`
-	PageSize      int32  `protobuf:"varint,10,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Scope         *Scope                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Period        *Period                `protobuf:"bytes,2,opt,name=period,proto3" json:"period,omitempty"`
+	Kind          TransactionKind        `protobuf:"varint,3,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
+	MemberIds     []string               `protobuf:"bytes,4,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"`
+	AccountIds    []string               `protobuf:"bytes,5,rep,name=account_ids,json=accountIds,proto3" json:"account_ids,omitempty"`
+	GroupIds      []string               `protobuf:"bytes,6,rep,name=group_ids,json=groupIds,proto3" json:"group_ids,omitempty"`
+	CategoryIds   []string               `protobuf:"bytes,7,rep,name=category_ids,json=categoryIds,proto3" json:"category_ids,omitempty"`
+	Query         string                 `protobuf:"bytes,8,opt,name=query,proto3" json:"query,omitempty"`
+	Cursor        string                 `protobuf:"bytes,9,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	PageSize      int32                  `protobuf:"varint,10,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -7074,15 +6949,10 @@ func (x *ListTransactionsRequest) GetPageSize() int32 {
 }
 
 type ListTransactionsResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Days  []*DaySection          `protobuf:"bytes,1,rep,name=days,proto3" json:"days,omitempty"`
-	// period_total covers the WHOLE period under the same filters, not the page: it never counts
-	// transfers (moving money is not spending it), and it counts only rows held in the household
-	// base currency, because minor units of two currencies do not add. With kind unspecified it
-	// is a net figure — expenses minus income — so the ЗАГАЛЬНЕ tab shows what the period cost
-	// rather than the two sides summed as magnitudes.
-	PeriodTotal   *Money `protobuf:"bytes,2,opt,name=period_total,json=periodTotal,proto3" json:"period_total,omitempty"`
-	NextCursor    string `protobuf:"bytes,3,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          []*DaySection          `protobuf:"bytes,1,rep,name=days,proto3" json:"days,omitempty"`
+	PeriodTotal   *Money                 `protobuf:"bytes,2,opt,name=period_total,json=periodTotal,proto3" json:"period_total,omitempty"`
+	NextCursor    string                 `protobuf:"bytes,3,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -7139,10 +7009,8 @@ func (x *ListTransactionsResponse) GetNextCursor() string {
 }
 
 type ListTemplatesRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// owner_user_id defaults to the caller. Asking for another member's templates returns an
-	// empty list rather than an error: they are private, not secret.
-	OwnerUserId   string `protobuf:"bytes,1,opt,name=owner_user_id,json=ownerUserId,proto3" json:"owner_user_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OwnerUserId   string                 `protobuf:"bytes,1,opt,name=owner_user_id,json=ownerUserId,proto3" json:"owner_user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -7661,13 +7529,10 @@ func (*ReorderTemplatesResponse) Descriptor() ([]byte, []int) {
 }
 
 type LogTemplateRequest struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	TemplateId string                 `protobuf:"bytes,1,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
-	// occurred_on defaults to today in the household timezone.
-	OccurredOn string `protobuf:"bytes,2,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
-	// amount_override handles "the usual coffee, but it cost more today" without editing the
-	// template.
-	AmountOverride *Money `protobuf:"bytes,3,opt,name=amount_override,json=amountOverride,proto3" json:"amount_override,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TemplateId     string                 `protobuf:"bytes,1,opt,name=template_id,json=templateId,proto3" json:"template_id,omitempty"`
+	OccurredOn     string                 `protobuf:"bytes,2,opt,name=occurred_on,json=occurredOn,proto3" json:"occurred_on,omitempty"`
+	AmountOverride *Money                 `protobuf:"bytes,3,opt,name=amount_override,json=amountOverride,proto3" json:"amount_override,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -7776,11 +7641,10 @@ func (x *LogTemplateResponse) GetAffectedBudgets() []*BudgetStatus {
 }
 
 type ListBudgetsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// as_of picks which rolling window each budget is evaluated in; empty means today.
-	AsOf            string             `protobuf:"bytes,1,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
-	Target          BudgetTargetFilter `protobuf:"varint,2,opt,name=target,proto3,enum=finance.v1.BudgetTargetFilter" json:"target,omitempty"`
-	IncludeArchived bool               `protobuf:"varint,3,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	AsOf            string                 `protobuf:"bytes,1,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
+	Target          BudgetTargetFilter     `protobuf:"varint,2,opt,name=target,proto3,enum=finance.v1.BudgetTargetFilter" json:"target,omitempty"`
+	IncludeArchived bool                   `protobuf:"varint,3,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -7837,12 +7701,10 @@ func (x *ListBudgetsRequest) GetIncludeArchived() bool {
 }
 
 type ListBudgetsResponse struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	Budgets []*BudgetStatus        `protobuf:"bytes,1,rep,name=budgets,proto3" json:"budgets,omitempty"`
-	// within_limit_count and total_count are the "4 з 5" caption: budgets currently under their
-	// limit out of the budgets evaluated.
-	WithinLimitCount int32 `protobuf:"varint,2,opt,name=within_limit_count,json=withinLimitCount,proto3" json:"within_limit_count,omitempty"`
-	TotalCount       int32 `protobuf:"varint,3,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Budgets          []*BudgetStatus        `protobuf:"bytes,1,rep,name=budgets,proto3" json:"budgets,omitempty"`
+	WithinLimitCount int32                  `protobuf:"varint,2,opt,name=within_limit_count,json=withinLimitCount,proto3" json:"within_limit_count,omitempty"`
+	TotalCount       int32                  `protobuf:"varint,3,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -7900,8 +7762,6 @@ func (x *ListBudgetsResponse) GetTotalCount() int32 {
 
 type CreateBudgetRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Exactly one target may be set.
-	//
 	// Types that are valid to be assigned to Target:
 	//
 	//	*CreateBudgetRequest_GroupId
@@ -8699,14 +8559,12 @@ func (x *GetMemberBreakdownResponse) GetInsights() []*Insight {
 }
 
 type GetSpendingSeriesRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// granularity is the bucket width; CUSTOM is not meaningful for a series and is rejected.
-	Granularity PeriodGranularity `protobuf:"varint,1,opt,name=granularity,proto3,enum=finance.v1.PeriodGranularity" json:"granularity,omitempty"`
-	// bucket_count is how many buckets back from today, inclusive (the chart draws 7).
-	BucketCount   int32           `protobuf:"varint,2,opt,name=bucket_count,json=bucketCount,proto3" json:"bucket_count,omitempty"`
-	Kind          TransactionKind `protobuf:"varint,3,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
-	StackedBy     SeriesStacking  `protobuf:"varint,4,opt,name=stacked_by,json=stackedBy,proto3,enum=finance.v1.SeriesStacking" json:"stacked_by,omitempty"`
-	Scope         *Scope          `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Granularity   PeriodGranularity      `protobuf:"varint,1,opt,name=granularity,proto3,enum=finance.v1.PeriodGranularity" json:"granularity,omitempty"`
+	BucketCount   int32                  `protobuf:"varint,2,opt,name=bucket_count,json=bucketCount,proto3" json:"bucket_count,omitempty"`
+	Kind          TransactionKind        `protobuf:"varint,3,opt,name=kind,proto3,enum=finance.v1.TransactionKind" json:"kind,omitempty"`
+	StackedBy     SeriesStacking         `protobuf:"varint,4,opt,name=stacked_by,json=stackedBy,proto3,enum=finance.v1.SeriesStacking" json:"stacked_by,omitempty"`
+	Scope         *Scope                 `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -8777,10 +8635,9 @@ func (x *GetSpendingSeriesRequest) GetScope() *Scope {
 }
 
 type GetSpendingSeriesResponse struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	Buckets []*SeriesBucket        `protobuf:"bytes,1,rep,name=buckets,proto3" json:"buckets,omitempty"`
-	// current_bucket_index is the bucket containing today, which the chart outlines.
-	CurrentBucketIndex int32 `protobuf:"varint,2,opt,name=current_bucket_index,json=currentBucketIndex,proto3" json:"current_bucket_index,omitempty"`
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Buckets            []*SeriesBucket        `protobuf:"bytes,1,rep,name=buckets,proto3" json:"buckets,omitempty"`
+	CurrentBucketIndex int32                  `protobuf:"varint,2,opt,name=current_bucket_index,json=currentBucketIndex,proto3" json:"current_bucket_index,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -8906,12 +8763,11 @@ func (x *SeriesBucket) GetSegments() []*SeriesSegment {
 }
 
 type SeriesSegment struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// key is a member id or a group id depending on the request's stacked_by.
-	Key           string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Label         string `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
-	ColorStep     int32  `protobuf:"varint,3,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
-	Amount        *Money `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Label         string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	ColorStep     int32                  `protobuf:"varint,3,opt,name=color_step,json=colorStep,proto3" json:"color_step,omitempty"`
+	Amount        *Money                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -9575,12 +9431,10 @@ func (*DeleteRecurringPaymentResponse) Descriptor() ([]byte, []int) {
 }
 
 type PostRecurringOccurrenceRequest struct {
-	state       protoimpl.MessageState `protogen:"open.v1"`
-	RecurringId string                 `protobuf:"bytes,1,opt,name=recurring_id,json=recurringId,proto3" json:"recurring_id,omitempty"`
-	// due_on identifies the occurrence being confirmed, so posting the same one twice is a
-	// no-op rather than a duplicate row.
-	DueOn          string `protobuf:"bytes,2,opt,name=due_on,json=dueOn,proto3" json:"due_on,omitempty"`
-	AmountOverride *Money `protobuf:"bytes,3,opt,name=amount_override,json=amountOverride,proto3" json:"amount_override,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	RecurringId    string                 `protobuf:"bytes,1,opt,name=recurring_id,json=recurringId,proto3" json:"recurring_id,omitempty"`
+	DueOn          string                 `protobuf:"bytes,2,opt,name=due_on,json=dueOn,proto3" json:"due_on,omitempty"`
+	AmountOverride *Money                 `protobuf:"bytes,3,opt,name=amount_override,json=amountOverride,proto3" json:"amount_override,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -9872,8 +9726,6 @@ func (x *ListRemindersResponse) GetReminders() []*Reminder {
 	return nil
 }
 
-// Upsert rather than create+update: a reminder is edited far more often than it is created,
-// and the app's editor has no meaningful distinction between the two.
 type UpsertReminderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ReminderId    string                 `protobuf:"bytes,1,opt,name=reminder_id,json=reminderId,proto3" json:"reminder_id,omitempty"`
@@ -10483,10 +10335,8 @@ func (*RemoveWidgetResponse) Descriptor() ([]byte, []int) {
 }
 
 type GetWidgetDataRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Empty means every widget the caller has placed — a cold widget process may not know its
-	// own ids yet.
-	WidgetIds     []string `protobuf:"bytes,1,rep,name=widget_ids,json=widgetIds,proto3" json:"widget_ids,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WidgetIds     []string               `protobuf:"bytes,1,rep,name=widget_ids,json=widgetIds,proto3" json:"widget_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -11086,7 +10936,6 @@ func (x *AccountsWidgetData) GetSharedBalance() *Money {
 	return nil
 }
 
-// finance.transaction.created
 type TransactionCreatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11219,8 +11068,6 @@ func (x *TransactionCreatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.transaction.updated. Both sides are carried because a consumer maintaining its own
-// totals has to subtract the old values before adding the new ones.
 type TransactionUpdatedEvent struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId           string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11353,7 +11200,6 @@ func (x *TransactionUpdatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.transaction.deleted
 type TransactionDeletedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11454,8 +11300,6 @@ func (x *TransactionDeletedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.transfer.created — kept separate from transaction.created so a consumer computing
-// spend never has to special-case a subject it already subscribed to.
 type TransferCreatedEvent struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId       string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11564,7 +11408,6 @@ func (x *TransferCreatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.account.created
 type AccountCreatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11649,7 +11492,6 @@ func (x *AccountCreatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.account.updated
 type AccountUpdatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11726,7 +11568,6 @@ func (x *AccountUpdatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.budget.created
 type BudgetCreatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11827,7 +11668,6 @@ func (x *BudgetCreatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.budget.updated
 type BudgetUpdatedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -11912,8 +11752,6 @@ func (x *BudgetUpdatedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.budget.exceeded — the notifications service is the consumer behind the household
-// screen's overspend toggle.
 type BudgetExceededEvent struct {
 	state                   protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId                string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -12046,9 +11884,6 @@ func (x *BudgetExceededEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.budget.recovered — an edit or a delete can pull a budget back under its limit.
-// Without this, a sent overspend alert could never be retracted and the same window would
-// alert again on the next breach.
 type BudgetRecoveredEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -12117,8 +11952,6 @@ func (x *BudgetRecoveredEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.template.used — drives usage_count, chip ordering and widget refresh without a
-// write path through the transaction consumer.
 type TemplateUsedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -12195,7 +12028,6 @@ func (x *TemplateUsedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.recurring.due
 type RecurringDueEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -12296,7 +12128,6 @@ func (x *RecurringDueEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.recurring.posted
 type RecurringPostedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
@@ -12381,7 +12212,6 @@ func (x *RecurringPostedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// finance.reminder.due
 type ReminderDueEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FamilyId      string                 `protobuf:"bytes,1,opt,name=family_id,json=familyId,proto3" json:"family_id,omitempty"`
