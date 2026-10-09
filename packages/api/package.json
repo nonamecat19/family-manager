@@ -30,10 +30,10 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.18",
-    "expo-constants": "~57.0.14",
-    "expo-notifications": "~57.0.21",
+    "expo-constants": "~58.0.10",
+    "expo-notifications": "~58.1.1",
     "react": "19.2.8",
-    "react-native": "0.86.3",
+    "react-native": "0.87.1",
     "typescript": "^5.7.0",
     "@types/node": "^26.4.0"
   },
